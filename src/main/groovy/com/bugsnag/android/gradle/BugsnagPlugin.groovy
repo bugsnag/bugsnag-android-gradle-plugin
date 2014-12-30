@@ -1,5 +1,8 @@
 package com.bugsnag.android.gradle
 
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+
 class BugsnagPlugin implements Plugin<Project> {
   private static final String TASK_NAME = 'bugsnag'
   private static final String API_KEY_TAG = 'com.bugsnag.android.API_KEY'
