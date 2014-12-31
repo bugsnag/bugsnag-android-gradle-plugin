@@ -41,3 +41,16 @@ bugsnag {
     endpoint 'http://upload.bugsnag.example.com'
 }
 ```
+
+Contributing
+------------
+
+We'd love your contributions! For information on how to build, test and release
+this plugin, see our [contributing guide](CONTRIBUTING.md).
+
+
+License
+-------
+
+This plugin is free software released under the MIT License. See
+[LICENSE.txt](LICENSE.txt) for details.
