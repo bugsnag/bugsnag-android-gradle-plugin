@@ -42,6 +42,17 @@ bugsnag {
 }
 ```
 
+By default Bugsnag refuses to let you upload multiple proguard files for a given
+versionCode of an app. If this happens you'll see an error:
+
+    Bugsnag upload failed: duplicate proguard file appId=com.bugsnag.android.example.debug versionCode=7
+
+The easiest way to fix this is to bump your versionCode and re-build, but if you cannot do that for some
+reason then you can set the `bugsnag.overwrite` system property to true. This will delete the previous
+version of the proguard file from Bugsnag's servers.
+
+    ./gradlew uploadBugsnagReleaseMapping -Dbugsnag.overwrite=true
+
 Contributing
 ------------
 
