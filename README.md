@@ -3,8 +3,6 @@ Bugsnag Android Gradle Plugin
 
 Gradle plugin which automatically uploads ProGuard mapping files to Bugsnag.
 
-> This is a pre-release version, interface is subject to change
-
 Basic Usage
 -----------
 
