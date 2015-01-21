@@ -30,8 +30,20 @@ class BugsnagPlugin implements Plugin<Project> {
                 return
             }
 
-            // Create Bugsnag post-build task
             def variantName = variant.name.capitalize()
+
+            // Create Bugsnag pre-proguard task
+            def bugsnagProguardTask = project.task("createBugsnagProguardConfig") << {
+                // Create the Bugsnag proguard configuration.
+                def file = project.file("build/intermediates/bugsnag/bugsnag.pro")
+                file.getParentFile().mkdirs()
+                FileWriter fr = new FileWriter(file.path)
+                fr.write("-keepattributes LineNumberTable,SourceFile\n")
+                fr.close()
+                variant.getBuildType().buildType.proguardFiles(file)
+            }
+
+            // Create Bugsnag post-proguard task
             def bugsnagTask = project.task("uploadBugsnag${variantName}Mapping") << {
                 // Find the processed manifest for this variant
                 def manifestPath = variant.outputs[0].processManifest.manifestOutputFile
@@ -99,10 +111,10 @@ class BugsnagPlugin implements Plugin<Project> {
             }
 
             // Run Bugsnag post-build tasks as part of a build
+
             project.tasks["package${variantName}"].dependsOn bugsnagTask
             bugsnagTask.dependsOn project.tasks["proguard${variantName}"]
+            project.tasks["proguard${variantName}"].dependsOn bugsnagProguardTask
         }
     }
 }
-
-
