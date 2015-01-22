@@ -22,6 +22,13 @@ buildscript {
 apply plugin: 'bugsnag'
 ```
 
+By default the bugsnag-android-gradle-plugin reads your API key [from your manifest](https://github.com/bugsnag/bugsnag-android#configuring-your-androidmanifest). You should ensure that you have the following code in AndroidManifest.xml.
+
+```xml
+<application ...>
+    <meta-data android:name="com.bugsnag.android.API_KEY" android:value="your-api-key-here"/>
+</application>
+```
 
 Advanced Usage
 --------------
