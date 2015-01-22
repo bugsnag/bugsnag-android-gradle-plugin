@@ -1,7 +1,8 @@
 Bugsnag Android Gradle Plugin
 =============================
 
-Gradle plugin which automatically uploads ProGuard mapping files to Bugsnag.
+Gradle plugin which automatically uploads ProGuard mapping files to Bugsnag. If you
+need more manual control, [see the API docs](https://bugsnag.com/docs/notifiers/android/proguard).
 
 Basic Usage
 -----------
@@ -50,6 +51,15 @@ reason then you can set the `bugsnag.overwrite` system property to true. This wi
 version of the proguard file from Bugsnag's servers.
 
     ./gradlew uploadBugsnagReleaseMapping -Dbugsnag.overwrite=true
+
+Proguard Configuration
+----------------------
+
+In order for Bugsnag to deduplicate errors correctly it needs to know the file and line at which the error
+occurred. Proguard by default strips this information, so the bugsnag-android-gradle-plugin adds an extra
+line to your Proguard configuration:
+
+    -keepattributes SourceFile,LineNumberTable
 
 Contributing
 ------------
