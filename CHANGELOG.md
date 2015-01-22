@@ -1,3 +1,8 @@
+1.1.0
+-----
+
+- Configure proguard correctly automatically
+
 1.0.0
 -----
 
