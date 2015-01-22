@@ -33,7 +33,7 @@ class BugsnagPlugin implements Plugin<Project> {
             def variantName = variant.name.capitalize()
 
             // Create Bugsnag pre-proguard task
-            def bugsnagProguardTask = project.task("createBugsnagProguardConfig") << {
+            def bugsnagProguardTask = project.task("createBugsnag${variantName}ProguardConfig") << {
                 // Create the Bugsnag proguard configuration.
                 def file = project.file("build/intermediates/bugsnag/bugsnag.pro")
                 file.getParentFile().mkdirs()
