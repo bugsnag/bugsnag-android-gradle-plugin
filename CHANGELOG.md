@@ -1,3 +1,8 @@
+1.2.0
+-----
+
+- Add build UUID support
+
 1.1.1
 -----
 
