@@ -1,8 +1,10 @@
 package com.bugsnag.android.gradle
 
 import java.io.File
+import java.util.UUID
 
 import groovy.util.XmlParser
+import groovy.util.Node
 import groovy.xml.Namespace
 
 import org.apache.http.HttpResponse
@@ -19,6 +21,7 @@ import org.gradle.api.Project
 
 class BugsnagPlugin implements Plugin<Project> {
     private static final String API_KEY_TAG = 'com.bugsnag.android.API_KEY'
+    private static final String BUILD_UUID_TAG = 'com.bugsnag.android.BUILD_UUID'
 
     void apply(Project project) {
         project.extensions.create("bugsnag", BugsnagPluginExtension)
@@ -41,6 +44,38 @@ class BugsnagPlugin implements Plugin<Project> {
                 fr.write("-keepattributes LineNumberTable,SourceFile\n")
                 fr.close()
                 variant.getBuildType().buildType.proguardFiles(file)
+
+                // Find the processed manifest for this variant
+                def manifestPath = variant.outputs[0].processManifest.manifestOutputFile
+
+                def appId = variant.applicationId
+
+                // Parse the AndroidManifest.xml
+                def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
+                def xml = new XmlParser().parse(manifestPath)
+
+                // Uniquely identify the build so that we can identify the proguard file.
+                def buildUUID = UUID.randomUUID().toString()
+
+                def application = xml.application[0]
+
+                if (application) {
+
+                    def metaDataTags = application['meta-data']
+                    // remove any old BUILD_UUID tags
+                    def buildUuidTags = metaDataTags.findAll{
+                        it.attributes()[ns.name].equals(BUILD_UUID_TAG)
+                    }.each{
+                        it.parent().remove(it)
+                    }
+
+                    application.appendNode('meta-data', [(ns.name): BUILD_UUID_TAG, (ns.value): buildUUID])
+
+                    def writer = new FileWriter(manifestPath)
+                    def printer = new XmlNodePrinter(new PrintWriter(writer))
+                    printer.preserveWhitespace = true
+                    printer.print(xml)
+                }
             }
 
             // Create Bugsnag post-proguard task
@@ -54,6 +89,8 @@ class BugsnagPlugin implements Plugin<Project> {
                 def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
                 def xml = new XmlParser().parse(manifestPath)
 
+                // Uniquely identify the build so that we can identify the proguard file.
+                def buildUUID =  ""
                 // Get the Bugsnag API key
                 def apiKey
                 if(project.bugsnag.apiKey != null) {
@@ -66,6 +103,13 @@ class BugsnagPlugin implements Plugin<Project> {
                         return
                     }
                     apiKey = apiKeyTags[0].attributes()[ns.value]
+
+                    def buildUUIDTags = metaDataTags.findAll{ it.attributes()[ns.name].equals(BUILD_UUID_TAG) }
+                    if (buildUUIDTags.size() == 0) {
+                        project.logger.warn("Could not find '$BUILD_UUID_TAG' <meta-data> tag in your AndroidManifest.xml")
+                    } else {
+                        buildUUID = buildUUIDTags[0].attributes()[ns.value]
+                    }
                 }
 
                 // Get the build version
@@ -91,6 +135,7 @@ class BugsnagPlugin implements Plugin<Project> {
                 mpEntity.addPart("apiKey", new StringBody(apiKey));
                 mpEntity.addPart("appId", new StringBody(appId));
                 mpEntity.addPart("versionCode", new StringBody(versionCode));
+                mpEntity.addPart("buildUUID", new StringBody(buildUUID));
 
                 if (versionName != null) {
                     mpEntity.addPart("versionName", new StringBody(versionName));
@@ -114,7 +159,8 @@ class BugsnagPlugin implements Plugin<Project> {
 
             project.tasks["package${variantName}"].dependsOn bugsnagTask
             bugsnagTask.dependsOn project.tasks["proguard${variantName}"]
-            project.tasks["proguard${variantName}"].dependsOn bugsnagProguardTask
+            project.tasks["process${variantName}Resources"].dependsOn bugsnagProguardTask
+            bugsnagProguardTask.dependsOn project.tasks["process${variantName}Manifest"]
         }
     }
 }
