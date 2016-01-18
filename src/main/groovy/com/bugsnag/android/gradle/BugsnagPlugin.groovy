@@ -26,141 +26,149 @@ class BugsnagPlugin implements Plugin<Project> {
     void apply(Project project) {
         project.extensions.create("bugsnag", BugsnagPluginExtension)
 
-        project.android.applicationVariants.all { variant ->
+        project.afterEvaluate {
 
-            // Only create Bugsnag tasks for proguard-enabled variants
-            if (variant.getObfuscation() == null) {
-                return
+            // Make sure there's an android configuration
+            if (!project.android) {
+                throw new IllegalStateException('Must apply \'com.android.application\' or \'com.android.library\' first!')
             }
 
-            def variantName = variant.name.capitalize()
+            project.android.applicationVariants.all { variant ->
 
-            // Create Bugsnag pre-proguard task
-            def bugsnagProguardTask = project.task("createBugsnag${variantName}ProguardConfig") << {
-                // Create the Bugsnag proguard configuration.
-                def file = project.file("build/intermediates/bugsnag/bugsnag.pro")
-                file.getParentFile().mkdirs()
-                FileWriter fr = new FileWriter(file.path)
-                fr.write("-keepattributes LineNumberTable,SourceFile\n")
-                fr.close()
-                variant.getBuildType().buildType.proguardFiles(file)
+                // Only create Bugsnag tasks for proguard-enabled variants
+                if (variant.getObfuscation() == null) {
+                    return
+                }
 
-                // Find the processed manifest for this variant
-                def manifestPath = variant.outputs[0].processManifest.manifestOutputFile
+                def variantName = variant.name.capitalize()
 
-                def appId = variant.applicationId
+                // Create Bugsnag pre-proguard task
+                def bugsnagProguardTask = project.task("createBugsnag${variantName}ProguardConfig") << {
+                    // Create the Bugsnag proguard configuration.
+                    def file = project.file("build/intermediates/bugsnag/bugsnag.pro")
+                    file.getParentFile().mkdirs()
+                    FileWriter fr = new FileWriter(file.path)
+                    fr.write("-keepattributes LineNumberTable,SourceFile\n")
+                    fr.close()
+                    variant.getBuildType().buildType.proguardFiles(file)
 
-                // Parse the AndroidManifest.xml
-                def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
-                def xml = new XmlParser().parse(manifestPath)
+                    // Find the processed manifest for this variant
+                    def manifestPath = variant.outputs[0].processManifest.manifestOutputFile
 
-                // Uniquely identify the build so that we can identify the proguard file.
-                def buildUUID = UUID.randomUUID().toString()
+                    def appId = variant.applicationId
 
-                def application = xml.application[0]
+                    // Parse the AndroidManifest.xml
+                    def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
+                    def xml = new XmlParser().parse(manifestPath)
 
-                if (application) {
+                    // Uniquely identify the build so that we can identify the proguard file.
+                    def buildUUID = UUID.randomUUID().toString()
 
-                    def metaDataTags = application['meta-data']
-                    // remove any old BUILD_UUID tags
-                    def buildUuidTags = metaDataTags.findAll{
-                        it.attributes()[ns.name].equals(BUILD_UUID_TAG)
-                    }.each{
-                        it.parent().remove(it)
+                    def application = xml.application[0]
+
+                    if (application) {
+
+                        def metaDataTags = application['meta-data']
+                        // remove any old BUILD_UUID tags
+                        def buildUuidTags = metaDataTags.findAll{
+                            it.attributes()[ns.name].equals(BUILD_UUID_TAG)
+                        }.each{
+                            it.parent().remove(it)
+                        }
+
+                        application.appendNode('meta-data', [(ns.name): BUILD_UUID_TAG, (ns.value): buildUUID])
+
+                        def writer = new FileWriter(manifestPath)
+                        def printer = new XmlNodePrinter(new PrintWriter(writer))
+                        printer.preserveWhitespace = true
+                        printer.print(xml)
+                    }
+                }
+
+                // Create Bugsnag post-proguard task
+                def bugsnagTask = project.task("uploadBugsnag${variantName}Mapping") << {
+                    // Find the processed manifest for this variant
+                    def manifestPath = variant.outputs[0].processManifest.manifestOutputFile
+
+                    def appId = variant.applicationId
+
+                    // Parse the AndroidManifest.xml
+                    def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
+                    def xml = new XmlParser().parse(manifestPath)
+
+                    // Uniquely identify the build so that we can identify the proguard file.
+                    def buildUUID =  ""
+                    // Get the Bugsnag API key
+                    def apiKey
+                    if(project.bugsnag.apiKey != null) {
+                        apiKey = project.bugsnag.apiKey
+                    } else {
+                        def metaDataTags = xml.application['meta-data']
+                        def apiKeyTags = metaDataTags.findAll{ it.attributes()[ns.name].equals(API_KEY_TAG) }
+                        if (apiKeyTags.size() == 0) {
+                            project.logger.warn("Could not find '$API_KEY_TAG' <meta-data> tag in your AndroidManifest.xml")
+                            return
+                        }
+                        apiKey = apiKeyTags[0].attributes()[ns.value]
+
+                        def buildUUIDTags = metaDataTags.findAll{ it.attributes()[ns.name].equals(BUILD_UUID_TAG) }
+                        if (buildUUIDTags.size() == 0) {
+                            project.logger.warn("Could not find '$BUILD_UUID_TAG' <meta-data> tag in your AndroidManifest.xml")
+                        } else {
+                            buildUUID = buildUUIDTags[0].attributes()[ns.value]
+                        }
                     }
 
-                    application.appendNode('meta-data', [(ns.name): BUILD_UUID_TAG, (ns.value): buildUUID])
-
-                    def writer = new FileWriter(manifestPath)
-                    def printer = new XmlNodePrinter(new PrintWriter(writer))
-                    printer.preserveWhitespace = true
-                    printer.print(xml)
-                }
-            }
-
-            // Create Bugsnag post-proguard task
-            def bugsnagTask = project.task("uploadBugsnag${variantName}Mapping") << {
-                // Find the processed manifest for this variant
-                def manifestPath = variant.outputs[0].processManifest.manifestOutputFile
-
-                def appId = variant.applicationId
-
-                // Parse the AndroidManifest.xml
-                def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
-                def xml = new XmlParser().parse(manifestPath)
-
-                // Uniquely identify the build so that we can identify the proguard file.
-                def buildUUID =  ""
-                // Get the Bugsnag API key
-                def apiKey
-                if(project.bugsnag.apiKey != null) {
-                    apiKey = project.bugsnag.apiKey
-                } else {
-                    def metaDataTags = xml.application['meta-data']
-                    def apiKeyTags = metaDataTags.findAll{ it.attributes()[ns.name].equals(API_KEY_TAG) }
-                    if (apiKeyTags.size() == 0) {
-                        project.logger.warn("Could not find '$API_KEY_TAG' <meta-data> tag in your AndroidManifest.xml")
+                    // Get the build version
+                    def versionName = xml.attributes()[ns.versionName]
+                    def versionCode = xml.attributes()[ns.versionCode]
+                    if (versionCode == null) {
+                        project.logger.warn("Could not find 'android:versionCode' value in your AndroidManifest.xml")
                         return
                     }
-                    apiKey = apiKeyTags[0].attributes()[ns.value]
 
-                    def buildUUIDTags = metaDataTags.findAll{ it.attributes()[ns.name].equals(BUILD_UUID_TAG) }
-                    if (buildUUIDTags.size() == 0) {
-                        project.logger.warn("Could not find '$BUILD_UUID_TAG' <meta-data> tag in your AndroidManifest.xml")
-                    } else {
-                        buildUUID = buildUUIDTags[0].attributes()[ns.value]
+                    // Find the Proguard mapping file
+                    File mappingFile = variant.getMappingFile()
+
+                    // If proguard configuration includes -dontobfuscate, the mapping file
+                    // will not exist (but we also won't need it).
+                    if (!mappingFile.exists()) {
+                        return
+                    }
+
+                    // Upload the mapping file to Bugsnag
+                    MultipartEntity mpEntity = new MultipartEntity();
+                    mpEntity.addPart("proguard", new FileBody(mappingFile));
+                    mpEntity.addPart("apiKey", new StringBody(apiKey));
+                    mpEntity.addPart("appId", new StringBody(appId));
+                    mpEntity.addPart("versionCode", new StringBody(versionCode));
+                    mpEntity.addPart("buildUUID", new StringBody(buildUUID));
+
+                    if (versionName != null) {
+                        mpEntity.addPart("versionName", new StringBody(versionName));
+                    }
+                    if (System.properties['bugsnag.overwrite']) {
+                        mpEntity.addPart("overwrite", new StringBody("true"));
+                    }
+
+                    HttpPost httpPost = new HttpPost(project.bugsnag.endpoint)
+                    httpPost.setEntity(mpEntity);
+
+                    HttpClient httpClient = new DefaultHttpClient();
+                    HttpResponse response = httpClient.execute(httpPost);
+
+                    if (response.getStatusLine().getStatusCode() != 200) {
+                        project.logger.warn("Bugsnag upload failed: " + EntityUtils.toString(response.getEntity(), "utf-8"))
                     }
                 }
 
-                // Get the build version
-                def versionName = xml.attributes()[ns.versionName]
-                def versionCode = xml.attributes()[ns.versionCode]
-                if (versionCode == null) {
-                    project.logger.warn("Could not find 'android:versionCode' value in your AndroidManifest.xml")
-                    return
-                }
+                // Run Bugsnag post-build tasks as part of a build
 
-                // Find the Proguard mapping file
-                File mappingFile = variant.getMappingFile()
-
-                // If proguard configuration includes -dontobfuscate, the mapping file
-                // will not exist (but we also won't need it).
-                if (!mappingFile.exists()) {
-                    return
-                }
-
-                // Upload the mapping file to Bugsnag
-                MultipartEntity mpEntity = new MultipartEntity();
-                mpEntity.addPart("proguard", new FileBody(mappingFile));
-                mpEntity.addPart("apiKey", new StringBody(apiKey));
-                mpEntity.addPart("appId", new StringBody(appId));
-                mpEntity.addPart("versionCode", new StringBody(versionCode));
-                mpEntity.addPart("buildUUID", new StringBody(buildUUID));
-
-                if (versionName != null) {
-                    mpEntity.addPart("versionName", new StringBody(versionName));
-                }
-                if (System.properties['bugsnag.overwrite']) {
-                    mpEntity.addPart("overwrite", new StringBody("true"));
-                }
-
-                HttpPost httpPost = new HttpPost(project.bugsnag.endpoint)
-                httpPost.setEntity(mpEntity);
-
-                HttpClient httpClient = new DefaultHttpClient();
-                HttpResponse response = httpClient.execute(httpPost);
-
-                if (response.getStatusLine().getStatusCode() != 200) {
-                    project.logger.warn("Bugsnag upload failed: " + EntityUtils.toString(response.getEntity(), "utf-8"))
-                }
+                project.tasks["package${variantName}"].dependsOn bugsnagTask
+                bugsnagTask.dependsOn project.tasks["proguard${variantName}"]
+                project.tasks["process${variantName}Resources"].dependsOn bugsnagProguardTask
+                bugsnagProguardTask.dependsOn project.tasks["process${variantName}Manifest"]
             }
-
-            // Run Bugsnag post-build tasks as part of a build
-
-            project.tasks["package${variantName}"].dependsOn bugsnagTask
-            bugsnagTask.dependsOn project.tasks["proguard${variantName}"]
-            project.tasks["process${variantName}Resources"].dependsOn bugsnagProguardTask
-            bugsnagProguardTask.dependsOn project.tasks["process${variantName}Manifest"]
         }
     }
 }
