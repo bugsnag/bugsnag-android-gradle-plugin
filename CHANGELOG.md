@@ -1,4 +1,4 @@
-1.2.1
+1.2.1 (2016-01-18)
 -----
 
 -   Configure Bugsnag plugin after `project` has been evaluated
