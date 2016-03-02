@@ -1,3 +1,9 @@
+1.2.2 (2016-03-02)
+-----
+
+-   Fix bug causing obfuscated variants to not be detected with newer
+    Android toolchains
+
 1.2.1 (2016-01-18)
 -----
 
