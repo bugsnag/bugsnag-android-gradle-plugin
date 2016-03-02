@@ -36,7 +36,7 @@ class BugsnagPlugin implements Plugin<Project> {
             project.android.applicationVariants.all { variant ->
 
                 // Only create Bugsnag tasks for proguard-enabled variants
-                if (variant.getObfuscation() == null) {
+                if (!variant.getMappingFile()?.exists()) {
                     return
                 }
 
