@@ -1,3 +1,18 @@
+## 2.0.0 (2016-03-11)
+
+This update added a few enhancements making usage easier and more customizable.
+There are more details in the
+[README](https://github.com/bugsnag/bugsnag-android-gradle-plugin#configuration)
+about the improvements to configuration. While gradle compatibility is
+preserved, this is a breaking change for users of previous versions of the
+plugin.
+
+### Bug Fixes
+
+* Fix support for Android plugin 1.5+
+  [James Smith](https://github.com/loopj]
+  [#10](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/10)
+
 1.2.2 (2016-03-02)
 -----
 
