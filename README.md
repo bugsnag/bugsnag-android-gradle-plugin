@@ -45,6 +45,15 @@ bugsnag {
     // By default, we'll upload mapping files to upload.bugsnag.com, if you
     // are using Bugsnag Enterprise, you can configure your upload endpoint
     endpoint 'http://upload.bugsnag.example.com'
+
+    // By default, we'll upload mapping files automatically, if you'd prefer
+    // to upload proguard mappings manually, you can set this to `false`
+    autoUpload false
+
+    // By default, we'll automatically apply our recommended proguard
+    // configuration to your existing proguard settings, if you'd prefer
+    // to do this yourself, you can set this to `false`
+    autoProguardConfig false
 }
 ```
 

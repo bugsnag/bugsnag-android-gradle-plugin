@@ -12,7 +12,7 @@ apply plugin: 'groovy'
 apply plugin: 'com.bmuschko.nexus'
 
 group = 'com.bugsnag'
-version = '1.2.3'
+version = '2.0.0'
 
 dependencies {
   repositories {
@@ -21,7 +21,7 @@ dependencies {
 
   compile gradleApi()
   compile localGroovy()
-  compile 'com.android.tools.build:gradle:1.0.0'
+  compile 'com.android.tools.build:gradle:+'
   compile 'org.apache.httpcomponents:httpclient:4.3.6'
   compile 'org.apache.httpcomponents:httpmime:4.3.6'
 }

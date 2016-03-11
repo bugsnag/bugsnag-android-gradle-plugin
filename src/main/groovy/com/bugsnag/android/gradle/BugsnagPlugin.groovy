@@ -23,13 +23,20 @@ class BugsnagPlugin implements Plugin<Project> {
             // Create tasks for each variant
             project.android.applicationVariants.all { ApplicationVariant variant ->
                 def variantName = variant.name.capitalize()
-                def manifestPath = variant.outputs.first().processManifest.manifestOutputFile
+                def variantOutput = variant.outputs.first()
+                def manifestPath = variantOutput.processManifest.manifestOutputFile
+
+                // Create a Bugsnag task to add a "Bugsnag recommended proguard settings" file
+                BugsnagProguardConfigTask proguardConfigTask = project.tasks.create("processBugsnag${variant.name.capitalize()}Proguard", BugsnagProguardConfigTask)
+                proguardConfigTask.group = GROUP_NAME
+                proguardConfigTask.applicationVariant = variant
+                proguardConfigTask.dependsOn variantOutput.processManifest
 
                 // Create a Bugsnag task to add a build UUID to AndroidManifest.xml
-                BugsnagManifestTask manifestTask = project.tasks.create("process${variant.name.capitalize()}BugsnagManifest", BugsnagManifestTask)
+                BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${variant.name.capitalize()}Manifest", BugsnagManifestTask)
                 manifestTask.group = GROUP_NAME
                 manifestTask.manifestPath = manifestPath
-                manifestTask.dependsOn variant.outputs.first().processManifest
+                manifestTask.dependsOn variantOutput.processManifest
 
                 // Create a Bugsnag task to upload proguard mapping file
                 BugsnagUploadTask uploadTask = project.tasks.create("uploadBugsnag${variant.name.capitalize()}Mapping", BugsnagUploadTask)
@@ -37,13 +44,19 @@ class BugsnagPlugin implements Plugin<Project> {
                 uploadTask.manifestPath = manifestPath
                 uploadTask.applicationId = variant.applicationId
                 uploadTask.mappingFile = variant.getMappingFile()
+                uploadTask.mustRunAfter variantOutput.packageApplication
 
-                // Automatically add UUID to manifest during a build
-                variant.outputs.first().processResources.dependsOn manifestTask
+                // Automatically add the manifest editing task to the build process
+                variantOutput.processResources.dependsOn manifestTask
 
-                // Automatically upload proguard mappings to Bugsnag during a build
-                if(project.tasks.findByPath("proguard${variantName}")) {
-                    uploadTask.dependsOn project.tasks["proguard${variantName}"]
+                // Automatically add the proguard settings task to the build process
+                if(project.bugsnag.autoProguardConfig) {
+                    variantOutput.processResources.dependsOn proguardConfigTask
+                }
+
+                // Automatically add the proguard mapping upload task to the build process
+                if(project.bugsnag.autoUpload) {
+                    variant.getAssemble().dependsOn uploadTask
                 }
             }
         }
