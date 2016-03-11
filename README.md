@@ -47,7 +47,7 @@ In most situations, the basic installation steps above will suffice, but you can
 
 ## API Key
 
-By default the bugsnag-android-gradle-plugin reads your API key [from your manifest](https://github.com/bugsnag/bugsnag-android#configuring-your-androidmanifest). You should ensure that you have the following code in `AndroidManifest.xml`.
+By default this plugin will read your API key [from your manifest](https://github.com/bugsnag/bugsnag-android#configuring-your-androidmanifest). You should ensure that you have the following code in `AndroidManifest.xml`.
 
 ```xml
 <application ...>
