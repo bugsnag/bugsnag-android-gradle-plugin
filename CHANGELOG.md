@@ -10,7 +10,7 @@ plugin.
 ### Bug Fixes
 
 * Fix support for Android plugin 1.5+
-  [James Smith](https://github.com/loopj]
+  [James Smith](https://github.com/loopj)
   [#10](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/10)
 
 1.2.2 (2016-03-02)
