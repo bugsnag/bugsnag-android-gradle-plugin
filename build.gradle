@@ -1,63 +1,59 @@
-buildscript {
-  repositories {
-    jcenter()
-  }
-
-  dependencies {
-    classpath 'com.bmuschko:gradle-nexus-plugin:2.1.1'
-  }
+// Plugins
+plugins {
+    id "groovy"
+    id "com.bmuschko.nexus" version "2.3.1"
 }
 
-apply plugin: 'groovy'
-apply plugin: 'com.bmuschko.nexus'
-
+// Project properties
 group = 'com.bugsnag'
 version = '2.0.0'
 
+// Build dependencies
 dependencies {
-  repositories {
-    mavenCentral()
-  }
+    repositories {
+        jcenter()
+    }
 
-  compile gradleApi()
-  compile localGroovy()
-  compile 'com.android.tools.build:gradle:+'
-  compile 'org.apache.httpcomponents:httpclient:4.3.6'
-  compile 'org.apache.httpcomponents:httpmime:4.3.6'
+    compile gradleApi()
+    compile localGroovy()
+    compile 'com.android.tools.build:gradle:(1.0,)'
+    compile 'org.apache.httpcomponents:httpclient:4.3.6'
+    compile 'org.apache.httpcomponents:httpmime:4.3.6'
 }
 
+// Settings for nexus maven plugin
 modifyPom {
-  project {
-    name 'Bugsnag Android Gradle Plugin'
-    description "A Gradle plugin with Bugsnag tasks for Android apps."
-    url 'https://github.com/bugsnag/bugsnag-android-gradle-plugin'
-    inceptionYear '2015'
+    project {
+        name 'Bugsnag Android Gradle Plugin'
+        description "A Gradle plugin with Bugsnag tasks for Android apps."
+        url 'https://github.com/bugsnag/bugsnag-android-gradle-plugin'
+        inceptionYear '2015'
 
-    scm {
-      url 'https://github.com/bugsnag/bugsnag-android-gradle-plugin'
-      connection 'scm:git:git://github.com/bugsnag/bugsnag-android-gradle-plugin.git'
-      developerConnection 'scm:git:ssh://git@github.com/bugsnag/bugsnag-android-gradle-plugin.git'
-    }
+        scm {
+            url 'https://github.com/bugsnag/bugsnag-android-gradle-plugin'
+            connection 'scm:git:git://github.com/bugsnag/bugsnag-android-gradle-plugin.git'
+            developerConnection 'scm:git:ssh://git@github.com/bugsnag/bugsnag-android-gradle-plugin.git'
+        }
 
-    licenses {
-      license {
-        name 'MIT'
-        url 'http://opensource.org/licenses/MIT'
-        distribution 'repo'
-      }
-    }
+        licenses {
+            license {
+                name 'MIT'
+                url 'http://opensource.org/licenses/MIT'
+                distribution 'repo'
+            }
+        }
 
-    organization {
-      name 'Bugsnag'
-      url 'https://bugsnag.com'
-    }
+        organization {
+            name 'Bugsnag'
+            url 'https://bugsnag.com'
+        }
 
-    developers {
-      developer {
-        id 'loopj'
-        name 'James Smith'
-        email 'james@bugsnag.com'
-      }
+        developers {
+            developer {
+                id 'loopj'
+                name 'James Smith'
+                email 'james@bugsnag.com'
+            }
+        }
     }
-  }
 }
