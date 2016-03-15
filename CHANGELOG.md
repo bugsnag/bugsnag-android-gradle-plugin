@@ -1,3 +1,9 @@
+## 2.0.1 (2016-03-14)
+
+### Bug Fixes
+
+* Target Java 6 when building, instead of Java 8
+
 ## 2.0.0 (2016-03-11)
 
 This update added a few enhancements making usage easier and more customizable.
