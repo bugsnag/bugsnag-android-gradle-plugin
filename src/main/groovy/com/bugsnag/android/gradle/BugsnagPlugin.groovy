@@ -80,7 +80,7 @@ class BugsnagPlugin implements Plugin<Project> {
                 // ProGuard.
                 //
                 // For reference, in Android Build Tools 1.0, the ProGuard
-                // task was named `releaseProguard`, and in 1.5+ the ProGuard
+                // task was named `proguardRelease`, and in 1.5+ the ProGuard
                 // task is named `transformClassesAndResourcesWithProguardForRelease`
                 // as it is now part of the "transforms" process.
                 if(project.bugsnag.autoProguardConfig) {
