@@ -25,7 +25,7 @@ import org.gradle.api.tasks.TaskAction
     https://developer.android.com/guide/topics/manifest/meta-data-element.html
 
     This task must be called after ProGuard mapping files are generated, so
-    it is usually safe to have this be the absolute task executed during
+    it is usually safe to have this be the absolute last task executed during
     a build.
 */
 class BugsnagUploadTask extends DefaultTask {
