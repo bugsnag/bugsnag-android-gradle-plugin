@@ -11,12 +11,15 @@ import groovy.xml.Namespace
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
-/*
+/**
     Task to add a unique build UUID to AndroidManifest.xml during the build
     process. This is used by Bugsnag to identify which proguard mapping file
     should be used to deobfuscate each crash report.
 
-    This task should be called after "process${variantName}Manifest"
+    https://docs.gradle.org/current/userguide/custom_tasks.html
+
+    This task must be called after "process${variantName}Manifest", since it
+    requires that an AndroidManifest.xml exists in `build/intermediates`.
 */
 class BugsnagManifestTask extends DefaultTask {
     String manifestPath
