@@ -15,6 +15,19 @@ import org.apache.http.util.EntityUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
+/**
+    Task to upload ProGuard mapping files to Bugsnag.
+
+    Reads meta-data tags from the project's AndroidManifest.xml to extract a
+    build UUID (injected by BugsnagManifestTask) and a Bugsnag API Key:
+
+    https://developer.android.com/guide/topics/manifest/manifest-intro.html
+    https://developer.android.com/guide/topics/manifest/meta-data-element.html
+
+    This task must be called after ProGuard mapping files are generated, so
+    it is usually safe to have this be the absolute last task executed during
+    a build.
+*/
 class BugsnagUploadTask extends DefaultTask {
     String manifestPath
     String applicationId

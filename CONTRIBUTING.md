@@ -20,11 +20,21 @@ Jar files are generated into `build/libs`.
 Installing Locally
 ------------------
 
+Install the plugin to your local Maven repository:
+
 ```shell
 ./gradlew clean install
 ```
 
-The plugin will be installed to your local Maven repository.
+Add `mavenLocal` to your buildscript repositories:
+
+```groovy
+buildscript {
+    repositories {
+        mavenLocal()
+    }
+}
+```
 
 
 Releasing a New Version
@@ -47,7 +57,11 @@ If you are a project maintainer, you can build and release a new version of
     git push origin master && git push --tags
     ```
 
-### 2. Release to Maven Central
+### 2. Upload the jar to the GitHub releases page
+
+- https://github.com/bugsnag/bugsnag-android-gradle-plugin/releases
+
+### 3. Release to Maven Central
 
 -   Create a file `~/.gradle/gradle.properties` with the following contents:
 
