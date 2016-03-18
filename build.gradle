@@ -1,23 +1,23 @@
-// Plugins
+// Gradle plugins
 plugins {
     id "groovy"
-    id "com.bmuschko.nexus" version "2.3.1"
+    id "maven-publish"
+    id "com.jfrog.bintray" version "1.6"
 }
 
-// JVM targets
-sourceCompatibility = '1.6'
-targetCompatibility = '1.6'
+// Repositories for dependencies
+repositories {
+    jcenter()
+}
 
-// Project properties
-group = 'com.bugsnag'
-version = '2.0.1'
+// Target Java 1.6 when compiling groovy code
+compileGroovy {
+    sourceCompatibility = '1.6'
+    targetCompatibility = '1.6'
+}
 
 // Build dependencies
 dependencies {
-    repositories {
-        jcenter()
-    }
-
     compile gradleApi()
     compile localGroovy()
     compile 'com.android.tools.build:gradle:1.5.0'
@@ -25,38 +25,49 @@ dependencies {
     compile 'org.apache.httpcomponents:httpmime:4.3.6'
 }
 
-// Settings for nexus maven plugin
-modifyPom {
-    project {
-        name 'Bugsnag Android Gradle Plugin'
-        description "A Gradle plugin with Bugsnag tasks for Android apps."
-        url 'https://github.com/bugsnag/bugsnag-android-gradle-plugin'
-        inceptionYear '2015'
+// Tasks to build jars for docs and sources
+task javadocJar(type: Jar, dependsOn: groovydoc) {
+    from "${buildDir}/docs/groovydoc"
+    classifier = 'javadoc'
+}
 
-        scm {
-            url 'https://github.com/bugsnag/bugsnag-android-gradle-plugin'
-            connection 'scm:git:git://github.com/bugsnag/bugsnag-android-gradle-plugin.git'
-            developerConnection 'scm:git:ssh://git@github.com/bugsnag/bugsnag-android-gradle-plugin.git'
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+// Publishing settings
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
         }
+    }
+}
 
-        licenses {
-            license {
-                name 'MIT'
-                url 'http://opensource.org/licenses/MIT'
-                distribution 'repo'
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    publications = ['maven']
+    publish = true
+    pkg {
+        repo = 'maven'
+        name = project.name
+        userOrg = 'bugsnag'
+        version {
+            attributes = ['gradle-plugin': "${project.property('gradle.plugin.id')}:${project.group}:${project.name}"]
+            vcsTag = "v${project.version}"
+
+            gpg {
+                sign = true
             }
-        }
 
-        organization {
-            name 'Bugsnag'
-            url 'https://bugsnag.com'
-        }
-
-        developers {
-            developer {
-                id 'loopj'
-                name 'James Smith'
-                email 'james@bugsnag.com'
+            mavenCentralSync {
+                sync = true
+                user = System.getenv('MAVEN_USER')
+                password = System.getenv('MAVEN_PASSWORD')
             }
         }
     }
