@@ -10,7 +10,7 @@ targetCompatibility = '1.6'
 
 // Project properties
 group = 'com.bugsnag'
-version = '2.0.1'
+version = '2.0.2'
 
 // Build dependencies
 dependencies {
