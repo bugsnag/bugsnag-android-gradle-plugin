@@ -1,3 +1,7 @@
+## 2.0.2 (2016-03-16)
+
+* Depend on Android Gradle plugin 1.5 to avoid lint warnings
+
 ## 2.0.1 (2016-03-14)
 
 ### Bug Fixes
