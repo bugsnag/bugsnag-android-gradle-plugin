@@ -1,10 +1,16 @@
 // Plugins
 plugins {
-    id "groovy"
-    id "com.bmuschko.nexus" version "2.3.1"
+    id 'groovy'
+    id 'com.gradle.plugin-publish' version '0.9.4'
+    id 'com.bmuschko.nexus' version '2.3.1'
 }
 
-// JVM targets
+// Use jCenter for dependencies
+repositories {
+    jcenter()
+}
+
+// Compile with, and target bytecode for, Java 1.6
 sourceCompatibility = '1.6'
 targetCompatibility = '1.6'
 
@@ -14,10 +20,6 @@ version = '2.0.2'
 
 // Build dependencies
 dependencies {
-    repositories {
-        jcenter()
-    }
-
     compile gradleApi()
     compile localGroovy()
     compile 'com.android.tools.build:gradle:1.5.0'
@@ -25,13 +27,12 @@ dependencies {
     compile 'org.apache.httpcomponents:httpmime:4.3.6'
 }
 
-// Settings for nexus maven plugin
+// Maven publishing settings (nexus-maven-plugins)
 modifyPom {
     project {
         name 'Bugsnag Android Gradle Plugin'
-        description "A Gradle plugin with Bugsnag tasks for Android apps."
+        description 'Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.'
         url 'https://github.com/bugsnag/bugsnag-android-gradle-plugin'
-        inceptionYear '2015'
 
         scm {
             url 'https://github.com/bugsnag/bugsnag-android-gradle-plugin'
@@ -59,5 +60,25 @@ modifyPom {
                 email 'james@bugsnag.com'
             }
         }
+    }
+}
+
+// Gradle plugin publishing settings (plugins.gradle.com)
+pluginBundle {
+    website = 'https://github.com/bugsnag/bugsnag-android-gradle-plugin'
+    vcsUrl = 'https://github.com/bugsnag/bugsnag-android-gradle-plugin.git'
+
+    plugins {
+        androidGradlePlugin {
+            id = 'com.bugsnag.android.gradle'
+            displayName = 'Bugsnag Android Gradle Plugin'
+            description = 'Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.'
+            tags = ['bugsnag', 'proguard', 'android', 'upload']
+        }
+    }
+
+    mavenCoordinates {
+        groupId = 'com.bugsnag'
+        artifactId = 'bugsnag-android-gradle-plugin'
     }
 }
