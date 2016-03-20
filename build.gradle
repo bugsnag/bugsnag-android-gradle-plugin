@@ -1,22 +1,20 @@
-// Plugins
+// Gradle plugins
 plugins {
     id 'groovy'
     id 'com.gradle.plugin-publish' version '0.9.4'
     id 'com.bmuschko.nexus' version '2.3.1'
 }
 
-// Use jCenter for dependencies
+// Repositories for dependencies
 repositories {
     jcenter()
 }
 
-// Compile with, and target bytecode for, Java 1.6
-sourceCompatibility = '1.6'
-targetCompatibility = '1.6'
-
-// Project properties
-group = 'com.bugsnag'
-version = '2.0.2'
+// Target Java 1.6 when compiling groovy code
+compileGroovy {
+    sourceCompatibility = '1.6'
+    targetCompatibility = '1.6'
+}
 
 // Build dependencies
 dependencies {
