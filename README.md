@@ -3,7 +3,7 @@ Bugsnag Android Gradle Plugin
 
 Gradle plugin to automatically upload [ProGuard](https://developer.android.com/tools/help/proguard.html) mapping files to Bugsnag.
 
-[Bugsnag](https://bugsnag.com) for Android automatically detects crashes in your Android apps, collecting diagnostic information and immediately notifying your development team.
+[Bugsnag](https://bugsnag.com/platforms/android) for Android automatically detects crashes in your Android apps, collecting diagnostic information and immediately notifying your development team.
 
 [Create a free account](https://bugsnag.com) to start capturing exceptions from your applications.
 
