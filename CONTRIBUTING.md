@@ -92,3 +92,8 @@ If you are a project maintainer, you can build and release a new version of
     -   Click the “refresh” button
     -   Select the com.bugsnag closed repository
     -   Click the “release” button in the toolbar
+
+### 4. Release to plugins.gradle.com
+
+-   Get the API key from James and [add it to your Gradle configuration](https://plugins.gradle.org/docs/submit)
+-   Run `gradle publishPlugins`
