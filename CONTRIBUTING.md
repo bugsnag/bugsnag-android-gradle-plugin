@@ -97,3 +97,7 @@ If you are a project maintainer, you can build and release a new version of
 
 -   Get the API key from James and [add it to your Gradle configuration](https://plugins.gradle.org/docs/submit)
 -   Run `gradle publishPlugins`
+
+### 5. Update docs.bugsnag.com
+
+Update the setup guide for Java (Android) with any new content.
