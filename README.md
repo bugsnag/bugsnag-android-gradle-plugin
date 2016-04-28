@@ -60,7 +60,7 @@ By default this plugin will read your API key [from your manifest](https://githu
 </application>
 ```
 
-Alternatively, you can set your API key in `gradle.properties` as follows:
+Alternatively, you can set your API key in your app's `build.gradle` as follows:
 
 ```groovy
 bugsnag {
@@ -70,7 +70,7 @@ bugsnag {
 
 ## Automatic Upload
 
-By default, this plugin will automatically upload the proguard mapping file generated for every build, if you'd prefer to disable this automatic uploading, set the `autoUpload` property in `gradle.properties`:
+By default, this plugin will automatically upload the proguard mapping file generated for every build, if you'd prefer to disable this automatic uploading, set the `autoUpload` property in your app's `build.gradle`:
 
 ```groovy
 bugsnag {
@@ -92,7 +92,7 @@ In order for Bugsnag to de-duplicate errors correctly it needs to know the file 
 -keepattributes SourceFile,LineNumberTable
 ```
 
-If you'd prefer to add this into your Proguard configuration yourself, you can disable our automatic configuration in `gradle.properties` as follows:
+If you'd prefer to add this into your Proguard configuration yourself, you can disable our automatic configuration in your app's `build.gradle` as follows:
 
 ```groovy
 bugsnag {
@@ -102,7 +102,7 @@ bugsnag {
 
 ## Custom Endpoints
 
-By default, we'll upload mapping files to `upload.bugsnag.com`, if you are using Bugsnag Enterprise, you can configure your upload endpoint in `gradle.properties` as follows:
+By default, we'll upload mapping files to `upload.bugsnag.com`, if you are using Bugsnag Enterprise, you can configure your upload endpoint in your app's `build.gradle` as follows:
 
 ```groovy
 bugsnag {
