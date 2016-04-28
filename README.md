@@ -18,6 +18,7 @@ If you aren't using Gradle or need more manual control, [see the API docs](https
     - [Automatic Upload](#automatic-upload)
     - [Automatic Proguard Config](#automatic-proguard-config)
     - [Custom Endpoints](#custom-endpoints)
+    - [Disabling Bugsnag](#disabling-bugsnag)
 - [Build UUIDs](#build-uuids)
 - [Support](#support)
 - [Contributing](#contributing)
