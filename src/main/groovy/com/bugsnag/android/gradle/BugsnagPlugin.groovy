@@ -29,6 +29,11 @@ class BugsnagPlugin implements Plugin<Project> {
         project.extensions.create("bugsnag", BugsnagPluginExtension)
 
         project.afterEvaluate {
+            // Allow disabling of all Bugsnag tasks
+            if(!project.bugsnag.enableBugsnag) {
+                return;
+            }
+
             // Make sure the android plugin has been applied first
             if(!project.plugins.hasPlugin(AppPlugin)) {
                 throw new IllegalStateException('Must apply \'com.android.application\' first!')
