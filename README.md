@@ -18,6 +18,7 @@ If you aren't using Gradle or need more manual control, [see the API docs](https
     - [Automatic Upload](#automatic-upload)
     - [Automatic Proguard Config](#automatic-proguard-config)
     - [Custom Endpoints](#custom-endpoints)
+    - [Disabling Bugsnag](#disabling-bugsnag)
 - [Build UUIDs](#build-uuids)
 - [Support](#support)
 - [Contributing](#contributing)
@@ -109,6 +110,18 @@ bugsnag {
     endpoint 'http://upload.bugsnag.example.com'
 }
 ```
+
+## Disabling Bugsnag
+To completely disable the Bugsnag plugin, use the following configuration:
+
+```groovy
+bugsnag {
+    enableBugsnag false
+}
+```
+
+You may want to do this to speed up build types or flavors where you don't require Bugsnag's functionality. Bugsnag's generation of a UUID for each build into your manifest (see [Build UUIDs](#build-uuids)) causes the resources task to be run for each build, introducing a small delay if your build's changes don't involve resources.
+
 
 # Build UUIDs
 
