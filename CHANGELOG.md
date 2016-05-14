@@ -1,3 +1,11 @@
+## 2.1.0 (2016-05-13)
+
+### Enhancements
+
+* Add configuration option `enableBugsnag` allowing you to completely disable Bugsnag in certain situations
+  | [Tim Mellor](https://github.com/tmelz)
+  | [#21](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/21)
+
 ## 2.0.2 (2016-03-16)
 
 * Depend on Android Gradle plugin 1.5 to avoid lint warnings

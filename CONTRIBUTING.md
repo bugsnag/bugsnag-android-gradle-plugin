@@ -47,7 +47,7 @@ If you are a project maintainer, you can build and release a new version of
 
 -   Update the `CHANGELOG` and `README.md` with any new features
 
--   Update the version number in `build.gradle`
+-   Update the version number in `gradle.properties`
 
 -   Commit and tag the release
 
