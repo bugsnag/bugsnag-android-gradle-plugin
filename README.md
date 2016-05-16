@@ -29,7 +29,7 @@ If you aren't using Gradle or need more manual control, [see the API docs](https
 
 ## Installation
 
-Add this plugin as a dependency in your main *Project Gradle Settings*, usually in `build.gradle` in the root of your project:
+Add this plugin as a dependency in your main *Project Gradle Settings*, at `<project_dir>/build.gradle`:
 
 ```groovy
 buildscript {
@@ -40,7 +40,7 @@ buildscript {
 }
 ```
 
-You'll then need to "apply" the plugin by adding the following line to the top of your *Module Gradle Settings*, usually found at `app/build.gradle`.
+You'll then need to "apply" the plugin by adding the following line to the top of your *Module Gradle Settings*, at `<project_dir>/<module_name>/build.gradle` (usually `<project_dir>/app/build.gradle`).
 
 ```groovy
 apply plugin: 'com.bugsnag.android.gradle'
