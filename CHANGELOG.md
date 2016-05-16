@@ -5,6 +5,8 @@
 * Add configuration option `enableBugsnag` allowing you to completely disable Bugsnag in certain situations
   | [Tim Mellor](https://github.com/tmelz)
   | [#21](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/21)
+* Plugin id changed to `com.bugsnag.android.gradle` from `bugsnag`
+* Now published on https://plugins.gradle.org
 
 ## 2.0.2 (2016-03-16)
 
