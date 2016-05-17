@@ -112,13 +112,19 @@ bugsnag {
 ```
 
 ## Disabling Bugsnag
-To completely disable the Bugsnag plugin, use the following configuration:
+To completely disable the Bugsnag plugin, use the extension property `enableBugsnag`, for example:
 
 ```groovy
-bugsnag {
-    enableBugsnag false
+android {
+    buildTypes {
+        debug {
+            ext.enableBugsnag = false
+        }
+    }
 }
 ```
+
+You can also declare this inside a product flavor. Conflicting values (between multiple flavors or a flavor and a build-type) are ignored and the plugin will be disabled if `false` was set anywhere.
 
 You may want to do this to speed up build types or flavors where you don't require Bugsnag's functionality. Bugsnag's generation of a UUID for each build into your manifest (see [Build UUIDs](#build-uuids)) causes the resources task to be run for each build, introducing a small delay if your build's changes don't involve resources.
 
