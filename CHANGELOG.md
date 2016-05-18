@@ -1,3 +1,9 @@
+## 2.1.1 (2016-05-18)
+
+* Update `enableBugsnag` feature to be configurable on a per-variant basis
+| [Tim Mellor](https://github.com/tmelz)
+| [#22](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/22)
+
 ## 2.1.0 (2016-05-13)
 
 ### Enhancements
