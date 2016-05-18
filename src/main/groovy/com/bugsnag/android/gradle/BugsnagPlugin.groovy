@@ -29,10 +29,6 @@ class BugsnagPlugin implements Plugin<Project> {
         project.extensions.create("bugsnag", BugsnagPluginExtension)
 
         project.afterEvaluate {
-            if (!project.bugsnag.enableBugsnag) {
-                return;
-            }
-
             // Make sure the android plugin has been applied first
             if(!project.plugins.hasPlugin(AppPlugin)) {
                 throw new IllegalStateException('Must apply \'com.android.application\' first!')
@@ -41,6 +37,15 @@ class BugsnagPlugin implements Plugin<Project> {
             // Create tasks for each Build Variant
             // https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide#TOC-Build-Variants
             project.android.applicationVariants.all { ApplicationVariant variant ->
+                def hasDisabledBugsnag = {
+                    it.ext.properties.containsKey("enableBugsnag") && !it.ext.enableBugsnag
+                }
+
+                // Ignore any conflicting properties, bail if anything has a disable flag.
+                if ((variant.productFlavors + variant.buildType).any(hasDisabledBugsnag)) {
+                    return
+                }
+
                 // The Android build system supports creating multiple APKs
                 // per Build Variant (Variant Outputs):
                 // https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide/apk-splits

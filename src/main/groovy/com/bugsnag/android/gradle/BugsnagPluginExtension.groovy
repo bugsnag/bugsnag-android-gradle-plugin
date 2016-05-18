@@ -8,5 +8,4 @@ class BugsnagPluginExtension {
     def String apiKey = null
     def boolean autoUpload = true;
     def boolean autoProguardConfig = true;
-    def boolean enableBugsnag = true;
 }
