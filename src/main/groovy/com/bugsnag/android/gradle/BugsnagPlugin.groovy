@@ -70,6 +70,7 @@ class BugsnagPlugin implements Plugin<Project> {
                 manifestTask.group = GROUP_NAME
                 manifestTask.manifestPath = manifestPath
                 manifestTask.mustRunAfter variantOutput.processManifest
+                manifestTask.onlyIf { it.shouldRun() }
 
                 // Create a Bugsnag task to upload proguard mapping file
                 BugsnagUploadTask uploadTask = project.tasks.create("uploadBugsnag${variantName}Mapping", BugsnagUploadTask)

@@ -131,9 +131,16 @@ You may want to do this to speed up build types or flavors where you don't requi
 
 # Build UUIDs
 
-This plugin automatically generates a UUID for each build, which is inserted into your `AndroidManifest.xml` during the build process. This UUID is used to uniquely identify each build, along with your `appId` and `versionCode`, to help us determine which proguard mapping file to use with each crash report.
+This plugin automatically generates a UUID for each build (excluding [Instant
+Run builds](https://medium.com/google-developers/instant-run-how-does-it-work-294a1633367f),
+which is inserted into your `AndroidManifest.xml` during the build process. This
+UUID is used to uniquely identify each build, along with your `appId` and
+`versionCode`, to help us determine which proguard mapping file to use with each
+crash report.
 
-This UUID is available as `com.bugsnag.BUILD_UUID` in a [meta-data element](https://developer.android.com/guide/topics/manifest/meta-data-element.html) in case you'd like to use yourself it in your applications.
+This UUID is available as `com.bugsnag.BUILD_UUID` in a [meta-data
+element](https://developer.android.com/guide/topics/manifest/meta-data-element.html)
+in case you'd like to use yourself it in your applications.
 
 
 # Support
