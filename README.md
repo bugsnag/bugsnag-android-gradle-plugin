@@ -35,7 +35,7 @@ Add this plugin as a dependency in your main *Project Gradle Settings*, at `<pro
 buildscript {
     dependencies {
         // Add this line to your `dependencies` section
-        classpath 'com.bugsnag:bugsnag-android-gradle-plugin:+'
+        classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.+'
     }
 }
 ```
