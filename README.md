@@ -19,6 +19,7 @@ If you aren't using Gradle or need more manual control, [see the API docs](https
     - [Automatic Proguard Config](#automatic-proguard-config)
     - [Custom Endpoints](#custom-endpoints)
     - [Disabling Bugsnag](#disabling-bugsnag)
+    - [Overwrite mapping file](#overwrite-mapping-file)
 - [Build UUIDs](#build-uuids)
 - [Support](#support)
 - [Contributing](#contributing)
@@ -121,6 +122,15 @@ android {
             ext.enableBugsnag = false
         }
     }
+}
+```
+
+## Overwrite mapping file
+To overwrite a mapping file, you can set the `overwrite` property as follows:
+
+```groovy
+bugsnag {
+    overwrite false
 }
 ```
 
