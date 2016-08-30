@@ -1,3 +1,7 @@
+## 2.1.2 (2016-08-30)
+
+* Avoid creating new build UUID for Instant Run builds
+
 ## 2.1.1 (2016-05-18)
 
 * Update `enableBugsnag` feature to be configurable on a per-variant basis
