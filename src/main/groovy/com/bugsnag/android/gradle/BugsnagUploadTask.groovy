@@ -3,10 +3,11 @@ package com.bugsnag.android.gradle
 import groovy.util.XmlParser
 import groovy.xml.Namespace
 
+import org.apache.http.HttpEntity
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpPost
-import org.apache.http.entity.mime.MultipartEntity
+import org.apache.http.entity.mime.MultipartEntityBuilder
 import org.apache.http.entity.mime.content.FileBody
 import org.apache.http.entity.mime.content.StringBody
 import org.apache.http.impl.client.DefaultHttpClient
@@ -66,31 +67,32 @@ class BugsnagUploadTask extends DefaultTask {
         }
 
         // Upload the mapping file to Bugsnag
-        MultipartEntity mpEntity = new MultipartEntity();
-        mpEntity.addPart("proguard", new FileBody(mappingFile));
-        mpEntity.addPart("apiKey", new StringBody(apiKey));
-        mpEntity.addPart("appId", new StringBody(applicationId));
-        mpEntity.addPart("versionCode", new StringBody(versionCode));
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.addPart("proguard", new FileBody(mappingFile));
+        builder.addPart("apiKey", new StringBody(apiKey));
+        builder.addPart("appId", new StringBody(applicationId));
+        builder.addPart("versionCode", new StringBody(versionCode));
 
         // Uniquely identify the build so that we can identify the proguard file.
         def buildUUID = getBuildUUID(metaDataTags, ns)
         if(buildUUID != null) {
-            mpEntity.addPart("buildUUID", new StringBody(buildUUID));
+            builder.addPart("buildUUID", new StringBody(buildUUID));
         }
 
         // Get the build version
         def versionName = xml.attributes()[ns.versionName]
         if (versionName != null) {
-            mpEntity.addPart("versionName", new StringBody(versionName));
+            builder.addPart("versionName", new StringBody(versionName));
         }
 
         if (System.properties['bugsnag.overwrite']) {
             mpEntity.addPart("overwrite", new StringBody("true"));
         }
+        HttpEntity entity = builder.build()
 
         // Make the request
         HttpPost httpPost = new HttpPost(project.bugsnag.endpoint)
-        httpPost.setEntity(mpEntity);
+        httpPost.setEntity(entity)
 
         HttpClient httpClient = new DefaultHttpClient();
         HttpResponse response = httpClient.execute(httpPost);
