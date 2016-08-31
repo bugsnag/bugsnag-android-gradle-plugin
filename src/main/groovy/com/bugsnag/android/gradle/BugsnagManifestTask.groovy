@@ -68,7 +68,7 @@ class BugsnagManifestTask extends DefaultTask {
         def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
         def app = new XmlParser().parse(manifestPath).application[0]
         if (app) {
-            let tagCount = app['meta-data'].findAll {
+            def tagCount = app['meta-data'].findAll {
                 it.attributes()[ns.name].equals(BugsnagPlugin.BUILD_UUID_TAG)
             }.size()
             tagCount == 0 || !isInstantRun()
