@@ -43,7 +43,7 @@ buildscript {
 You'll then need to "apply" the plugin by adding the following line to the top of your *Module Gradle Settings*, at `<project_dir>/<module_name>/build.gradle` (usually `<project_dir>/app/build.gradle`).
 
 ```groovy
-apply plugin: 'com.bugsnag.android.gradle'
+apply plugin: com.bugsnag.android.gradle.BugsnagPlugin
 ```
 
 
