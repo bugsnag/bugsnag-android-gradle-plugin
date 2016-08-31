@@ -29,6 +29,18 @@ If you aren't using Gradle or need more manual control, [see the API docs](https
 
 ## Installation
 
+### Using the Gradle Plugin Portal (Gradle 2.1+)
+
+Add the plugin to your `plugins` section in `<project_dir>/build.gradle`:
+
+```groovy
+plugins {
+    id "com.bugsnag.android.gradle" version "2.1.3"
+}
+```
+
+### Using other source repositories
+
 Add this plugin as a dependency in your main *Project Gradle Settings*, at `<project_dir>/build.gradle`:
 
 ```groovy
