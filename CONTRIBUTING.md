@@ -47,7 +47,8 @@ If you are a project maintainer, you can build and release a new version of
 
 -   Update the `CHANGELOG` and `README.md` with any new features
 
--   Update the version number in `gradle.properties`
+-   Update the version number in `gradle.properties` and the installation
+    section of `README.md`
 
 -   Commit and tag the release
 
@@ -61,7 +62,7 @@ If you are a project maintainer, you can build and release a new version of
 
 - https://github.com/bugsnag/bugsnag-android-gradle-plugin/releases
 
-### 3. Release to Maven Central
+### 3. Release to jCenter and Maven Central
 
 -   Create a file `~/.gradle/gradle.properties` with the following contents:
 
@@ -74,12 +75,16 @@ If you are a project maintainer, you can build and release a new version of
     signing.keyId=your-gpg-key-id # From gpg --list-keys
     signing.password=your-gpg-key-passphrase
     signing.secretKeyRingFile=/Users/james/.gnupg/secring.gpg
+
+    # Your credentials for https://bintray.com
+    bintray_user=your-bintray-username
+    bintray_api_key=your-bintray-api-key
     ```
 
 -   Build and upload the new version
 
     ```shell
-    ./gradlew clean uploadArchives
+    ./gradlew clean uploadArchives uploadBintray
     ```
 
 -   "Promote" the release build on Maven Central

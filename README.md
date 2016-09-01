@@ -30,6 +30,20 @@ If you aren't using Gradle or need more manual control, [see the API docs](https
 
 ## Installation
 
+### Using the Gradle Plugin Portal (Gradle 2.1+)
+
+Add the plugin to the `plugins` section at the top of your Module-level Gradle
+Settings, at `<project dir>/<module name>/build.gradle` (usually
+`<project_dir>/app/build.gradle`):
+
+```groovy
+plugins {
+    id "com.bugsnag.android.gradle" version "2.1.3"
+}
+```
+
+### Using other source repositories
+
 Add this plugin as a dependency in your main *Project Gradle Settings*, at `<project_dir>/build.gradle`:
 
 ```groovy
@@ -44,7 +58,7 @@ buildscript {
 You'll then need to "apply" the plugin by adding the following line to the top of your *Module Gradle Settings*, at `<project_dir>/<module_name>/build.gradle` (usually `<project_dir>/app/build.gradle`).
 
 ```groovy
-apply plugin: 'com.bugsnag.android.gradle'
+apply plugin: com.bugsnag.android.gradle.BugsnagPlugin
 ```
 
 

@@ -3,7 +3,9 @@ plugins {
     id 'groovy'
     id 'com.gradle.plugin-publish' version '0.9.4'
     id 'com.bmuschko.nexus' version '2.3.1'
+    id 'com.jfrog.bintray' version '1.7'
 }
+apply plugin: 'maven-publish'
 
 // Repositories for dependencies
 repositories {
@@ -78,5 +80,34 @@ pluginBundle {
     mavenCoordinates {
         groupId = 'com.bugsnag'
         artifactId = 'bugsnag-android-gradle-plugin'
+    }
+}
+
+publishing {
+    publications {
+        Publication(MavenPublication) {
+            artifact jar
+            groupId 'com.bugsnag'
+            artifactId 'bugsnag-android-gradle-plugin'
+            version "$version"
+        }
+    }
+}
+// Bintray upload
+bintray {
+    user = "$bintray_user"
+    key = "$bintray_api_key"
+    publications = ['Publication']
+    pkg {
+        repo = 'maven'
+        name = 'bugsnag-android-gradle-plugin'
+        userOrg = 'bugsnag'
+        licenses = ['MIT']
+        vcsUrl = 'https://github.com/bugsnag/bugsnag-android-gradle-plugin.git'
+        version {
+            name = "$version"
+            vcsTag = "v$version"
+            attributes = ['gradle-plugin': "com.bugsnag.android.gradle"]
+        }
     }
 }

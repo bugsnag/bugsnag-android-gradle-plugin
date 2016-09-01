@@ -1,3 +1,7 @@
+## 2.1.3 (2016-08-31)
+
+* Fix build error during task execution
+
 ## 2.1.2 (2016-08-30)
 
 * Avoid creating new build UUID for Instant Run builds
