@@ -31,7 +31,9 @@ If you aren't using Gradle or need more manual control, [see the API docs](https
 
 ### Using the Gradle Plugin Portal (Gradle 2.1+)
 
-Add the plugin to your `plugins` section in `<project_dir>/build.gradle`:
+Add the plugin to the `plugins` section at the top of your Module-level Gradle
+Settings, at `<project dir>/<module name>/build.gradle` (usually
+`<project_dir>/app/build.gradle`):
 
 ```groovy
 plugins {
