@@ -4,6 +4,7 @@
 
 * Add option to overwrite a mapping during upload
   [Felipe Duarte](https://github.com/fcduarte)
+  [#25](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/25)
 
 ## 2.1.3 (2016-08-31)
 
