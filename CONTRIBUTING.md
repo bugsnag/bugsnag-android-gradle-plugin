@@ -84,7 +84,7 @@ If you are a project maintainer, you can build and release a new version of
 -   Build and upload the new version
 
     ```shell
-    ./gradlew clean uploadArchives uploadBintray
+    ./gradlew clean uploadArchives bintrayUpload
     ```
 
 -   "Promote" the release build on Maven Central
