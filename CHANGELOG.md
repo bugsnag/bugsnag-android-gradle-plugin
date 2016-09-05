@@ -1,3 +1,9 @@
+## 2.2.1 (2016-09-05)
+
+### Bug fixes
+
+* Restore support for running alongside older versions of HttpClient
+
 ## 2.2.0 (2016-09-05)
 
 ### Enhancements

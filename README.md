@@ -38,7 +38,7 @@ Settings, at `<project dir>/<module name>/build.gradle` (usually
 
 ```groovy
 plugins {
-    id "com.bugsnag.android.gradle" version "2.2.0"
+    id "com.bugsnag.android.gradle" version "2.2.1"
 }
 ```
 
@@ -50,7 +50,7 @@ Add this plugin as a dependency in your main *Project Gradle Settings*, at `<pro
 buildscript {
     dependencies {
         // Add this line to your `dependencies` section
-        classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.2.0'
+        classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.2.1'
     }
 }
 ```
