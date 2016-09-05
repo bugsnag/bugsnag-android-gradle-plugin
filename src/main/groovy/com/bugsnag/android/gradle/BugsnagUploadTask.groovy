@@ -1,6 +1,5 @@
 package com.bugsnag.android.gradle
 
-import groovy.util.XmlParser
 import groovy.xml.Namespace
 
 import org.apache.http.HttpEntity
