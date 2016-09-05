@@ -1,3 +1,10 @@
+## 2.2.0 (2016-09-05)
+
+### Enhancements
+
+* Add option to overwrite a mapping during upload
+  [Felipe Duarte](https://github.com/fcduarte)
+
 ## 2.1.3 (2016-08-31)
 
 * Fix build error during task execution
