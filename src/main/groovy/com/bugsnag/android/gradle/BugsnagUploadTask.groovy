@@ -83,7 +83,7 @@ class BugsnagUploadTask extends DefaultTask {
         }
 
         if (project.bugsnag.overwrite || System.properties['bugsnag.overwrite']) {
-            builder.addPart("overwrite", new StringBody("true"));
+            mpEntity.addPart("overwrite", new StringBody("true"));
         }
         HttpEntity entity = builder.build()
 

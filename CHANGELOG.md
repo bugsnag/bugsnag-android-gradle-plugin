@@ -1,3 +1,17 @@
+## 2.2.1 (2016-09-05)
+
+### Bug fixes
+
+* Restore support for running alongside older versions of HttpClient
+
+## 2.2.0 (2016-09-05)
+
+### Enhancements
+
+* Add option to overwrite a mapping during upload
+  [Felipe Duarte](https://github.com/fcduarte)
+  [#25](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/25)
+
 ## 2.1.3 (2016-08-31)
 
 * Fix build error during task execution
