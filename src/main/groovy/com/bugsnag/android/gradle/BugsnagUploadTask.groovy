@@ -4,6 +4,7 @@ import groovy.xml.Namespace
 
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
+import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
@@ -28,6 +29,8 @@ import org.gradle.api.tasks.TaskAction
     a build.
 */
 class BugsnagUploadTask extends DefaultTask {
+    static final int MAX_RETRY_COUNT = 5
+    static final int TIMEOUT_MILLIS = 10000 // 10 seconds
     String manifestPath
     String applicationId
     File mappingFile
@@ -64,38 +67,74 @@ class BugsnagUploadTask extends DefaultTask {
             return
         }
 
-        // Upload the mapping file to Bugsnag
-        MultipartEntity mpEntity = new MultipartEntity();
-        mpEntity.addPart("proguard", new FileBody(mappingFile));
-        mpEntity.addPart("apiKey", new StringBody(apiKey));
-        mpEntity.addPart("appId", new StringBody(applicationId));
-        mpEntity.addPart("versionCode", new StringBody(versionCode));
-
         // Uniquely identify the build so that we can identify the proguard file.
         def buildUUID = getBuildUUID(metaDataTags, ns)
+
+        // Get the version name
+        def versionName = xml.attributes()[ns.versionName]
+
+        boolean uploadSuccessful = uploadToServer(apiKey, versionCode, buildUUID, versionName)
+
+        def maxRetryCount = getRetryCount()
+        def retryCount = maxRetryCount
+        while (!uploadSuccessful && retryCount > 0) {
+            project.logger.warn(String.format("Retrying Bugsnag upload (%d/%d) ...",
+                                maxRetryCount - retryCount + 1, maxRetryCount))
+            uploadSuccessful = uploadToServer(apiKey, versionCode, buildUUID, versionName)
+            retryCount--
+        }
+    }
+
+    def boolean uploadToServer(apiKey, versionCode, buildUUID, versionName) {
+        MultipartEntity mpEntity = new MultipartEntity()
+        mpEntity.addPart("proguard", new FileBody(mappingFile))
+        mpEntity.addPart("apiKey", new StringBody(apiKey))
+        mpEntity.addPart("appId", new StringBody(applicationId))
+        mpEntity.addPart("versionCode", new StringBody(versionCode))
+
         if(buildUUID != null) {
             mpEntity.addPart("buildUUID", new StringBody(buildUUID));
         }
 
-        // Get the build version
-        def versionName = xml.attributes()[ns.versionName]
         if (versionName != null) {
-            mpEntity.addPart("versionName", new StringBody(versionName));
+            mpEntity.addPart("versionName", new StringBody(versionName))
         }
 
         if (project.bugsnag.overwrite || System.properties['bugsnag.overwrite']) {
-            mpEntity.addPart("overwrite", new StringBody("true"));
+            mpEntity.addPart("overwrite", new StringBody("true"))
         }
 
         // Make the request
         HttpPost httpPost = new HttpPost(project.bugsnag.endpoint)
         httpPost.setEntity(mpEntity);
 
-        HttpClient httpClient = new DefaultHttpClient();
-        HttpResponse response = httpClient.execute(httpPost);
-        if (response.getStatusLine().getStatusCode() != 200) {
-            project.logger.warn("Bugsnag upload failed: " + EntityUtils.toString(response.getEntity(), "utf-8"))
+        RequestConfig requestConfig = RequestConfig.custom()
+            .setSocketTimeout(TIMEOUT_MILLIS)
+            .setConnectTimeout(TIMEOUT_MILLIS)
+            .setConnectionRequestTimeout(TIMEOUT_MILLIS)
+            .build()
+
+        httpPost.setConfig(requestConfig)
+
+        HttpClient httpClient = new DefaultHttpClient()
+
+        int statusCode = 0
+        try {
+            HttpResponse response = httpClient.execute(httpPost)
+            statusCode = response.getStatusLine().getStatusCode()
+        } catch (Exception e) {
+            project.logger.warn(String.format("Bugsnag upload failed: %s", e))
+            return false
         }
+
+        if (statusCode == 200) {
+            return true
+        }
+
+        project.logger.warn(String.format("Bugsnag upload failed with code %d: %s",
+                            statusCode,
+                            EntityUtils.toString(response.getEntity(), "utf-8")))
+        return false
     }
 
     def getApiKey(metaDataTags, ns) {
@@ -125,4 +164,15 @@ class BugsnagUploadTask extends DefaultTask {
 
         return buildUUID
     }
+
+    /**
+     * Get the retry count defined by the user. If none is set the default is 0 (zero).
+     * Also to avoid too much retries the max value is 5 (five).
+     *
+     * @return the retry count
+     */
+    def getRetryCount() {
+        return project.bugsnag.retryCount >= MAX_RETRY_COUNT ? MAX_RETRY_COUNT : project.bugsnag.retryCount
+    }
+
 }

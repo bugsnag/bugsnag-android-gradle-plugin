@@ -9,4 +9,5 @@ class BugsnagPluginExtension {
     def boolean autoUpload = true;
     def boolean autoProguardConfig = true;
     def boolean overwrite = false
+    def int retryCount = 0
 }
