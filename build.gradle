@@ -18,13 +18,15 @@ compileGroovy {
     targetCompatibility = '1.6'
 }
 
+def ApacheHttpComponentsVersion = '4.5.2'
+
 // Build dependencies
 dependencies {
     compile gradleApi()
     compile localGroovy()
-    compile 'com.android.tools.build:gradle:1.5.0'
-    compile 'org.apache.httpcomponents:httpclient:4.3.6'
-    compile 'org.apache.httpcomponents:httpmime:4.3.6'
+    compile 'com.android.tools.build:gradle:2.1.3'
+    compile "org.apache.httpcomponents:httpclient:$ApacheHttpComponentsVersion"
+    compile "org.apache.httpcomponents:httpmime:$ApacheHttpComponentsVersion"
 }
 
 // Maven publishing settings (nexus-maven-plugins)
