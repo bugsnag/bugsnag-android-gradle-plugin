@@ -15,18 +15,18 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
 /**
- Task to upload ProGuard mapping files to Bugsnag.
+    Task to upload ProGuard mapping files to Bugsnag.
 
- Reads meta-data tags from the project's AndroidManifest.xml to extract a
- build UUID (injected by BugsnagManifestTask) and a Bugsnag API Key:
+    Reads meta-data tags from the project's AndroidManifest.xml to extract a
+    build UUID (injected by BugsnagManifestTask) and a Bugsnag API Key:
 
- https://developer.android.com/guide/topics/manifest/manifest-intro.html
- https://developer.android.com/guide/topics/manifest/meta-data-element.html
+    https://developer.android.com/guide/topics/manifest/manifest-intro.html
+    https://developer.android.com/guide/topics/manifest/meta-data-element.html
 
- This task must be called after ProGuard mapping files are generated, so
- it is usually safe to have this be the absolute last task executed during
- a build.
- */
+    This task must be called after ProGuard mapping files are generated, so
+    it is usually safe to have this be the absolute last task executed during
+    a build.
+*/
 class BugsnagUploadTask extends DefaultTask {
     static final int MAX_RETRY_COUNT = 5
     static final int TIMEOUT_MILLIS = 10000 // 10 seconds
@@ -88,11 +88,11 @@ class BugsnagUploadTask extends DefaultTask {
 
     def boolean uploadToServer(apiKey, versionCode, buildUUID, versionName) {
         // Upload the mapping file to Bugsnag
-        MultipartEntityBuilder mpEntity = MultipartEntityBuilder.create();
-        mpEntity.addPart("proguard", new FileBody(mappingFile));
-        mpEntity.addPart("apiKey", new StringBody(apiKey));
-        mpEntity.addPart("appId", new StringBody(applicationId));
-        mpEntity.addPart("versionCode", new StringBody(versionCode));
+        MultipartEntityBuilder mpEntity = MultipartEntityBuilder.create()
+        mpEntity.addPart("proguard", new FileBody(mappingFile))
+        mpEntity.addPart("apiKey", new StringBody(apiKey))
+        mpEntity.addPart("appId", new StringBody(applicationId))
+        mpEntity.addPart("versionCode", new StringBody(versionCode))
 
         if (buildUUID != null) {
             mpEntity.addPart("buildUUID", new StringBody(buildUUID))
@@ -110,7 +110,7 @@ class BugsnagUploadTask extends DefaultTask {
 
         // Make the request
         HttpPost httpPost = new HttpPost(project.bugsnag.endpoint)
-        httpPost.setEntity(entity);
+        httpPost.setEntity(entity)
 
         RequestConfig requestConfig = RequestConfig.custom()
             .setSocketTimeout(TIMEOUT_MILLIS)
