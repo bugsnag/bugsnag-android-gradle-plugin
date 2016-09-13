@@ -1,3 +1,15 @@
+## 2.3.0 (2016-09-13)
+
+### Enhancements
+
+* Support retrying the mapping file upload via `retryCount` config property
+  [Felipe Duarte](https://github.com/fcduarte)
+  [#27](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/27)
+
+### Bug Fixes
+
+* Fix build failure if the Bugsnag server could not be reached
+
 ## 2.2.1 (2016-09-05)
 
 ### Bug fixes
