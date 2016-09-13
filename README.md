@@ -38,7 +38,7 @@ Settings, at `<project dir>/<module name>/build.gradle` (usually
 
 ```groovy
 plugins {
-    id "com.bugsnag.android.gradle" version "2.2.1"
+    id "com.bugsnag.android.gradle" version "2.3.0"
 }
 ```
 
@@ -50,7 +50,7 @@ Add this plugin as a dependency in your main *Project Gradle Settings*, at `<pro
 buildscript {
     dependencies {
         // Add this line to your `dependencies` section
-        classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.2.1'
+        classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.3.0'
     }
 }
 ```
@@ -152,6 +152,14 @@ You can also declare this inside a product flavor. Conflicting values (between m
 
 You may want to do this to speed up build types or flavors where you don't require Bugsnag's functionality. Bugsnag's generation of a UUID for each build into your manifest (see [Build UUIDs](#build-uuids)) causes the resources task to be run for each build, introducing a small delay if your build's changes don't involve resources.
 
+## Retrying the file upload
+To enable retrying the file upload, set the `retryCount` property:
+
+```groovy
+bugsnag {
+    retryCount 5
+}
+```
 
 # Build UUIDs
 
