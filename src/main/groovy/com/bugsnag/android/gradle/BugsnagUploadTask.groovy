@@ -120,9 +120,11 @@ class BugsnagUploadTask extends DefaultTask {
         HttpClient httpClient = new DefaultHttpClient()
 
         int statusCode = 0
+        def responseEntity = null
         try {
             HttpResponse response = httpClient.execute(httpPost)
             statusCode = response.getStatusLine().getStatusCode()
+            responseEntity = EntityUtils.toString(response.getEntity(), "utf-8")
         } catch (Exception e) {
             project.logger.warn(String.format("Bugsnag upload failed: %s", e))
             return false
@@ -133,8 +135,7 @@ class BugsnagUploadTask extends DefaultTask {
         }
 
         project.logger.warn(String.format("Bugsnag upload failed with code %d: %s",
-                            statusCode,
-                            EntityUtils.toString(response.getEntity(), "utf-8")))
+                            statusCode, responseEntity))
         return false
     }
 
