@@ -1,3 +1,9 @@
+## 2.3.1 (2016-09-15)
+
+### Bug Fixes
+
+* Fix error log on upload failures unrelated to server/network outage
+
 ## 2.3.0 (2016-09-13)
 
 ### Enhancements
