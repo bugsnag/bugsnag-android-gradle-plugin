@@ -2,12 +2,12 @@ package com.bugsnag.android.gradle
 
 import groovy.xml.Namespace
 
-import org.apache.http.HttpEntity
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
-import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.HttpPost
-import org.apache.http.entity.mime.MultipartEntityBuilder
+import org.apache.http.params.HttpConnectionParams
+import org.apache.http.params.HttpParams
+import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
 import org.apache.http.entity.mime.content.StringBody
 import org.apache.http.impl.client.DefaultHttpClient
@@ -87,37 +87,32 @@ class BugsnagUploadTask extends DefaultTask {
     }
 
     def boolean uploadToServer(apiKey, versionCode, buildUUID, versionName) {
-        MultipartEntityBuilder builder = new MultipartEntityBuilder()
-        builder.addPart("proguard", new FileBody(mappingFile))
-        builder.addPart("apiKey", new StringBody(apiKey))
-        builder.addPart("appId", new StringBody(applicationId))
-        builder.addPart("versionCode", new StringBody(versionCode))
+        MultipartEntity mpEntity = new MultipartEntity()
+        mpEntity.addPart("proguard", new FileBody(mappingFile))
+        mpEntity.addPart("apiKey", new StringBody(apiKey))
+        mpEntity.addPart("appId", new StringBody(applicationId))
+        mpEntity.addPart("versionCode", new StringBody(versionCode))
 
         if(buildUUID != null) {
-            builder.addPart("buildUUID", new StringBody(buildUUID));
+            mpEntity.addPart("buildUUID", new StringBody(buildUUID));
         }
 
         if (versionName != null) {
-            builder.addPart("versionName", new StringBody(versionName))
+            mpEntity.addPart("versionName", new StringBody(versionName))
         }
 
         if (project.bugsnag.overwrite || System.properties['bugsnag.overwrite']) {
-            builder.addPart("overwrite", new StringBody("true"))
+            mpEntity.addPart("overwrite", new StringBody("true"))
         }
 
         // Make the request
         HttpPost httpPost = new HttpPost(project.bugsnag.endpoint)
-        httpPost.setEntity(builder.build());
-
-        RequestConfig requestConfig = RequestConfig.custom()
-            .setSocketTimeout(TIMEOUT_MILLIS)
-            .setConnectTimeout(TIMEOUT_MILLIS)
-            .setConnectionRequestTimeout(TIMEOUT_MILLIS)
-            .build()
-
-        httpPost.setConfig(requestConfig)
+        httpPost.setEntity(mpEntity);
 
         HttpClient httpClient = new DefaultHttpClient()
+        HttpParams params = httpClient.getParams()
+        HttpConnectionParams.setConnectionTimeout(params, TIMEOUT_MILLIS)
+        HttpConnectionParams.setSoTimeout(params, TIMEOUT_MILLIS)
 
         int statusCode = 0
         def responseEntity = null
