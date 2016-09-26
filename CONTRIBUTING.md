@@ -101,7 +101,7 @@ If you are a project maintainer, you can build and release a new version of
 ### 4. Release to plugins.gradle.com
 
 -   Get the API key from James and [add it to your Gradle configuration](https://plugins.gradle.org/docs/submit)
--   Run `gradle publishPlugins`
+-   Run `./gradlew publishPlugins`
 
 ### 5. Update docs.bugsnag.com
 
