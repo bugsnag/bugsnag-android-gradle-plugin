@@ -89,7 +89,7 @@ publishing {
             artifact jar
             groupId 'com.bugsnag'
             artifactId 'bugsnag-android-gradle-plugin'
-            version "$version"
+            version project.version
         }
     }
 }
@@ -105,8 +105,8 @@ bintray {
         licenses = ['MIT']
         vcsUrl = 'https://github.com/bugsnag/bugsnag-android-gradle-plugin.git'
         version {
-            name = "$version"
-            vcsTag = "v$version"
+            name = project.version
+            vcsTag = "v${project.version}"
             attributes = ['gradle-plugin': "com.bugsnag.android.gradle"]
         }
     }

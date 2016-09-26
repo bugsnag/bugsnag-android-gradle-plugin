@@ -1,3 +1,9 @@
+## 2.3.2 (2016-09-26)
+
+### Bug Fixes
+
+* Reduce dependent version of HttpClient to 4.2.1
+
 ## 2.3.1 (2016-09-15)
 
 ### Bug Fixes
