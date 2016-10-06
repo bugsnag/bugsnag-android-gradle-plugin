@@ -1,10 +1,8 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.gradle.api.BaseVariant
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
-
-import com.android.build.gradle.api.ApplicationVariant
-
 /**
     Task to add an additional ProGuard configuration file (bugsnag.pro)
     which ensures that our required ProGuard settings are applied.
@@ -15,7 +13,7 @@ class BugsnagProguardConfigTask extends DefaultTask {
     static final String PROGUARD_CONFIG_PATH = "build/intermediates/bugsnag/bugsnag.pro"
     static final String PROGUARD_CONFIG_SETTINGS = "-keepattributes LineNumberTable,SourceFile"
 
-    ApplicationVariant applicationVariant
+    BaseVariant applicationVariant
 
     BugsnagProguardConfigTask() {
         super()
