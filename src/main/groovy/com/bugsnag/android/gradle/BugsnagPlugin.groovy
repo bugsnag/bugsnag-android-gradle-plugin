@@ -58,6 +58,13 @@ class BugsnagPlugin implements Plugin<Project> {
                 // The location of the "intermediate" AndroidManifest.xml
                 def manifestPath = variantOutput.processManifest.manifestOutputFile
 
+                // Location where Proguard symbols are output
+                def symbolPath = variantOutput.processResources.textSymbolOutputDir
+                def intermediatePath = null;
+                if (symbolPath != null) {
+                    intermediatePath = symbolPath.parentFile.parentFile
+                }
+
                 // Create a Bugsnag task to add a "Bugsnag recommended proguard settings" file
                 BugsnagProguardConfigTask proguardConfigTask = project.tasks.create("processBugsnag${variantName}Proguard", BugsnagProguardConfigTask)
                 proguardConfigTask.group = GROUP_NAME
@@ -73,12 +80,23 @@ class BugsnagPlugin implements Plugin<Project> {
                 manifestTask.onlyIf { it.shouldRun() }
 
                 // Create a Bugsnag task to upload proguard mapping file
-                BugsnagUploadTask uploadTask = project.tasks.create("uploadBugsnag${variantName}Mapping", BugsnagUploadTask)
+                BugsnagUploadProguardTask uploadTask = project.tasks.create("uploadBugsnag${variantName}Mapping", BugsnagUploadProguardTask)
                 uploadTask.group = GROUP_NAME
                 uploadTask.manifestPath = manifestPath
                 uploadTask.applicationId = variant.applicationId
                 uploadTask.mappingFile = variant.getMappingFile()
                 uploadTask.mustRunAfter variantOutput.packageApplication
+
+                // Create a Bugsnag task to upload NDK mapping file(s)
+                BugsnagUploadNdkTask uploadNdkTask = project.tasks.create("uploadBugsnagNdk${variantName}Mapping", BugsnagUploadNdkTask)
+                uploadNdkTask.group = GROUP_NAME
+                uploadNdkTask.manifestPath = manifestPath
+                uploadNdkTask.applicationId = variant.applicationId
+                uploadNdkTask.intermediatePath = intermediatePath
+                uploadNdkTask.symbolPath = symbolPath
+                uploadNdkTask.variantName = variant.name
+                uploadNdkTask.mustRunAfter variantOutput.packageApplication
+
 
                 // Automatically add the "edit proguard settings" task to the
                 // build process.
@@ -114,6 +132,7 @@ class BugsnagPlugin implements Plugin<Project> {
                 // of a typical build, so we hook into the `assemble` task.
                 if(project.bugsnag.autoUpload) {
                     variant.getAssemble().dependsOn uploadTask
+                    variant.getAssemble().dependsOn uploadNdkTask
                 }
             }
         }
