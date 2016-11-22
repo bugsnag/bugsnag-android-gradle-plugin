@@ -61,6 +61,8 @@ class BugsnagPlugin implements Plugin<Project> {
                 // Location where Proguard symbols are output
                 def symbolPath = variantOutput.processResources.textSymbolOutputDir
                 def intermediatePath = null;
+
+                // TODO: will there always be a symbol path? will it always be in this relative path to the intermediate directory?
                 if (symbolPath != null) {
                     intermediatePath = symbolPath.parentFile.parentFile
                 }

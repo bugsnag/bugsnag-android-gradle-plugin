@@ -26,6 +26,13 @@ class BugsnagUploadProguardTask extends BugsnagUploadAbstractTask {
 
     @TaskAction
     def upload() {
+        // If we haven't enabled proguard for this variant, or the proguard
+        // configuration includes -dontobfuscate, the mapping file
+        // will not exist (but we also won't need it).
+        if (!mappingFile || !mappingFile.exists()) {
+            return
+        }
+
         // Read the API key and Build ID etc..
         super.readManifestFile();
 
