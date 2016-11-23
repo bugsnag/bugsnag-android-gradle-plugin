@@ -52,7 +52,10 @@ class SOMappingProcessor {
                                 writer.print(" " + symbol.filename + " " + symbol.line_number);
                             }
 
-                            writer.println();
+                            // Output a newline if this is not the last symbol
+                            if (symbol != symbols.get(symbols.size() -1)) {
+                                writer.println();
+                            }
                         }
 
                         writer.close();
