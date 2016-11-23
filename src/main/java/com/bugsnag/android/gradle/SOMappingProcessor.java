@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-class NdkMappingFile {
+class SOMappingProcessor {
 
     private static class SharedObjectFilter implements FilenameFilter {
 
@@ -29,9 +29,9 @@ class NdkMappingFile {
         }
     }
 
-    public static File[] GenerateMappingFiles(File inputDirectory, File outputDirectory) {
+    public static SOMappingFile[] GenerateMappingFiles(File inputDirectory, File outputDirectory) {
 
-        List<File> outputFiles = new ArrayList<>();
+        List<SOMappingFile> outputFiles = new ArrayList<>();
 
         for (File archDir : inputDirectory.listFiles()) {
             if (archDir.isDirectory()) {
@@ -57,7 +57,7 @@ class NdkMappingFile {
 
                         writer.close();
 
-                        outputFiles.add(outputFile);
+                        outputFiles.add(new SOMappingFile(sharedObject.getName(), outputFile, arch));
                     } catch (Exception e) {
                         System.out.println("arch = " + arch + "  failed to generate symbols = " + e.getMessage());
                     }
@@ -65,7 +65,7 @@ class NdkMappingFile {
             }
         }
 
-        return outputFiles.toArray(new File[outputFiles.size()]);
+        return outputFiles.toArray(new SOMappingFile[outputFiles.size()]);
     }
 
     private static List<Sym> getSymbols(File f) throws IOException {

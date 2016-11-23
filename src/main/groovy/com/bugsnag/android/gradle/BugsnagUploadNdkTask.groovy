@@ -51,17 +51,18 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
 
         // Create the files to upload
         File intermediateBinaries = new File(binariesFile.absolutePath + File.separator + variantName + File.separator + "obj");
-        File[] files = NdkMappingFile.GenerateMappingFiles(intermediateBinaries, symbolPath)
+        SOMappingFile[] files = SOMappingProcessor.GenerateMappingFiles(intermediateBinaries, symbolPath)
 
         // Read the API key and Build ID etc..
         super.readManifestFile();
 
-        for (File file : files) {
-            project.logger.error("Attempting to upload NDK mapping file " + file.name)
+        for (SOMappingFile file : files) {
+            project.logger.error("Attempting to upload NDK mapping file " + file.mappingFile.name)
 
             MultipartEntity mpEntity = new MultipartEntity()
-            mpEntity.addPart("soMappingFile", new FileBody(file))
-            mpEntity.addPart("arch", new StringBody(file.name))
+            mpEntity.addPart("soMappingFile", new FileBody(file.mappingFile))
+            mpEntity.addPart("arch", new StringBody(file.arch))
+            mpEntity.addPart("sharedObjectName", new StringBody(file.sharedObjectName))
 
             super.uploadMultipartEntity(mpEntity)
         }
