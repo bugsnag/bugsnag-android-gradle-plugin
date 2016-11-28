@@ -34,7 +34,7 @@ class SOMappingProcessor {
         }
     }
 
-    public static SOMappingFile[] GenerateMappingFiles(File inputDirectory, File outputDirectory) {
+    public static SOMappingFile[] GenerateMappingFiles(File inputDirectory, File outputDirectory, File projectDir) {
 
         List<SOMappingFile> outputFiles = new ArrayList<>();
 
@@ -54,7 +54,15 @@ class SOMappingProcessor {
                             writer.print(symbol.getAddress() + " " + symbol.getMethodName());
 
                             if (symbol.getFilename() != null) {
-                                writer.print(" " + symbol.getFilename() + " " + symbol.getLineNumber());
+
+                                // Strip some of the filename
+                                String filename = symbol.getFilename();
+                                if (filename.contains(projectDir.getAbsolutePath())) {
+                                    filename = filename.substring(filename.indexOf(projectDir.getAbsolutePath())
+                                        + projectDir.getAbsolutePath().length());
+                                }
+
+                                writer.print(" " + filename + " " + symbol.getLineNumber());
                             }
 
                             // Output a newline if this is not the last symbol

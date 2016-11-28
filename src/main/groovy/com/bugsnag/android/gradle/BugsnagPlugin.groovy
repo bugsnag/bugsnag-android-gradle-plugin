@@ -97,6 +97,7 @@ class BugsnagPlugin implements Plugin<Project> {
                 uploadNdkTask.intermediatePath = intermediatePath
                 uploadNdkTask.symbolPath = symbolPath
                 uploadNdkTask.variantName = variant.name
+                uploadNdkTask.projectDir = project.projectDir
                 uploadNdkTask.mustRunAfter variantOutput.packageApplication
 
 

@@ -21,6 +21,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
     File intermediatePath
     File symbolPath
     String variantName
+    File projectDir
 
     BugsnagUploadNdkTask() {
         super()
@@ -51,7 +52,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
 
         // Create the files to upload
         File intermediateBinaries = new File(binariesFile.absolutePath + File.separator + variantName + File.separator + "obj");
-        SOMappingFile[] files = SOMappingProcessor.GenerateMappingFiles(intermediateBinaries, symbolPath)
+        SOMappingFile[] files = SOMappingProcessor.GenerateMappingFiles(intermediateBinaries, symbolPath, projectDir)
 
         // Read the API key and Build ID etc..
         super.readManifestFile();
