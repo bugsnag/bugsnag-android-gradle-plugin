@@ -58,8 +58,6 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
         super.readManifestFile();
 
         for (SOMappingFile file : files) {
-            project.logger.error("Attempting to upload NDK mapping file " + file.mappingFile.name)
-
             MultipartEntity mpEntity = new MultipartEntity()
             mpEntity.addPart("soMappingFile", new FileBody(file.mappingFile))
             mpEntity.addPart("arch", new StringBody(file.arch))
