@@ -34,6 +34,8 @@ class SOMappingProcessor {
         }
     }
 
+    private static final String DELIMITER = " | ";
+
     public static SOMappingFile[] GenerateMappingFiles(File inputDirectory, File outputDirectory, File projectDir) {
 
         List<SOMappingFile> outputFiles = new ArrayList<>();
@@ -51,7 +53,7 @@ class SOMappingProcessor {
                         PrintWriter writer = new PrintWriter(outputFile.getAbsolutePath(), "UTF-8");
 
                         for (SOSymbol symbol : symbols) {
-                            writer.print(symbol.getAddress() + " " + symbol.getMethodName());
+                            writer.print(symbol.getAddress() + DELIMITER + symbol.getMethodName());
 
                             if (symbol.getFilename() != null) {
 
@@ -62,7 +64,7 @@ class SOMappingProcessor {
                                         + projectDir.getAbsolutePath().length());
                                 }
 
-                                writer.print(" " + filename + " " + symbol.getLineNumber());
+                                writer.print(DELIMITER + filename + DELIMITER + symbol.getLineNumber());
                             }
 
                             // Output a newline if this is not the last symbol
