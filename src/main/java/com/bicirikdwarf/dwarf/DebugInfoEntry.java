@@ -1,7 +1,7 @@
 package com.bicirikdwarf.dwarf;
 
-import com.bicirikdwarf.utils.ElfUtils;
-import com.bicirikdwarf.utils.Leb128;
+import static com.bicirikdwarf.utils.ElfUtils.debugging;
+import static com.bicirikdwarf.utils.ElfUtils.log;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -9,8 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.bicirikdwarf.utils.ElfUtils.debugging;
-import static com.bicirikdwarf.utils.ElfUtils.log;
+import com.bicirikdwarf.utils.ElfUtils;
+import com.bicirikdwarf.utils.Leb128;
 
 public class DebugInfoEntry {
 	public int address;
