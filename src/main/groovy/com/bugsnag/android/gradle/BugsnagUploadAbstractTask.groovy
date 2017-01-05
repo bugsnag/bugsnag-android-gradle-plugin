@@ -24,7 +24,7 @@ import org.gradle.api.DefaultTask
     it is usually safe to have this be the absolute last task executed during
     a build.
 */
-class BugsnagUploadAbstractTask extends DefaultTask {
+abstract class BugsnagUploadAbstractTask extends DefaultTask {
     static final int MAX_RETRY_COUNT = 5
     static final int TIMEOUT_MILLIS = 10000 // 10 seconds
     String manifestPath
