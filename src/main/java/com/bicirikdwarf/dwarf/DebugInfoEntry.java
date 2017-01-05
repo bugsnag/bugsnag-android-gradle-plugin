@@ -30,7 +30,7 @@ public class DebugInfoEntry {
 	}
 
 	public static DebugInfoEntry parse(ByteBuffer buffer, CompilationUnit cu, DebugInfoEntry parent) {
-		ElfUtils.dumpNextNBytes(buffer, 8);
+		ElfUtils.dumpNextNBytes(buffer, 20);
 		DebugInfoEntry result = new DebugInfoEntry(cu, parent);
 
 		int address = buffer.position();
@@ -51,6 +51,9 @@ public class DebugInfoEntry {
 		for (AbbrevEntry entry : abbrev.entries) {
 			Object value = cu.getAttribValue(buffer, entry.form);
 
+			if(value == null)
+				throw new IllegalArgumentException();
+			
 			result.attribs.put(entry.at, value);
 
 			if (debugging())

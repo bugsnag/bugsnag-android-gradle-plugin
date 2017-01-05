@@ -1,6 +1,7 @@
 package com.bicirikdwarf.utils;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 // taken from:
 // http://stackoverflow.com/questions/9883472/is-it-possible-to-have-an-unsigned-bytebuffer-in-java
@@ -37,6 +38,15 @@ public class Unsigned {
 
 	public static void putU16(ByteBuffer bb, int position, int value) {
 		bb.putShort(position, (short) (value & 0xffff));
+	}
+
+	public static int getU24(ByteBuffer bb) {
+		byte[] bytes = new byte[] { bb.get(), bb.get(), bb.get() };
+
+		if (bb.order() == ByteOrder.BIG_ENDIAN)
+			return bytes[2] << 16 | bytes[1] << 8 | bytes[0];
+		else
+			return bytes[0] << 16 | bytes[1] << 8 | bytes[2];
 	}
 
 	// ---------------------------------------------------------------

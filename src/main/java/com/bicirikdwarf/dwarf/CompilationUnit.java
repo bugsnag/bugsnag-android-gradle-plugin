@@ -31,7 +31,7 @@ public class CompilationUnit {
 	}
 
 	public void parse(ByteBuffer buffer) {
-		ElfUtils.dumpNextNBytes(buffer, 16);
+		ElfUtils.dumpNextNBytes(buffer, 32);
 
 		length = buffer.getInt();
 		version = buffer.getShort();

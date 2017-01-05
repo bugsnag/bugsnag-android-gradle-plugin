@@ -66,9 +66,7 @@ public class Elf32Context {
 				Shdr shdr = shdrs.get(i);
 				shdrsByName.put(name, shdr);
 				if (debugging())
-					log("Section n:" + name + " off:"
-							+ Integer.toHexString((int) shdr.sh_offset)
-							+ " addr:"
+					log("Section n:" + name + " off:" + Integer.toHexString((int) shdr.sh_offset) + " addr:"
 							+ Integer.toHexString((int) shdr.sh_addr) + " s:"
 							+ Integer.toHexString((int) shdr.sh_size));
 			}
@@ -98,8 +96,7 @@ public class Elf32Context {
 				symbols.add(symbol);
 
 				if (debugging())
-					log("Symbol at:" + Integer.toHexString(position) + " n:"
-							+ name + "  s:" + symbol.st_info);
+					log("Symbol at:" + Integer.toHexString(position) + " n:" + name + "  s:" + symbol.st_info);
 			}
 
 		}
@@ -173,13 +170,11 @@ public class Elf32Context {
 		return ElfUtils.cloneSection(elfBuffer, (int) shdr.sh_offset, (int) shdr.sh_size);
 	}
 
-	public ByteBuffer getSectionBufferByName(String sectionName)
-			throws InvalidParameterException {
+	public ByteBuffer getSectionBufferByName(String sectionName) throws InvalidParameterException {
 		Shdr shdr = getSectionByName(sectionName);
 
 		if (shdr == null)
-			throw new InvalidParameterException(sectionName
-					+ " section not found.");
+			throw new InvalidParameterException(sectionName + " section not found.");
 
 		return getSectionBuffer(shdr);
 	}
