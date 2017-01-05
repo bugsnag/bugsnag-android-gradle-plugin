@@ -6,7 +6,7 @@ import com.bicirikdwarf.dwarf.DebugLineEntry;
 import com.bicirikdwarf.dwarf.DwAtType;
 import com.bicirikdwarf.dwarf.Dwarf32Context;
 import com.bicirikdwarf.elf.Elf32Context;
-import com.bicirikdwarf.elf.ElfSymbol;
+import com.bicirikdwarf.elf.Sym;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -105,7 +105,7 @@ class SOMappingProcessor {
         Map<Long, SOSymbol> symbols = new HashMap<>();
 
         // Create shared object symbols for all the elf symbols
-        for (ElfSymbol symbol : elf.getSymbols()) {
+        for (Sym symbol : elf.getSymbols()) {
             SOSymbol so = new SOSymbol(symbol);
             findCompileUnitInformation(dwarf.getCompilationUnits(), so);
 
@@ -152,8 +152,8 @@ class SOMappingProcessor {
     private static void cleanElfSymbols(Elf32Context elf) {
 
         // Sort the elf Entries by Address
-        elf.getSymbols().sort(new Comparator<ElfSymbol>() {
-            public int compare(ElfSymbol obj1, ElfSymbol obj2) {
+        elf.getSymbols().sort(new Comparator<Sym>() {
+            public int compare(Sym obj1, Sym obj2) {
                 return Long.compare(obj1.st_value, obj2.st_value);
             }
         });
@@ -164,7 +164,7 @@ class SOMappingProcessor {
         // $d - At the start of a region of data.
         int index = 0;
         while (index < elf.getSymbols().size()) {
-            ElfSymbol current = elf.getSymbols().get(index);
+            Sym current = elf.getSymbols().get(index);
 
             if (current.symbol_name.equals("$a")
                 || current.symbol_name.equals("$t")
@@ -185,8 +185,8 @@ class SOMappingProcessor {
         }
     }
 
-    private static void findMethodName(List<ElfSymbol> elfSymbols, SOSymbol so) {
-        for (ElfSymbol symbol : elfSymbols) {
+    private static void findMethodName(List<Sym> elfSymbols, SOSymbol so) {
+        for (Sym symbol : elfSymbols) {
 
             if (symbol.st_value <= so.getAddress()
                 && symbol.st_value + symbol.st_size > so.getAddress()) {

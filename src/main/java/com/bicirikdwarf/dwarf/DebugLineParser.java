@@ -12,8 +12,6 @@ details.  */
 
 package com.bicirikdwarf.dwarf;
 
-// import gnu.classpath.Configuration;
-
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;

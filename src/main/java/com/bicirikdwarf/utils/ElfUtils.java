@@ -18,8 +18,6 @@ public class ElfUtils {
 
 	/**
 	 * Parses next null-terminated string.
-     * @param buffer the buffer to get string from
-     * @return the string
 	 */
 	public static String getNTString(ByteBuffer buffer) {
 		StringBuilder result = new StringBuilder();
@@ -61,9 +59,9 @@ public class ElfUtils {
 
 	/**
 	 * Please note that this moved the source buffer forward.
-	 * @param source The buffer to get bytes from
-	 * @param count the number of bytes to get
-	 * @return the byte buffer
+	 * @param source
+	 * @param count
+	 * @return
 	 */
 	public static ByteBuffer getByteBuffer( ByteBuffer source, int count ) {
 		byte [] data = new byte[count];
@@ -72,7 +70,7 @@ public class ElfUtils {
 		result.order(source.order());
 		return result;
 	}
-
+	
 	public static ByteBuffer cloneSection( ByteBuffer source, int start, int count ) {
 		int oldPosition = source.position();
 		source.position(start);

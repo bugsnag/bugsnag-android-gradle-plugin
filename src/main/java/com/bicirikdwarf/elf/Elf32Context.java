@@ -1,6 +1,7 @@
 package com.bicirikdwarf.elf;
 
-import com.bicirikdwarf.utils.ElfUtils;
+import static com.bicirikdwarf.utils.ElfUtils.debugging;
+import static com.bicirikdwarf.utils.ElfUtils.log;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -11,8 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.bicirikdwarf.utils.ElfUtils.debugging;
-import static com.bicirikdwarf.utils.ElfUtils.log;
+import com.bicirikdwarf.utils.ElfUtils;
 
 // Note: Java does not support unsigned types. So we have to use one
 // larger type for unsigned mappings. (@see Unsigned) class properly handles
@@ -30,7 +30,7 @@ public class Elf32Context {
 	final ByteBuffer elfBuffer;
 
 	Ehdr ehdr;
-	List<ElfSymbol> symbols;
+	List<Sym> symbols;
 	List<Shdr> shdrs;
 	Map<String, Shdr> shdrsByName;
 	String buildNote;
@@ -89,7 +89,7 @@ public class Elf32Context {
 		while (symtabBuffer.remaining() >= 16) {
 			int position = symtabBuffer.position();
 
-            ElfSymbol symbol = new ElfSymbol();
+			Sym symbol = new Sym();
 			symbol.parse(symtabBuffer);
 
 			String name = readString(symbol.st_name);
@@ -165,7 +165,7 @@ public class Elf32Context {
 		return shdrsByName.get(name);
 	}
 
-	public List<ElfSymbol> getSymbols() {
+	public List<Sym> getSymbols() {
 		return symbols;
 	}
 

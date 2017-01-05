@@ -1,7 +1,7 @@
 package com.bugsnag.android.gradle;
 
 import com.bicirikdwarf.dwarf.DebugLineEntry;
-import com.bicirikdwarf.elf.ElfSymbol;
+import com.bicirikdwarf.elf.Sym;
 
 /**
  * The Symbol information to send to Bugsnag
@@ -12,7 +12,7 @@ public class SOSymbol {
     private String filename;
     private int lineNumber;
 
-    public SOSymbol(ElfSymbol symbol) {
+    public SOSymbol(Sym symbol) {
         address = symbol.st_value;
         methodName = symbol.symbol_name;
     }
