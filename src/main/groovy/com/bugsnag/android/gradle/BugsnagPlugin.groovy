@@ -98,6 +98,8 @@ class BugsnagPlugin implements Plugin<Project> {
                 uploadNdkTask.symbolPath = symbolPath
                 uploadNdkTask.variantName = variant.name
                 uploadNdkTask.projectDir = project.projectDir
+                uploadNdkTask.projectRoot = project.rootDir
+                uploadNdkTask.abi = project.getProperties().get("android.injected.build.abi")
                 uploadNdkTask.mustRunAfter variantOutput.packageApplication
 
 

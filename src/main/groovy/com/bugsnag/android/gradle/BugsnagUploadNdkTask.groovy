@@ -1,5 +1,8 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.core.Toolchain
+import com.android.build.gradle.internal.ndk.NdkHandler
 import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
 import org.apache.http.entity.mime.content.StringBody
@@ -22,6 +25,8 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
     File symbolPath
     String variantName
     File projectDir
+    File projectRoot
+    String abi
 
     BugsnagUploadNdkTask() {
         super()
@@ -34,6 +39,25 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
         if (intermediatePath == null) {
             return
         }
+
+        project.logger.error("ABI is: " + abi)
+        Abi a = Abi.getByName(abi)
+
+        project.logger.error("Obj ABI is: " + a.toString())
+
+        try {
+            project.logger.error("getting path, projectRoot = " + projectRoot)
+
+            NdkHandler handler = new NdkHandler(projectRoot, null, Toolchain.getDefault().name, "4.9")
+            String ndkpath = handler.getStripExecutable(a)
+            project.logger.error("NdkHandlerPath = " + ndkpath)
+
+        } catch (Throwable ex) {
+            project.logger.error("Error " + ex.message)
+            ex.printStackTrace()
+        }
+
+
 
         // Look for the shared objects in likely folders
         File binariesFile = null;
@@ -66,4 +90,6 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
             super.uploadMultipartEntity(mpEntity)
         }
     }
+
+
 }
