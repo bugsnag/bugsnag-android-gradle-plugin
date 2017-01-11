@@ -1,11 +1,11 @@
 package com.bugsnag.android.gradle
 
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.api.ApplicationVariant
-
+import com.android.build.gradle.internal.core.Toolchain
+import com.android.build.gradle.internal.dsl.BuildType
+import org.gradle.api.Plugin
+import org.gradle.api.Project
 /**
  * Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.
  *
@@ -98,10 +98,9 @@ class BugsnagPlugin implements Plugin<Project> {
                 uploadNdkTask.symbolPath = symbolPath
                 uploadNdkTask.variantName = variant.name
                 uploadNdkTask.projectDir = project.projectDir
-                uploadNdkTask.projectRoot = project.rootDir
-                uploadNdkTask.abi = project.getProperties().get("android.injected.build.abi")
+                uploadNdkTask.rootDir = project.rootDir
+                uploadNdkTask.toolchain = getCmakeToolchain(project, variant)
                 uploadNdkTask.mustRunAfter variantOutput.packageApplication
-
 
                 // Automatically add the "edit proguard settings" task to the
                 // build process.
@@ -141,5 +140,82 @@ class BugsnagPlugin implements Plugin<Project> {
                 }
             }
         }
+    }
+
+    /**
+     * Gets the buildchain that is setup for cmake
+     * @param project The project to check
+     * @param variant The variant to check
+     * @return The buildchain for cmake (or Toolchain.default if not found)
+     */
+    private static String getCmakeToolchain(Project project, ApplicationVariant variant) {
+
+        String toolchain = null
+
+        // First check the selected build type to see if there are cmake arguments
+        TreeSet buildTypes = project.android.buildTypes.store
+        BuildType b = findNode(buildTypes, variant.baseName)
+
+        if (b != null
+            && b.externalNativeBuildOptions != null
+            && b.externalNativeBuildOptions.cmake != null
+            && b.externalNativeBuildOptions.cmake.arguments != null) {
+
+            ArrayList<String> args = b.externalNativeBuildOptions.cmake.arguments
+            toolchain = getToolchain(args)
+        }
+
+        // Next check to see if there are arguments in the default config section
+        if (toolchain == null) {
+            if (project.android.defaultConfig.externalNativeBuildOptions != null
+                && project.android.defaultConfig.externalNativeBuildOptions.cmake != null
+                && project.android.defaultConfig.externalNativeBuildOptions.cmake.arguments != null) {
+
+                ArrayList<String> args = project.android.defaultConfig.externalNativeBuildOptions.cmake.arguments
+                for (String arg : args ) {
+                    toolchain = getToolchain(args)
+                }
+            }
+        }
+
+        // Default to Toolchain.default if not found so far
+        if (toolchain == null) {
+            toolchain = Toolchain.default.name
+        }
+
+        return toolchain
+    }
+
+    /**
+     * Looks for an "ANDROID_TOOLCHAIN" argument in a list of cmake arguments
+     * @param args The cmake args
+     * @return the value of the "ANDROID_TOOLCHAIN" argument, or null if not found
+     */
+    private static String getToolchain(ArrayList<String> args) {
+        for (String arg : args ) {
+            if (arg.startsWith("-DANDROID_TOOLCHAIN")) {
+                return arg.substring(arg.indexOf("=") + 1).trim()
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Finds the given build type in a TreeSet of buildtypes
+     * @param set The TreeSet of build types
+     * @param name The name of the buildtype to search for
+     * @return The buildtype, or null if not found
+     */
+    private static BuildType findNode(TreeSet<BuildType> set, String name) {
+
+        Iterator<BuildType> iterator = set.iterator();
+        while(iterator.hasNext()) {
+            BuildType node = iterator.next();
+            if(node.getName().equals(name))
+                return node;
+        }
+
+        return null;
     }
 }
