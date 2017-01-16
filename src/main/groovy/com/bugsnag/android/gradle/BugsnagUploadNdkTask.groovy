@@ -59,7 +59,6 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
 
         // Create the files to upload
         File intermediateBinaries = new File(binariesFile.absolutePath + File.separator + variantName + File.separator + "obj")
-        List<SOMappingFile> outputFiles = new ArrayList<SOMappingFile>()
 
         for (File archDir : intermediateBinaries.listFiles()) {
             if (archDir.isDirectory()) {
@@ -130,6 +129,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
         mpEntity.addPart("soMappingFile", new FileBody(mappingFile))
         mpEntity.addPart("arch", new StringBody(arch))
         mpEntity.addPart("sharedObjectName", new StringBody(sharedObjectName))
+        mpEntity.addPart("relativePath", new StringBody(projectDir.toString()))
 
         super.uploadMultipartEntity(mpEntity)
     }
