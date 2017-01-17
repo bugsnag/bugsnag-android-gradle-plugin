@@ -43,24 +43,29 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
         File binariesFile = null;
         for (File intDir : intermediatePath.listFiles()) {
             if (intDir.name.equals("cmake")) { // CMake
-                binariesFile = intDir;
+                binariesFile = new File(intDir.absolutePath + File.separator + variantName + File.separator + "obj")
             } else if (intDir.name.equals("binaries")) { // Experimental
-                binariesFile = intDir;
-            } // TODO: where do the build-ndk files get output?
+                binariesFile = new File(intDir.absolutePath + File.separator + variantName + File.separator + "obj")
+            }
         }
 
         if (binariesFile == null) {
-            project.logger.error("Unable to locate correct path to intermediate binaries under " + intermediatePath.absolutePath)
+            // Check to see if there an 'obj/local' folder in the project for ndk-build setup
+            File objDir = new File(projectDir.toString() + File.separator + "obj" + File.separator + "local");
+            if (objDir.exists()) {
+                binariesFile = objDir;
+            }
+        }
+
+        if (binariesFile == null) {
+            project.logger.error("Unable to locate correct path to intermediate binaries")
             return
         }
 
         // Read the API key and Build ID etc..
         super.readManifestFile();
 
-        // Create the files to upload
-        File intermediateBinaries = new File(binariesFile.absolutePath + File.separator + variantName + File.separator + "obj")
-
-        for (File archDir : intermediateBinaries.listFiles()) {
+        for (File archDir : binariesFile.listFiles()) {
             if (archDir.isDirectory()) {
                 String arch = archDir.getName();
 
@@ -98,18 +103,23 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
 
             try {
                 File outputFile = new File(symbolPath.getAbsolutePath() + File.separator + arch + ".txt");
+                File errorOutputFile = new File(symbolPath.getAbsolutePath() + File.separator + arch + ".error.txt");
 
                 // Call objdump, redirecting output to the output file
                 ProcessBuilder builder = new ProcessBuilder(objDumpPath.toString(), "--disassemble", "--demangle", "--line-numbers", "--section=.text", sharedObject.toString())
                 builder.redirectOutput(outputFile)
+                builder.redirectError(errorOutputFile)
                 Process process = builder.start()
-                while (process.alive) {
-                    Thread.sleep(100)
-                }
+                process.waitFor()
 
-                return outputFile
+                if (process.exitValue() == 0) {
+                    return outputFile
+                } else {
+                    project.logger.error("failed to generate symbols for " + arch + ", see " + errorOutputFile.toString() + " for more details");
+                    return null
+                }
             } catch (Exception e) {
-                project.logger.error("arch = " + arch + "  failed to generate symbols = " + e.getMessage());
+                project.logger.error("failed to generate symbols for " + arch + ": "+ e.getMessage());
             }
         } else {
             project.logger.error("Unable to upload NDK symbols: Could not find objdump location for " + arch)

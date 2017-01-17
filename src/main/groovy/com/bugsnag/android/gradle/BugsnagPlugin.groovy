@@ -62,7 +62,6 @@ class BugsnagPlugin implements Plugin<Project> {
                 def symbolPath = variantOutput.processResources.textSymbolOutputDir
                 def intermediatePath = null;
 
-                // TODO: will there always be a symbol path? will it always be in this relative path to the intermediate directory?
                 if (symbolPath != null) {
                     intermediatePath = symbolPath.parentFile.parentFile
                 }
