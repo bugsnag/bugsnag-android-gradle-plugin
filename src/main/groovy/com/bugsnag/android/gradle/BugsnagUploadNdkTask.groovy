@@ -6,6 +6,10 @@ import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
 import org.apache.http.entity.mime.content.StringBody
 import org.gradle.api.tasks.TaskAction
+
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+
 /**
     Task to upload shared object mapping files to Bugsnag.
 
@@ -107,10 +111,15 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
 
                 // Call objdump, redirecting output to the output file
                 ProcessBuilder builder = new ProcessBuilder(objDumpPath.toString(), "--disassemble", "--demangle", "--line-numbers", "--section=.text", sharedObject.toString())
-                builder.redirectOutput(outputFile)
                 builder.redirectError(errorOutputFile)
                 Process process = builder.start()
-                process.waitFor()
+
+                InputStream stdout = process.getInputStream();
+                BufferedReader outReader = new BufferedReader (new InputStreamReader(stdout));
+
+                if (!outPutSymbolFile(outReader, outputFile, arch)) {
+                    return null;
+                }
 
                 if (process.exitValue() == 0) {
                     return outputFile
@@ -126,6 +135,69 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
         }
 
         return null
+    }
+
+    /**
+     * Outputs the contents of the outReader from the objdump command to the outputFile
+     * Removes redundant address lines to minimize file size
+     *
+     * @param outReader The objdump output
+     * @param outputFile The file to write to
+     * @param arch The arch of the shared object being analysed
+     * @return true if the file was written successfully, else false
+     * @return true if the file was written successfully, else false
+     */
+    private boolean outPutSymbolFile(BufferedReader outReader, File outputFile, String arch) {
+        // Output the file from stdout
+        try {
+            FileOutputStream is = new FileOutputStream(outputFile)
+            OutputStreamWriter osw = new OutputStreamWriter(is)
+            Writer writer = new BufferedWriter(osw)
+
+            Pattern addressPattern = Pattern.compile("\\s+([0-9a-f]+):.*", Pattern.CASE_INSENSITIVE);
+            boolean justSeenAddress = false;
+            String previousAddress = null;
+
+            // Loop to remove redundant address lines (just keep the first and last addresses of each block)
+            String line = outReader.readLine()
+            while (line != null) {
+
+                // Check to see if the current line is an address
+                Matcher addressMatcher = addressPattern.matcher(line);
+                if (addressMatcher.matches()) {
+
+                    // Only output the line if this is the start of a block of addresses
+                    if (!justSeenAddress) {
+                        writer.writeLine(line)
+                        previousAddress = null;
+                    } else {
+                        previousAddress = line;
+                    }
+
+                    justSeenAddress = true;
+                } else {
+
+                    // If this is the end of a block of addresses then output the last address
+                    if (justSeenAddress && previousAddress != null) {
+                        writer.writeLine(previousAddress)
+                    }
+
+                    writer.writeLine(line)
+
+                    previousAddress = null;
+                    justSeenAddress = false;
+                }
+
+                line = outReader.readLine()
+            }
+
+            writer.close();
+        } catch (IOException e) {
+            project.logger.error("failed to write symbols for " + arch + ": " + e.getMessage());
+            return false
+        }
+
+        return true
     }
 
     /**
