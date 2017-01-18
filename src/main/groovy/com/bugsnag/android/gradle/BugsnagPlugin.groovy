@@ -88,18 +88,22 @@ class BugsnagPlugin implements Plugin<Project> {
                 uploadTask.mappingFile = variant.getMappingFile()
                 uploadTask.mustRunAfter variantOutput.packageApplication
 
-                // Create a Bugsnag task to upload NDK mapping file(s)
-                BugsnagUploadNdkTask uploadNdkTask = project.tasks.create("uploadBugsnagNdk${variantName}Mapping", BugsnagUploadNdkTask)
-                uploadNdkTask.group = GROUP_NAME
-                uploadNdkTask.manifestPath = manifestPath
-                uploadNdkTask.applicationId = variant.applicationId
-                uploadNdkTask.intermediatePath = intermediatePath
-                uploadNdkTask.symbolPath = symbolPath
-                uploadNdkTask.variantName = variant.name
-                uploadNdkTask.projectDir = project.projectDir
-                uploadNdkTask.rootDir = project.rootDir
-                uploadNdkTask.toolchain = getCmakeToolchain(project, variant)
-                uploadNdkTask.mustRunAfter variantOutput.packageApplication
+                BugsnagUploadNdkTask uploadNdkTask
+                if (project.bugsnag.ndk) {
+                    // Create a Bugsnag task to upload NDK mapping file(s)
+                    uploadNdkTask = project.tasks.create("uploadBugsnagNdk${variantName}Mapping", BugsnagUploadNdkTask)
+                    uploadNdkTask.group = GROUP_NAME
+                    uploadNdkTask.manifestPath = manifestPath
+                    uploadNdkTask.applicationId = variant.applicationId
+                    uploadNdkTask.intermediatePath = intermediatePath
+                    uploadNdkTask.symbolPath = symbolPath
+                    uploadNdkTask.variantName = variant.name
+                    uploadNdkTask.projectDir = project.projectDir
+                    uploadNdkTask.rootDir = project.rootDir
+                    uploadNdkTask.toolchain = getCmakeToolchain(project, variant)
+                    uploadNdkTask.sharedObjectPath = project.bugsnag.sharedObjectPath
+                    uploadNdkTask.mustRunAfter variantOutput.packageApplication
+                }
 
                 // Automatically add the "edit proguard settings" task to the
                 // build process.
@@ -135,7 +139,10 @@ class BugsnagPlugin implements Plugin<Project> {
                 // of a typical build, so we hook into the `assemble` task.
                 if(project.bugsnag.autoUpload) {
                     variant.getAssemble().dependsOn uploadTask
-                    variant.getAssemble().dependsOn uploadNdkTask
+
+                    if (project.bugsnag.ndk) {
+                        variant.getAssemble().dependsOn uploadNdkTask
+                    }
                 }
             }
         }

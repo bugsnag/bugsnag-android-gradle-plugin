@@ -30,6 +30,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
     File projectDir
     File rootDir
     String toolchain
+    String sharedObjectPath
 
     BugsnagUploadNdkTask() {
         super()
@@ -43,21 +44,33 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
             return
         }
 
-        // Look for the shared objects in likely folders
         File binariesFile = null;
-        for (File intDir : intermediatePath.listFiles()) {
-            if (intDir.name.equals("cmake")) { // CMake
-                binariesFile = new File(intDir.absolutePath + File.separator + variantName + File.separator + "obj")
-            } else if (intDir.name.equals("binaries")) { // Experimental
-                binariesFile = new File(intDir.absolutePath + File.separator + variantName + File.separator + "obj")
-            }
-        }
 
-        if (binariesFile == null) {
-            // Check to see if there an 'obj/local' folder in the project for ndk-build setup
-            File objDir = new File(projectDir.toString() + File.separator + "obj" + File.separator + "local");
+        // See if the sharedObjectPath setting has been provided
+        if (sharedObjectPath != null) {
+            File objDir = new File(projectDir.toString() + File.separator + sharedObjectPath);
             if (objDir.exists()) {
                 binariesFile = objDir;
+            } else {
+                project.logger.error("Path " + objDir.absolutePath + " not found when looking for shared objects")
+                return
+            }
+        } else {
+            // Look for the shared objects in likely folders
+            for (File intDir : intermediatePath.listFiles()) {
+                if (intDir.name.equals("cmake")) { // CMake
+                    binariesFile = new File(intDir.absolutePath + File.separator + variantName + File.separator + "obj")
+                } else if (intDir.name.equals("binaries")) { // Experimental
+                    binariesFile = new File(intDir.absolutePath + File.separator + variantName + File.separator + "obj")
+                }
+            }
+
+            if (binariesFile == null) {
+                // Check to see if there an 'obj/local' folder in the project for ndk-build setup
+                File objDir = new File(projectDir.toString() + File.separator + "obj" + File.separator + "local");
+                if (objDir.exists()) {
+                    binariesFile = objDir;
+                }
             }
         }
 
@@ -69,11 +82,13 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
         // Read the API key and Build ID etc..
         super.readManifestFile();
 
+        boolean sharedObjectFound = false
         for (File archDir : binariesFile.listFiles()) {
             if (archDir.isDirectory()) {
                 String arch = archDir.getName();
 
                 for (File sharedObject : archDir.listFiles(new SharedObjectFilter())) {
+                    sharedObjectFound = true
                     File outputFile = createSymbolsForSharedObject(sharedObject, arch)
 
                     if (outputFile != null) {
@@ -81,6 +96,10 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
                     }
                 }
             }
+        }
+
+        if (!sharedObjectFound) {
+            project.logger.error("No shared objects found in " + binariesFile.absolutePath)
         }
     }
 
