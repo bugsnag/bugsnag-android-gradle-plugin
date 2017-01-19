@@ -230,7 +230,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
         mpEntity.addPart("soMappingFile", new FileBody(mappingFile))
         mpEntity.addPart("arch", new StringBody(arch))
         mpEntity.addPart("sharedObjectName", new StringBody(sharedObjectName))
-        mpEntity.addPart("relativePath", new StringBody(projectDir.toString()))
+        mpEntity.addPart("projectRoot", new StringBody(projectDir.toString()))
 
         super.uploadMultipartEntity(mpEntity)
     }
