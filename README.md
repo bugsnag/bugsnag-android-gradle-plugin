@@ -139,6 +139,27 @@ android {
 }
 ```
 
+## NDK Support
+
+Bugsnag supports uploading NDK shared object symbol mappings as well as ProGuard mappings. If you are using the Native Development Kit, enable symbol upload as follows:
+
+```groovy
+bugsnag {
+  ndk true
+}
+```
+
+If `autoProguardConfig` is enabled, this adds additional options required for NDK support:
+
+```
+-keep class com.bugsnag.android.NativeInterface { *; }
+-keep class com.bugsnag.android.Breadcrumbs { *; }
+-keep class com.bugsnag.android.Breadcrumbs$Breadcrumb { *; }
+-keep class com.bugsnag.android.BreadcrumbType { *; }
+-keep class com.bugsnag.android.Severity { *; }
+-keep class com.bugsnag.android.ndk.BugsnagObserver { *; }
+```
+
 ## Overwrite mapping file
 To overwrite a mapping file, you can set the `overwrite` property as follows:
 

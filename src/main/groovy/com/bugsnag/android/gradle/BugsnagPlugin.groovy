@@ -70,6 +70,7 @@ class BugsnagPlugin implements Plugin<Project> {
                 BugsnagProguardConfigTask proguardConfigTask = project.tasks.create("processBugsnag${variantName}Proguard", BugsnagProguardConfigTask)
                 proguardConfigTask.group = GROUP_NAME
                 proguardConfigTask.applicationVariant = variant
+                proguardConfigTask.useNdk = project.bugsnag.ndk
 
                 // Create a Bugsnag task to add a build UUID to AndroidManifest.xml
                 // This task must be called after "process${variantName}Manifest", since it

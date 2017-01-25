@@ -14,6 +14,16 @@ import com.android.build.gradle.api.ApplicationVariant
 class BugsnagProguardConfigTask extends DefaultTask {
     static final String PROGUARD_CONFIG_PATH = "build/intermediates/bugsnag/bugsnag.pro"
     static final String PROGUARD_CONFIG_SETTINGS = "-keepattributes LineNumberTable,SourceFile"
+    static final String PROGUARD_NDK_SETTINGS = """
+    -keep class com.bugsnag.android.NativeInterface { *; }
+    -keep class com.bugsnag.android.Breadcrumbs { *; }
+    -keep class com.bugsnag.android.Breadcrumbs$Breadcrumb { *; }
+    -keep class com.bugsnag.android.BreadcrumbType { *; }
+    -keep class com.bugsnag.android.Severity { *; }
+    -keep class com.bugsnag.android.ndk.BugsnagObserver { *; }
+    """.toString()
+
+    boolean useNdk = false
 
     ApplicationVariant applicationVariant
 
@@ -34,6 +44,9 @@ class BugsnagProguardConfigTask extends DefaultTask {
         FileWriter fr = new FileWriter(file.path)
         fr.write(PROGUARD_CONFIG_SETTINGS)
         fr.write("\n")
+        if (useNdk) {
+            fr.write(PROGUARD_NDK_SETTINGS)
+        }
         fr.close()
 
         // Add this proguard settings file to the list
