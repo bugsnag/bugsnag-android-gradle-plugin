@@ -1,3 +1,9 @@
+## 2.4.0 (2017-01-27)
+
+## Enhancements
+
+Add support for uploading NDK symbols
+
 ## 2.3.2 (2016-09-26)
 
 ### Bug Fixes
