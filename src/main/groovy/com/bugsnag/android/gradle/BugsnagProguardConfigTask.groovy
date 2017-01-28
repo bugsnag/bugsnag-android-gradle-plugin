@@ -13,7 +13,15 @@ import com.android.build.gradle.api.ApplicationVariant
 */
 class BugsnagProguardConfigTask extends DefaultTask {
     static final String PROGUARD_CONFIG_PATH = "build/intermediates/bugsnag/bugsnag.pro"
-    static final String PROGUARD_CONFIG_SETTINGS = "-keepattributes LineNumberTable,SourceFile"
+    static final String PROGUARD_CONFIG_SETTINGS = """\
+    -keepattributes LineNumberTable,SourceFile"
+    -keep class com.bugsnag.android.NativeInterface { *; }
+    -keep class com.bugsnag.android.Breadcrumbs { *; }
+    -keep class com.bugsnag.android.Breadcrumbs\$Breadcrumb { *; }
+    -keep class com.bugsnag.android.BreadcrumbType { *; }
+    -keep class com.bugsnag.android.Severity { *; }
+    -keep class com.bugsnag.android.ndk.BugsnagObserver { *; }
+    """.toString()
 
     ApplicationVariant applicationVariant
 

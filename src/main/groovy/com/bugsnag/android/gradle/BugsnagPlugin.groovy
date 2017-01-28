@@ -1,11 +1,11 @@
 package com.bugsnag.android.gradle
 
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.api.ApplicationVariant
-
+import com.android.build.gradle.internal.core.Toolchain
+import com.android.build.gradle.internal.dsl.BuildType
+import org.gradle.api.Plugin
+import org.gradle.api.Project
 /**
  * Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.
  *
@@ -58,6 +58,14 @@ class BugsnagPlugin implements Plugin<Project> {
                 // The location of the "intermediate" AndroidManifest.xml
                 def manifestPath = variantOutput.processManifest.manifestOutputFile
 
+                // Location where Proguard symbols are output
+                def symbolPath = variantOutput.processResources.textSymbolOutputDir
+                def intermediatePath = null;
+
+                if (symbolPath != null) {
+                    intermediatePath = symbolPath.parentFile.parentFile
+                }
+
                 // Create a Bugsnag task to add a "Bugsnag recommended proguard settings" file
                 BugsnagProguardConfigTask proguardConfigTask = project.tasks.create("processBugsnag${variantName}Proguard", BugsnagProguardConfigTask)
                 proguardConfigTask.group = GROUP_NAME
@@ -73,12 +81,29 @@ class BugsnagPlugin implements Plugin<Project> {
                 manifestTask.onlyIf { it.shouldRun() }
 
                 // Create a Bugsnag task to upload proguard mapping file
-                BugsnagUploadTask uploadTask = project.tasks.create("uploadBugsnag${variantName}Mapping", BugsnagUploadTask)
+                BugsnagUploadProguardTask uploadTask = project.tasks.create("uploadBugsnag${variantName}Mapping", BugsnagUploadProguardTask)
                 uploadTask.group = GROUP_NAME
                 uploadTask.manifestPath = manifestPath
                 uploadTask.applicationId = variant.applicationId
                 uploadTask.mappingFile = variant.getMappingFile()
                 uploadTask.mustRunAfter variantOutput.packageApplication
+
+                BugsnagUploadNdkTask uploadNdkTask
+                if (project.bugsnag.ndk) {
+                    // Create a Bugsnag task to upload NDK mapping file(s)
+                    uploadNdkTask = project.tasks.create("uploadBugsnagNdk${variantName}Mapping", BugsnagUploadNdkTask)
+                    uploadNdkTask.group = GROUP_NAME
+                    uploadNdkTask.manifestPath = manifestPath
+                    uploadNdkTask.applicationId = variant.applicationId
+                    uploadNdkTask.intermediatePath = intermediatePath
+                    uploadNdkTask.symbolPath = symbolPath
+                    uploadNdkTask.variantName = variant.name
+                    uploadNdkTask.projectDir = project.projectDir
+                    uploadNdkTask.rootDir = project.rootDir
+                    uploadNdkTask.toolchain = getCmakeToolchain(project, variant)
+                    uploadNdkTask.sharedObjectPath = project.bugsnag.sharedObjectPath
+                    uploadNdkTask.mustRunAfter variantOutput.packageApplication
+                }
 
                 // Automatically add the "edit proguard settings" task to the
                 // build process.
@@ -114,8 +139,89 @@ class BugsnagPlugin implements Plugin<Project> {
                 // of a typical build, so we hook into the `assemble` task.
                 if(project.bugsnag.autoUpload) {
                     variant.getAssemble().dependsOn uploadTask
+
+                    if (project.bugsnag.ndk) {
+                        variant.getAssemble().dependsOn uploadNdkTask
+                    }
                 }
             }
         }
+    }
+
+    /**
+     * Gets the buildchain that is setup for cmake
+     * @param project The project to check
+     * @param variant The variant to check
+     * @return The buildchain for cmake (or Toolchain.default if not found)
+     */
+    private static String getCmakeToolchain(Project project, ApplicationVariant variant) {
+
+        String toolchain = null
+
+        // First check the selected build type to see if there are cmake arguments
+        TreeSet buildTypes = project.android.buildTypes.store
+        BuildType b = findNode(buildTypes, variant.baseName)
+
+        if (b != null
+            && b.externalNativeBuildOptions != null
+            && b.externalNativeBuildOptions.cmake != null
+            && b.externalNativeBuildOptions.cmake.arguments != null) {
+
+            ArrayList<String> args = b.externalNativeBuildOptions.cmake.arguments
+            toolchain = getToolchain(args)
+        }
+
+        // Next check to see if there are arguments in the default config section
+        if (toolchain == null) {
+            if (project.android.defaultConfig.externalNativeBuildOptions != null
+                && project.android.defaultConfig.externalNativeBuildOptions.cmake != null
+                && project.android.defaultConfig.externalNativeBuildOptions.cmake.arguments != null) {
+
+                ArrayList<String> args = project.android.defaultConfig.externalNativeBuildOptions.cmake.arguments
+                for (String arg : args ) {
+                    toolchain = getToolchain(args)
+                }
+            }
+        }
+
+        // Default to Toolchain.default if not found so far
+        if (toolchain == null) {
+            toolchain = Toolchain.default.name
+        }
+
+        return toolchain
+    }
+
+    /**
+     * Looks for an "ANDROID_TOOLCHAIN" argument in a list of cmake arguments
+     * @param args The cmake args
+     * @return the value of the "ANDROID_TOOLCHAIN" argument, or null if not found
+     */
+    private static String getToolchain(ArrayList<String> args) {
+        for (String arg : args ) {
+            if (arg.startsWith("-DANDROID_TOOLCHAIN")) {
+                return arg.substring(arg.indexOf("=") + 1).trim()
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Finds the given build type in a TreeSet of buildtypes
+     * @param set The TreeSet of build types
+     * @param name The name of the buildtype to search for
+     * @return The buildtype, or null if not found
+     */
+    private static BuildType findNode(TreeSet<BuildType> set, String name) {
+
+        Iterator<BuildType> iterator = set.iterator();
+        while(iterator.hasNext()) {
+            BuildType node = iterator.next();
+            if(node.getName().equals(name))
+                return node;
+        }
+
+        return null;
     }
 }

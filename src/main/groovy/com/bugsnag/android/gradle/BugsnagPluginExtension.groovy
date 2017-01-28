@@ -10,4 +10,6 @@ class BugsnagPluginExtension {
     def boolean autoProguardConfig = true;
     def boolean overwrite = false
     def int retryCount = 0
+    def boolean ndk = false
+    def String sharedObjectPath = null
 }

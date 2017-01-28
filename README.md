@@ -106,6 +106,12 @@ In order for Bugsnag to de-duplicate errors correctly it needs to know the file 
 
 ```
 -keepattributes SourceFile,LineNumberTable
+-keep class com.bugsnag.android.NativeInterface { *; }
+-keep class com.bugsnag.android.Breadcrumbs { *; }
+-keep class com.bugsnag.android.Breadcrumbs$Breadcrumb { *; }
+-keep class com.bugsnag.android.BreadcrumbType { *; }
+-keep class com.bugsnag.android.Severity { *; }
+-keep class com.bugsnag.android.ndk.BugsnagObserver { *; }
 ```
 
 If you'd prefer to add this into your Proguard configuration yourself, you can disable our automatic configuration in your app's `build.gradle` as follows:
@@ -136,6 +142,16 @@ android {
             ext.enableBugsnag = false
         }
     }
+}
+```
+
+## NDK Support
+
+Bugsnag supports uploading NDK shared object symbol mappings as well as ProGuard mappings. If you are using the Native Development Kit, enable symbol upload as follows:
+
+```groovy
+bugsnag {
+  ndk true
 }
 ```
 
