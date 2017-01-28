@@ -64,6 +64,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
      * - {project dir}/obj/local
      * - {intermediates}/cmake/{variant}/obj
      * - {intermediates}/binaries/{variant}/obj
+     * - {intermediates}/exploded-aar/{*}/jni
      *
      * Each of these locations contain a list of directories indicating which
      * architecture is targeted and any library (*.so) files.
@@ -81,6 +82,13 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
         if (intermediateDir) {
             findSharedObjectFiles(joinPath(intermediateDir, "cmake", variantName, "obj"), processor)
             findSharedObjectFiles(joinPath(intermediateDir, "binaries", variantName, "obj"), processor)
+
+            File explodedLibs = new File(joinPath(intermediateDir, "exploded-aar"))
+            if (explodedLibs.exists()) {
+                explodedLibs.eachDir {
+                    findSharedObjectFiles(joinPath(it.path, "jni"), processor)
+                }
+            }
         }
     }
 
