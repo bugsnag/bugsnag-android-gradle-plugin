@@ -10,6 +10,8 @@ import org.gradle.api.tasks.TaskAction
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
+import static groovy.io.FileType.*
+
 /**
     Task to upload shared object mapping files to Bugsnag.
 
@@ -31,6 +33,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
     File rootDir
     String toolchain
     String sharedObjectPath
+    def joinPath = { String ...args -> args.join(File.separator) }
 
     BugsnagUploadNdkTask() {
         super()
@@ -39,79 +42,65 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
 
     @TaskAction
     def upload() {
-
-        if (intermediatePath == null) {
-            return
-        }
-
-        File binariesFile = null;
-
-        // See if the sharedObjectPath setting has been provided
-        if (sharedObjectPath != null) {
-            File objDir = new File(projectDir.toString() + File.separator + sharedObjectPath);
-            if (objDir.exists()) {
-                binariesFile = objDir;
-            } else {
-                project.logger.error("Path " + objDir.absolutePath + " not found when looking for shared objects")
-                return
-            }
-        } else {
-            // Look for the shared objects in likely folders
-            for (File intDir : intermediatePath.listFiles()) {
-                if (intDir.name.equals("cmake")) { // CMake
-                    binariesFile = new File(intDir.absolutePath + File.separator + variantName + File.separator + "obj")
-                } else if (intDir.name.equals("binaries")) { // Experimental
-                    binariesFile = new File(intDir.absolutePath + File.separator + variantName + File.separator + "obj")
-                }
-            }
-
-            if (binariesFile == null) {
-                // Check to see if there an 'obj/local' folder in the project for ndk-build setup
-                File objDir = new File(projectDir.toString() + File.separator + "obj" + File.separator + "local");
-                if (objDir.exists()) {
-                    binariesFile = objDir;
-                }
-            }
-        }
-
-        if (binariesFile == null) {
-            project.logger.error("Unable to locate correct path to intermediate binaries")
-            return
-        }
-
-        // Read the API key and Build ID etc..
         super.readManifestFile();
-
         boolean sharedObjectFound = false
-        for (File archDir : binariesFile.listFiles()) {
-            if (archDir.isDirectory()) {
-                String arch = archDir.getName();
+        searchLibraryPaths { String arch, File sharedObject ->
+            sharedObjectFound = true
 
-                for (File sharedObject : archDir.listFiles(new SharedObjectFilter())) {
-                    sharedObjectFound = true
-                    File outputFile = createSymbolsForSharedObject(sharedObject, arch)
-
-                    if (outputFile != null) {
-                        uploadSymbols(outputFile, arch, sharedObject.getName())
-                    }
-                }
-            }
+            File outputFile = createSymbolsForSharedObject(sharedObject, arch)
+            if (outputFile)
+                uploadSymbols(outputFile, arch, sharedObject.name)
         }
-
         if (!sharedObjectFound) {
-            project.logger.error("No shared objects found in " + binariesFile.absolutePath)
+            project.logger.error("No shared objects found in ${sharedObjectPath?: intermediatePath}")
         }
     }
 
     /**
-     * Class to filter files to just contain shared objects
+     * Traverse potential library paths, aggregating shared libraries
+     *
+     * Potential locations:
+     * - {project dir}/{defined shared object path}
+     * - {project dir}/obj/local
+     * - {intermediates}/cmake/{variant}/obj
+     * - {intermediates}/binaries/{variant}/obj
+     *
+     * Each of these locations contain a list of directories indicating which
+     * architecture is targeted and any library (*.so) files.
+     *
+     * @param processor a closure to execute on each parent directory and shared
+     *                  object file
      */
-    private static class SharedObjectFilter implements FilenameFilter {
-        @Override
-        public boolean accept(File dir, String name) {
-            return name.endsWith(".so");
+    def searchLibraryPaths(Closure processor) {
+        if (sharedObjectPath)
+            findSharedObjectFiles(joinPath(projectDir.path, sharedObjectPath), processor)
+
+        findSharedObjectFiles(joinPath(projectDir.path, "obj", "local"), processor)
+
+        String intermediateDir = intermediatePath?.path
+        if (intermediateDir) {
+            findSharedObjectFiles(joinPath(intermediateDir, "cmake", variantName, "obj"), processor)
+            findSharedObjectFiles(joinPath(intermediateDir, "binaries", variantName, "obj"), processor)
         }
     }
+
+    /**
+     * Searches the subdirectories of a given path and executes a block on
+     * any shared object files
+     * @param path      The parent path to search. Each subdirectory should
+     *                  represent an architecture
+     * @param processor a closure to execute on each parent directory and shared
+     *                  object file
+     */
+    def findSharedObjectFiles(String path, Closure processor) {
+        File dir = new File(path)
+        if (dir.exists()) {
+            dir.eachDir { arch ->
+                arch.eachFileMatch FILES, ~/.*\.so$/, { processor(arch.name, it) }
+            }
+        }
+    }
+
 
     /**
      * Uses objdump to create a symbols file for the given shared object file
@@ -119,7 +108,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
      * @param arch the arch of the file
      * @return the output file location, or null on error
      */
-    private File createSymbolsForSharedObject(File sharedObject, String arch) {
+    File createSymbolsForSharedObject(File sharedObject, String arch) {
         // Get the path the version of objdump to use to get symbols
         File objDumpPath = getObjDumpExecutable(arch)
         if (objDumpPath != null) {
@@ -166,7 +155,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
      * @return true if the file was written successfully, else false
      * @return true if the file was written successfully, else false
      */
-    private boolean outPutSymbolFile(BufferedReader outReader, File outputFile, String arch) {
+    boolean outPutSymbolFile(BufferedReader outReader, File outputFile, String arch) {
         // Output the file from stdout
         try {
             FileOutputStream is = new FileOutputStream(outputFile)
@@ -225,7 +214,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
      * @param arch the arch that is being uploaded
      * @param sharedObjectName the original shared object name
      */
-    private void uploadSymbols(File mappingFile, String arch, String sharedObjectName) {
+    void uploadSymbols(File mappingFile, String arch, String sharedObjectName) {
         MultipartEntity mpEntity = new MultipartEntity()
         mpEntity.addPart("soMappingFile", new FileBody(mappingFile))
         mpEntity.addPart("arch", new StringBody(arch))
@@ -240,7 +229,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
      * @param arch The arch of the shared object
      * @return The objdump executable, or null if not found
      */
-    private File getObjDumpExecutable(String arch) {
+    File getObjDumpExecutable(String arch) {
 
         try {
             Abi abi = Abi.getByName(arch)
