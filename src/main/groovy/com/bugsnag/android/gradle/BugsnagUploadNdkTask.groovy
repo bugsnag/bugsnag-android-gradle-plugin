@@ -84,10 +84,19 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
             findSharedObjectFiles(joinPath(intermediateDir, "binaries", variantName, "obj"), processor)
 
             File explodedLibs = new File(joinPath(intermediateDir, "exploded-aar"))
-            if (explodedLibs.exists()) {
-                explodedLibs.eachDir {
-                    findSharedObjectFiles(joinPath(it.path, "jni"), processor)
-                }
+            if (explodedLibs.exists())
+                searchLibraryJNIPaths(explodedLibs, processor)
+        }
+    }
+
+    /**
+     * Recursively searches subdirectories for shared object files
+     */
+    def searchLibraryJNIPaths(File dir, Closure processor) {
+        if (dir.exists()) {
+            dir.eachDir {
+                findSharedObjectFiles(joinPath(it.path, "jni"), processor)
+                searchLibraryJNIPaths(it, processor)
             }
         }
     }
