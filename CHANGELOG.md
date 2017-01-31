@@ -1,3 +1,13 @@
+## 2.4.1 (2017-01-30)
+
+## Enhancements
+
+* Support NDK symbols in versioned dependent libraries
+
+## Bug fixes
+
+* Fix typo in internal Proguard configuration
+
 ## 2.4.0 (2017-01-27)
 
 ## Enhancements
