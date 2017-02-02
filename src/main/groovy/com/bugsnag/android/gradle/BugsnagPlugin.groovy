@@ -80,13 +80,30 @@ class BugsnagPlugin implements Plugin<Project> {
                 manifestTask.mustRunAfter variantOutput.processManifest
                 manifestTask.onlyIf { it.shouldRun() }
 
-                // Create a Bugsnag task to upload proguard mapping file
-                BugsnagUploadProguardTask uploadTask = project.tasks.create("uploadBugsnag${variantName}Mapping", BugsnagUploadProguardTask)
-                uploadTask.group = GROUP_NAME
-                uploadTask.manifestPath = manifestPath
-                uploadTask.applicationId = variant.applicationId
-                uploadTask.mappingFile = variant.getMappingFile()
-                uploadTask.mustRunAfter variantOutput.packageApplication
+
+                BugsnagUploadAbstractTask uploadTask
+                if (isJackEnabled(project, variant)) {
+                    // Create a Bugsnag task to upload jack mapping file
+                    BugsnagUploadJackTask uploadJackTask = project.tasks.create("uploadBugsnag${variantName}Mapping", BugsnagUploadJackTask)
+                    uploadJackTask.group = GROUP_NAME
+                    uploadJackTask.manifestPath = manifestPath
+                    uploadJackTask.applicationId = variant.applicationId
+                    uploadJackTask.mappingFile = variant.getMappingFile()
+                    uploadJackTask.mustRunAfter variantOutput.packageApplication
+
+                    uploadTask = uploadJackTask
+                } else {
+                    // Create a Bugsnag task to upload proguard mapping file
+                    BugsnagUploadProguardTask uploadProguardTask = project.tasks.create("uploadBugsnag${variantName}Mapping", BugsnagUploadProguardTask)
+                    uploadProguardTask.group = GROUP_NAME
+                    uploadProguardTask.manifestPath = manifestPath
+                    uploadProguardTask.applicationId = variant.applicationId
+                    uploadProguardTask.mappingFile = variant.getMappingFile()
+                    uploadProguardTask.mustRunAfter variantOutput.packageApplication
+
+                    uploadTask = uploadProguardTask
+                }
+
 
                 BugsnagUploadNdkTask uploadNdkTask
                 if (project.bugsnag.ndk) {
@@ -145,6 +162,36 @@ class BugsnagPlugin implements Plugin<Project> {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Checks to see if the Jack compiler is being used for the given variant
+     *
+     * @param project The project to check in
+     * @param variant The variant to check
+     * @return true if Jack is enabled, else false
+     */
+    private static boolean isJackEnabled(Project project, ApplicationVariant variant) {
+
+        // First check the selected build type to see if there are jack settings
+        TreeSet buildTypes = project.android.buildTypes.store
+        BuildType b = findNode(buildTypes, variant.baseName)
+
+        if (b != null
+            && b.jackOptions != null
+            && b.jackOptions.enabled instanceof Boolean) {
+
+            return b.jackOptions.enabled
+
+        // Now check the default config to see if any Jack settings are defined
+        } else if (project.android.defaultConfig != null
+            && project.android.defaultConfig.jackOptions != null
+            && project.android.defaultConfig.jackOptions.enabled instanceof Boolean) {
+
+            return project.android.defaultConfig.jackOptions.enabled;
+        } else {
+            return false;
         }
     }
 
