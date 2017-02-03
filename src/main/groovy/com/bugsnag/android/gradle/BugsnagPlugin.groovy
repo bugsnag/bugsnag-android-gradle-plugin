@@ -80,30 +80,14 @@ class BugsnagPlugin implements Plugin<Project> {
                 manifestTask.mustRunAfter variantOutput.processManifest
                 manifestTask.onlyIf { it.shouldRun() }
 
-
-                BugsnagUploadAbstractTask uploadTask
-                if (isJackEnabled(project, variant)) {
-                    // Create a Bugsnag task to upload jack mapping file
-                    BugsnagUploadJackTask uploadJackTask = project.tasks.create("uploadBugsnag${variantName}Mapping", BugsnagUploadJackTask)
-                    uploadJackTask.group = GROUP_NAME
-                    uploadJackTask.manifestPath = manifestPath
-                    uploadJackTask.applicationId = variant.applicationId
-                    uploadJackTask.mappingFile = variant.getMappingFile()
-                    uploadJackTask.mustRunAfter variantOutput.packageApplication
-
-                    uploadTask = uploadJackTask
-                } else {
-                    // Create a Bugsnag task to upload proguard mapping file
-                    BugsnagUploadProguardTask uploadProguardTask = project.tasks.create("uploadBugsnag${variantName}Mapping", BugsnagUploadProguardTask)
-                    uploadProguardTask.group = GROUP_NAME
-                    uploadProguardTask.manifestPath = manifestPath
-                    uploadProguardTask.applicationId = variant.applicationId
-                    uploadProguardTask.mappingFile = variant.getMappingFile()
-                    uploadProguardTask.mustRunAfter variantOutput.packageApplication
-
-                    uploadTask = uploadProguardTask
-                }
-
+                // Create a Bugsnag task to upload proguard mapping file
+                def uploadTaskClass = isJackEnabled(project, variant) ? BugsnagUploadJackTask : BugsnagUploadProguardTask
+                def uploadTask = project.tasks.create("uploadBugsnag${variantName}Mapping", uploadTaskClass)
+                uploadTask.group = GROUP_NAME
+                uploadTask.manifestPath = manifestPath
+                uploadTask.applicationId = variant.applicationId
+                uploadTask.mappingFile = variant.getMappingFile()
+                uploadTask.mustRunAfter variantOutput.packageApplication
 
                 BugsnagUploadNdkTask uploadNdkTask
                 if (project.bugsnag.ndk) {
