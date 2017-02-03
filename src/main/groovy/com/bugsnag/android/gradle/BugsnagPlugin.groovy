@@ -178,15 +178,13 @@ class BugsnagPlugin implements Plugin<Project> {
         TreeSet buildTypes = project.android.buildTypes.store
         BuildType b = findNode(buildTypes, variant.baseName)
 
-        if (b != null
-            && b.jackOptions != null
+        if (b?.hasProperty('jackOptions')
             && b.jackOptions.enabled instanceof Boolean) {
 
             return b.jackOptions.enabled
 
         // Now check the default config to see if any Jack settings are defined
-        } else if (project.android.defaultConfig != null
-            && project.android.defaultConfig.jackOptions != null
+        } else if (project.android.defaultConfig?.hasProperty('jackOptions')
             && project.android.defaultConfig.jackOptions.enabled instanceof Boolean) {
 
             return project.android.defaultConfig.jackOptions.enabled;
