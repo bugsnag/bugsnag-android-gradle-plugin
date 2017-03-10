@@ -49,8 +49,9 @@ class BugsnagPlugin implements Plugin<Project> {
                 // The Android build system supports creating multiple APKs
                 // per Build Variant (Variant Outputs):
                 // https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide/apk-splits
-                def variantName = variant.name.capitalize()
                 variant.outputs.each { variantOutput ->
+                    // Retrieve the name of the variant output. This name is guaranteed to be unique
+                    def outputName = variantOutput.name
                     // The location of the "intermediate" AndroidManifest.xml
                     def manifestPath = variantOutput.processManifest.manifestOutputFile
 
@@ -63,14 +64,14 @@ class BugsnagPlugin implements Plugin<Project> {
                     }
 
                     // Create a Bugsnag task to add a "Bugsnag recommended proguard settings" file
-                    BugsnagProguardConfigTask proguardConfigTask = project.tasks.create("processBugsnag${variantName}Proguard", BugsnagProguardConfigTask)
+                    BugsnagProguardConfigTask proguardConfigTask = project.tasks.create("processBugsnag${outputName}Proguard", BugsnagProguardConfigTask)
                     proguardConfigTask.group = GROUP_NAME
                     proguardConfigTask.applicationVariant = variant
 
                     // Create a Bugsnag task to add a build UUID to AndroidManifest.xml
                     // This task must be called after "process${variantName}Manifest", since it
                     // requires that an AndroidManifest.xml exists in `build/intermediates`.
-                    BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${variantName}Manifest", BugsnagManifestTask)
+                    BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${outputName}Manifest", BugsnagManifestTask)
                     manifestTask.group = GROUP_NAME
                     manifestTask.manifestPath = manifestPath
                     manifestTask.mustRunAfter variantOutput.processManifest
@@ -78,7 +79,7 @@ class BugsnagPlugin implements Plugin<Project> {
 
                     // Create a Bugsnag task to upload proguard mapping file
                     def uploadTaskClass = isJackEnabled(project, variant) ? BugsnagUploadJackTask : BugsnagUploadProguardTask
-                    def uploadTask = project.tasks.create("uploadBugsnag${variantName}Mapping", uploadTaskClass)
+                    def uploadTask = project.tasks.create("uploadBugsnag${outputName}Mapping", uploadTaskClass)
                     uploadTask.group = GROUP_NAME
                     uploadTask.manifestPath = manifestPath
                     uploadTask.applicationId = variant.applicationId
@@ -88,7 +89,7 @@ class BugsnagPlugin implements Plugin<Project> {
                     BugsnagUploadNdkTask uploadNdkTask
                     if (project.bugsnag.ndk) {
                         // Create a Bugsnag task to upload NDK mapping file(s)
-                        uploadNdkTask = project.tasks.create("uploadBugsnagNdk${variantName}Mapping", BugsnagUploadNdkTask)
+                        uploadNdkTask = project.tasks.create("uploadBugsnagNdk${outputName}Mapping", BugsnagUploadNdkTask)
                         uploadNdkTask.group = GROUP_NAME
                         uploadNdkTask.manifestPath = manifestPath
                         uploadNdkTask.applicationId = variant.applicationId
