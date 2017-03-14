@@ -12,4 +12,5 @@ class BugsnagPluginExtension {
     def int retryCount = 0
     def boolean ndk = false
     def String sharedObjectPath = null
+    def boolean enabled = true
 }
