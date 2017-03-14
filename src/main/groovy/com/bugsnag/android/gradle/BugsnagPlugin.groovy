@@ -4,6 +4,7 @@ import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.internal.core.Toolchain
 import com.android.build.gradle.internal.dsl.BuildType
+import com.android.builder.internal.BaseConfigImpl
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 /**
@@ -34,11 +35,15 @@ class BugsnagPlugin implements Plugin<Project> {
                 throw new IllegalStateException('Must apply \'com.android.application\' first!')
             }
 
+            // Add to the buildType metaclass a enableBugsnag property. Defaults to true.
+            // For non read-only product flavors this can be reused too
+            BaseConfigImpl.metaClass.enableBugsnag = true;
+
             // Create tasks for each Build Variant
             // https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide#TOC-Build-Variants
             project.android.applicationVariants.all { ApplicationVariant variant ->
                 def hasDisabledBugsnag = {
-                    it.ext.properties.containsKey("enableBugsnag") && !it.ext.enableBugsnag
+                    !variant.buildType.enableBugsnag
                 }
 
                 // Ignore any conflicting properties, bail if anything has a disable flag.
