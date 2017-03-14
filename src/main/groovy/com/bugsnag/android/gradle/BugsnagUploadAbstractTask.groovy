@@ -26,8 +26,7 @@ import org.gradle.api.DefaultTask
 */
 abstract class BugsnagUploadAbstractTask extends DefaultTask {
     static final int MAX_RETRY_COUNT = 5
-    // Uploading mappings sometimes the read response takes a while (45'' aprox). We are giving 1'30'' to read them
-    static final int TIMEOUT_MILLIS = 90000
+    static final int TIMEOUT_MILLIS = 30000
     String manifestPath
     String applicationId
 
