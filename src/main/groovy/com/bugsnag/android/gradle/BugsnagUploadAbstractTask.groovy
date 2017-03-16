@@ -26,7 +26,7 @@ import org.gradle.api.DefaultTask
 */
 abstract class BugsnagUploadAbstractTask extends DefaultTask {
     static final int MAX_RETRY_COUNT = 5
-    static final int TIMEOUT_MILLIS = 10000 // 10 seconds
+    static final int TIMEOUT_MILLIS = 60000 // 60 seconds
     String manifestPath
     String applicationId
 
