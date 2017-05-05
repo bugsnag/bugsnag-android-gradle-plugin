@@ -179,7 +179,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
             OutputStreamWriter osw = new OutputStreamWriter(is)
             Writer writer = new BufferedWriter(osw)
 
-            Pattern addressPattern = Pattern.compile("\\s+([0-9a-f]+):.*", Pattern.CASE_INSENSITIVE);
+            Pattern addressPattern = Pattern.compile("^\\s+([0-9a-f]+):", Pattern.CASE_INSENSITIVE);
             boolean justSeenAddress = false;
             String previousAddress = null;
 
