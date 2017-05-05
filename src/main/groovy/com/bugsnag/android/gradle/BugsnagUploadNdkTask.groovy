@@ -185,10 +185,11 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
 
             // Loop to remove redundant address lines (just keep the first and last addresses of each block)
             String line = outReader.readLine()
+            Matcher addressMatcher = null;
             while (line != null) {
 
                 // Check to see if the current line is an address
-                Matcher addressMatcher = addressPattern.matcher(line);
+                addressMatcher = addressPattern.matcher(line);
                 if (addressMatcher.matches()) {
 
                     // Only output the line if this is the start of a block of addresses
