@@ -190,7 +190,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
 
                 // Check to see if the current line is an address
                 addressMatcher = addressPattern.matcher(line);
-                if (addressMatcher.matches()) {
+                if (addressMatcher.find()) {
 
                     // Only output the line if this is the start of a block of addresses
                     if (!justSeenAddress) {
