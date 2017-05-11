@@ -179,17 +179,18 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
             OutputStreamWriter osw = new OutputStreamWriter(is)
             Writer writer = new BufferedWriter(osw)
 
-            Pattern addressPattern = Pattern.compile("\\s+([0-9a-f]+):.*", Pattern.CASE_INSENSITIVE);
+            Pattern addressPattern = Pattern.compile("^\\s+([0-9a-f]+):", Pattern.CASE_INSENSITIVE);
             boolean justSeenAddress = false;
             String previousAddress = null;
 
             // Loop to remove redundant address lines (just keep the first and last addresses of each block)
             String line = outReader.readLine()
+            Matcher addressMatcher = null;
             while (line != null) {
 
                 // Check to see if the current line is an address
-                Matcher addressMatcher = addressPattern.matcher(line);
-                if (addressMatcher.matches()) {
+                addressMatcher = addressPattern.matcher(line);
+                if (addressMatcher.find()) {
 
                     // Only output the line if this is the start of a block of addresses
                     if (!justSeenAddress) {
