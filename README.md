@@ -38,7 +38,7 @@ Settings, at `<project dir>/<module name>/build.gradle` (usually
 
 ```groovy
 plugins {
-    id "com.bugsnag.android.gradle" version "2.3.2"
+    id "com.bugsnag.android.gradle" version "2.4.2"
 }
 ```
 

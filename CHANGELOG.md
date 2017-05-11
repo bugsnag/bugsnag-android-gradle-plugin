@@ -1,3 +1,9 @@
+## 2.4.2 (2017-05-10)
+
+## Bug fixes
+
+* Improve performance of NDK object file generation
+
 ## 2.4.1 (2017-01-30)
 
 ## Enhancements
