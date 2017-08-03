@@ -56,11 +56,21 @@ class BugsnagPlugin implements Plugin<Project> {
                 def variantName = variant.name.capitalize()
 
                 // The location of the "intermediate" AndroidManifest.xml
-                def manifestPath = variantOutput.processManifest.manifestOutputFile
+
+                def manifestPaths = output.processManifest.getManifestOutputDirectory().listFiles(new FilenameFilter() {
+                    @Override
+                    boolean accept(File dir, String filename) {
+                        filename.contains("AndroidManifest.xml")
+                    }
+                })
+
+                println(manifestPaths)
+                def manifestPath = manifestPaths[0]
+                println(manifestPath)
 
                 // Location where Proguard symbols are output
                 def symbolPath = variantOutput.processResources.textSymbolOutputDir
-                def intermediatePath = null;
+                def intermediatePath = null
 
                 if (symbolPath != null) {
                     intermediatePath = symbolPath.parentFile.parentFile
