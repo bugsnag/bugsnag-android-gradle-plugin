@@ -30,7 +30,7 @@ class BugsnagPlugin implements Plugin<Project> {
 
         project.afterEvaluate {
             // Make sure the android plugin has been applied first
-            if(!project.plugins.hasPlugin(AppPlugin)) {
+            if (!project.plugins.hasPlugin(AppPlugin)) {
                 throw new IllegalStateException('Must apply \'com.android.application\' first!')
             }
 
@@ -57,16 +57,21 @@ class BugsnagPlugin implements Plugin<Project> {
 
                 // The location of the "intermediate" AndroidManifest.xml
 
-                def manifestPaths = variantOutput.processManifest.getManifestOutputDirectory().listFiles(new FilenameFilter() {
+                def manifestPaths = variantOutput.processManifest.getManifgitestOutputDirectory().listFiles(new FilenameFilter() {
                     @Override
                     boolean accept(File dir, String filename) {
-                        filename.contains("AndroidManifest.xml")
+                        return filename.contains("AndroidManifest.xml")
                     }
                 })
+
+                if (manifestPaths == null) {
+                    throw new IllegalStateException("Could not find manifest file!")
+                }
+
                 def manifestPath = manifestPaths[0]
 
                 // Location where Proguard symbols are output
-                def symbolPath = variantOutput.processResources.textSymbolOutputDir
+                def symbolPath = variantOutput.processResources.getTextSymbolOutputFile()
                 def intermediatePath = null
 
                 if (symbolPath != null) {
