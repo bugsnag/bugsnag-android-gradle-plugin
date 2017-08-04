@@ -2,6 +2,7 @@ package com.bugsnag.android.gradle
 
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.api.ApplicationVariant
+import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.core.Toolchain
 import com.android.build.gradle.internal.dsl.BuildType
 import org.gradle.api.Plugin
@@ -56,27 +57,12 @@ class BugsnagPlugin implements Plugin<Project> {
                 def variantName = variant.name.capitalize()
 
                 // The location of the "intermediate" AndroidManifest.xml
-
-                def manifestPaths = variantOutput.processManifest.getManifgitestOutputDirectory().listFiles(new FilenameFilter() {
-                    @Override
-                    boolean accept(File dir, String filename) {
-                        return filename.contains("AndroidManifest.xml")
-                    }
-                })
-
-                if (manifestPaths == null) {
-                    throw new IllegalStateException("Could not find manifest file!")
-                }
-
-                def manifestPath = manifestPaths[0]
+                File manifestPath = getManifestFile(variantOutput)
 
                 // Location where Proguard symbols are output
-                def symbolPath = variantOutput.processResources.getTextSymbolOutputFile()
-                def intermediatePath = null
+                File symbolPath = getSymbolPath(variantOutput)
 
-                if (symbolPath != null) {
-                    intermediatePath = symbolPath.parentFile.parentFile
-                }
+                File intermediatePath = getIntermediatePath(symbolPath)
 
                 // Create a Bugsnag task to add a "Bugsnag recommended proguard settings" file
                 BugsnagProguardConfigTask proguardConfigTask = project.tasks.create("processBugsnag${variantName}Proguard", BugsnagProguardConfigTask)
@@ -131,7 +117,7 @@ class BugsnagPlugin implements Plugin<Project> {
                 // task was named `proguardRelease`, and in 1.5+ the ProGuard
                 // task is named `transformClassesAndResourcesWithProguardForRelease`
                 // as it is now part of the "transforms" process.
-                if(project.bugsnag.autoProguardConfig) {
+                if (project.bugsnag.autoProguardConfig) {
                     variantOutput.packageApplication.dependsOn proguardConfigTask
                 }
 
@@ -150,7 +136,7 @@ class BugsnagPlugin implements Plugin<Project> {
                 // This task must be called after `packageApplication` (see
                 // above), but we also want this to run automatically as part
                 // of a typical build, so we hook into the `assemble` task.
-                if(project.bugsnag.autoUpload) {
+                if (project.bugsnag.autoUpload) {
                     variant.getAssemble().dependsOn uploadTask
 
                     if (project.bugsnag.ndk) {
@@ -159,6 +145,40 @@ class BugsnagPlugin implements Plugin<Project> {
                 }
             }
         }
+    }
+
+    private File getIntermediatePath(File symbolPath) {
+        def intermediatePath = null
+
+        if (symbolPath != null) {
+            intermediatePath = symbolPath.parentFile.parentFile
+        }
+        intermediatePath
+    }
+
+    private File getSymbolPath(BaseVariantOutput variantOutput) {
+        def symbolPath = variantOutput.processResources.getTextSymbolOutputFile()
+
+        if (symbolPath == null) {
+            throw new IllegalStateException("Could not find symbol path")
+        }
+        symbolPath
+    }
+
+    private File getManifestFile(BaseVariantOutput variantOutput) {
+        def manifestPaths = variantOutput.processManifest.getManifestOutputDirectory().listFiles(new FilenameFilter() {
+            @Override
+            boolean accept(File dir, String filename) {
+                return filename.contains("AndroidManifest.xml")
+            }
+        })
+
+        if (manifestPaths == null) {
+            throw new IllegalStateException("Could not find manifest file!")
+        }
+
+        def manifestPath = manifestPaths[0]
+        manifestPath
     }
 
     /**
