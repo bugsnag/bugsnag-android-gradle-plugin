@@ -101,6 +101,8 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
     }
 
     def boolean uploadToServer(mpEntity) {
+        println("Attempting upload to Bugsnag")
+
         // Make the request
         HttpPost httpPost = new HttpPost(project.bugsnag.endpoint)
         httpPost.setEntity(mpEntity);
@@ -122,6 +124,7 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
         }
 
         if (statusCode == 200) {
+            println("Bugsnag upload succeeded")
             return true
         }
 

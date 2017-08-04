@@ -155,7 +155,7 @@ class BugsnagPlugin implements Plugin<Project> {
         }
     }
 
-    private File getIntermediatePath(File symbolPath) {
+    private static File getIntermediatePath(File symbolPath) {
         def intermediatePath = null
 
         if (symbolPath != null) {
@@ -164,7 +164,7 @@ class BugsnagPlugin implements Plugin<Project> {
         intermediatePath
     }
 
-    private File getSymbolPath(BaseVariantOutput variantOutput) {
+    private static File getSymbolPath(BaseVariantOutput variantOutput) {
         def symbolPath = variantOutput.processResources.getTextSymbolOutputFile()
 
         if (symbolPath == null) {
@@ -173,7 +173,7 @@ class BugsnagPlugin implements Plugin<Project> {
         symbolPath
     }
 
-    private File getManifestFile(BaseVariantOutput variantOutput) {
+    private static File getManifestFile(BaseVariantOutput variantOutput) {
         println("Supplied with Manifest Directory: " + variantOutput.processManifest.getManifestOutputDirectory())
         def manifestPaths = variantOutput.processManifest.getManifestOutputDirectory().listFiles(new FilenameFilter() {
             @Override
