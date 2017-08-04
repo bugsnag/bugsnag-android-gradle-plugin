@@ -59,6 +59,14 @@ class BugsnagPlugin implements Plugin<Project> {
                 // The location of the "intermediate" AndroidManifest.xml
                 File manifestPath = getManifestFile(variantOutput)
 
+                if (manifestPath == null) {
+                    println("No manifest available, skipping task.")
+                    return // FIXME will fail if this is a clean build of the variant
+                }
+                else {
+                    println("Bugsnag modifying manifest at" + manifestPath)
+                }
+
                 // Location where Proguard symbols are output
                 File symbolPath = getSymbolPath(variantOutput)
 
@@ -166,19 +174,14 @@ class BugsnagPlugin implements Plugin<Project> {
     }
 
     private File getManifestFile(BaseVariantOutput variantOutput) {
+        println("Supplied with Manifest Directory: " + variantOutput.processManifest.getManifestOutputDirectory())
         def manifestPaths = variantOutput.processManifest.getManifestOutputDirectory().listFiles(new FilenameFilter() {
             @Override
             boolean accept(File dir, String filename) {
                 return filename.contains("AndroidManifest.xml")
             }
         })
-
-        if (manifestPaths == null) {
-            throw new IllegalStateException("Could not find manifest file!")
-        }
-
-        def manifestPath = manifestPaths[0]
-        manifestPath
+        return manifestPaths != null ? manifestPaths[0] : null
     }
 
     /**
