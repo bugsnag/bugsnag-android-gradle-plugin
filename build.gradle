@@ -11,9 +11,7 @@ apply plugin: 'maven-publish'
 repositories {
     jcenter()
     mavenCentral()
-    maven {
-        url "https://maven.google.com/"
-    }
+    google()
 }
 
 // Target Java 1.6 when compiling groovy code
@@ -26,8 +24,8 @@ compileGroovy {
 dependencies {
     compile gradleApi()
     compile localGroovy()
-//    compile 'com.android.tools.build:gradle:3.0.0-alpha9'
-    compile 'com.android.tools.build:gradle:2.3.1'
+    compile 'com.android.tools.build:gradle:3.0.0-alpha9'
+//    compile 'com.android.tools.build:gradle:2.3.1'
     compile 'org.apache.httpcomponents:httpclient:4.2.1'
     compile 'org.apache.httpcomponents:httpmime:4.2.1'
 }
