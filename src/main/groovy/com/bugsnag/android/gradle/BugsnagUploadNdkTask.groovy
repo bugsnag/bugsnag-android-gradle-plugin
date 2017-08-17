@@ -48,8 +48,9 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
             sharedObjectFound = true
 
             File outputFile = createSymbolsForSharedObject(sharedObject, arch)
-            if (outputFile)
+            if (outputFile) {
                 uploadSymbols(outputFile, arch, sharedObject.name)
+            }
         }
         if (!sharedObjectFound) {
             project.logger.error("No shared objects found in ${sharedObjectPath?: intermediatePath}")
@@ -73,8 +74,9 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
      *                  object file
      */
     def searchLibraryPaths(Closure processor) {
-        if (sharedObjectPath)
+        if (sharedObjectPath) {
             findSharedObjectFiles(joinPath(projectDir.path, sharedObjectPath), processor)
+        }
 
         findSharedObjectFiles(joinPath(projectDir.path, "obj", "local"), processor)
 
@@ -84,8 +86,9 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
             findSharedObjectFiles(joinPath(intermediateDir, "binaries", variantName, "obj"), processor)
 
             File explodedLibs = new File(joinPath(intermediateDir, "exploded-aar"))
-            if (explodedLibs.exists())
+            if (explodedLibs.exists()) {
                 searchLibraryJNIPaths(explodedLibs, processor)
+            }
         }
     }
 

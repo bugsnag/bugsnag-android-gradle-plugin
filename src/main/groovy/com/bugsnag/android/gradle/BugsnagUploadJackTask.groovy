@@ -4,6 +4,9 @@ import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
 import org.gradle.api.tasks.TaskAction
 /**
+
+    Deprecated by google: http://tools.android.com/tech-docs/jackandjill
+
     Task to upload Jack mapping files to Bugsnag.
 
     Reads meta-data tags from the project's AndroidManifest.xml to extract a
@@ -16,6 +19,7 @@ import org.gradle.api.tasks.TaskAction
     it is usually safe to have this be the absolute last task executed during
     a build.
 */
+@Deprecated
 class BugsnagUploadJackTask extends BugsnagUploadAbstractTask {
     File mappingFile
 
@@ -30,6 +34,7 @@ class BugsnagUploadJackTask extends BugsnagUploadAbstractTask {
         // configuration includes -dontobfuscate, the mapping file
         // will not exist (but we also won't need it).
         if (!mappingFile || !mappingFile.exists()) {
+            project.logger.info("Mapping file not found for Jack")
             return
         }
 

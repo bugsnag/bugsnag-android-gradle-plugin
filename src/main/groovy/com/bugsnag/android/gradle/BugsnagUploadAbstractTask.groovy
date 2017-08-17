@@ -87,7 +87,7 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
         mpEntity.addPart("appId", new StringBody(applicationId))
         mpEntity.addPart("versionCode", new StringBody(versionCode))
 
-        if(buildUUID != null) {
+        if (buildUUID != null) {
             mpEntity.addPart("buildUUID", new StringBody(buildUUID));
         }
 
@@ -122,6 +122,7 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
         }
 
         if (statusCode == 200) {
+            project.logger.info("Bugsnag upload successful")
             return true
         }
 
