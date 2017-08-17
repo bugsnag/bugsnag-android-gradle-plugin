@@ -30,11 +30,13 @@ class BugsnagUploadProguardTask extends BugsnagUploadAbstractTask {
         // configuration includes -dontobfuscate, the mapping file
         // will not exist (but we also won't need it).
         if (!mappingFile || !mappingFile.exists()) {
+            project.logger.info("Mapping file not found for Proguard")
             return
         }
 
         // Read the API key and Build ID etc..
         super.readManifestFile();
+        project.logger.info("Attempting to upload proguard mapping file: " + mappingFile)
 
         // Construct a basic request
         MultipartEntity mpEntity = new MultipartEntity()

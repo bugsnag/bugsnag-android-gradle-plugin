@@ -1,16 +1,8 @@
 package com.bugsnag.android.gradle
 
-import java.io.FileWriter
-import java.io.PrintWriter
-import java.util.UUID
-
-import groovy.util.XmlNodePrinter
-import groovy.util.XmlParser
 import groovy.xml.Namespace
-
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
-
 /**
     Task to add a unique build UUID to AndroidManifest.xml during the build
     process. This is used by Bugsnag to identify which proguard mapping file
@@ -57,6 +49,9 @@ class BugsnagManifestTask extends DefaultTask {
             def printer = new XmlNodePrinter(new PrintWriter(writer))
             printer.preserveWhitespace = true
             printer.print(xml)
+        }
+        else {
+            project.logger.warn("Bugsnag detected invalid manifest with no application element so did not write Build UUID")
         }
     }
 

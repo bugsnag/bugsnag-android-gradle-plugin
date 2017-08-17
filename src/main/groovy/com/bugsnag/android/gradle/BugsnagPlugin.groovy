@@ -30,7 +30,7 @@ class BugsnagPlugin implements Plugin<Project> {
 
         project.afterEvaluate {
             // Make sure the android plugin has been applied first
-            if(!project.plugins.hasPlugin(AppPlugin)) {
+            if (!project.plugins.hasPlugin(AppPlugin)) {
                 throw new IllegalStateException('Must apply \'com.android.application\' first!')
             }
 
