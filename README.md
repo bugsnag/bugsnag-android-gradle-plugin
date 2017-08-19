@@ -208,3 +208,8 @@ this plugin, see our [contributing guide](CONTRIBUTING.md).
 
 This plugin is free software released under the MIT License. See
 [LICENSE.txt](LICENSE.txt) for details.
+
+
+# Can't comment on Issues?
+Some users have been unable to comment on Github issues when an [adblocker extension is enabled](https://docs.bugsnag.com/platforms/browsers/faq/#is-bugsnag-blocked-by-ad-blockers).
+We recommend temporarily disabling the extension, or if that fails, contacting support@bugsnag.com.
