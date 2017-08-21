@@ -3,22 +3,23 @@ package com.bugsnag.android.gradle
 import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
 import org.gradle.api.tasks.TaskAction
+
 /**
 
-    Deprecated by google: http://tools.android.com/tech-docs/jackandjill
+ Deprecated by google: http://tools.android.com/tech-docs/jackandjill
 
-    Task to upload Jack mapping files to Bugsnag.
+ Task to upload Jack mapping files to Bugsnag.
 
-    Reads meta-data tags from the project's AndroidManifest.xml to extract a
-    build UUID (injected by BugsnagManifestTask) and a Bugsnag API Key:
+ Reads meta-data tags from the project's AndroidManifest.xml to extract a
+ build UUID (injected by BugsnagManifestTask) and a Bugsnag API Key:
 
-    https://developer.android.com/guide/topics/manifest/manifest-intro.html
-    https://developer.android.com/guide/topics/manifest/meta-data-element.html
+ https://developer.android.com/guide/topics/manifest/manifest-intro.html
+ https://developer.android.com/guide/topics/manifest/meta-data-element.html
 
-    This task must be called after ProGuard mapping files are generated, so
-    it is usually safe to have this be the absolute last task executed during
-    a build.
-*/
+ This task must be called after ProGuard mapping files are generated, so
+ it is usually safe to have this be the absolute last task executed during
+ a build.
+ */
 @Deprecated
 class BugsnagUploadJackTask extends BugsnagUploadAbstractTask {
     File mappingFile
