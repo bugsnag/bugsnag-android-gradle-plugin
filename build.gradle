@@ -27,6 +27,11 @@ dependencies {
     compile 'org.apache.httpcomponents:httpmime:4.2.1'
 }
 
+wrapper {
+    version = '3.3'
+    distributionType = Wrapper.DistributionType.ALL
+}
+
 // Maven publishing settings (nexus-maven-plugins)
 modifyPom {
     project {
