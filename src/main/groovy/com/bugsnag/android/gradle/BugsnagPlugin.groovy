@@ -6,6 +6,7 @@ import com.android.build.gradle.internal.core.Toolchain
 import com.android.build.gradle.internal.dsl.BuildType
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+
 /**
  * Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.
  *
@@ -119,7 +120,7 @@ class BugsnagPlugin implements Plugin<Project> {
                 // task was named `proguardRelease`, and in 1.5+ the ProGuard
                 // task is named `transformClassesAndResourcesWithProguardForRelease`
                 // as it is now part of the "transforms" process.
-                if(project.bugsnag.autoProguardConfig) {
+                if (project.bugsnag.autoProguardConfig) {
                     variantOutput.packageApplication.dependsOn proguardConfigTask
                 }
 
@@ -138,7 +139,7 @@ class BugsnagPlugin implements Plugin<Project> {
                 // This task must be called after `packageApplication` (see
                 // above), but we also want this to run automatically as part
                 // of a typical build, so we hook into the `assemble` task.
-                if(project.bugsnag.autoUpload) {
+                if (project.bugsnag.autoUpload) {
                     variant.getAssemble().dependsOn uploadTask
 
                     if (project.bugsnag.ndk) {
@@ -167,7 +168,7 @@ class BugsnagPlugin implements Plugin<Project> {
 
             return b.jackOptions.enabled
 
-        // Now check the default config to see if any Jack settings are defined
+            // Now check the default config to see if any Jack settings are defined
         } else if (project.android.defaultConfig?.hasProperty('jackOptions')
             && project.android.defaultConfig.jackOptions.enabled instanceof Boolean) {
 
@@ -207,7 +208,7 @@ class BugsnagPlugin implements Plugin<Project> {
                 && project.android.defaultConfig.externalNativeBuildOptions.cmake.arguments != null) {
 
                 ArrayList<String> args = project.android.defaultConfig.externalNativeBuildOptions.cmake.arguments
-                for (String arg : args ) {
+                for (String arg : args) {
                     toolchain = getToolchain(args)
                 }
             }
@@ -227,7 +228,7 @@ class BugsnagPlugin implements Plugin<Project> {
      * @return the value of the "ANDROID_TOOLCHAIN" argument, or null if not found
      */
     private static String getToolchain(ArrayList<String> args) {
-        for (String arg : args ) {
+        for (String arg : args) {
             if (arg.startsWith("-DANDROID_TOOLCHAIN")) {
                 return arg.substring(arg.indexOf("=") + 1).trim()
             }
@@ -245,10 +246,11 @@ class BugsnagPlugin implements Plugin<Project> {
     private static BuildType findNode(TreeSet<BuildType> set, String name) {
 
         Iterator<BuildType> iterator = set.iterator();
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             BuildType node = iterator.next();
-            if(node.getName().equals(name))
+            if (node.getName() == name) {
                 return node;
+            }
         }
 
         return null;

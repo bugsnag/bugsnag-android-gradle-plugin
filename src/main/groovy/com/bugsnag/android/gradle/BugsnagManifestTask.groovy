@@ -3,16 +3,17 @@ package com.bugsnag.android.gradle
 import groovy.xml.Namespace
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
+
 /**
-    Task to add a unique build UUID to AndroidManifest.xml during the build
-    process. This is used by Bugsnag to identify which proguard mapping file
-    should be used to deobfuscate each crash report.
+ Task to add a unique build UUID to AndroidManifest.xml during the build
+ process. This is used by Bugsnag to identify which proguard mapping file
+ should be used to deobfuscate each crash report.
 
-    https://docs.gradle.org/current/userguide/custom_tasks.html
+ https://docs.gradle.org/current/userguide/custom_tasks.html
 
-    This task must be called after "process${variantName}Manifest", since it
-    requires that an AndroidManifest.xml exists in `build/intermediates`.
-*/
+ This task must be called after "process${variantName}Manifest", since it
+ requires that an AndroidManifest.xml exists in `build/intermediates`.
+ */
 class BugsnagManifestTask extends DefaultTask {
     String manifestPath
 
@@ -32,9 +33,9 @@ class BugsnagManifestTask extends DefaultTask {
             def metaDataTags = application['meta-data']
 
             // remove any old BUILD_UUID_TAG elements
-            def buildUuidTags = metaDataTags.findAll{
-                it.attributes()[ns.name].equals(BugsnagPlugin.BUILD_UUID_TAG)
-            }.each{
+            metaDataTags.findAll {
+                (it.attributes()[ns.name] == BugsnagPlugin.BUILD_UUID_TAG)
+            }.each {
                 it.parent().remove(it)
             }
 
@@ -49,8 +50,7 @@ class BugsnagManifestTask extends DefaultTask {
             def printer = new XmlNodePrinter(new PrintWriter(writer))
             printer.preserveWhitespace = true
             printer.print(xml)
-        }
-        else {
+        } else {
             project.logger.warn("Bugsnag detected invalid manifest with no application element so did not write Build UUID")
         }
     }
@@ -64,7 +64,7 @@ class BugsnagManifestTask extends DefaultTask {
         def app = new XmlParser().parse(manifestPath).application[0]
         if (app) {
             def tagCount = app['meta-data'].findAll {
-                it.attributes()[ns.name].equals(BugsnagPlugin.BUILD_UUID_TAG)
+                (it.attributes()[ns.name] == BugsnagPlugin.BUILD_UUID_TAG)
             }.size()
             tagCount == 0 || !isInstantRun()
         } else {
