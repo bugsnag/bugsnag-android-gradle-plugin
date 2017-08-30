@@ -13,18 +13,18 @@ import java.util.regex.Pattern
 import static groovy.io.FileType.*
 
 /**
-    Task to upload shared object mapping files to Bugsnag.
+ Task to upload shared object mapping files to Bugsnag.
 
-    Reads meta-data tags from the project's AndroidManifest.xml to extract a
-    build UUID (injected by BugsnagManifestTask) and a Bugsnag API Key:
+ Reads meta-data tags from the project's AndroidManifest.xml to extract a
+ build UUID (injected by BugsnagManifestTask) and a Bugsnag API Key:
 
-    https://developer.android.com/guide/topics/manifest/manifest-intro.html
-    https://developer.android.com/guide/topics/manifest/meta-data-element.html
+ https://developer.android.com/guide/topics/manifest/manifest-intro.html
+ https://developer.android.com/guide/topics/manifest/meta-data-element.html
 
-    This task must be called after shared object files are generated, so
-    it is usually safe to have this be the absolute last task executed during
-    a build.
-*/
+ This task must be called after shared object files are generated, so
+ it is usually safe to have this be the absolute last task executed during
+ a build.
+ */
 class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
     File intermediatePath
     File symbolPath
@@ -33,7 +33,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
     File rootDir
     String toolchain
     String sharedObjectPath
-    def joinPath = { String ...args -> args.join(File.separator) }
+    def joinPath = { String... args -> args.join(File.separator) }
 
     BugsnagUploadNdkTask() {
         super()
@@ -48,11 +48,12 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
             sharedObjectFound = true
 
             File outputFile = createSymbolsForSharedObject(sharedObject, arch)
-            if (outputFile)
+            if (outputFile) {
                 uploadSymbols(outputFile, arch, sharedObject.name)
+            }
         }
         if (!sharedObjectFound) {
-            project.logger.error("No shared objects found in ${sharedObjectPath?: intermediatePath}")
+            project.logger.error("No shared objects found in ${sharedObjectPath ?: intermediatePath}")
         }
     }
 
@@ -60,8 +61,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
      * Traverse potential library paths, aggregating shared libraries
      *
      * Potential locations:
-     * - {project dir}/{defined shared object path}
-     * - {project dir}/obj/local
+     * - {project dir}/{defined shared object path}* - {project dir}/obj/local
      * - {intermediates}/cmake/{variant}/obj
      * - {intermediates}/binaries/{variant}/obj
      * - {intermediates}/exploded-aar/{*}/jni
@@ -73,8 +73,9 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
      *                  object file
      */
     def searchLibraryPaths(Closure processor) {
-        if (sharedObjectPath)
+        if (sharedObjectPath) {
             findSharedObjectFiles(joinPath(projectDir.path, sharedObjectPath), processor)
+        }
 
         findSharedObjectFiles(joinPath(projectDir.path, "obj", "local"), processor)
 
@@ -84,8 +85,9 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
             findSharedObjectFiles(joinPath(intermediateDir, "binaries", variantName, "obj"), processor)
 
             File explodedLibs = new File(joinPath(intermediateDir, "exploded-aar"))
-            if (explodedLibs.exists())
+            if (explodedLibs.exists()) {
                 searchLibraryJNIPaths(explodedLibs, processor)
+            }
         }
     }
 
@@ -104,12 +106,12 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
     /**
      * Searches the subdirectories of a given path and executes a block on
      * any shared object files
-     * @param path      The parent path to search. Each subdirectory should
+     * @param path The parent path to search. Each subdirectory should
      *                  represent an architecture
      * @param processor a closure to execute on each parent directory and shared
      *                  object file
      */
-    def findSharedObjectFiles(String path, Closure processor) {
+    static def findSharedObjectFiles(String path, Closure processor) {
         File dir = new File(path)
         if (dir.exists()) {
             dir.eachDir { arch ->
@@ -117,7 +119,6 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
             }
         }
     }
-
 
     /**
      * Uses objdump to create a symbols file for the given shared object file
@@ -140,7 +141,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
                 Process process = builder.start()
 
                 InputStream stdout = process.getInputStream();
-                BufferedReader outReader = new BufferedReader (new InputStreamReader(stdout));
+                BufferedReader outReader = new BufferedReader(new InputStreamReader(stdout));
 
                 if (!outPutSymbolFile(outReader, outputFile, arch)) {
                     return null;
@@ -153,7 +154,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
                     return null
                 }
             } catch (Exception e) {
-                project.logger.error("failed to generate symbols for " + arch + ": "+ e.getMessage());
+                project.logger.error("failed to generate symbols for " + arch + ": " + e.getMessage());
             }
         } else {
             project.logger.error("Unable to upload NDK symbols: Could not find objdump location for " + arch)
@@ -185,7 +186,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
 
             // Loop to remove redundant address lines (just keep the first and last addresses of each block)
             String line = outReader.readLine()
-            Matcher addressMatcher = null;
+            Matcher addressMatcher
             while (line != null) {
 
                 // Check to see if the current line is an address

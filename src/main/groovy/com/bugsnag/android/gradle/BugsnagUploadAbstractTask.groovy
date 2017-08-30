@@ -11,19 +11,20 @@ import org.apache.http.params.HttpConnectionParams
 import org.apache.http.params.HttpParams
 import org.apache.http.util.EntityUtils
 import org.gradle.api.DefaultTask
+
 /**
-    Task to upload ProGuard mapping files to Bugsnag.
+ Task to upload ProGuard mapping files to Bugsnag.
 
-    Reads meta-data tags from the project's AndroidManifest.xml to extract a
-    build UUID (injected by BugsnagManifestTask) and a Bugsnag API Key:
+ Reads meta-data tags from the project's AndroidManifest.xml to extract a
+ build UUID (injected by BugsnagManifestTask) and a Bugsnag API Key:
 
-    https://developer.android.com/guide/topics/manifest/manifest-intro.html
-    https://developer.android.com/guide/topics/manifest/meta-data-element.html
+ https://developer.android.com/guide/topics/manifest/manifest-intro.html
+ https://developer.android.com/guide/topics/manifest/meta-data-element.html
 
-    This task must be called after ProGuard mapping files are generated, so
-    it is usually safe to have this be the absolute last task executed during
-    a build.
-*/
+ This task must be called after ProGuard mapping files are generated, so
+ it is usually safe to have this be the absolute last task executed during
+ a build.
+ */
 abstract class BugsnagUploadAbstractTask extends DefaultTask {
     static final int MAX_RETRY_COUNT = 5
     static final int TIMEOUT_MILLIS = 60000 // 60 seconds
@@ -49,7 +50,7 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
 
         // Get the Bugsnag API key
         apiKey = getApiKey(metaDataTags, ns)
-        if(!apiKey) {
+        if (!apiKey) {
             throw new RuntimeException("Could not find apiKey in '$BugsnagPlugin.API_KEY_TAG' <meta-data> tag in your AndroidManifest.xml or in your gradle config")
         }
 
@@ -76,7 +77,7 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
         def retryCount = maxRetryCount
         while (!uploadSuccessful && retryCount > 0) {
             project.logger.warn(String.format("Retrying Bugsnag upload (%d/%d) ...",
-                                maxRetryCount - retryCount + 1, maxRetryCount))
+                maxRetryCount - retryCount + 1, maxRetryCount))
             uploadSuccessful = uploadToServer(mpEntity)
             retryCount--
         }
@@ -87,7 +88,7 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
         mpEntity.addPart("appId", new StringBody(applicationId))
         mpEntity.addPart("versionCode", new StringBody(versionCode))
 
-        if(buildUUID != null) {
+        if (buildUUID != null) {
             mpEntity.addPart("buildUUID", new StringBody(buildUUID));
         }
 
@@ -112,8 +113,8 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
         HttpConnectionParams.setConnectionTimeout(params, TIMEOUT_MILLIS)
         HttpConnectionParams.setSoTimeout(params, TIMEOUT_MILLIS)
 
-        int statusCode = 0
-        def responseEntity = null
+        int statusCode
+        def responseEntity
         try {
             HttpResponse response = httpClient.execute(httpPost)
             statusCode = response.getStatusLine().getStatusCode()
@@ -124,22 +125,24 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
         }
 
         if (statusCode == 200) {
-            println("Bugsnag upload succeeded")
+            project.logger.info("Bugsnag upload successful")
             return true
         }
 
         project.logger.warn(String.format("Bugsnag upload failed with code %d: %s",
-                            statusCode, responseEntity))
+            statusCode, responseEntity))
         return false
     }
 
     def getApiKey(metaDataTags, ns) {
         def apiKey = null
 
-        if(project.bugsnag.apiKey != null) {
+        if (project.bugsnag.apiKey != null) {
             apiKey = project.bugsnag.apiKey
         } else {
-            def apiKeyTags = metaDataTags.findAll{ it.attributes()[ns.name].equals(BugsnagPlugin.API_KEY_TAG) }
+            def apiKeyTags = metaDataTags.findAll {
+                (it.attributes()[ns.name] == BugsnagPlugin.API_KEY_TAG)
+            }
             if (apiKeyTags.size() > 0) {
                 apiKey = apiKeyTags[0].attributes()[ns.value]
             }
@@ -151,7 +154,9 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
     def getBuildUUID(metaDataTags, ns) {
         def buildUUID = null
 
-        def buildUUIDTags = metaDataTags.findAll{ it.attributes()[ns.name].equals(BugsnagPlugin.BUILD_UUID_TAG) }
+        def buildUUIDTags = metaDataTags.findAll {
+            (it.attributes()[ns.name] == BugsnagPlugin.BUILD_UUID_TAG)
+        }
         if (buildUUIDTags.size() == 0) {
             project.logger.warn("Could not find '$BugsnagPlugin.BUILD_UUID_TAG' <meta-data> tag in your AndroidManifest.xml")
         } else {
