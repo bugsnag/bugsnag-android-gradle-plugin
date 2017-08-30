@@ -24,6 +24,8 @@ class BugsnagManifestTask extends DefaultTask {
 
     @TaskAction
     def updateManifest() {
+        println("Updating manifest with build UUID: " + manifestPath)
+
         // Parse the AndroidManifest.xml
         def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
         def xml = new XmlParser().parse(manifestPath)

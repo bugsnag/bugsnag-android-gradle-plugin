@@ -23,23 +23,10 @@ import org.gradle.api.Project
  * https://docs.gradle.org/current/userguide/custom_tasks.html
  */
 class BugsnagPlugin implements Plugin<Project> {
+
     static final String API_KEY_TAG = 'com.bugsnag.android.API_KEY'
     static final String BUILD_UUID_TAG = 'com.bugsnag.android.BUILD_UUID'
     static final String GROUP_NAME = 'Bugsnag'
-
-
-
-
-//            applicationVariants.all { variant ->
-//                variant.outputs.all { output ->
-//                    output.processManifest.doLast {
-//                        String manifestPath = "$manifestOutputDirectory/AndroidManifest.xml"
-//                        println("Manifest: " + manifestPath)
-//                    }
-//                }
-//            }
-
-
 
     void apply(Project project) {
         project.extensions.create("bugsnag", BugsnagPluginExtension)
@@ -58,90 +45,106 @@ class BugsnagPlugin implements Plugin<Project> {
                     return
                 }
 
-                // The Android build system supports creating multiple APKs
-                // per Build Variant (Variant Outputs):
-                // https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide/apk-splits
-                //
-                // Variant Outputs share most tasks so we only need to attach
-                // Bugsnag tasks to the first output.
-                def variantOutput = variant.outputs.first()
-                def variantName = variant.name.capitalize()
+                // adds a Build UUID to the manifest
+                variant.outputs.all { output ->
+                    output.processManifest.doLast {
+                        File manifestPath = new File("$manifestOutputDirectory/AndroidManifest.xml")
+                        def task = createBuildUuidTask(project, variant.name, manifestPath, output)
 
-                // The location of the "intermediate" AndroidManifest.xml
-                File manifestPath = getManifestFile(variantOutput)
-
-                if (manifestPath == null) {
-                    println("No manifest available, skipping task.")
-                    return // FIXME will fail if this is a clean build of the variant
-                }
-                else {
-                    println("Bugsnag modifying manifest at" + manifestPath)
-                }
-
-                // Location where Proguard symbols are output
-                File symbolPath = getSymbolPath(variantOutput)
-
-                File intermediatePath = getIntermediatePath(symbolPath)
-
-                // Create a Bugsnag task to add a "Bugsnag recommended proguard settings" file
-                BugsnagProguardConfigTask proguardConfigTask = project.tasks.create("processBugsnag${variantName}Proguard", BugsnagProguardConfigTask)
-                proguardConfigTask.group = GROUP_NAME
-                proguardConfigTask.applicationVariant = variant
-
-                // Create a Bugsnag task to add a build UUID to AndroidManifest.xml
-                // This task must be called after "process${variantName}Manifest", since it
-                // requires that an AndroidManifest.xml exists in `build/intermediates`.
-                BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${variantName}Manifest", BugsnagManifestTask)
-                manifestTask.group = GROUP_NAME
-                manifestTask.manifestPath = manifestPath
-                manifestTask.mustRunAfter variantOutput.processManifest
-                manifestTask.onlyIf { it.shouldRun() }
-
-                // Create a Bugsnag task to upload proguard mapping file
-                BugsnagUploadAbstractTask uploadTask = getUploadTask(variant, variantName, manifestPath, variantOutput)
-                BugsnagUploadNdkTask uploadNdkTask = getUploadNdkTask(variantName, manifestPath, variant, intermediatePath, symbolPath, variantOutput)
-
-                // Automatically add the "edit proguard settings" task to the
-                // build process.
-                //
-                // This task must be called before ProGuard is run, but since
-                // the name of the ProGuard task changed between 1.0 and 1.5
-                // of the Android build tools, we'll hook into the "package"
-                // task as a dependency, since this is always run before
-                // ProGuard.
-                //
-                // For reference, in Android Build Tools 1.0, the ProGuard
-                // task was named `proguardRelease`, and in 1.5+ the ProGuard
-                // task is named `transformClassesAndResourcesWithProguardForRelease`
-                // as it is now part of the "transforms" process.
-                if (project.bugsnag.autoProguardConfig) {
-                    variantOutput.packageApplication.dependsOn proguardConfigTask
-                }
-
-                // Automatically add the "add build uuid to manifest" task to
-                // the build process.
-                //
-                // This task must be called after processManifest (see above),
-                // but before any source code is compiled, and before
-                // Bugsnag's upload task is run, since both require a UUID to
-                // be present in AndroidManifest.xml.
-                variantOutput.processResources.dependsOn manifestTask
-
-                // Automatically add the "upload proguard mappings" task to
-                // the build process.
-                //
-                // This task must be called after `packageApplication` (see
-                // above), but we also want this to run automatically as part
-                // of a typical build, so we hook into the `assemble` task.
-                if (project.bugsnag.autoUpload) {
-                    variant.getAssemble().dependsOn uploadTask
-
-                    if (project.bugsnag.ndk) {
-                        variant.getAssemble().dependsOn uploadNdkTask
+                        if (task.shouldRun()) {
+                            task.updateManifest()
+                        }
                     }
                 }
+
+
+
+//                // The Android build system supports creating multiple APKs
+//                // per Build Variant (Variant Outputs):
+//                // https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide/apk-splits
+//                //
+//                // Variant Outputs share most tasks so we only need to attach
+//                // Bugsnag tasks to the first output.
+//                def variantOutput = variant.outputs.first()
+//                def variantName = variant.name.capitalize()
+//
+//                // Location where Proguard symbols are output
+//                File symbolPath = getSymbolPath(variantOutput)
+//                File intermediatePath = getIntermediatePath(symbolPath)
+//
+//
+//                BugsnagProguardConfigTask proguardConfigTask = createProguardSettingsTask(variantName, variant)
+//
+//                // Create a Bugsnag task to upload proguard mapping file
+//                BugsnagUploadAbstractTask uploadTask = getUploadTask(variant, variantName, manifestPath, variantOutput)
+//                BugsnagUploadNdkTask uploadNdkTask = getUploadNdkTask(variantName, manifestPath, variant, intermediatePath, symbolPath, variantOutput)
+//
+//                // Automatically add the "edit proguard settings" task to the
+//                // build process.
+//                //
+//                // This task must be called before ProGuard is run, but since
+//                // the name of the ProGuard task changed between 1.0 and 1.5
+//                // of the Android build tools, we'll hook into the "package"
+//                // task as a dependency, since this is always run before
+//                // ProGuard.
+//                //
+//                // For reference, in Android Build Tools 1.0, the ProGuard
+//                // task was named `proguardRelease`, and in 1.5+ the ProGuard
+//                // task is named `transformClassesAndResourcesWithProguardForRelease`
+//                // as it is now part of the "transforms" process.
+//                if (project.bugsnag.autoProguardConfig) {
+//                    variantOutput.packageApplication.dependsOn proguardConfigTask
+//                }
+//
+//                // Automatically add the "upload proguard mappings" task to
+//                // the build process.
+//                //
+//                // This task must be called after `packageApplication` (see
+//                // above), but we also want this to run automatically as part
+//                // of a typical build, so we hook into the `assemble` task.
+//                if (project.bugsnag.autoUpload) {
+//                    variant.getAssemble().dependsOn uploadTask
+//
+//                    if (project.bugsnag.ndk) {
+//                        variant.getAssemble().dependsOn uploadNdkTask
+//                    }
+//                }
             }
         }
+    }
+
+    /**
+     * Create a Bugsnag task to add a "Bugsnag recommended proguard settings" file
+     * @param variantName
+     * @param variant
+     * @return
+     */
+    private BugsnagProguardConfigTask createProguardSettingsTask(variantName, ApplicationVariant variant) {
+        BugsnagProguardConfigTask proguardConfigTask = project.tasks.create("processBugsnag${variantName}Proguard", BugsnagProguardConfigTask)
+        proguardConfigTask.group = GROUP_NAME
+        proguardConfigTask.applicationVariant = variant
+        proguardConfigTask
+    }
+
+    /**
+     *
+     * Create a Bugsnag task to add a build UUID to AndroidManifest.xml
+     * This task must be called after "process${variantName}Manifest", since it
+     * requires that an AndroidManifest.xml exists in `build/intermediates`.
+     *
+     * @param variantName
+     * @param manifestPath
+     * @param variantOutput
+     * @return
+     */
+    private static BugsnagManifestTask createBuildUuidTask(Project project, String variantName, File manifestPath, BaseVariantOutput variantOutput) {
+        println("BUILD UUID")
+        BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${variantName}Manifest", BugsnagManifestTask)
+        manifestTask.group = GROUP_NAME
+        manifestTask.manifestPath = manifestPath
+        manifestTask.mustRunAfter variantOutput.processManifest
+        manifestTask.onlyIf { it.shouldRun() }
+        manifestTask
     }
 
     private boolean hasDisabledBugsnag(ApplicationVariant variant) {
@@ -150,8 +153,7 @@ class BugsnagPlugin implements Plugin<Project> {
         }
 
         // Ignore any conflicting properties, bail if anything has a disable flag.
-        def any = (variant.productFlavors + variant.buildType).any(hasDisabledBugsnag)
-        any
+        return (variant.productFlavors + variant.buildType).any(hasDisabledBugsnag)
     }
 
     private static BugsnagUploadAbstractTask getUploadTask(ApplicationVariant variant,
@@ -193,35 +195,6 @@ class BugsnagPlugin implements Plugin<Project> {
             uploadNdkTask.mustRunAfter variantOutput.packageApplication
         }
         uploadNdkTask
-    }
-
-    private static File getIntermediatePath(File symbolPath) {
-        def intermediatePath = null
-
-        if (symbolPath != null) {
-            intermediatePath = symbolPath.parentFile.parentFile
-        }
-        intermediatePath
-    }
-
-    private static File getSymbolPath(BaseVariantOutput variantOutput) {
-        def symbolPath = variantOutput.processResources.getTextSymbolOutputFile()
-
-        if (symbolPath == null) {
-            throw new IllegalStateException("Could not find symbol path")
-        }
-        symbolPath
-    }
-
-    private static File getManifestFile(BaseVariantOutput variantOutput) {
-        println("Supplied with Manifest Directory: " + variantOutput.processManifest.getManifestOutputDirectory())
-        def manifestPaths = variantOutput.processManifest.getManifestOutputDirectory().listFiles(new FilenameFilter() {
-            @Override
-            boolean accept(File dir, String filename) {
-                return filename.contains("AndroidManifest.xml")
-            }
-        })
-        return manifestPaths != null ? manifestPaths[0] : null
     }
 
     /**
