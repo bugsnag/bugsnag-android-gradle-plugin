@@ -24,7 +24,7 @@ class BugsnagManifestTask extends DefaultTask {
 
     @TaskAction
     def updateManifest() {
-        println("Updating manifest with build UUID: " + manifestPath)
+        project.logger.debug("Updating manifest with build UUID: " + manifestPath)
 
         // Parse the AndroidManifest.xml
         def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
@@ -53,7 +53,7 @@ class BugsnagManifestTask extends DefaultTask {
             printer.preserveWhitespace = true
             printer.print(xml)
         } else {
-            project.logger.warn("Bugsnag detected invalid manifest with no application element so did not write Build UUID")
+            project.logger.error("Bugsnag detected invalid manifest with no application element so did not write Build UUID")
         }
     }
 

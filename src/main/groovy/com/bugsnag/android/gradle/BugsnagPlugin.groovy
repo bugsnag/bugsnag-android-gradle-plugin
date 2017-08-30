@@ -7,7 +7,6 @@ import com.android.build.gradle.internal.core.Toolchain
 import com.android.build.gradle.internal.dsl.BuildType
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-
 /**
  * Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.
  *
@@ -37,7 +36,6 @@ class BugsnagPlugin implements Plugin<Project> {
                 throw new IllegalStateException('Must apply \'com.android.application\' first!')
             }
 
-
             // Create tasks for each Build Variant
             // https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide#TOC-Build-Variants
             project.android.applicationVariants.all { ApplicationVariant variant ->
@@ -45,71 +43,86 @@ class BugsnagPlugin implements Plugin<Project> {
                     return
                 }
 
-                // adds a Build UUID to the manifest
                 variant.outputs.all { output ->
-                    output.processManifest.doLast {
-                        File manifestPath = new File("$manifestOutputDirectory/AndroidManifest.xml")
-                        def task = createBuildUuidTask(project, variant.name, manifestPath, output)
+                    setupProguardAutoConfig(variant, project) // TODO check dexguard task name matches
 
-                        if (task.shouldRun()) {
-                            task.updateManifest()
+                    // manipulate the generated manifest then upload the mapping file
+                    output.processManifest.doLast {
+                        def path = "$manifestOutputDirectory/AndroidManifest.xml"
+                        def manifestPath = new File(path)
+
+                        if (!manifestPath.exists()) {
+                            project.logger.warn("Failed to find manifest for variant " + variant.name)
+                            return
                         }
+
+                        addUuidToManifest(project, output, manifestPath, variant)
+                        uploadMappingFile(manifestPath, variant, project)
                     }
                 }
-
-
-
-//                // The Android build system supports creating multiple APKs
-//                // per Build Variant (Variant Outputs):
-//                // https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide/apk-splits
-//                //
-//                // Variant Outputs share most tasks so we only need to attach
-//                // Bugsnag tasks to the first output.
-//                def variantOutput = variant.outputs.first()
-//                def variantName = variant.name.capitalize()
-//
-//                // Location where Proguard symbols are output
-//                File symbolPath = getSymbolPath(variantOutput)
-//                File intermediatePath = getIntermediatePath(symbolPath)
-//
-//
-//                BugsnagProguardConfigTask proguardConfigTask = createProguardSettingsTask(variantName, variant)
-//
-//                // Create a Bugsnag task to upload proguard mapping file
-//                BugsnagUploadAbstractTask uploadTask = getUploadTask(variant, variantName, manifestPath, variantOutput)
-//                BugsnagUploadNdkTask uploadNdkTask = getUploadNdkTask(variantName, manifestPath, variant, intermediatePath, symbolPath, variantOutput)
-//
-//                // Automatically add the "edit proguard settings" task to the
-//                // build process.
-//                //
-//                // This task must be called before ProGuard is run, but since
-//                // the name of the ProGuard task changed between 1.0 and 1.5
-//                // of the Android build tools, we'll hook into the "package"
-//                // task as a dependency, since this is always run before
-//                // ProGuard.
-//                //
-//                // For reference, in Android Build Tools 1.0, the ProGuard
-//                // task was named `proguardRelease`, and in 1.5+ the ProGuard
-//                // task is named `transformClassesAndResourcesWithProguardForRelease`
-//                // as it is now part of the "transforms" process.
-//                if (project.bugsnag.autoProguardConfig) {
-//                    variantOutput.packageApplication.dependsOn proguardConfigTask
-//                }
-//
-//                // Automatically add the "upload proguard mappings" task to
-//                // the build process.
-//                //
-//                // This task must be called after `packageApplication` (see
-//                // above), but we also want this to run automatically as part
-//                // of a typical build, so we hook into the `assemble` task.
-//                if (project.bugsnag.autoUpload) {
-//                    variant.getAssemble().dependsOn uploadTask
-//
-//                    if (project.bugsnag.ndk) {
-//                        variant.getAssemble().dependsOn uploadNdkTask
-//                    }
-//                }
             }
+        }
+    }
+
+    private static void uploadMappingFile(File manifestPath, ApplicationVariant variant, Project project) {
+
+        // The Android build system supports creating multiple APKs
+        // per Build Variant (Variant Outputs):
+        // https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide/apk-splits
+        //
+        // Variant Outputs share most tasks so we only need to attach
+        // Bugsnag tasks to the first output.
+        def variantOutput = variant.outputs.first()
+        def variantName = variant.name.capitalize()
+
+        // Location where Proguard symbols are output
+        File symbolPath = getSymbolPath(variantOutput)
+        File intermediatePath = getIntermediatePath(symbolPath)
+
+        // Create a Bugsnag task to upload proguard mapping file
+        BugsnagUploadAbstractTask uploadTask = getUploadTask(project, variant, variantName, manifestPath, variantOutput)
+        BugsnagUploadNdkTask uploadNdkTask = getUploadNdkTask(project, variantName, manifestPath, variant, intermediatePath, symbolPath, variantOutput)
+
+        // Automatically add the "upload proguard mappings" task to
+        // the build process.
+        if (project.bugsnag.autoUpload) {
+            uploadTask.upload()
+
+            if (project.bugsnag.ndk) {
+                uploadNdkTask.upload()
+            }
+        }
+    }
+
+    private static void addUuidToManifest(Project project, BaseVariantOutput output,
+                                          File manifestPath, ApplicationVariant variant) {
+        def task = createBuildUuidTask(project, variant.name, manifestPath, output)
+
+        if (task.shouldRun()) {
+            task.updateManifest()
+        }
+    }
+
+    private static void setupProguardAutoConfig(ApplicationVariant variant, Project project) {
+        BugsnagProguardConfigTask proguardConfigTask = createProguardSettingsTask(project, variant.name, variant)
+
+        // Automatically add the "edit proguard settings" task to the
+        // build process.
+        //
+        // This task must be called before ProGuard is run, but since
+        // the name of the ProGuard task changed between 1.0 and 1.5
+        // of the Android build tools, we'll hook into the "package"
+        // task as a dependency, since this is always run before
+        // ProGuard.
+        //
+        // For reference, in Android Build Tools 1.0, the ProGuard
+        // task was named `proguardRelease`, and in 1.5+ the ProGuard
+        // task is named `transformClassesAndResourcesWithProguardForRelease`
+        // as it is now part of the "transforms" process.
+        if (project.bugsnag.autoProguardConfig) {
+            project.logger.debug("Bugsnag autoproguard config enabled")
+            def variantOutput = variant.outputs.first()
+            variantOutput.packageApplication.dependsOn proguardConfigTask
         }
     }
 
@@ -119,7 +132,9 @@ class BugsnagPlugin implements Plugin<Project> {
      * @param variant
      * @return
      */
-    private BugsnagProguardConfigTask createProguardSettingsTask(variantName, ApplicationVariant variant) {
+    private static BugsnagProguardConfigTask createProguardSettingsTask(Project project,
+                                                                        variantName,
+                                                                        ApplicationVariant variant) {
         BugsnagProguardConfigTask proguardConfigTask = project.tasks.create("processBugsnag${variantName}Proguard", BugsnagProguardConfigTask)
         proguardConfigTask.group = GROUP_NAME
         proguardConfigTask.applicationVariant = variant
@@ -137,8 +152,11 @@ class BugsnagPlugin implements Plugin<Project> {
      * @param variantOutput
      * @return
      */
-    private static BugsnagManifestTask createBuildUuidTask(Project project, String variantName, File manifestPath, BaseVariantOutput variantOutput) {
-        println("BUILD UUID")
+    private static BugsnagManifestTask createBuildUuidTask(Project project,
+                                                           String variantName,
+                                                           File manifestPath,
+                                                           BaseVariantOutput variantOutput) {
+        project.logger.debug("Adding Build UUID to manifest")
         BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${variantName}Manifest", BugsnagManifestTask)
         manifestTask.group = GROUP_NAME
         manifestTask.manifestPath = manifestPath
@@ -147,7 +165,7 @@ class BugsnagPlugin implements Plugin<Project> {
         manifestTask
     }
 
-    private boolean hasDisabledBugsnag(ApplicationVariant variant) {
+    private static boolean hasDisabledBugsnag(ApplicationVariant variant) {
         def hasDisabledBugsnag = {
             it.ext.properties.containsKey("enableBugsnag") && !it.ext.enableBugsnag
         }
@@ -156,11 +174,11 @@ class BugsnagPlugin implements Plugin<Project> {
         return (variant.productFlavors + variant.buildType).any(hasDisabledBugsnag)
     }
 
-    private static BugsnagUploadAbstractTask getUploadTask(ApplicationVariant variant,
+    private static BugsnagUploadAbstractTask getUploadTask(Project project,
+                                                           ApplicationVariant variant,
                                                            variantName,
                                                            File manifestPath,
                                                            BaseVariantOutput variantOutput) {
-        Project project
         def uploadTaskClass = isJackEnabled(project, variant) ? BugsnagUploadJackTask : BugsnagUploadProguardTask
         def uploadTask = project.tasks.create("uploadBugsnag${variantName}Mapping", uploadTaskClass)
         uploadTask.group = GROUP_NAME
@@ -171,13 +189,13 @@ class BugsnagPlugin implements Plugin<Project> {
         uploadTask
     }
 
-    private static BugsnagUploadNdkTask getUploadNdkTask(variantName,
+    private static BugsnagUploadNdkTask getUploadNdkTask(Project project,
+                                                         variantName,
                                                          File manifestPath,
                                                          ApplicationVariant variant,
                                                          File intermediatePath,
                                                          File symbolPath,
                                                          BaseVariantOutput variantOutput) {
-        Project project
         BugsnagUploadNdkTask uploadNdkTask
         if (project.bugsnag.ndk) {
             // Create a Bugsnag task to upload NDK mapping file(s)
@@ -196,6 +214,25 @@ class BugsnagPlugin implements Plugin<Project> {
         }
         uploadNdkTask
     }
+
+    private static File getIntermediatePath(File symbolPath) {
+        def intermediatePath = null
+
+        if (symbolPath != null) {
+            intermediatePath = symbolPath.parentFile.parentFile
+        }
+        intermediatePath
+    }
+
+    private static File getSymbolPath(BaseVariantOutput variantOutput) {
+        def symbolPath = variantOutput.processResources.textSymbolOutputFile
+
+        if (symbolPath == null) {
+            throw new IllegalStateException("Could not find symbol path")
+        }
+        symbolPath
+    }
+
 
     /**
      * Checks to see if the Jack compiler is being used for the given variant

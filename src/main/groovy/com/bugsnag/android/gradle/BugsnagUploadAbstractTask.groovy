@@ -102,7 +102,7 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
     }
 
     def boolean uploadToServer(mpEntity) {
-        println("Attempting upload to Bugsnag")
+        project.logger.lifecycle("Attempting upload of mapping file to Bugsnag")
 
         // Make the request
         HttpPost httpPost = new HttpPost(project.bugsnag.endpoint)
@@ -120,16 +120,16 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
             statusCode = response.getStatusLine().getStatusCode()
             responseEntity = EntityUtils.toString(response.getEntity(), "utf-8")
         } catch (Exception e) {
-            project.logger.warn(String.format("Bugsnag upload failed: %s", e))
+            project.logger.error(String.format("Bugsnag upload failed: %s", e))
             return false
         }
 
         if (statusCode == 200) {
-            project.logger.info("Bugsnag upload successful")
+            project.logger.lifecycle("Bugsnag upload successful")
             return true
         }
 
-        project.logger.warn(String.format("Bugsnag upload failed with code %d: %s",
+        project.logger.error(String.format("Bugsnag upload failed with code %d: %s",
             statusCode, responseEntity))
         return false
     }
@@ -148,7 +148,7 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
             }
         }
 
-        return apiKey;
+        return apiKey
     }
 
     def getBuildUUID(metaDataTags, ns) {
