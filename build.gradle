@@ -10,7 +10,6 @@ apply plugin: 'maven-publish'
 // Repositories for dependencies
 repositories {
     jcenter()
-    mavenCentral()
     google()
 }
 
