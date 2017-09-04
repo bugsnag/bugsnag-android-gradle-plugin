@@ -6,5 +6,5 @@ build/
 
 # Ignore Gradle GUI config
 gradle-app.setting
-*.idea
+.idea/
 local.properties

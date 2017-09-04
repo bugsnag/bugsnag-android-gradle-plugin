@@ -196,9 +196,9 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
                     // Only output the line if this is the start of a block of addresses
                     if (!justSeenAddress) {
                         writer.writeLine(line)
-                        previousAddress = null;
+                        previousAddress = null
                     } else {
-                        previousAddress = line;
+                        previousAddress = line
                     }
 
                     justSeenAddress = true;
