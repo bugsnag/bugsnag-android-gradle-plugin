@@ -1,3 +1,7 @@
+## 3.0.0-beta (2017-09-06)
+
+* Support Android Plugin for Gradle 3.0.0
+
 ## 2.4.2 (2017-05-10)
 
 ## Bug fixes
