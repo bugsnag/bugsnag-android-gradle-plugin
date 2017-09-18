@@ -46,28 +46,15 @@ class BugsnagPlugin implements Plugin<Project> {
                 }
 
                 variant.outputs.all { output ->
-                    setupProguardAutoConfig(variant, project)
-                    setupManifestUuidTask(project, output, variant)
-
-                    // manipulate the generated manifest then upload the mapping file
-                    output.processManifest.doLast {
-                         File manifestPath = output.processManifest.manifestOutputDirectory
-
-                        if (!manifestPath.exists()) {
-                            project.logger.warn("Failed to find manifest for variant " + variant.name)
-                            return
-                        }
-
-//                        setupManifestUuidTask(project, output, manifestPath, variant)
-                        uploadMappingFile(manifestPath, variant, project)
-                    }
+                    setupProguardAutoConfig(project, variant, output)
+                    setupManifestUuidTask(project, variant, output)
+                    setupMappingFileUpload(project, variant, output)
                 }
             }
         }
     }
 
-    private static void uploadMappingFile(File manifestPath, ApplicationVariant variant, Project project) {
-
+    private static void setupMappingFileUpload(Project project, ApplicationVariant variant,  BaseVariantOutput output) {
         // The Android build system supports creating multiple APKs
         // per Build Variant (Variant Outputs):
         // https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide/apk-splits
@@ -82,21 +69,21 @@ class BugsnagPlugin implements Plugin<Project> {
         File intermediatePath = getIntermediatePath(symbolPath)
 
         // Create a Bugsnag task to upload proguard mapping file
-        BugsnagUploadAbstractTask uploadTask = getUploadTask(project, variant, variantName, manifestPath, variantOutput)
-        BugsnagUploadNdkTask uploadNdkTask = getUploadNdkTask(project, variantName, manifestPath, variant, intermediatePath, symbolPath, variantOutput)
-
-        // Automatically add the "upload proguard mappings" task to
-        // the build process.
-        if (project.bugsnag.autoUpload) {
-            uploadTask.upload()
-
-            if (project.bugsnag.ndk) {
-                uploadNdkTask.upload()
-            }
-        }
+//        BugsnagUploadAbstractTask uploadTask = getUploadTask(project, variant, variantName, manifestPath, variantOutput)
+//        BugsnagUploadNdkTask uploadNdkTask = getUploadNdkTask(project, variantName, manifestPath, variant, intermediatePath, symbolPath, variantOutput)
+//
+//        // Automatically add the "upload proguard mappings" task to
+//        // the build process.
+//        if (project.bugsnag.autoUpload) {
+//            uploadTask.upload()
+//
+//            if (project.bugsnag.ndk) {
+//                uploadNdkTask.upload()
+//            }
+//        }
     }
 
-    private static void setupManifestUuidTask(Project project, BaseVariantOutput output, ApplicationVariant variant) {
+    private static void setupManifestUuidTask(Project project, ApplicationVariant variant,  BaseVariantOutput output) {
         project.logger.debug("Adding Build UUID to manifest")
 
         BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${variant.name}Manifest", BugsnagManifestTask)
@@ -109,7 +96,7 @@ class BugsnagPlugin implements Plugin<Project> {
         variantOutput.packageApplication.dependsOn manifestTask
     }
 
-    private static void setupProguardAutoConfig(ApplicationVariant variant, Project project) {
+    private static void setupProguardAutoConfig(Project project, ApplicationVariant variant,  BaseVariantOutput output) {
         BugsnagProguardConfigTask proguardConfigTask = project.tasks.create("processBugsnag${variant.name}Proguard", BugsnagProguardConfigTask)
         proguardConfigTask.group = GROUP_NAME
         proguardConfigTask.applicationVariant = variant
