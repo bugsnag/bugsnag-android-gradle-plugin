@@ -1,5 +1,6 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.gradle.api.BaseVariantOutput
 import groovy.xml.Namespace
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
@@ -26,9 +27,11 @@ import org.gradle.api.DefaultTask
  a build.
  */
 abstract class BugsnagUploadAbstractTask extends DefaultTask {
+
     static final int MAX_RETRY_COUNT = 5
     static final int TIMEOUT_MILLIS = 60000 // 60 seconds
-    String manifestPath
+
+    BaseVariantOutput output
     String applicationId
 
     // Read from the manifest file
@@ -45,7 +48,7 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
     def readManifestFile() {
         // Parse the AndroidManifest.xml
         def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
-        def xml = new XmlParser().parse(manifestPath)
+        def xml = new XmlParser().parse(getManifestPath())
         def metaDataTags = xml.application['meta-data']
 
         // Get the Bugsnag API key
@@ -176,4 +179,12 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
         return project.bugsnag.retryCount >= MAX_RETRY_COUNT ? MAX_RETRY_COUNT : project.bugsnag.retryCount
     }
 
+    def getManifestPath() {
+        File manifestPath = new File(output.processManifest.manifestOutputDirectory, "AndroidManifest.xml")
+
+        if (!manifestPath.exists()) {
+            project.logger.warn("Failed to find manifest for output " + output.name)
+        }
+        manifestPath
+    }
 }
