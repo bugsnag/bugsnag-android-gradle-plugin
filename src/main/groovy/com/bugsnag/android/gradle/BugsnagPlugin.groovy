@@ -70,8 +70,8 @@ class BugsnagPlugin implements Plugin<Project> {
 
         uploadTask.group = GROUP_NAME
         uploadTask.output = output
+        uploadTask.variant = variant
         uploadTask.applicationId = variant.applicationId
-        uploadTask.mappingFile = variant.mappingFile
         uploadTask.mustRunAfter output.processManifest
         uploadTask.onlyIf { project.bugsnag.autoUpload }
 
@@ -89,6 +89,7 @@ class BugsnagPlugin implements Plugin<Project> {
             uploadNdkTask = project.tasks.create("uploadBugsnagNdk${variantName}Mapping", BugsnagUploadNdkTask)
             uploadNdkTask.group = GROUP_NAME
             uploadNdkTask.output = output
+            uploadNdkTask.variant = variant
             uploadNdkTask.applicationId = variant.applicationId
             uploadNdkTask.intermediatePath = intermediatePath
             uploadNdkTask.symbolPath = symbolPath

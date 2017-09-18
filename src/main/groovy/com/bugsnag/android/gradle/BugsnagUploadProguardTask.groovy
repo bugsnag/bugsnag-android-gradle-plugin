@@ -19,7 +19,6 @@ import org.gradle.api.tasks.TaskAction
  */
 class BugsnagUploadProguardTask extends BugsnagUploadAbstractTask { // FIXME duplication with Jack task
 
-    File mappingFile
     String partName
 
     BugsnagUploadProguardTask() {
@@ -29,6 +28,8 @@ class BugsnagUploadProguardTask extends BugsnagUploadAbstractTask { // FIXME dup
 
     @TaskAction
     def upload() {
+        def mappingFile = variant.mappingFile
+
         // If we haven't enabled proguard for this variant, or the proguard
         // configuration includes -dontobfuscate, the mapping file
         // will not exist (but we also won't need it).
