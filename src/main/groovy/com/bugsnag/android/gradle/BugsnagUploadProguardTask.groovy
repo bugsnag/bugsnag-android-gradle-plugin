@@ -17,12 +17,14 @@ import org.gradle.api.tasks.TaskAction
  it is usually safe to have this be the absolute last task executed during
  a build.
  */
-class BugsnagUploadProguardTask extends BugsnagUploadAbstractTask {
+class BugsnagUploadProguardTask extends BugsnagUploadAbstractTask { // FIXME duplication with Jack task
+
     File mappingFile
+    String partName
 
     BugsnagUploadProguardTask() {
         super()
-        this.description = "Uploads the proguard mapping file to Bugsnag"
+        this.description = "Uploads the mapping file to Bugsnag"
     }
 
     @TaskAction
@@ -31,19 +33,20 @@ class BugsnagUploadProguardTask extends BugsnagUploadAbstractTask {
         // configuration includes -dontobfuscate, the mapping file
         // will not exist (but we also won't need it).
         if (!mappingFile || !mappingFile.exists()) {
-            project.logger.info("Mapping file not found for Proguard")
+            project.logger.error("Mapping file not found")
             return
         }
 
         // Read the API key and Build ID etc..
-        super.readManifestFile();
-        project.logger.info("Attempting to upload proguard mapping file: " + mappingFile)
+        super.readManifestFile()
+        project.logger.info("Attempting to upload mapping file: " + mappingFile)
 
         // Construct a basic request
         MultipartEntity mpEntity = new MultipartEntity()
-        mpEntity.addPart("proguard", new FileBody(mappingFile))
+        mpEntity.addPart(partName, new FileBody(mappingFile))
 
         // Send the request
         super.uploadMultipartEntity(mpEntity)
     }
+
 }

@@ -64,8 +64,10 @@ class BugsnagPlugin implements Plugin<Project> {
         def variantName = variant.name.capitalize()
 
         // Create a Bugsnag task to upload proguard mapping file
-        def uploadTaskClass = isJackEnabled(project, variant) ? BugsnagUploadJackTask : BugsnagUploadProguardTask
+        def uploadTaskClass = BugsnagUploadProguardTask
         def uploadTask = project.tasks.create("uploadBugsnag${ variantName}Mapping", uploadTaskClass)
+        uploadTask.partName = isJackEnabled(project, variant) ? "jack" : "proguard"
+
         uploadTask.group = GROUP_NAME
         uploadTask.output = output
         uploadTask.applicationId = variant.applicationId
