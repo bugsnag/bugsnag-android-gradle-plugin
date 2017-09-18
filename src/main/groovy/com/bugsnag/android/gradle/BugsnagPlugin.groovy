@@ -30,6 +30,8 @@ class BugsnagPlugin implements Plugin<Project> {
     void apply(Project project) {
         project.extensions.create("bugsnag", BugsnagPluginExtension)
 
+        project.tasks.create("myCustomTask", BugsnagUploadProguardTask)
+
         project.afterEvaluate {
             // Make sure the android plugin has been applied first
             if (!project.plugins.hasPlugin(AppPlugin)) {
@@ -44,19 +46,19 @@ class BugsnagPlugin implements Plugin<Project> {
                 }
 
                 variant.outputs.all { output ->
-                    setupProguardAutoConfig(variant, project) // TODO check dexguard task name matches
+                    setupProguardAutoConfig(variant, project)
+                    setupManifestUuidTask(project, output, variant)
 
                     // manipulate the generated manifest then upload the mapping file
                     output.processManifest.doLast {
-                        def path = "$manifestOutputDirectory/AndroidManifest.xml"
-                        def manifestPath = new File(path)
+                         File manifestPath = output.processManifest.manifestOutputDirectory
 
                         if (!manifestPath.exists()) {
                             project.logger.warn("Failed to find manifest for variant " + variant.name)
                             return
                         }
 
-                        addUuidToManifest(project, output, manifestPath, variant)
+//                        setupManifestUuidTask(project, output, manifestPath, variant)
                         uploadMappingFile(manifestPath, variant, project)
                     }
                 }
@@ -94,17 +96,23 @@ class BugsnagPlugin implements Plugin<Project> {
         }
     }
 
-    private static void addUuidToManifest(Project project, BaseVariantOutput output,
-                                          File manifestPath, ApplicationVariant variant) {
-        def task = createBuildUuidTask(project, variant.name, manifestPath, output)
+    private static void setupManifestUuidTask(Project project, BaseVariantOutput output, ApplicationVariant variant) {
+        project.logger.debug("Adding Build UUID to manifest")
 
-        if (task.shouldRun()) {
-            task.updateManifest()
-        }
+        BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${variant.name}Manifest", BugsnagManifestTask)
+        manifestTask.output = output
+        manifestTask.group = GROUP_NAME
+        manifestTask.mustRunAfter output.processManifest
+        manifestTask.onlyIf { it.shouldRun() }
+
+        def variantOutput = variant.outputs.first()
+        variantOutput.packageApplication.dependsOn manifestTask
     }
 
     private static void setupProguardAutoConfig(ApplicationVariant variant, Project project) {
-        BugsnagProguardConfigTask proguardConfigTask = createProguardSettingsTask(project, variant.name, variant)
+        BugsnagProguardConfigTask proguardConfigTask = project.tasks.create("processBugsnag${variant.name}Proguard", BugsnagProguardConfigTask)
+        proguardConfigTask.group = GROUP_NAME
+        proguardConfigTask.applicationVariant = variant
 
         // Automatically add the "edit proguard settings" task to the
         // build process.
@@ -132,14 +140,6 @@ class BugsnagPlugin implements Plugin<Project> {
      * @param variant
      * @return
      */
-    private static BugsnagProguardConfigTask createProguardSettingsTask(Project project,
-                                                                        variantName,
-                                                                        ApplicationVariant variant) {
-        BugsnagProguardConfigTask proguardConfigTask = project.tasks.create("processBugsnag${variantName}Proguard", BugsnagProguardConfigTask)
-        proguardConfigTask.group = GROUP_NAME
-        proguardConfigTask.applicationVariant = variant
-        proguardConfigTask
-    }
 
     /**
      *
@@ -152,18 +152,6 @@ class BugsnagPlugin implements Plugin<Project> {
      * @param variantOutput
      * @return
      */
-    private static BugsnagManifestTask createBuildUuidTask(Project project,
-                                                           String variantName,
-                                                           File manifestPath,
-                                                           BaseVariantOutput variantOutput) {
-        project.logger.debug("Adding Build UUID to manifest")
-        BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${variantName}Manifest", BugsnagManifestTask)
-        manifestTask.group = GROUP_NAME
-        manifestTask.manifestPath = manifestPath
-        manifestTask.mustRunAfter variantOutput.processManifest
-        manifestTask.onlyIf { it.shouldRun() }
-        manifestTask
-    }
 
     private static boolean hasDisabledBugsnag(ApplicationVariant variant) {
         def hasDisabledBugsnag = {
