@@ -97,7 +97,7 @@ bugsnag {
 If you disable automatic uploading, you can still run the upload task manually, with the uploadBugsnag*Variant*Mapping task:
 
 ```shell
-./gradlew clean package uploadBugsnagReleaseMapping
+./gradlew clean assembleRelease packageRelease uploadBugsnagReleaseMapping
 ```
 
 ## Automatic Proguard Config

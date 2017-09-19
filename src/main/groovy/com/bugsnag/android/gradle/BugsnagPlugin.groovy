@@ -72,10 +72,9 @@ class BugsnagPlugin implements Plugin<Project> {
         uploadTask.output = output
         uploadTask.variant = variant
         uploadTask.applicationId = variant.applicationId
-        uploadTask.mustRunAfter output.processManifest
         uploadTask.onlyIf { project.bugsnag.autoUpload }
 
-        output.packageApplication.dependsOn uploadTask
+        project.tasks.findByName("package${variantName}").finalizedBy {uploadTask}
     }
 
     private static void setupNdkMappingFileUpload(Project project, ApplicationVariant variant,  BaseVariantOutput output) {
@@ -98,10 +97,9 @@ class BugsnagPlugin implements Plugin<Project> {
             uploadNdkTask.rootDir = project.rootDir
             uploadNdkTask.toolchain = getCmakeToolchain(project, variant)
             uploadNdkTask.sharedObjectPath = project.bugsnag.sharedObjectPath
-            uploadNdkTask.mustRunAfter output.processManifest
             uploadNdkTask.onlyIf { project.bugsnag.autoUpload && project.bugsnag.ndk }
 
-            output.packageApplication.dependsOn uploadNdkTask
+            project.tasks.findByName("package${variantName}").finalizedBy {uploadNdkTask}
         }
     }
 
