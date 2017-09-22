@@ -97,8 +97,10 @@ bugsnag {
 If you disable automatic uploading, you can still run the upload task manually, with the uploadBugsnag*Variant*Mapping task:
 
 ```shell
-./gradlew clean assembleRelease packageRelease ${moduleName}:uploadBugsnag${variantName}ReleaseMapping
+./gradlew clean assembleRelease packageRelease ${moduleName}:uploadBugsnag${variantName}Mapping
 ```
+
+In this example, $moduleName is the module being built (e.g. 'app'), and $variantName is the build variant name (e.g. 'appProRelease')
 
 ## Automatic Proguard Config
 
