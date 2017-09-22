@@ -38,7 +38,7 @@ Settings, at `<project dir>/<module name>/build.gradle` (usually
 
 ```groovy
 plugins {
-    id "com.bugsnag.android.gradle" version "2.4.2"
+    id "com.bugsnag.android.gradle" version "3.0.0-beta2"
 }
 ```
 
@@ -50,7 +50,7 @@ Add this plugin as a dependency in your main *Project Gradle Settings*, at `<pro
 buildscript {
     dependencies {
         // Add this line to your `dependencies` section
-        classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.3.2'
+        classpath 'com.bugsnag:bugsnag-android-gradle-plugin:3.0.0-beta2'
     }
 }
 ```
@@ -97,8 +97,10 @@ bugsnag {
 If you disable automatic uploading, you can still run the upload task manually, with the uploadBugsnag*Variant*Mapping task:
 
 ```shell
-./gradlew clean package uploadBugsnagReleaseMapping
+./gradlew clean assembleRelease packageRelease ${moduleName}:uploadBugsnag${variantName}Mapping
 ```
+
+In this example, $moduleName is the module being built (e.g. 'app'), and $variantName is the build variant name (e.g. 'appProRelease')
 
 ## Automatic Proguard Config
 

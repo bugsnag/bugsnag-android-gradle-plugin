@@ -1,5 +1,6 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.gradle.api.BaseVariantOutput
 import groovy.xml.Namespace
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
@@ -15,7 +16,8 @@ import org.gradle.api.tasks.TaskAction
  requires that an AndroidManifest.xml exists in `build/intermediates`.
  */
 class BugsnagManifestTask extends DefaultTask {
-    String manifestPath
+
+    BaseVariantOutput output // cache output to find manifestPath when it is created
 
     BugsnagManifestTask() {
         super()
@@ -24,6 +26,7 @@ class BugsnagManifestTask extends DefaultTask {
 
     @TaskAction
     def updateManifest() {
+        def manifestPath = getManifestPath()
         project.logger.debug("Updating manifest with build UUID: " + manifestPath)
 
         // Parse the AndroidManifest.xml
@@ -62,6 +65,8 @@ class BugsnagManifestTask extends DefaultTask {
     }
 
     def shouldRun() {
+        def manifestPath = getManifestPath()
+
         def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
         def app = new XmlParser().parse(manifestPath).application[0]
         if (app) {
@@ -73,4 +78,14 @@ class BugsnagManifestTask extends DefaultTask {
             false
         }
     }
+
+    def getManifestPath() {
+        File manifestPath = new File(output.processManifest.manifestOutputDirectory, "AndroidManifest.xml")
+
+        if (!manifestPath.exists()) {
+            project.logger.warn("Failed to find manifest for output " + output.name)
+        }
+        manifestPath
+    }
+
 }
