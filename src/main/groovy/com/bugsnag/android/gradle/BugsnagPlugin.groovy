@@ -72,6 +72,7 @@ class BugsnagPlugin implements Plugin<Project> {
         uploadTask.output = output
         uploadTask.variant = variant
         uploadTask.applicationId = variant.applicationId
+        uploadTask.mustRunAfter output.assemble
 
         if (project.bugsnag.autoUpload) {
             project.tasks.findByName("package${variantName}").finalizedBy {uploadTask}
@@ -98,6 +99,7 @@ class BugsnagPlugin implements Plugin<Project> {
             uploadNdkTask.rootDir = project.rootDir
             uploadNdkTask.toolchain = getCmakeToolchain(project, variant)
             uploadNdkTask.sharedObjectPath = project.bugsnag.sharedObjectPath
+            uploadNdkTask.mustRunAfter output.assemble
 
             if (project.bugsnag.autoUpload) {
                 project.tasks.findByName("package${variantName}").finalizedBy {uploadNdkTask}
