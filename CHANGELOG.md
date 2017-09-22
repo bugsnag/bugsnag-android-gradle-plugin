@@ -1,3 +1,7 @@
+## 3.0.0-beta2 (2017-09-22)
+
+* Expose manual upload gradle task 
+
 ## 3.0.0-beta (2017-09-06)
 
 * Support Android Plugin for Gradle 3.0.0
