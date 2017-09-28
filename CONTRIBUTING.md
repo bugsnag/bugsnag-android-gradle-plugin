@@ -40,6 +40,13 @@ buildscript {
 Releasing a New Version
 -----------------------
 
+## Release Checklist
+Please follow the testing instructions in [the platforms release checklist](https://github.com/bugsnag/platforms-release-checklist/blob/master/README.md), and any additional steps directly below.
+
+- Use `gradlew clean install` to install a release build to a local maven repo, and `gradlew clean build` to refresh the example project.
+
+### Instructions
+
 If you are a project maintainer, you can build and release a new version of
 `bugsnag-android-gradle-plugin` as follows:
 
