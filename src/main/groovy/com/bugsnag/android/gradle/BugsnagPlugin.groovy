@@ -65,7 +65,7 @@ class BugsnagPlugin implements Plugin<Project> {
 
         // Create a Bugsnag task to upload proguard mapping file
         def uploadTaskClass = BugsnagUploadProguardTask
-        def uploadTask = project.tasks.create("uploadBugsnag${taskNameForVariant(variant)}Mapping", uploadTaskClass)
+        def uploadTask = project.tasks.create("uploadBugsnag${taskNameForOutput(output)}Mapping", uploadTaskClass)
         uploadTask.partName = isJackEnabled(project, variant) ? "jack" : "proguard"
 
         uploadTask.group = GROUP_NAME
@@ -86,7 +86,7 @@ class BugsnagPlugin implements Plugin<Project> {
 
         if (project.bugsnag.ndk) {
             // Create a Bugsnag task to upload NDK mapping file(s)
-            uploadNdkTask = project.tasks.create("uploadBugsnagNdk${taskNameForVariant(variant)}Mapping", BugsnagUploadNdkTask)
+            uploadNdkTask = project.tasks.create("uploadBugsnagNdk${taskNameForOutput(output)}Mapping", BugsnagUploadNdkTask)
             uploadNdkTask.group = GROUP_NAME
             uploadNdkTask.output = output
             uploadNdkTask.variant = variant
@@ -110,7 +110,7 @@ class BugsnagPlugin implements Plugin<Project> {
     private static void setupManifestUuidTask(Project project, ApplicationVariant variant,  BaseVariantOutput output) {
         project.logger.debug("Adding Build UUID to manifest")
 
-        BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${taskNameForVariant(variant)}Manifest", BugsnagManifestTask)
+        BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${taskNameForOutput(output)}Manifest", BugsnagManifestTask)
         manifestTask.output = output
         manifestTask.group = GROUP_NAME
         manifestTask.mustRunAfter output.processManifest
@@ -145,6 +145,10 @@ class BugsnagPlugin implements Plugin<Project> {
 
     private static String taskNameForVariant(ApplicationVariant variant) {
         variant.name.capitalize()
+    }
+
+    private static String taskNameForOutput(BaseVariantOutput output) {
+        output.name.capitalize()
     }
 
     /**

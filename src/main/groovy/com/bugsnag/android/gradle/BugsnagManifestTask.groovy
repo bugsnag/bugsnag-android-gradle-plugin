@@ -80,11 +80,7 @@ class BugsnagManifestTask extends DefaultTask {
     }
 
     def getManifestPath() {
-        File directory = output.processManifest.manifestOutputDirectory
-        def name = output.name
-        println("Output name: " + name)
-
-        File manifestPath = new File(directory, "AndroidManifest.xml")
+        File manifestPath = ManifestOutputDir.getManifestPath(output)
 
         if (!manifestPath.exists()) {
             project.logger.warn("Failed to find manifest for output " + output.name)
