@@ -27,6 +27,11 @@ class BugsnagPlugin implements Plugin<Project> {
     static final String BUILD_UUID_TAG = 'com.bugsnag.android.BUILD_UUID'
     static final String GROUP_NAME = 'Bugsnag'
 
+    private SplitsInfo splitsInfo
+    private BugsnagManifestTask manifestUuidTask
+    private BugsnagUploadProguardTask uploadProguardTask
+    private BugsnagUploadNdkTask uploadNdkTask
+
     void apply(Project project) {
         project.extensions.create("bugsnag", BugsnagPluginExtension)
 
@@ -37,7 +42,6 @@ class BugsnagPlugin implements Plugin<Project> {
             }
 
 
-
             // Create tasks for each Build Variant
             // https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide#TOC-Build-Variants
             project.android.applicationVariants.all { ApplicationVariant variant ->
@@ -45,30 +49,38 @@ class BugsnagPlugin implements Plugin<Project> {
                     return
                 }
 
-                // proguard rules only need to be setup once
+                // only need to be run once per variant
                 setupProguardAutoConfig(project, variant)
+                setupSplitsDiscovery(project, variant)
 
-
-                def task = project.tasks.findByName("splitsDiscoveryTask${taskNameForVariant(variant)}")
-                task.doLast {
-                    println("Density filters: " + task.densityFilters)
-                    println("Language filters: " + task.languageFilters)
-                    println("ABI filters: " + task.abiFilters)
-
-                    // language filters appear to be broken?
-                    // see: https://issuetracker.google.com/issues/37085185
-                }
-
+                // need to be run for each output
                 variant.outputs.all { output ->
-                    setupManifestUuidTask(project, variant, output)
-                    setupMappingFileUpload(project, variant, output)
-                    setupNdkMappingFileUpload(project, variant, output)
+                    this.manifestUuidTask = setupManifestUuidTask(project, output)
+                    this.uploadProguardTask = setupMappingFileUpload(project, variant, output)
+                    this.uploadNdkTask = setupNdkMappingFileUpload(project, variant, output)
                 }
             }
         }
     }
 
-    private static void setupMappingFileUpload(Project project, ApplicationVariant variant, BaseVariantOutput output) {
+    private void setupSplitsDiscovery(Project project, ApplicationVariant variant) {
+        def task = project.tasks.findByName("splitsDiscoveryTask${taskNameForVariant(variant)}")
+        task.doLast {
+            this.splitsInfo = new SplitsInfo()
+            this.splitsInfo.densityFilters = task.densityFilters
+            this.splitsInfo.languageFilters = task.languageFilters
+            this.splitsInfo.abiFilters = task.abiFilters
+
+            this.manifestUuidTask.splitsInfo = splitsInfo
+            this.uploadProguardTask.splitsInfo = splitsInfo
+
+            if (this.uploadNdkTask != null) {
+                this.uploadNdkTask.splitsInfo = splitsInfo
+            }
+        }
+    }
+
+    private BugsnagUploadProguardTask setupMappingFileUpload(Project project, ApplicationVariant variant, BaseVariantOutput output) {
         // The Android build system supports creating multiple APKs
         // per Build Variant (Variant Outputs):
         // https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide/apk-splits
@@ -77,8 +89,7 @@ class BugsnagPlugin implements Plugin<Project> {
         // Bugsnag tasks to the first output.
 
         // Create a Bugsnag task to upload proguard mapping file
-        def uploadTaskClass = BugsnagUploadProguardTask
-        def uploadTask = project.tasks.create("uploadBugsnag${taskNameForOutput(output)}Mapping", uploadTaskClass)
+        def uploadTask = project.tasks.create("uploadBugsnag${taskNameForOutput(output)}Mapping", BugsnagUploadProguardTask)
         uploadTask.partName = isJackEnabled(project, variant) ? "jack" : "proguard"
 
         uploadTask.group = GROUP_NAME
@@ -90,9 +101,10 @@ class BugsnagPlugin implements Plugin<Project> {
         if (project.bugsnag.autoUpload) {
             project.tasks.findByName("package${taskNameForVariant(variant)}").finalizedBy {uploadTask}
         }
+        return uploadTask
     }
 
-    private static void setupNdkMappingFileUpload(Project project, ApplicationVariant variant,  BaseVariantOutput output) {
+    private BugsnagUploadNdkTask setupNdkMappingFileUpload(Project project, ApplicationVariant variant,  BaseVariantOutput output) {
         File symbolPath = getSymbolPath(output)
         File intermediatePath = getIntermediatePath(symbolPath)
         BugsnagUploadNdkTask uploadNdkTask
@@ -117,10 +129,10 @@ class BugsnagPlugin implements Plugin<Project> {
                 project.tasks.findByName("package${taskNameForVariant(variant)}").finalizedBy {uploadNdkTask}
             }
         }
+        return uploadNdkTask
     }
 
-
-    private static void setupManifestUuidTask(Project project, ApplicationVariant variant,  BaseVariantOutput output) {
+    private BugsnagManifestTask setupManifestUuidTask(Project project, BaseVariantOutput output) {
         project.logger.debug("Adding Build UUID to manifest")
 
         BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${taskNameForOutput(output)}Manifest", BugsnagManifestTask)
@@ -130,9 +142,10 @@ class BugsnagPlugin implements Plugin<Project> {
         manifestTask.onlyIf { it.shouldRun() }
 
         output.packageApplication.dependsOn manifestTask
+        return manifestTask
     }
 
-    private static void setupProguardAutoConfig(Project project, ApplicationVariant variant) {
+    private static BugsnagProguardConfigTask setupProguardAutoConfig(Project project, ApplicationVariant variant) {
         BugsnagProguardConfigTask proguardConfigTask = project.tasks.create("processBugsnag${taskNameForVariant(variant)}Proguard", BugsnagProguardConfigTask)
         proguardConfigTask.group = GROUP_NAME
         proguardConfigTask.applicationVariant = variant
@@ -154,6 +167,7 @@ class BugsnagPlugin implements Plugin<Project> {
             project.logger.debug("Bugsnag autoproguard config enabled")
             variant.packageApplication.dependsOn proguardConfigTask
         }
+        return proguardConfigTask
     }
 
     private static String taskNameForVariant(ApplicationVariant variant) {
@@ -314,5 +328,11 @@ class BugsnagPlugin implements Plugin<Project> {
             }
         }
         return null
+    }
+
+    static class SplitsInfo {
+        def densityFilters
+        def languageFilters
+        def abiFilters
     }
 }
