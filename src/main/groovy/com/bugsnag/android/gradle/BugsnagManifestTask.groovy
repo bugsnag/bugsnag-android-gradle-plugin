@@ -18,7 +18,6 @@ import org.gradle.api.tasks.TaskAction
 class BugsnagManifestTask extends DefaultTask {
 
     BaseVariantOutput output // cache output to find manifestPath when it is created
-    BugsnagPlugin.SplitsInfo splitsInfo
 
     BugsnagManifestTask() {
         super()
@@ -27,7 +26,7 @@ class BugsnagManifestTask extends DefaultTask {
 
     @TaskAction
     def updateManifest() {
-        def manifestPath = ManifestOutputDir.getManifestPath(output, splitsInfo)
+        def manifestPath = ManifestOutputDir.getManifestPath(output)
 
         if (!manifestPath.exists()) {
             project.logger.warn("Failed to find manifest for output " + output.name)
@@ -72,7 +71,7 @@ class BugsnagManifestTask extends DefaultTask {
     }
 
     def shouldRun() {
-        def manifestPath = ManifestOutputDir.getManifestPath(output, splitsInfo)
+        def manifestPath = ManifestOutputDir.getManifestPath(output)
 
         if (!manifestPath.exists()) {
             project.logger.warn("Failed to find manifest for output " + output.name)

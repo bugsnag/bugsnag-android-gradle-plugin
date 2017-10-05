@@ -26,6 +26,7 @@ class BugsnagPlugin implements Plugin<Project> {
     static final String API_KEY_TAG = 'com.bugsnag.android.API_KEY'
     static final String BUILD_UUID_TAG = 'com.bugsnag.android.BUILD_UUID'
     static final String GROUP_NAME = 'Bugsnag'
+    static final String BUGSNAG_SPLIT_INFO = "bugsnagSplitInfo"
 
     private SplitsInfo splitsInfo
     private BugsnagManifestTask manifestUuidTask
@@ -64,19 +65,13 @@ class BugsnagPlugin implements Plugin<Project> {
     }
 
     private void setupSplitsDiscovery(Project project, ApplicationVariant variant) {
+        // TODO need to expose this as a task to support uploading properly
         def task = project.tasks.findByName("splitsDiscoveryTask${taskNameForVariant(variant)}")
         task.doLast {
-            this.splitsInfo = new SplitsInfo()
-            this.splitsInfo.densityFilters = task.densityFilters
-            this.splitsInfo.languageFilters = task.languageFilters
-            this.splitsInfo.abiFilters = task.abiFilters
-
-            this.manifestUuidTask.splitsInfo = splitsInfo
-            this.uploadProguardTask.splitsInfo = splitsInfo
-
-            if (this.uploadNdkTask != null) {
-                this.uploadNdkTask.splitsInfo = splitsInfo
-            }
+            splitsInfo = new SplitsInfo()
+            splitsInfo.densityFilters = task.densityFilters
+            splitsInfo.languageFilters = task.languageFilters
+            splitsInfo.abiFilters = task.abiFilters
         }
     }
 
@@ -139,7 +134,7 @@ class BugsnagPlugin implements Plugin<Project> {
         manifestTask.output = output
         manifestTask.group = GROUP_NAME
         manifestTask.mustRunAfter output.processManifest
-        manifestTask.onlyIf { it.shouldRun() }
+//        manifestTask.onlyIf { it.shouldRun() }
 
         output.packageApplication.dependsOn manifestTask
         return manifestTask

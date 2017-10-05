@@ -1,7 +1,6 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.BaseVariantOutput
-import com.bugsnag.android.gradle.BugsnagPlugin.SplitsInfo
 
 class ManifestOutputDir {
 
@@ -17,16 +16,45 @@ class ManifestOutputDir {
      * See: https://developer.android.com/studio/build/configure-apk-splits.html#build-apks-filename
      * https://issuetracker.google.com/issues/37085185
      */
-    static File getManifestPath(BaseVariantOutput output, SplitsInfo splitsInfo) {
+    static File getManifestPath(BaseVariantOutput output) {
         File directory = output.processManifest.manifestOutputDirectory
+        String[] tokens = output.name.split("-")
 
-//        if (split.length == 2) { // only 1 split enabled
-//            directory = new File(directory, split[1])
-//        } else if (split.length > 2) { // more than 1 split, need to determine order
-//            def subdir = split[2] + File.separator + split[1] // N.B. order is reversed!
-//            directory = new File(directory, subdir)
-//        }
-        return new File(directory, "AndroidManifest.xml");
+        // when splits are enabled, the output has a name with the following structure:
+        // e.g. "javaExample-hdpiMips-debug"
+
+        if (tokens.length == 3) {
+            def split = tokens[1]
+            BugsnagPlugin.SplitsInfo splitsInfo = null // TODO populate!
+
+            if (splitsInfo != null) {
+                def density = findValueForSplit(split, splitsInfo.densityFilters)
+                def abi = findValueForSplit(split, splitsInfo.densityFilters)
+                directory = findManifestDirForSplit(density, abi, directory)
+            }
+        }
+        new File(directory, "AndroidManifest.xml")
     }
 
+    private static String findValueForSplit(String split, Collection<String> values) {
+        for (String val : values) {
+            if (split.contains(val)) {
+                return split
+            }
+        }
+        null
+    }
+
+    private static File findManifestDirForSplit(String density, String abi, File manifestDir) {
+        if (abi != null && density != null) { // abi comes first, then density
+            String subdir = abi + File.separator + density
+            new File(manifestDir, subdir)
+        } else if (abi != null) {
+            new File(manifestDir, abi)
+        } else if (density != null) {
+            new File(manifestDir, density)
+        } else {
+            manifestDir
+        }
+    }
 }

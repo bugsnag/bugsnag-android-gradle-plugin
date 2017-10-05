@@ -35,7 +35,6 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
     ApplicationVariant variant
     BaseVariantOutput output
     String applicationId
-    BugsnagPlugin.SplitsInfo splitsInfo
 
     // Read from the manifest file
     String apiKey
@@ -51,7 +50,7 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
     def readManifestFile() {
         // Parse the AndroidManifest.xml
         def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
-        def manifestPath = ManifestOutputDir.getManifestPath(output, splitsInfo)
+        def manifestPath = ManifestOutputDir.getManifestPath(output)
 
         if (!manifestPath.exists()) {
             project.logger.warn("Failed to find manifest for output " + output.name)
