@@ -43,12 +43,13 @@ class BugsnagPlugin implements Plugin<Project> {
                     return
                 }
 
+                // proguard rules only need to be setup once
+                setupProguardAutoConfig(project, variant)
+
                 variant.outputs.all { output ->
-                    def usedOutput = variant.outputs.first()
-                    setupProguardAutoConfig(project, variant, usedOutput)
-                    setupManifestUuidTask(project, variant, usedOutput)
-                    setupMappingFileUpload(project, variant, usedOutput)
-                    setupNdkMappingFileUpload(project, variant, usedOutput)
+                    setupManifestUuidTask(project, variant, output)
+                    setupMappingFileUpload(project, variant, output)
+                    setupNdkMappingFileUpload(project, variant, output)
                 }
             }
         }
@@ -61,11 +62,10 @@ class BugsnagPlugin implements Plugin<Project> {
         //
         // Variant Outputs share most tasks so we only need to attach
         // Bugsnag tasks to the first output.
-        def variantName = variant.name.capitalize()
 
         // Create a Bugsnag task to upload proguard mapping file
         def uploadTaskClass = BugsnagUploadProguardTask
-        def uploadTask = project.tasks.create("uploadBugsnag${ variantName}Mapping", uploadTaskClass)
+        def uploadTask = project.tasks.create("uploadBugsnag${taskNameForVariant(variant)}Mapping", uploadTaskClass)
         uploadTask.partName = isJackEnabled(project, variant) ? "jack" : "proguard"
 
         uploadTask.group = GROUP_NAME
@@ -75,7 +75,7 @@ class BugsnagPlugin implements Plugin<Project> {
         uploadTask.mustRunAfter output.assemble
 
         if (project.bugsnag.autoUpload) {
-            project.tasks.findByName("package${variantName}").finalizedBy {uploadTask}
+            project.tasks.findByName("package${taskNameForVariant(variant)}").finalizedBy {uploadTask}
         }
     }
 
@@ -83,18 +83,17 @@ class BugsnagPlugin implements Plugin<Project> {
         File symbolPath = getSymbolPath(output)
         File intermediatePath = getIntermediatePath(symbolPath)
         BugsnagUploadNdkTask uploadNdkTask
-        def variantName = variant.name.capitalize()
 
         if (project.bugsnag.ndk) {
             // Create a Bugsnag task to upload NDK mapping file(s)
-            uploadNdkTask = project.tasks.create("uploadBugsnagNdk${variantName}Mapping", BugsnagUploadNdkTask)
+            uploadNdkTask = project.tasks.create("uploadBugsnagNdk${taskNameForVariant(variant)}Mapping", BugsnagUploadNdkTask)
             uploadNdkTask.group = GROUP_NAME
             uploadNdkTask.output = output
             uploadNdkTask.variant = variant
             uploadNdkTask.applicationId = variant.applicationId
             uploadNdkTask.intermediatePath = intermediatePath
             uploadNdkTask.symbolPath = symbolPath
-            uploadNdkTask.variantName = variantName
+            uploadNdkTask.variantName = taskNameForVariant(variant)
             uploadNdkTask.projectDir = project.projectDir
             uploadNdkTask.rootDir = project.rootDir
             uploadNdkTask.toolchain = getCmakeToolchain(project, variant)
@@ -102,7 +101,7 @@ class BugsnagPlugin implements Plugin<Project> {
             uploadNdkTask.mustRunAfter output.assemble
 
             if (project.bugsnag.autoUpload) {
-                project.tasks.findByName("package${variantName}").finalizedBy {uploadNdkTask}
+                project.tasks.findByName("package${taskNameForVariant(variant)}").finalizedBy {uploadNdkTask}
             }
         }
     }
@@ -111,7 +110,7 @@ class BugsnagPlugin implements Plugin<Project> {
     private static void setupManifestUuidTask(Project project, ApplicationVariant variant,  BaseVariantOutput output) {
         project.logger.debug("Adding Build UUID to manifest")
 
-        BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${variant.name.capitalize()}Manifest", BugsnagManifestTask)
+        BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${taskNameForVariant(variant)}Manifest", BugsnagManifestTask)
         manifestTask.output = output
         manifestTask.group = GROUP_NAME
         manifestTask.mustRunAfter output.processManifest
@@ -120,8 +119,8 @@ class BugsnagPlugin implements Plugin<Project> {
         output.packageApplication.dependsOn manifestTask
     }
 
-    private static void setupProguardAutoConfig(Project project, ApplicationVariant variant,  BaseVariantOutput output) {
-        BugsnagProguardConfigTask proguardConfigTask = project.tasks.create("processBugsnag${variant.name.capitalize()}Proguard", BugsnagProguardConfigTask)
+    private static void setupProguardAutoConfig(Project project, ApplicationVariant variant) {
+        BugsnagProguardConfigTask proguardConfigTask = project.tasks.create("processBugsnag${taskNameForVariant(variant)}Proguard", BugsnagProguardConfigTask)
         proguardConfigTask.group = GROUP_NAME
         proguardConfigTask.applicationVariant = variant
 
@@ -140,8 +139,12 @@ class BugsnagPlugin implements Plugin<Project> {
         // as it is now part of the "transforms" process.
         if (project.bugsnag.autoProguardConfig) {
             project.logger.debug("Bugsnag autoproguard config enabled")
-            output.packageApplication.dependsOn proguardConfigTask
+            variant.packageApplication.dependsOn proguardConfigTask
         }
+    }
+
+    private static String taskNameForVariant(ApplicationVariant variant) {
+        variant.name.capitalize()
     }
 
     /**
