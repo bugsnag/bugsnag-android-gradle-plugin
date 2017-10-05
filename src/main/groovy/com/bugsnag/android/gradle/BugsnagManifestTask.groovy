@@ -26,7 +26,13 @@ class BugsnagManifestTask extends DefaultTask {
 
     @TaskAction
     def updateManifest() {
-        def manifestPath = getManifestPath()
+        def manifestPath = ManifestOutputDir.getManifestPath(output)
+
+        if (!manifestPath.exists()) {
+            project.logger.warn("Failed to find manifest for output " + output.name)
+            return
+        }
+
         project.logger.debug("Updating manifest with build UUID: " + manifestPath)
 
         // Parse the AndroidManifest.xml
@@ -65,7 +71,12 @@ class BugsnagManifestTask extends DefaultTask {
     }
 
     def shouldRun() {
-        def manifestPath = getManifestPath()
+        def manifestPath = ManifestOutputDir.getManifestPath(output)
+
+        if (!manifestPath.exists()) {
+            project.logger.warn("Failed to find manifest for output " + output.name)
+            return false
+        }
 
         def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
         def app = new XmlParser().parse(manifestPath).application[0]
@@ -77,15 +88,6 @@ class BugsnagManifestTask extends DefaultTask {
         } else {
             false
         }
-    }
-
-    def getManifestPath() {
-        File manifestPath = ManifestOutputDir.getManifestPath(output)
-
-        if (!manifestPath.exists()) {
-            project.logger.warn("Failed to find manifest for output " + output.name)
-        }
-        manifestPath
     }
 
 }

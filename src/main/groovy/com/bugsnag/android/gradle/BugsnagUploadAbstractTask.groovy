@@ -50,7 +50,14 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
     def readManifestFile() {
         // Parse the AndroidManifest.xml
         def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
-        def xml = new XmlParser().parse(getManifestPath())
+        def manifestPath = ManifestOutputDir.getManifestPath(output)
+
+        if (!manifestPath.exists()) {
+            project.logger.warn("Failed to find manifest for output " + output.name)
+            return
+        }
+
+        def xml = new XmlParser().parse(manifestPath)
         def metaDataTags = xml.application['meta-data']
 
         // Get the Bugsnag API key
@@ -74,6 +81,11 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
     }
 
     def uploadMultipartEntity(MultipartEntity mpEntity) {
+        if (apiKey == null) {
+            project.logger.warn("Skipping upload due to invalid parameters")
+            return
+        }
+
         addPropertiesToMultipartEntity(mpEntity)
 
         boolean uploadSuccessful = uploadToServer(mpEntity)
@@ -181,12 +193,4 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
         return project.bugsnag.retryCount >= MAX_RETRY_COUNT ? MAX_RETRY_COUNT : project.bugsnag.retryCount
     }
 
-    def getManifestPath() {
-        File manifestPath = ManifestOutputDir.getManifestPath(output)
-
-        if (!manifestPath.exists()) {
-            project.logger.warn("Failed to find manifest for output " + output.name)
-        }
-        manifestPath
-    }
 }

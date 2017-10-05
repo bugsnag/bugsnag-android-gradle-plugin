@@ -55,7 +55,7 @@ class BugsnagPlugin implements Plugin<Project> {
         }
     }
 
-    private static void setupMappingFileUpload(Project project, ApplicationVariant variant,  BaseVariantOutput output) {
+    private static void setupMappingFileUpload(Project project, ApplicationVariant variant, BaseVariantOutput output) {
         // The Android build system supports creating multiple APKs
         // per Build Variant (Variant Outputs):
         // https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide/apk-splits

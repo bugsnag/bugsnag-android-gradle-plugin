@@ -17,7 +17,7 @@ import org.gradle.api.tasks.TaskAction
  it is usually safe to have this be the absolute last task executed during
  a build.
  */
-class BugsnagUploadProguardTask extends BugsnagUploadAbstractTask { // FIXME duplication with Jack task
+class BugsnagUploadProguardTask extends BugsnagUploadAbstractTask {
 
     String partName
 
