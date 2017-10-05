@@ -36,6 +36,8 @@ class BugsnagPlugin implements Plugin<Project> {
                 throw new IllegalStateException('Must apply \'com.android.application\' first!')
             }
 
+
+
             // Create tasks for each Build Variant
             // https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide#TOC-Build-Variants
             project.android.applicationVariants.all { ApplicationVariant variant ->
@@ -45,6 +47,17 @@ class BugsnagPlugin implements Plugin<Project> {
 
                 // proguard rules only need to be setup once
                 setupProguardAutoConfig(project, variant)
+
+
+                def task = project.tasks.findByName("splitsDiscoveryTask${taskNameForVariant(variant)}")
+                task.doLast {
+                    println("Density filters: " + task.densityFilters)
+                    println("Language filters: " + task.languageFilters)
+                    println("ABI filters: " + task.abiFilters)
+
+                    // language filters appear to be broken?
+                    // see: https://issuetracker.google.com/issues/37085185
+                }
 
                 variant.outputs.all { output ->
                     setupManifestUuidTask(project, variant, output)
