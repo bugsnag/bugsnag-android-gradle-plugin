@@ -26,6 +26,7 @@ import static groovy.io.FileType.*
  a build.
  */
 class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
+
     File intermediatePath
     File symbolPath
     String variantName
