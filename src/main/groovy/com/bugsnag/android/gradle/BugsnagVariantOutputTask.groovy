@@ -1,8 +1,11 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.BaseVariantOutput
+import org.gradle.api.DefaultTask
 
-class ManifestOutputDir {
+class BugsnagVariantOutputTask extends DefaultTask {
+
+    BaseVariantOutput variantOutput
 
     /**
      * Gets the manifest for a given Variant Output, accounting for any APK splits.
@@ -16,9 +19,9 @@ class ManifestOutputDir {
      * See: https://developer.android.com/studio/build/configure-apk-splits.html#build-apks-filename
      * https://issuetracker.google.com/issues/37085185
      */
-    static File getManifestPath(BaseVariantOutput output) {
-        File directory = output.processManifest.manifestOutputDirectory
-        String[] tokens = output.name.split("-")
+    private File getManifestPath() {
+        File directory = variantOutput.processManifest.manifestOutputDirectory
+        String[] tokens = variantOutput.name.split("-")
 
         // when splits are enabled, the output has a name with the following structure:
         // e.g. "javaExample-hdpiMips-debug"
@@ -57,4 +60,5 @@ class ManifestOutputDir {
             manifestDir
         }
     }
+
 }

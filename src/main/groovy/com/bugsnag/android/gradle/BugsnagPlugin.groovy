@@ -115,7 +115,7 @@ class BugsnagPlugin implements Plugin<Project> {
 
     private static void prepareUploadTask(uploadTask, BaseVariantOutput output, BaseVariant variant, Project project) {
         uploadTask.group = GROUP_NAME
-        uploadTask.output = output
+        uploadTask.variantOutput = output
         uploadTask.variant = variant
         uploadTask.applicationId = variant.applicationId
         uploadTask.mustRunAfter output.assemble
@@ -131,7 +131,7 @@ class BugsnagPlugin implements Plugin<Project> {
         project.logger.debug("Adding Build UUID to manifest")
 
         BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${taskNameForOutput(output)}Manifest", BugsnagManifestTask)
-        manifestTask.output = output
+        manifestTask.variantOutput = output
         manifestTask.group = GROUP_NAME
         manifestTask.mustRunAfter output.processManifest
 //        manifestTask.onlyIf { it.shouldRun() }

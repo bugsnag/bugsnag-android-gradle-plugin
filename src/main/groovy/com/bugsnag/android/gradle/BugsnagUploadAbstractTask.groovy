@@ -1,7 +1,6 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.BaseVariant
-import com.android.build.gradle.api.BaseVariantOutput
 import groovy.xml.Namespace
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
@@ -12,8 +11,6 @@ import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.params.HttpConnectionParams
 import org.apache.http.params.HttpParams
 import org.apache.http.util.EntityUtils
-import org.gradle.api.DefaultTask
-
 /**
  Task to upload ProGuard mapping files to Bugsnag.
 
@@ -27,13 +24,12 @@ import org.gradle.api.DefaultTask
  it is usually safe to have this be the absolute last task executed during
  a build.
  */
-abstract class BugsnagUploadAbstractTask extends DefaultTask {
+abstract class BugsnagUploadAbstractTask extends BugsnagVariantOutputTask {
 
     static final int MAX_RETRY_COUNT = 5
     static final int TIMEOUT_MILLIS = 60000 // 60 seconds
 
     BaseVariant variant
-    BaseVariantOutput output
     String applicationId
 
     // Read from the manifest file
@@ -50,10 +46,10 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
     def readManifestFile() {
         // Parse the AndroidManifest.xml
         def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
-        def manifestPath = ManifestOutputDir.getManifestPath(output)
+        def manifestPath = ManifestOutputDir.getManifestPath()
 
         if (!manifestPath.exists()) {
-            project.logger.warn("Failed to find manifest for output " + output.name)
+            project.logger.warn("Failed to find manifest for output " + variantOutput.name)
             return
         }
 
