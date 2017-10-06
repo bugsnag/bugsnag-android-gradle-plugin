@@ -46,7 +46,7 @@ abstract class BugsnagUploadAbstractTask extends BugsnagVariantOutputTask {
     def readManifestFile() {
         // Parse the AndroidManifest.xml
         def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
-        def manifestPath = ManifestOutputDir.getManifestPath()
+        def manifestPath = getManifestPath()
 
         if (!manifestPath.exists()) {
             project.logger.warn("Failed to find manifest for output " + variantOutput.name)

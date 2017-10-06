@@ -21,7 +21,7 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
 
     @TaskAction
     def updateManifest() {
-        def manifestPath = ManifestOutputDir.getManifestPath()
+        def manifestPath = getManifestPath()
 
         if (!manifestPath.exists()) {
             project.logger.warn("Failed to find manifest for output " + variantOutput.name)
@@ -66,7 +66,7 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
     }
 
     def shouldRun() {
-        def manifestPath = ManifestOutputDir.getManifestPath()
+        def manifestPath = getManifestPath()
 
         if (!manifestPath.exists()) {
             project.logger.warn("Failed to find manifest for output " + variantOutput.name)

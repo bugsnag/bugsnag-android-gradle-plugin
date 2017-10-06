@@ -19,7 +19,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
      * See: https://developer.android.com/studio/build/configure-apk-splits.html#build-apks-filename
      * https://issuetracker.google.com/issues/37085185
      */
-    private File getManifestPath() {
+    def File getManifestPath() {
         File directory = variantOutput.processManifest.manifestOutputDirectory
         String[] tokens = variantOutput.name.split("-")
 
