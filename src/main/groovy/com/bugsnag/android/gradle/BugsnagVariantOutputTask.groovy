@@ -19,7 +19,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
      * See: https://developer.android.com/studio/build/configure-apk-splits.html#build-apks-filename
      * https://issuetracker.google.com/issues/37085185
      */
-    def File getManifestPath() {
+    File getManifestPath() {
         File directory = variantOutput.processManifest.manifestOutputDirectory
         String[] tokens = variantOutput.name.split("-")
 
@@ -28,13 +28,16 @@ class BugsnagVariantOutputTask extends DefaultTask {
 
         if (tokens.length == 3) {
             def split = tokens[1]
-            BugsnagPlugin.SplitsInfo splitsInfo = null // TODO populate!
+            def splitsInfo = project.ext.splitsInfo
+            println("Manifest path ${splitsInfo}")
 
-            if (splitsInfo != null) {
-                def density = findValueForSplit(split, splitsInfo.densityFilters)
-                def abi = findValueForSplit(split, splitsInfo.densityFilters)
-                directory = findManifestDirForSplit(density, abi, directory)
-            }
+
+            def density = findValueForSplit(split, splitsInfo.densityFilters)
+            def abi = findValueForSplit(split, splitsInfo.abiFilters)
+            directory = findManifestDirForSplit(density, abi, directory)
+            println("Density ${density}")
+            println("ABI ${abi}")
+            println("Directory ${directory}")
         }
         new File(directory, "AndroidManifest.xml")
     }

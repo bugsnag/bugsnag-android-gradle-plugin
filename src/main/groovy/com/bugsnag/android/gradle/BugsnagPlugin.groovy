@@ -8,7 +8,6 @@ import com.android.build.gradle.internal.core.Toolchain
 import com.android.build.gradle.internal.dsl.BuildType
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-
 /**
  * Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.
  *
@@ -28,12 +27,16 @@ class BugsnagPlugin implements Plugin<Project> {
     static final String API_KEY_TAG = 'com.bugsnag.android.API_KEY'
     static final String BUILD_UUID_TAG = 'com.bugsnag.android.BUILD_UUID'
     static final String GROUP_NAME = 'Bugsnag'
-    static final String BUGSNAG_SPLIT_INFO = "bugsnagSplitInfo"
 
-    private SplitsInfo splitsInfo
     private BugsnagManifestTask manifestUuidTask
     private BugsnagUploadProguardTask uploadProguardTask
     private BugsnagUploadNdkTask uploadNdkTask
+
+    class SplitsInfo {
+        def densityFilters
+        def languageFilters
+        def abiFilters
+    }
 
     void apply(Project project) {
         project.extensions.create("bugsnag", BugsnagPluginExtension)
@@ -72,13 +75,12 @@ class BugsnagPlugin implements Plugin<Project> {
     }
 
     private void setupSplitsDiscovery(Project project, BaseVariant variant) {
-        // TODO need to expose this as a task to support uploading properly
         def task = project.tasks.findByName("splitsDiscoveryTask${taskNameForVariant(variant)}")
         task.doLast {
-            splitsInfo = new SplitsInfo()
-            splitsInfo.densityFilters = task.densityFilters
-            splitsInfo.languageFilters = task.languageFilters
-            splitsInfo.abiFilters = task.abiFilters
+            project.ext.splitsInfo = new SplitsInfo()
+            project.ext.splitsInfo.densityFilters = task.densityFilters
+            project.ext.splitsInfo.languageFilters = task.languageFilters
+            project.ext.splitsInfo.abiFilters = task.abiFilters
         }
     }
 
@@ -305,11 +307,5 @@ class BugsnagPlugin implements Plugin<Project> {
             }
         }
         return null
-    }
-
-    static class SplitsInfo {
-        def densityFilters
-        def languageFilters
-        def abiFilters
     }
 }
