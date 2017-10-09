@@ -49,7 +49,6 @@ abstract class BugsnagUploadAbstractTask extends BugsnagVariantOutputTask {
         def manifestPath = getManifestPath()
 
         if (!manifestPath.exists()) {
-            project.logger.warn("Failed to find manifest for output " + variantOutput.name)
             return
         }
 

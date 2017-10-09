@@ -28,24 +28,23 @@ class BugsnagVariantOutputTask extends DefaultTask {
 
         if (tokens.length == 3) {
             def split = tokens[1]
-            def splitsInfo = project.ext.splitsInfo
-            println("Manifest path ${splitsInfo}")
-
-
-            def density = findValueForSplit(split, splitsInfo.densityFilters)
-            def abi = findValueForSplit(split, splitsInfo.abiFilters)
+            def density = findValueForSplit(split, project.ext.splitsInfo.densityFilters)
+            def abi = findValueForSplit(split, project.ext.splitsInfo.abiFilters)
             directory = findManifestDirForSplit(density, abi, directory)
-            println("Density ${density}")
-            println("ABI ${abi}")
-            println("Directory ${directory}")
         }
-        new File(directory, "AndroidManifest.xml")
+        def file = new File(directory, "AndroidManifest.xml")
+
+        if (!file.exists()) {
+            project.logger.error("Failed to find manifest at ${file}")
+        }
+
+        file
     }
 
     private static String findValueForSplit(String split, Collection<String> values) {
         for (String val : values) {
-            if (split.contains(val)) {
-                return split
+            if (split.toLowerCase().contains(val.toLowerCase())) {
+                return val
             }
         }
         null

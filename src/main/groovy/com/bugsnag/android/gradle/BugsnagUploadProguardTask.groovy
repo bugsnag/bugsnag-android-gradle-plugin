@@ -34,7 +34,7 @@ class BugsnagUploadProguardTask extends BugsnagUploadAbstractTask {
         // configuration includes -dontobfuscate, the mapping file
         // will not exist (but we also won't need it).
         if (!mappingFile || !mappingFile.exists()) {
-            project.logger.error("Mapping file not found")
+            project.logger.error("Mapping file not found: ${mappingFile}")
             return
         }
 
