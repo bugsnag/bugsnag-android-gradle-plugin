@@ -100,7 +100,8 @@ If you disable automatic uploading, you can still run the upload task manually, 
 ./gradlew clean build uploadBugsnag${variantOutputName}Mapping
 ```
 
-In this example, $moduleName is the module being built (e.g. 'app'), and $variantName is the build variant name (e.g. 'appProRelease')
+For example, the following would upload the release mapping file for the `x86` split of the `javaExample` productFlavor in the `example` module: 
+:example:uploadBugsnagJavaExample-x86-releaseMapping
 
 ## Automatic Proguard Config
 
