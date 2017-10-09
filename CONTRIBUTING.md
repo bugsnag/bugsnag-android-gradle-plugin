@@ -36,6 +36,11 @@ buildscript {
 }
 ```
 
+If you need to remove the plugin, run the following command then perform a clean build:
+
+```shell
+rm ~/.m2/repository/com/bugsnag/bugsnag-android-gradle-plugin
+```
 
 Releasing a New Version
 -----------------------
