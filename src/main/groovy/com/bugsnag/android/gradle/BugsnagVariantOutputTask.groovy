@@ -5,6 +5,8 @@ import org.gradle.api.DefaultTask
 
 class BugsnagVariantOutputTask extends DefaultTask {
 
+    private static final String SPLIT_UNIVERSAL = "universal"
+
     BaseVariantOutput variantOutput
 
     /**
@@ -28,16 +30,20 @@ class BugsnagVariantOutputTask extends DefaultTask {
 
         if (tokens.length == 3) {
             def split = tokens[1]
-            def density = findValueForSplit(split, project.ext.splitsInfo.densityFilters)
-            def abi = findValueForSplit(split, project.ext.splitsInfo.abiFilters)
-            directory = findManifestDirForSplit(density, abi, directory)
+
+            if (SPLIT_UNIVERSAL == split) {
+                directory = new File(directory, SPLIT_UNIVERSAL)
+            } else {
+                def density = findValueForSplit(split, project.ext.splitsInfo.densityFilters)
+                def abi = findValueForSplit(split, project.ext.splitsInfo.abiFilters)
+                directory = findManifestDirForSplit(density, abi, directory)
+            }
         }
         def file = new File(directory, "AndroidManifest.xml")
 
         if (!file.exists()) {
             project.logger.error("Failed to find manifest at ${file}")
         }
-
         file
     }
 
