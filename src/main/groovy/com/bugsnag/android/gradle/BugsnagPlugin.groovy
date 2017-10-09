@@ -64,7 +64,7 @@ class BugsnagPlugin implements Plugin<Project> {
 
         // need to be run for each output
         variant.outputs.all { output ->
-            if (!output.name.toLowerCase().endsWith("debug")) {
+            if (!output.name.toLowerCase().endsWith("debug") || project.bugsnag.uploadDebugBuildMappings) {
                 setupManifestUuidTask(project, output)
                 setupMappingFileUpload(project, variant, output)
                 setupNdkMappingFileUpload(project, variant, output)
