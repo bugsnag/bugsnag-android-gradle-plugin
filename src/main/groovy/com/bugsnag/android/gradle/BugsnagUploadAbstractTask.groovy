@@ -101,7 +101,7 @@ abstract class BugsnagUploadAbstractTask extends BugsnagVariantOutputTask {
         mpEntity.addPart("versionCode", new StringBody(versionCode))
 
         if (buildUUID != null) {
-            mpEntity.addPart("buildUUID", new StringBody(buildUUID));
+            mpEntity.addPart("buildUUID", new StringBody(buildUUID))
         }
 
         if (versionName != null) {
@@ -118,7 +118,7 @@ abstract class BugsnagUploadAbstractTask extends BugsnagVariantOutputTask {
 
         // Make the request
         HttpPost httpPost = new HttpPost(project.bugsnag.endpoint)
-        httpPost.setEntity(mpEntity);
+        httpPost.setEntity(mpEntity)
 
         HttpClient httpClient = new DefaultHttpClient()
         HttpParams params = httpClient.getParams()

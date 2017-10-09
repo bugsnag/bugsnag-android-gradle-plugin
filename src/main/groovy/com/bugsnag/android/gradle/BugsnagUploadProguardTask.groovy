@@ -40,7 +40,7 @@ class BugsnagUploadProguardTask extends BugsnagUploadAbstractTask {
 
         // Read the API key and Build ID etc..
         super.readManifestFile()
-        project.logger.info("Attempting to upload mapping file: " + mappingFile)
+        project.logger.info("Attempting to upload mapping file: ${mappingFile}")
 
         // Construct a basic request
         MultipartEntity mpEntity = new MultipartEntity()
