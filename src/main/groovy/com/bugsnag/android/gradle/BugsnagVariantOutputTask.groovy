@@ -34,8 +34,8 @@ class BugsnagVariantOutputTask extends DefaultTask {
             if (SPLIT_UNIVERSAL == split) {
                 directory = new File(directory, SPLIT_UNIVERSAL)
             } else {
-                def density = findValueForSplit(split, project.ext.splitsInfo.densityFilters)
-                def abi = findValueForSplit(split, project.ext.splitsInfo.abiFilters)
+                def density = findValueForDensityFilter(split, project.ext.splitsInfo.densityFilters)
+                def abi = findValueForAbiFilter(split, project.ext.splitsInfo.abiFilters)
                 directory = findManifestDirForSplit(density, abi, directory)
             }
         }
@@ -47,9 +47,18 @@ class BugsnagVariantOutputTask extends DefaultTask {
         file
     }
 
-    private static String findValueForSplit(String split, Collection<String> values) {
+    private static String findValueForAbiFilter(String split, Collection<String> values) {
         for (String val : values) {
-            if (split.toLowerCase().contains(val.toLowerCase())) {
+            if (split.toLowerCase().endsWith(val.toLowerCase())) {
+                return val
+            }
+        }
+        null
+    }
+
+    private static String findValueForDensityFilter(String split, Collection<String> values) {
+        for (String val : values) {
+            if (split.toLowerCase().startsWith(val.toLowerCase())) {
                 return val
             }
         }

@@ -51,6 +51,7 @@ abstract class BugsnagUploadAbstractTask extends BugsnagVariantOutputTask {
         if (!manifestPath.exists()) {
             return
         }
+        project.logger.info("Reading manifest at: ${manifestPath}")
 
         def xml = new XmlParser().parse(manifestPath)
         def metaDataTags = xml.application['meta-data']
@@ -111,6 +112,13 @@ abstract class BugsnagUploadAbstractTask extends BugsnagVariantOutputTask {
         if (project.bugsnag.overwrite || System.properties['bugsnag.overwrite']) {
             mpEntity.addPart("overwrite", new StringBody("true"))
         }
+
+        project.logger.info("apiKey: ${apiKey}")
+        project.logger.info("appId: ${applicationId}")
+        project.logger.info("versionCode: ${versionCode}")
+        project.logger.info("buildUUID: ${buildUUID}")
+        project.logger.info("versionName: ${versionName}")
+        project.logger.info("overwrite: ${project.bugsnag.overwrite}")
     }
 
     def boolean uploadToServer(mpEntity) {
