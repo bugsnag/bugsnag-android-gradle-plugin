@@ -1,3 +1,19 @@
+## 3.0.0-beta3 (2017-10-10)
+
+* Support upload of APK splits
+
+#### Breaking changes
+If you run the upload task manually, the task name has now changed to use the VariantOutput name, rather than the Variant name.
+
+```shell
+./gradlew clean build uploadBugsnag${variantOutputName}Mapping
+```
+
+For example, the following would upload the release mapping file for the `x86` split of the `javaExample` productFlavor in the `example` module: 
+```shell
+./gradlew clean build :example:uploadBugsnagJavaExample-x86-releaseMapping
+```
+
 ## 3.0.0-beta2 (2017-09-22)
 
 * Expose manual upload gradle task 

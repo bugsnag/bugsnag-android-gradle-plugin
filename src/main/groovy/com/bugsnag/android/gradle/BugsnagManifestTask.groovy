@@ -1,10 +1,7 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.gradle.api.BaseVariantOutput
 import groovy.xml.Namespace
-import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
-
 /**
  Task to add a unique build UUID to AndroidManifest.xml during the build
  process. This is used by Bugsnag to identify which proguard mapping file
@@ -15,9 +12,7 @@ import org.gradle.api.tasks.TaskAction
  This task must be called after "process${variantName}Manifest", since it
  requires that an AndroidManifest.xml exists in `build/intermediates`.
  */
-class BugsnagManifestTask extends DefaultTask {
-
-    BaseVariantOutput output // cache output to find manifestPath when it is created
+class BugsnagManifestTask extends BugsnagVariantOutputTask {
 
     BugsnagManifestTask() {
         super()
@@ -27,6 +22,11 @@ class BugsnagManifestTask extends DefaultTask {
     @TaskAction
     def updateManifest() {
         def manifestPath = getManifestPath()
+
+        if (!manifestPath.exists()) {
+            return
+        }
+
         project.logger.debug("Updating manifest with build UUID: " + manifestPath)
 
         // Parse the AndroidManifest.xml
@@ -67,6 +67,10 @@ class BugsnagManifestTask extends DefaultTask {
     def shouldRun() {
         def manifestPath = getManifestPath()
 
+        if (!manifestPath.exists()) {
+            return false
+        }
+
         def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
         def app = new XmlParser().parse(manifestPath).application[0]
         if (app) {
@@ -77,15 +81,6 @@ class BugsnagManifestTask extends DefaultTask {
         } else {
             false
         }
-    }
-
-    def getManifestPath() {
-        File manifestPath = new File(output.processManifest.manifestOutputDirectory, "AndroidManifest.xml")
-
-        if (!manifestPath.exists()) {
-            project.logger.warn("Failed to find manifest for output " + output.name)
-        }
-        manifestPath
     }
 
 }

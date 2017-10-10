@@ -17,7 +17,7 @@ import org.gradle.api.tasks.TaskAction
  it is usually safe to have this be the absolute last task executed during
  a build.
  */
-class BugsnagUploadProguardTask extends BugsnagUploadAbstractTask { // FIXME duplication with Jack task
+class BugsnagUploadProguardTask extends BugsnagUploadAbstractTask {
 
     String partName
 
@@ -34,13 +34,13 @@ class BugsnagUploadProguardTask extends BugsnagUploadAbstractTask { // FIXME dup
         // configuration includes -dontobfuscate, the mapping file
         // will not exist (but we also won't need it).
         if (!mappingFile || !mappingFile.exists()) {
-            project.logger.error("Mapping file not found")
+            project.logger.error("Mapping file not found: ${mappingFile}")
             return
         }
 
         // Read the API key and Build ID etc..
         super.readManifestFile()
-        project.logger.info("Attempting to upload mapping file: " + mappingFile)
+        project.logger.info("Attempting to upload mapping file: ${mappingFile}")
 
         // Construct a basic request
         MultipartEntity mpEntity = new MultipartEntity()

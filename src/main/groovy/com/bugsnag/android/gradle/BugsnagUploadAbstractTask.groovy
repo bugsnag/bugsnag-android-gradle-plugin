@@ -1,7 +1,6 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.gradle.api.ApplicationVariant
-import com.android.build.gradle.api.BaseVariantOutput
+import com.android.build.gradle.api.BaseVariant
 import groovy.xml.Namespace
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
@@ -12,8 +11,6 @@ import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.params.HttpConnectionParams
 import org.apache.http.params.HttpParams
 import org.apache.http.util.EntityUtils
-import org.gradle.api.DefaultTask
-
 /**
  Task to upload ProGuard mapping files to Bugsnag.
 
@@ -27,13 +24,12 @@ import org.gradle.api.DefaultTask
  it is usually safe to have this be the absolute last task executed during
  a build.
  */
-abstract class BugsnagUploadAbstractTask extends DefaultTask {
+abstract class BugsnagUploadAbstractTask extends BugsnagVariantOutputTask {
 
     static final int MAX_RETRY_COUNT = 5
     static final int TIMEOUT_MILLIS = 60000 // 60 seconds
 
-    ApplicationVariant variant
-    BaseVariantOutput output
+    BaseVariant variant
     String applicationId
 
     // Read from the manifest file
@@ -50,7 +46,14 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
     def readManifestFile() {
         // Parse the AndroidManifest.xml
         def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
-        def xml = new XmlParser().parse(getManifestPath())
+        def manifestPath = getManifestPath()
+
+        if (!manifestPath.exists()) {
+            return
+        }
+        project.logger.debug("Reading manifest at: ${manifestPath}")
+
+        def xml = new XmlParser().parse(manifestPath)
         def metaDataTags = xml.application['meta-data']
 
         // Get the Bugsnag API key
@@ -74,6 +77,11 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
     }
 
     def uploadMultipartEntity(MultipartEntity mpEntity) {
+        if (apiKey == null) {
+            project.logger.warn("Skipping upload due to invalid parameters")
+            return
+        }
+
         addPropertiesToMultipartEntity(mpEntity)
 
         boolean uploadSuccessful = uploadToServer(mpEntity)
@@ -94,7 +102,7 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
         mpEntity.addPart("versionCode", new StringBody(versionCode))
 
         if (buildUUID != null) {
-            mpEntity.addPart("buildUUID", new StringBody(buildUUID));
+            mpEntity.addPart("buildUUID", new StringBody(buildUUID))
         }
 
         if (versionName != null) {
@@ -104,6 +112,13 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
         if (project.bugsnag.overwrite || System.properties['bugsnag.overwrite']) {
             mpEntity.addPart("overwrite", new StringBody("true"))
         }
+
+        project.logger.debug("apiKey: ${apiKey}")
+        project.logger.debug("appId: ${applicationId}")
+        project.logger.debug("versionCode: ${versionCode}")
+        project.logger.debug("buildUUID: ${buildUUID}")
+        project.logger.debug("versionName: ${versionName}")
+        project.logger.debug("overwrite: ${project.bugsnag.overwrite}")
     }
 
     def boolean uploadToServer(mpEntity) {
@@ -111,7 +126,7 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
 
         // Make the request
         HttpPost httpPost = new HttpPost(project.bugsnag.endpoint)
-        httpPost.setEntity(mpEntity);
+        httpPost.setEntity(mpEntity)
 
         HttpClient httpClient = new DefaultHttpClient()
         HttpParams params = httpClient.getParams()
@@ -181,12 +196,4 @@ abstract class BugsnagUploadAbstractTask extends DefaultTask {
         return project.bugsnag.retryCount >= MAX_RETRY_COUNT ? MAX_RETRY_COUNT : project.bugsnag.retryCount
     }
 
-    def getManifestPath() {
-        File manifestPath = new File(output.processManifest.manifestOutputDirectory, "AndroidManifest.xml")
-
-        if (!manifestPath.exists()) {
-            project.logger.warn("Failed to find manifest for output " + output.name)
-        }
-        manifestPath
-    }
 }

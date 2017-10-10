@@ -26,6 +26,7 @@ import static groovy.io.FileType.*
  a build.
  */
 class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
+
     File intermediatePath
     File symbolPath
     String variantName
@@ -42,7 +43,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
 
     @TaskAction
     def upload() {
-        super.readManifestFile();
+        super.readManifestFile()
         boolean sharedObjectFound = false
         searchLibraryPaths { String arch, File sharedObject ->
             sharedObjectFound = true
