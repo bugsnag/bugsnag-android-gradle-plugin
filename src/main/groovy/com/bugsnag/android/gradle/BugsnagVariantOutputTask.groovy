@@ -33,6 +33,8 @@ class BugsnagVariantOutputTask extends DefaultTask {
             directory = guessManifestDir(directory, split)
         } else if (tokens.length == 3) {
             directory = guessManifestDir(directory, tokens[1])
+        } else if (tokens.length > 4) {
+            project.logger.warn("Cannot parse `variantOutput.name: ${variantOutput.name}` for manifest location")
         }
         def file = new File(directory, "AndroidManifest.xml")
 
