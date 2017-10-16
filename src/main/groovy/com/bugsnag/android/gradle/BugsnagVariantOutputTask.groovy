@@ -28,16 +28,13 @@ class BugsnagVariantOutputTask extends DefaultTask {
         // when splits are enabled, the output has a name with the following structure:
         // e.g. "javaExample-hdpiMips-debug"
 
-        if (tokens.length == 3) {
-            def split = tokens[1]
-
-            if (SPLIT_UNIVERSAL == split) {
-                directory = new File(directory, SPLIT_UNIVERSAL)
-            } else {
-                def density = findValueForDensityFilter(split, project.ext.splitsInfo.densityFilters)
-                def abi = findValueForAbiFilter(split, project.ext.splitsInfo.abiFilters)
-                directory = findManifestDirForSplit(density, abi, directory)
-            }
+        if (tokens.length == 4) { // should be one of the following cases: 'armeabi-v7a', 'arm64-v8a'
+            def split = tokens[1] + "-" + tokens[2] // combine back into one string
+            directory = guessManifestDir(directory, split)
+        } else if (tokens.length == 3) {
+            directory = guessManifestDir(directory, tokens[1])
+        } else if (tokens.length > 4) {
+            project.logger.warn("Cannot parse `variantOutput.name: ${variantOutput.name}` for manifest location")
         }
         def file = new File(directory, "AndroidManifest.xml")
 
@@ -45,6 +42,17 @@ class BugsnagVariantOutputTask extends DefaultTask {
             project.logger.error("Failed to find manifest at ${file}")
         }
         file
+    }
+
+    private File guessManifestDir(File directory, String split) {
+        if (SPLIT_UNIVERSAL == split) {
+            directory = new File(directory, SPLIT_UNIVERSAL)
+        } else {
+            def density = findValueForDensityFilter(split, project.ext.splitsInfo.densityFilters)
+            def abi = findValueForAbiFilter(split, project.ext.splitsInfo.abiFilters)
+            directory = findManifestDirForSplit(density, abi, directory)
+        }
+        directory
     }
 
     private static String findValueForAbiFilter(String split, Collection<String> values) {
