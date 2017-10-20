@@ -1,5 +1,6 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import org.gradle.api.DefaultTask
 
@@ -8,6 +9,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
     private static final String SPLIT_UNIVERSAL = "universal"
 
     BaseVariantOutput variantOutput
+    BaseVariant variant
 
     /**
      * Gets the manifest for a given Variant Output, accounting for any APK splits.
@@ -45,11 +47,18 @@ class BugsnagVariantOutputTask extends DefaultTask {
     }
 
     private File guessManifestDir(File directory, String split) {
+        String taskName = "bugsnagSplitsInfo${BugsnagPlugin.taskNameForVariant(variant)}"
+        def task = project.tasks.findByName(taskName)
+
+        if (task == null) {
+            throw new IllegalStateException("No task found matching ${taskName}")
+        }
+
         if (SPLIT_UNIVERSAL == split) {
             directory = new File(directory, SPLIT_UNIVERSAL)
         } else {
-            def density = findValueForDensityFilter(split, project.ext.splitsInfo.densityFilters)
-            def abi = findValueForAbiFilter(split, project.ext.splitsInfo.abiFilters)
+            def density = findValueForDensityFilter(split, task.splitsInfo.densityFilters)
+            def abi = findValueForAbiFilter(split, task.splitsInfo.abiFilters)
             directory = findManifestDirForSplit(density, abi, directory)
         }
         directory
