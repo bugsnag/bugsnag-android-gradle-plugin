@@ -57,8 +57,8 @@ class BugsnagVariantOutputTask extends DefaultTask {
         if (SPLIT_UNIVERSAL == split) {
             directory = new File(directory, SPLIT_UNIVERSAL)
         } else {
-            def density = findValueForDensityFilter(split, task.splitsInfo.densityFilters)
-            def abi = findValueForAbiFilter(split, task.splitsInfo.abiFilters)
+            def density = findValueForDensityFilter(split, task.densityFilters)
+            def abi = findValueForAbiFilter(split, task.abiFilters)
             directory = findManifestDirForSplit(density, abi, directory)
         }
         directory

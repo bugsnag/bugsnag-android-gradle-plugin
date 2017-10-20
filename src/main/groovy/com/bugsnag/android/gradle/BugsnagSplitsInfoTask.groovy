@@ -8,7 +8,9 @@ import org.gradle.api.tasks.TaskAction
 class BugsnagSplitsInfoTask extends DefaultTask {
 
     BaseVariant variant
-    BugsnagPlugin.SplitsInfo splitsInfo
+    def densityFilters
+    def languageFilters
+    def abiFilters
 
     BugsnagSplitsInfoTask() {
         super()
@@ -23,12 +25,9 @@ class BugsnagSplitsInfoTask extends DefaultTask {
         if (task == null) {
             throw new IllegalStateException("Could not find task: ${taskName}")
         }
-
-        this.splitsInfo = new BugsnagPlugin.SplitsInfo()
-        this.splitsInfo.densityFilters = task.densityFilters
-        this.splitsInfo.languageFilters = task.languageFilters
-        this.splitsInfo.abiFilters = task.abiFilters
-        println("Density: ${this.splitsInfo.densityFilters}")
+        this.densityFilters = task.densityFilters
+        this.languageFilters = task.languageFilters
+        this.abiFilters = task.abiFilters
     }
 
 }

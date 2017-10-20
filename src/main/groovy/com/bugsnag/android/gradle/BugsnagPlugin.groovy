@@ -28,12 +28,6 @@ class BugsnagPlugin implements Plugin<Project> {
     static final String BUILD_UUID_TAG = 'com.bugsnag.android.BUILD_UUID'
     static final String GROUP_NAME = 'Bugsnag'
 
-    class SplitsInfo {
-        def densityFilters
-        def languageFilters
-        def abiFilters
-    }
-
     void apply(Project project) {
         project.extensions.create("bugsnag", BugsnagPluginExtension)
 
