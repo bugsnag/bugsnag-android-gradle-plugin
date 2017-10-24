@@ -22,12 +22,14 @@ class BugsnagSplitsInfoTask extends DefaultTask {
         def taskName = "splitsDiscoveryTask${BugsnagPlugin.taskNameForVariant(variant)}"
         def task = project.tasks.findByName(taskName)
 
-        if (task == null) {
-            throw new IllegalStateException("Could not find task: ${taskName}")
+        if (task != null) {
+            this.densityFilters = task.densityFilters
+            this.languageFilters = task.languageFilters
+            this.abiFilters = task.abiFilters
+        } else {
+            project.logger.error("Failed to find splits task ${taskName}")
         }
-        this.densityFilters = task.densityFilters
-        this.languageFilters = task.languageFilters
-        this.abiFilters = task.abiFilters
+
     }
 
 }
