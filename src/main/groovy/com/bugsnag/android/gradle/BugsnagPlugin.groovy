@@ -125,7 +125,7 @@ class BugsnagPlugin implements Plugin<Project> {
     private static void setupManifestUuidTask(Project project, BaseVariant variant, BaseVariantOutput output) {
         BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${taskNameForOutput(output)}Manifest", BugsnagManifestTask)
         manifestTask.variantOutput = output
-        manifestTask.variant = baseVariant
+        manifestTask.variant = variant
         manifestTask.group = GROUP_NAME
         manifestTask.mustRunAfter output.processManifest
         dependTaskOnPackageTask(variant, manifestTask)
