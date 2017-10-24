@@ -31,12 +31,6 @@ class BugsnagPlugin implements Plugin<Project> {
     static final String BUILD_UUID_TAG = 'com.bugsnag.android.BUILD_UUID'
     static final String GROUP_NAME = 'Bugsnag'
 
-    class SplitsInfo {
-        def densityFilters
-        def languageFilters
-        def abiFilters
-    }
-
     void apply(Project project) {
         project.extensions.create("bugsnag", BugsnagPluginExtension)
 
@@ -60,7 +54,7 @@ class BugsnagPlugin implements Plugin<Project> {
      * Create tasks for each Build Variant
      * See https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide#TOC-Build-Variants
      */
-    private void applyBugsnagToVariant(BaseVariant variant, Project project) {
+    private static void applyBugsnagToVariant(BaseVariant variant, Project project) {
         if (hasDisabledBugsnag(variant)) {
             return
         }
@@ -78,20 +72,12 @@ class BugsnagPlugin implements Plugin<Project> {
         }
     }
 
-    /**
-     * Latch on to the splits discovery task and store the split types as Set<String> in project.ext
-     */
-    private void setupSplitsDiscovery(Project project, BaseVariant variant) {
-        def task = project.tasks.findByName("splitsDiscoveryTask${taskNameForVariant(variant)}")
-
-        if (task) {
-            task.doLast {
-                project.ext.splitsInfo = new SplitsInfo()
-                project.ext.splitsInfo.densityFilters = task.densityFilters
-                project.ext.splitsInfo.languageFilters = task.languageFilters
-                project.ext.splitsInfo.abiFilters = task.abiFilters
-            }
-        }
+    private static void setupSplitsDiscovery(Project project, BaseVariant variant) {
+        BugsnagSplitsInfoTask splitsInfoTask = project.tasks.create("bugsnagSplitsInfo${taskNameForVariant(variant)}", BugsnagSplitsInfoTask)
+        splitsInfoTask.group = GROUP_NAME
+        splitsInfoTask.variant = variant
+        dependTaskOnPackageTask(variant, splitsInfoTask)
+        splitsInfoTask.mustRunAfter variant.outputs.first().processManifest
     }
 
     /**
@@ -139,6 +125,7 @@ class BugsnagPlugin implements Plugin<Project> {
     private static void setupManifestUuidTask(Project project, BaseVariant variant, BaseVariantOutput output) {
         BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${taskNameForOutput(output)}Manifest", BugsnagManifestTask)
         manifestTask.variantOutput = output
+        manifestTask.variant = baseVariant
         manifestTask.group = GROUP_NAME
         manifestTask.mustRunAfter output.processManifest
         dependTaskOnPackageTask(variant, manifestTask)
@@ -170,11 +157,11 @@ class BugsnagPlugin implements Plugin<Project> {
         }
     }
 
-    private static String taskNameForVariant(BaseVariant variant) {
+    static String taskNameForVariant(BaseVariant variant) {
         variant.name.capitalize()
     }
 
-    private static String taskNameForOutput(BaseVariantOutput output) {
+    static String taskNameForOutput(BaseVariantOutput output) {
         output.name.capitalize()
     }
 
@@ -194,7 +181,6 @@ class BugsnagPlugin implements Plugin<Project> {
         // Ignore any conflicting properties, bail if anything has a disable flag.
         return (variant.productFlavors + variant.buildType).any(hasDisabledBugsnag)
     }
-
 
     private static File getIntermediatePath(File symbolPath) {
         def intermediatePath = null

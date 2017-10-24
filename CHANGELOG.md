@@ -1,3 +1,7 @@
+## 3.0.0-beta4 (2017-10-16)
+
+* Fix upload of files for ARM ABI splits
+
 ## 3.0.0-beta3 (2017-10-10)
 
 * Support upload of APK splits
