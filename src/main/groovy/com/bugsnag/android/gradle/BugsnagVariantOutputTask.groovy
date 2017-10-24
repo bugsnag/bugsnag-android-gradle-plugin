@@ -50,16 +50,16 @@ class BugsnagVariantOutputTask extends DefaultTask {
         String taskName = "bugsnagSplitsInfo${BugsnagPlugin.taskNameForVariant(variant)}"
         def task = project.tasks.findByName(taskName)
 
-        if (task == null) {
-            throw new IllegalStateException("No task found matching ${taskName}")
-        }
-
-        if (SPLIT_UNIVERSAL == split) {
-            directory = new File(directory, SPLIT_UNIVERSAL)
+        if (task != null) {
+            if (SPLIT_UNIVERSAL == split) {
+                directory = new File(directory, SPLIT_UNIVERSAL)
+            } else {
+                def density = findValueForDensityFilter(split, task.densityFilters)
+                def abi = findValueForAbiFilter(split, task.abiFilters)
+                directory = findManifestDirForSplit(density, abi, directory)
+            }
         } else {
-            def density = findValueForDensityFilter(split, task.densityFilters)
-            def abi = findValueForAbiFilter(split, task.abiFilters)
-            directory = findManifestDirForSplit(density, abi, directory)
+            project.logger.error("Failed to find task ${taskName}")
         }
         directory
     }
