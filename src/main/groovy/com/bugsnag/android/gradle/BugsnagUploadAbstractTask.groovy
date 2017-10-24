@@ -1,6 +1,5 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.gradle.api.BaseVariant
 import groovy.xml.Namespace
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
@@ -29,7 +28,6 @@ abstract class BugsnagUploadAbstractTask extends BugsnagVariantOutputTask {
     static final int MAX_RETRY_COUNT = 5
     static final int TIMEOUT_MILLIS = 60000 // 60 seconds
 
-    BaseVariant variant
     String applicationId
 
     // Read from the manifest file
