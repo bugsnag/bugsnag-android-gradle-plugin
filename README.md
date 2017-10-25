@@ -38,7 +38,7 @@ Settings, at `<project dir>/<module name>/build.gradle` (usually
 
 ```groovy
 plugins {
-    id "com.bugsnag.android.gradle" version "3.0.0-beta4"
+    id "com.bugsnag.android.gradle" version "3.+"
 }
 ```
 
@@ -50,7 +50,7 @@ Add this plugin as a dependency in your main *Project Gradle Settings*, at `<pro
 buildscript {
     dependencies {
         // Add this line to your `dependencies` section
-        classpath 'com.bugsnag:bugsnag-android-gradle-plugin:3.0.0-beta3'
+        classpath 'com.bugsnag:bugsnag-android-gradle-plugin:3.+'
     }
 }
 ```
@@ -61,6 +61,9 @@ You'll then need to "apply" the plugin by adding the following line to the top o
 apply plugin: 'com.bugsnag.android.gradle'
 ```
 
+The `3.X` plugin is only currently supported on Android Studio 3. If you are migrating from Android Studio 2, you will also need to update the Android Gradle Plugin version in your root-level build.gradle:
+
+`classpath 'com.android.tools.build:gradle:<latestVersion>'`
 
 # Configuration
 

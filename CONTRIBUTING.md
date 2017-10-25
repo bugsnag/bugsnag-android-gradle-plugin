@@ -59,8 +59,7 @@ If you are a project maintainer, you can build and release a new version of
 
 -   Update the `CHANGELOG` and `README.md` with any new features
 
--   Update the version number in `gradle.properties` and the installation
-    section of `README.md`
+-   Run `make VERSION={version_number} bump
 
 -   Commit and tag the release
 

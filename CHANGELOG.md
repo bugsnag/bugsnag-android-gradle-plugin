@@ -1,3 +1,7 @@
+## 3.0.0-beta5 (2017-10-25)
+
+* Add separate task for holding Splits Info
+
 ## 3.0.0-beta4 (2017-10-16)
 
 * Fix upload of files for ARM ABI splits
