@@ -1,3 +1,7 @@
+## 3.0.0 (2017-10-26)
+
+* Support Android Studio 3 stable release
+
 ## 3.0.0-beta5 (2017-10-25)
 
 * Add separate task for holding Splits Info
@@ -17,14 +21,14 @@ If you run the upload task manually, the task name has now changed to use the Va
 ./gradlew clean build uploadBugsnag${variantOutputName}Mapping
 ```
 
-For example, the following would upload the release mapping file for the `x86` split of the `javaExample` productFlavor in the `example` module: 
+For example, the following would upload the release mapping file for the `x86` split of the `javaExample` productFlavor in the `example` module:
 ```shell
 ./gradlew clean build :example:uploadBugsnagJavaExample-x86-releaseMapping
 ```
 
 ## 3.0.0-beta2 (2017-09-22)
 
-* Expose manual upload gradle task 
+* Expose manual upload gradle task
 
 ## 3.0.0-beta (2017-09-06)
 
