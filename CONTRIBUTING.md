@@ -59,15 +59,7 @@ If you are a project maintainer, you can build and release a new version of
 
 -   Update the `CHANGELOG` and `README.md` with any new features
 
--   Run `make VERSION={version_number} bump
-
--   Commit and tag the release
-
-    ```shell
-    git commit -am "v1.x.x"
-    git tag v1.x.x
-    git push origin master && git push --tags
-    ```
+-   Run `make VERSION={version_number} release
 
 ### 2. Upload the jar to the GitHub releases page
 
@@ -90,12 +82,6 @@ If you are a project maintainer, you can build and release a new version of
     # Your credentials for https://bintray.com
     bintray_user=your-bintray-username
     bintray_api_key=your-bintray-api-key
-    ```
-
--   Build and upload the new version
-
-    ```shell
-    ./gradlew clean uploadArchives bintrayUpload
     ```
 
 -   "Promote" the release build on Maven Central
