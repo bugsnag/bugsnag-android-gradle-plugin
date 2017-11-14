@@ -22,8 +22,8 @@ class BugsnagPluginExtension {
     String builderName = null
     String releaseStage = null
     String vcsProvider = null
-    String vcsUrl = null
-    String vcsHash = null
+    String vcsRepository = null
+    String vcsRevision = null
     boolean autoAssignRelease = false
     Map<String, String> metadata = null
 

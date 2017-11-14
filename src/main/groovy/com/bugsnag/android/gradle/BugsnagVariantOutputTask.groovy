@@ -2,6 +2,7 @@ package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
+import groovy.xml.Namespace
 import org.gradle.api.DefaultTask
 
 class BugsnagVariantOutputTask extends DefaultTask {
@@ -93,6 +94,81 @@ class BugsnagVariantOutputTask extends DefaultTask {
         } else {
             manifestDir
         }
+    }
+
+
+    // Read the API key and Build ID etc..
+    void readManifestFile() {
+        // Parse the AndroidManifest.xml
+        Namespace ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
+        File manifestPath = getManifestPath()
+
+        if (!manifestPath.exists()) {
+            return
+        }
+        project.logger.debug("Reading manifest at: ${manifestPath}")
+
+        Node xml = new XmlParser().parse(manifestPath)
+        def metaDataTags = xml.application['meta-data']
+
+        // Get the Bugsnag API key
+        apiKey = getApiKey(metaDataTags, ns)
+        if (!apiKey) {
+            project.logger.warn("Could not find apiKey in '$BugsnagPlugin.API_KEY_TAG' <meta-data> tag in your AndroidManifest.xml or in your gradle config")
+        }
+
+        // Get the build version
+        versionCode = getVersionCode(xml, ns)
+        if (versionCode == null) {
+            project.logger.warn("Could not find 'android:versionCode' value in your AndroidManifest.xml")
+            return
+        }
+
+        // Uniquely identify the build so that we can identify the proguard file.
+        buildUUID = getBuildUUID(metaDataTags, ns)
+
+        // Get the version name
+        versionName = getVersionName(xml, ns)
+    }
+
+    String getApiKey(metaDataTags, Namespace ns) {
+        String apiKey = null
+
+        if (project.bugsnag.apiKey != null) {
+            apiKey = project.bugsnag.apiKey
+        } else {
+            def apiKeyTags = metaDataTags.findAll {
+                (it.attributes()[ns.name] == BugsnagPlugin.API_KEY_TAG)
+            }
+            if (apiKeyTags.size() > 0) {
+                apiKey = apiKeyTags[0].attributes()[ns.value]
+            }
+        }
+
+        return apiKey
+    }
+
+    String getBuildUUID(metaDataTags, Namespace ns) {
+        String buildUUID = null
+
+        def buildUUIDTags = metaDataTags.findAll {
+            (it.attributes()[ns.name] == BugsnagPlugin.BUILD_UUID_TAG)
+        }
+        if (buildUUIDTags.size() == 0) {
+            project.logger.warn("Could not find '$BugsnagPlugin.BUILD_UUID_TAG' <meta-data> tag in your AndroidManifest.xml")
+        } else {
+            buildUUID = buildUUIDTags[0].attributes()[ns.value]
+        }
+
+        return buildUUID
+    }
+
+    String getVersionName(Node xml, Namespace ns) {
+        xml.attributes()[ns.versionName]
+    }
+
+    Integer getVersionCode(Node xml, Namespace ns) {
+        xml.attributes()[ns.versionCode]
     }
 
 }

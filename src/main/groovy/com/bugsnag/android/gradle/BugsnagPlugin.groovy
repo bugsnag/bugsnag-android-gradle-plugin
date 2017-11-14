@@ -62,6 +62,7 @@ class BugsnagPlugin implements Plugin<Project> {
                 setupManifestUuidTask(project, output, variant)
                 setupMappingFileUpload(project, variant, output)
                 setupNdkMappingFileUpload(project, variant, output)
+                setupReleasesTask(project, variant, output)
             }
         }
     }
@@ -103,6 +104,16 @@ class BugsnagPlugin implements Plugin<Project> {
             uploadNdkTask.toolchain = getCmakeToolchain(project, variant)
             uploadNdkTask.sharedObjectPath = project.bugsnag.sharedObjectPath
         }
+    }
+
+    private static void setupReleasesTask(Project project, BaseVariant variant, BaseVariantOutput output) {
+        def releasesTask = project.tasks.create("bugsnagRelease${taskNameForOutput(output)}Task", BugsnagReleasesTask)
+        releasesTask.variantOutput = output
+        releasesTask.variant = variant
+
+        def buildTask = project.tasks.findByName("build")
+        releasesTask.mustRunAfter buildTask
+        buildTask.finalizedBy releasesTask // FIXME handle upload task finalization
     }
 
     private static void prepareUploadTask(uploadTask, BaseVariantOutput output, BaseVariant variant, Project project) {

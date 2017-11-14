@@ -40,40 +40,6 @@ abstract class BugsnagUploadAbstractTask extends BugsnagVariantOutputTask {
         super()
     }
 
-    // Read the API key and Build ID etc..
-    def readManifestFile() {
-        // Parse the AndroidManifest.xml
-        def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
-        def manifestPath = getManifestPath()
-
-        if (!manifestPath.exists()) {
-            return
-        }
-        project.logger.debug("Reading manifest at: ${manifestPath}")
-
-        def xml = new XmlParser().parse(manifestPath)
-        def metaDataTags = xml.application['meta-data']
-
-        // Get the Bugsnag API key
-        apiKey = getApiKey(metaDataTags, ns)
-        if (!apiKey) {
-            throw new RuntimeException("Could not find apiKey in '$BugsnagPlugin.API_KEY_TAG' <meta-data> tag in your AndroidManifest.xml or in your gradle config")
-        }
-
-        // Get the build version
-        versionCode = xml.attributes()[ns.versionCode]
-        if (versionCode == null) {
-            project.logger.warn("Could not find 'android:versionCode' value in your AndroidManifest.xml")
-            return
-        }
-
-        // Uniquely identify the build so that we can identify the proguard file.
-        buildUUID = getBuildUUID(metaDataTags, ns)
-
-        // Get the version name
-        versionName = xml.attributes()[ns.versionName]
-    }
-
     def uploadMultipartEntity(MultipartEntity mpEntity) {
         if (apiKey == null) {
             project.logger.warn("Skipping upload due to invalid parameters")
@@ -119,7 +85,7 @@ abstract class BugsnagUploadAbstractTask extends BugsnagVariantOutputTask {
         project.logger.debug("overwrite: ${project.bugsnag.overwrite}")
     }
 
-    def boolean uploadToServer(mpEntity) {
+    boolean uploadToServer(mpEntity) {
         project.logger.lifecycle("Attempting upload of mapping file to Bugsnag")
 
         // Make the request
@@ -152,45 +118,13 @@ abstract class BugsnagUploadAbstractTask extends BugsnagVariantOutputTask {
         return false
     }
 
-    def getApiKey(metaDataTags, ns) {
-        def apiKey = null
-
-        if (project.bugsnag.apiKey != null) {
-            apiKey = project.bugsnag.apiKey
-        } else {
-            def apiKeyTags = metaDataTags.findAll {
-                (it.attributes()[ns.name] == BugsnagPlugin.API_KEY_TAG)
-            }
-            if (apiKeyTags.size() > 0) {
-                apiKey = apiKeyTags[0].attributes()[ns.value]
-            }
-        }
-
-        return apiKey
-    }
-
-    def getBuildUUID(metaDataTags, ns) {
-        def buildUUID = null
-
-        def buildUUIDTags = metaDataTags.findAll {
-            (it.attributes()[ns.name] == BugsnagPlugin.BUILD_UUID_TAG)
-        }
-        if (buildUUIDTags.size() == 0) {
-            project.logger.warn("Could not find '$BugsnagPlugin.BUILD_UUID_TAG' <meta-data> tag in your AndroidManifest.xml")
-        } else {
-            buildUUID = buildUUIDTags[0].attributes()[ns.value]
-        }
-
-        return buildUUID
-    }
-
     /**
      * Get the retry count defined by the user. If none is set the default is 0 (zero).
      * Also to avoid too much retries the max value is 5 (five).
      *
      * @return the retry count
      */
-    def getRetryCount() {
+    int getRetryCount() {
         return project.bugsnag.retryCount >= MAX_RETRY_COUNT ? MAX_RETRY_COUNT : project.bugsnag.retryCount
     }
 
