@@ -136,7 +136,6 @@ class BugsnagPlugin implements Plugin<Project> {
         }
         .forEach {
             uploadTask.mustRunAfter it
-            project.logger.lifecycle("Attaching upload to task: ${it.name}")
 
             if (project.bugsnag.autoUpload) {
                 it.finalizedBy uploadTask
