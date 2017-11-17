@@ -111,11 +111,35 @@ class BugsnagPlugin implements Plugin<Project> {
         uploadTask.variant = variant
         uploadTask.applicationId = variant.applicationId
 
-        def buildTask = project.tasks.findByName("build")
-        uploadTask.mustRunAfter buildTask
 
-        if (project.bugsnag.autoUpload) {
-            buildTask.finalizedBy uploadTask
+        // Expected behaviour:
+        // assemble
+        // assembleJavaExampleRelease
+        // assembleJavaExample
+        // assembleRelease
+
+
+        String variantName = output.name.split("-")[0].capitalize()
+        String assembleTaskName = output.assemble.name
+        String buildTypeTaskName = assembleTaskName.replaceAll(variantName, "")
+        String buildType = buildTypeTaskName.replaceAll("assemble", "")
+        String variantTaskName = assembleTaskName.replaceAll(buildType, "")
+
+        Set<String> taskNames = new HashSet<>()
+        taskNames.add(assembleTaskName)
+        taskNames.add("assemble")
+        taskNames.add(buildTypeTaskName)
+        taskNames.add(variantTaskName)
+
+        project.tasks.findAll {
+            taskNames.contains(it.name)
+        }
+        .forEach {
+            uploadTask.mustRunAfter it
+
+            if (project.bugsnag.autoUpload) {
+                it.finalizedBy uploadTask
+            }
         }
     }
 
