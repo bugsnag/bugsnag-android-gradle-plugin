@@ -98,8 +98,8 @@ publishing {
 
 // Bintray upload
 bintray {
-    user = "$bintray_user"
-    key = "$bintray_api_key"
+    user = project.hasProperty("bintray_user") ? "$bintray_user" : System.getenv("bintray_user")
+    key = project.hasProperty("bintray_api_key") ? "$bintray_api_key" : System.getenv("bintray_api_key")
 
     publications = ['Publication']
     pkg {
@@ -117,5 +117,5 @@ bintray {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.1-rc-1'
+    gradleVersion = '4.3'
 }
