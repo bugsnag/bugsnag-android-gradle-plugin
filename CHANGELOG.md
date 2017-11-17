@@ -1,3 +1,8 @@
+## 3.1.0 (2017-11-17)
+
+* Finalise upload task on assemble rather than build
+* Support Library variant upload
+
 ## 3.0.0 (2017-10-26)
 
 * Support Android Studio 3 stable release
