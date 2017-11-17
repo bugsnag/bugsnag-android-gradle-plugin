@@ -114,9 +114,10 @@ class BugsnagPlugin implements Plugin<Project> {
         releasesTask.variantOutput = output
         releasesTask.variant = variant
 
-        def buildTask = project.tasks.findByName("build")
-        releasesTask.mustRunAfter buildTask
-        buildTask.finalizedBy releasesTask // FIXME handle upload task finalization
+        findAssembleTasks(output, project).forEach {
+            releasesTask.mustRunAfter it
+            it.finalizedBy releasesTask
+        }
     }
 
     private static void prepareUploadTask(uploadTask, BaseVariantOutput output, BaseVariant variant, Project project) {
@@ -125,14 +126,25 @@ class BugsnagPlugin implements Plugin<Project> {
         uploadTask.variant = variant
         uploadTask.applicationId = variant.applicationId
 
+        findAssembleTasks(output, project).forEach {
+            uploadTask.mustRunAfter it
 
-        // Expected behaviour:
-        // assemble
-        // assembleJavaExampleRelease
-        // assembleJavaExample
-        // assembleRelease
+            if (project.bugsnag.autoUpload) {
+                it.finalizedBy uploadTask
+            }
+        }
+    }
 
-
+    /**
+     * Fetches all the assemble tasks in the current project that match the variant
+     *
+     * Expected behaviour: assemble, assembleJavaExampleRelease, assembleJavaExample, assembleRelease
+     *
+     * @param output the variantOutput
+     * @param project the current project
+     * @return the assemble tasks
+     */
+    private static Set<Task> findAssembleTasks(BaseVariantOutput output, Project project) {
         String variantName = output.name.split("-")[0].capitalize()
         String assembleTaskName = output.assemble.name
         String buildTypeTaskName = assembleTaskName.replaceAll(variantName, "")
@@ -147,13 +159,6 @@ class BugsnagPlugin implements Plugin<Project> {
 
         project.tasks.findAll {
             taskNames.contains(it.name)
-        }
-        .forEach {
-            uploadTask.mustRunAfter it
-
-            if (project.bugsnag.autoUpload) {
-                it.finalizedBy uploadTask
-            }
         }
     }
 

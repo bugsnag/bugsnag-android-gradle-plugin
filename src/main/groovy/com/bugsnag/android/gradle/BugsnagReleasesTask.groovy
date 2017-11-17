@@ -33,7 +33,9 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
             return
         }
 
-        isValidVcsProvider(vcsProvider)
+        if (isValidVcsProvider(vcsProvider)) {
+           // TODO add to payload
+        }
         project.logger.lifecycle("Releases task!")
     }
 
