@@ -22,14 +22,14 @@ import org.apache.http.util.EntityUtils
  it is usually safe to have this be the absolute last task executed during
  a build.
  */
-abstract class BugsnagUploadAbstractTask extends BugsnagVariantOutputTask {
+abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
 
     static final int MAX_RETRY_COUNT = 5
     static final int TIMEOUT_MILLIS = 60000 // 60 seconds
 
     String applicationId
 
-    BugsnagUploadAbstractTask() {
+    BugsnagMultiPartUploadTask() {
         super()
     }
 

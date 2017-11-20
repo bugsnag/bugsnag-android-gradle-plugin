@@ -25,7 +25,7 @@ import static groovy.io.FileType.*
  it is usually safe to have this be the absolute last task executed during
  a build.
  */
-class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
+class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
 
     File intermediatePath
     File symbolPath
