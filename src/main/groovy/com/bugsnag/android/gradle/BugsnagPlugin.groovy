@@ -10,7 +10,6 @@ import com.android.build.gradle.internal.dsl.BuildType
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-
 /**
  * Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.
  *
