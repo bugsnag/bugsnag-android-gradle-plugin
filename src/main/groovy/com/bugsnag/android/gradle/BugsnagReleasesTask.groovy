@@ -7,7 +7,6 @@ import java.nio.charset.Charset
 
 class BugsnagReleasesTask extends BugsnagVariantOutputTask {
 
-
     private static final Collection<String> VALID_VCS_PROVIDERS =
         Arrays.asList("github-enterprise", "bitbucket-server", "gitlab-onpremise", "bitbucket",
             "github", "gitlab")
@@ -19,14 +18,8 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
     private static final String MK_GRADLE_VERSION = "gradle.version"
     private static final String MK_GIT_VERSION = "git.version"
 
-    String apiKey
-    String versionName // "appVersion"
-    Integer versionCode // "appVersionCode"
     String releaseStage
-
-    // TODO 0. get versionName, code, release stage
-    // TODO 1. check if git repo exists and get info if so
-    // TODO 2. Automatically collect non-sensitive useful metadata and merge with any user-supplied info
+    // TODO release stage
 
     BugsnagReleasesTask() {
         super()
@@ -34,7 +27,9 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
     }
 
     @TaskAction
-    void fetchReleaseInfo() { // TODO check project plugin extension values
+    void fetchReleaseInfo() { // TODO check project plugin extension values + add to payload
+        super.readManifestFile()
+
 //        if (!isValidPayload(apiKey, versionName)) {
 //            project.logger.warn("Must supply api key and version name for release task")
 //            return
@@ -49,7 +44,6 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         project.logger.lifecycle("VCS Provider ${vcsProvider}")
 
         if (isValidVcsProvider(vcsProvider)) {
-            // TODO add to payload
         }
         // collect default project metadata
         Map<String, String> metadata = collectDefaultMetaData()
@@ -97,7 +91,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
      * @param cmd the command (arguments must be separate strings)
      * @return the cmd output
      */
-    String runCmd(String... cmd) {
+    private String runCmd(String... cmd) {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream()
 

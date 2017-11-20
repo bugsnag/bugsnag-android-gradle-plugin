@@ -12,6 +12,13 @@ class BugsnagVariantOutputTask extends DefaultTask {
     BaseVariantOutput variantOutput
     BaseVariant variant
 
+
+    // Read from the manifest file
+    String apiKey
+    String versionCode
+    String buildUUID
+    String versionName
+
     /**
      * Gets the manifest for a given Variant Output, accounting for any APK splits.
      *

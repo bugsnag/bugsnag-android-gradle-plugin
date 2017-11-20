@@ -1,6 +1,5 @@
 package com.bugsnag.android.gradle
 
-import groovy.xml.Namespace
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpPost
@@ -29,12 +28,6 @@ abstract class BugsnagUploadAbstractTask extends BugsnagVariantOutputTask {
     static final int TIMEOUT_MILLIS = 60000 // 60 seconds
 
     String applicationId
-
-    // Read from the manifest file
-    String apiKey
-    String versionCode
-    String buildUUID
-    String versionName
 
     BugsnagUploadAbstractTask() {
         super()
