@@ -64,7 +64,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
 //        commandLine "git config --get remote.origin.url"
 
         // collect default project metadata
-        Map<String, String> defaultMetaData = collectDefaultMetaData(gitVersion)
+        Map<String, String> defaultMetaData = collectDefaultMetaData()
     }
 
     private Map<String, String> collectDefaultMetaData() {
@@ -97,15 +97,16 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         null
     }
 
+
     /**
      * Runs a command on the shell
      * @param cmd the command (arguments must be separate strings)
      * @return the cmd output
      */
-    private String runCmd(String... cmd) {
+    String runCmd(String... cmd) { // TODO handle non-zero process codes
         ByteArrayOutputStream baos = new ByteArrayOutputStream()
 
-        exec {
+        project.exec {
             commandLine cmd
             standardOutput = baos
         }
