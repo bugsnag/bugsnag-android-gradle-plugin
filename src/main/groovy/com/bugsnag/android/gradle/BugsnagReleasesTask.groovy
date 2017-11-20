@@ -1,6 +1,7 @@
 package com.bugsnag.android.gradle
 
 import org.gradle.api.tasks.TaskAction
+import org.gradle.process.internal.ExecException
 
 import java.nio.charset.Charset
 
@@ -23,10 +24,6 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
     Integer versionCode // "appVersionCode"
     String releaseStage
 
-    String vcsProvider // in "sourceControl" object
-    String vcsRepository
-    String vcsRevision
-
     // TODO 0. get versionName, code, release stage
     // TODO 1. check if git repo exists and get info if so
     // TODO 2. Automatically collect non-sensitive useful metadata and merge with any user-supplied info
@@ -43,7 +40,6 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
 //            return
 //        }
 
-
         String vcsUrl = runCmd("git", "config", "--get", "remote.origin.url")
         String commitHash = runCmd("git", "rev-parse", "HEAD")
         String vcsProvider = parseProviderUrl(vcsUrl)
@@ -55,14 +51,6 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         if (isValidVcsProvider(vcsProvider)) {
             // TODO add to payload
         }
-        project.logger.lifecycle("Releases task!")
-
-        // Fetch URL: git config --get remote.origin.url
-        // Fetch Hash: git rev-parse HEAD
-        // VCS provider: parse URL
-
-//        commandLine "git config --get remote.origin.url"
-
         // collect default project metadata
         Map<String, String> defaultMetaData = collectDefaultMetaData()
     }
@@ -74,7 +62,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         metadata.put(MK_OS_VERSION, System.getProperty(MK_OS_VERSION))
         metadata.put(MK_JAVA_VERSION, System.getProperty(MK_JAVA_VERSION))
         metadata.put(MK_GRADLE_VERSION, project.gradle.gradleVersion)
-        metadata.put(MK_GIT_VERSION, runCmd("git", "--version"))
+        metadata.put(MK_GIT_VERSION, runCmd("git", "--versio"))
         metadata
     }
 
@@ -97,20 +85,24 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         null
     }
 
-
     /**
      * Runs a command on the shell
      * @param cmd the command (arguments must be separate strings)
      * @return the cmd output
      */
-    String runCmd(String... cmd) { // TODO handle non-zero process codes
-        ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    String runCmd(String... cmd) {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream()
 
-        project.exec {
-            commandLine cmd
-            standardOutput = baos
+            project.exec {
+                commandLine cmd
+                standardOutput = baos
+            }
+            new String(baos.toByteArray(), Charset.forName("UTF-8"))
+        } catch (ExecException e) {
+            project.logger.warn("Command failed", e)
+            null
         }
-        new String(baos.toByteArray(), Charset.forName("UTF-8"))
     }
 }
 
