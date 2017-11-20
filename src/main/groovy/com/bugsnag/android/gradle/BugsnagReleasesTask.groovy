@@ -2,6 +2,7 @@ package com.bugsnag.android.gradle
 
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.internal.ExecException
+import org.json.simple.JSONObject
 
 import java.nio.charset.Charset
 
@@ -18,34 +19,79 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
     private static final String MK_GRADLE_VERSION = "gradle.version"
     private static final String MK_GIT_VERSION = "git.version"
 
-    String releaseStage
-    // TODO release stage
-
     BugsnagReleasesTask() {
         super()
         this.description = "Assembles information about the build that will be sent to the releases API"
     }
 
     @TaskAction
-    void fetchReleaseInfo() { // TODO check project plugin extension values + add to payload
+    void fetchReleaseInfo() {
         super.readManifestFile()
 
-//        if (!isValidPayload(apiKey, versionName)) {
-//            project.logger.warn("Must supply api key and version name for release task")
-//            return
-//        }
+        if (!isValidPayload(apiKey, versionName)) {
+            project.logger.warn("Must supply api key and version name for release task")
+            return
+        }
 
-        String vcsUrl = runCmd("git", "config", "--get", "remote.origin.url")
-        String commitHash = runCmd("git", "rev-parse", "HEAD")
-        String vcsProvider = parseProviderUrl(vcsUrl)
+        // TODO change to debug level
+        JSONObject payload = generateJsonPayload()
+        String json = payload.toString()
+        project.logger.lifecycle("Releases Payload:\n${json}")
 
-        project.logger.lifecycle("VCS URL ${vcsUrl}")
-        project.logger.lifecycle("Commit hash ${commitHash}")
-        project.logger.lifecycle("VCS Provider ${vcsProvider}")
+    }
+
+    JSONObject generateJsonPayload() {
+        JSONObject root = new JSONObject()
+
+        if (project.bugsnag.versionName != null) {
+            versionName = project.bugsnag.versionName
+        }
+        if (project.bugsnag.versionCode != null) {
+            versionCode = project.bugsnag.versionCode
+        }
+        if (project.bugsnag.releaseStage != null) {
+            releaseStage = project.bugsnag.releaseStage
+        }
+
+        root.put("appVersion", versionName)
+        root.put("appVersionCode", versionCode)
+        root.put("releaseStage", releaseStage)
+        root.put("autoAssignRelease", project.bugsnag.autoAssignRelease)
+
+        if (project.bugsnag.builderName != null) {
+            root.put("builderName", project.bugsnag.builderName)
+        }
+        root.put("metadata", generateMetadataJson())
+        root.put("sourceControl", generateVcsJson())
+        root
+    }
+
+    private JSONObject generateVcsJson() {
+        String vcsUrl = project.bugsnag.vcsRepository
+        String commitHash = project.bugsnag.vcsRevision
+        String vcsProvider = project.bugsnag.vcsProvider
+
+        if (vcsUrl == null) {
+            vcsUrl = runCmd("git", "config", "--get", "remote.origin.url")
+        }
+        if (commitHash == null) {
+            commitHash = runCmd("git", "rev-parse", "HEAD")
+        }
+        if (vcsProvider == null) {
+            vcsProvider = parseProviderUrl(vcsUrl)
+        }
+
+        JSONObject sourceControl = new JSONObject()
+        sourceControl.put("repository", vcsUrl)
+        sourceControl.put("revision", commitHash)
 
         if (isValidVcsProvider(vcsProvider)) {
+            sourceControl.put("provider", vcsProvider)
         }
-        // collect default project metadata
+        sourceControl
+    }
+
+    private JSONObject generateMetadataJson() {
         Map<String, String> metadata = collectDefaultMetaData()
         Map<String, String> userData = project.bugsnag.metadata
 
@@ -54,6 +100,13 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
                 metadata.put(entry.key, entry.value)
             }
         }
+
+        JSONObject additionalInfo = new JSONObject()
+
+        for (Map.Entry<String, String> entry : metadata.entrySet()) {
+            additionalInfo.put(entry.key, entry.value)
+        }
+        additionalInfo
     }
 
     private Map<String, String> collectDefaultMetaData() {
@@ -63,7 +116,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         metadata.put(MK_OS_VERSION, System.getProperty(MK_OS_VERSION))
         metadata.put(MK_JAVA_VERSION, System.getProperty(MK_JAVA_VERSION))
         metadata.put(MK_GRADLE_VERSION, project.gradle.gradleVersion)
-        metadata.put(MK_GIT_VERSION, runCmd("git", "--versio"))
+        metadata.put(MK_GIT_VERSION, runCmd("git", "--version"))
         metadata
     }
 
@@ -99,7 +152,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
                 commandLine cmd
                 standardOutput = baos
             }
-            new String(baos.toByteArray(), Charset.forName("UTF-8"))
+            new String(baos.toByteArray(), Charset.forName("UTF-8")).trim()
         } catch (ExecException e) {
             project.logger.warn("Command failed", e)
             null

@@ -18,6 +18,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
     String versionCode
     String buildUUID
     String versionName
+    String releaseStage
 
     /**
      * Gets the manifest for a given Variant Output, accounting for any APK splits.
@@ -132,42 +133,37 @@ class BugsnagVariantOutputTask extends DefaultTask {
         }
 
         // Uniquely identify the build so that we can identify the proguard file.
-        buildUUID = getBuildUUID(metaDataTags, ns)
+        buildUUID = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.BUILD_UUID_TAG)
+        releaseStage = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.RELEASE_STAGE_TAG)
 
         // Get the version name
         versionName = getVersionName(xml, ns)
     }
 
     String getApiKey(metaDataTags, Namespace ns) {
-        String apiKey = null
+        String apiKey
 
         if (project.bugsnag.apiKey != null) {
             apiKey = project.bugsnag.apiKey
         } else {
-            def apiKeyTags = metaDataTags.findAll {
-                (it.attributes()[ns.name] == BugsnagPlugin.API_KEY_TAG)
-            }
-            if (apiKeyTags.size() > 0) {
-                apiKey = apiKeyTags[0].attributes()[ns.value]
-            }
+            apiKey = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.API_KEY_TAG)
         }
-
         return apiKey
     }
 
-    String getBuildUUID(metaDataTags, Namespace ns) {
-        String buildUUID = null
 
-        def buildUUIDTags = metaDataTags.findAll {
-            (it.attributes()[ns.name] == BugsnagPlugin.BUILD_UUID_TAG)
+    private String getManifestMetaData(metaDataTags, Namespace ns, String key) {
+        String value = null
+
+        def tags = metaDataTags.findAll {
+            (it.attributes()[ns.name] == key)
         }
-        if (buildUUIDTags.size() == 0) {
-            project.logger.warn("Could not find '$BugsnagPlugin.BUILD_UUID_TAG' <meta-data> tag in your AndroidManifest.xml")
+        if (tags.isEmpty()) {
+            project.logger.warn("Could not find '$key' <meta-data> tag in your AndroidManifest.xml")
         } else {
-            buildUUID = buildUUIDTags[0].attributes()[ns.value]
+            value = tags[0].attributes()[ns.value]
         }
-
-        return buildUUID
+        return value
     }
 
     String getVersionName(Node xml, Namespace ns) {

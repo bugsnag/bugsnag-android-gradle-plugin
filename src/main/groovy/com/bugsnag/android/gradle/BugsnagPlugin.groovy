@@ -28,6 +28,8 @@ class BugsnagPlugin implements Plugin<Project> {
 
     static final String API_KEY_TAG = 'com.bugsnag.android.API_KEY'
     static final String BUILD_UUID_TAG = 'com.bugsnag.android.BUILD_UUID'
+    static final String RELEASE_STAGE_TAG = 'com.bugsnag.android.RELEASE_STAGE'
+
     static final String GROUP_NAME = 'Bugsnag'
 
     void apply(Project project) {
