@@ -52,7 +52,14 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
             // TODO add to payload
         }
         // collect default project metadata
-        Map<String, String> defaultMetaData = collectDefaultMetaData()
+        Map<String, String> metadata = collectDefaultMetaData()
+        Map<String, String> userData = project.bugsnag.metadata
+
+        if (userData != null) { // user values overwrite any defaults
+            for (Map.Entry<String, String> entry : userData.entrySet()) {
+                metadata.put(entry.key, entry.value)
+            }
+        }
     }
 
     private Map<String, String> collectDefaultMetaData() {
