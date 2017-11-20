@@ -6,6 +6,7 @@ package com.bugsnag.android.gradle
 class BugsnagPluginExtension {
 
     String endpoint = 'https://upload.bugsnag.com'
+    String releasesEndpoint = 'https://releases.example.com' // TODO change me!
     String apiKey = null
     boolean autoUpload = true
     boolean autoProguardConfig = true

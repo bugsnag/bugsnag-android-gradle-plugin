@@ -33,14 +33,38 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
             return
         }
 
-        // TODO change to debug level
         JSONObject payload = generateJsonPayload()
         String json = payload.toString()
+        deliverPayload(payload)
+
+        // TODO change to debug level
         project.logger.lifecycle("Releases Payload:\n${json}")
 
     }
 
-    JSONObject generateJsonPayload() {
+    private void deliverPayload(JSONObject payload) {
+        try {
+            URL url = new URL(project.bugsnag.releasesEndpoint)
+            HttpURLConnection conn = url.openConnection()
+            conn.setRequestMethod("POST")
+            conn.setRequestProperty("Content-Type", "application/json")
+            conn.setRequestProperty("Bugsnag-Api-Key", apiKey)
+            conn.setDoOutput(true)
+
+            OutputStream os = conn.outputStream
+            os.write(payload.toString().getBytes("UTF-8"))
+            os.close()
+
+            int statusCode = conn.getResponseCode()
+        } catch (IOException e) {
+            project.logger.error("Failed to POST request", e)
+            // TODO error handling
+            // TODO retry count
+        }
+
+    }
+
+    private JSONObject generateJsonPayload() {
         JSONObject root = new JSONObject()
 
         if (project.bugsnag.versionName != null) {
