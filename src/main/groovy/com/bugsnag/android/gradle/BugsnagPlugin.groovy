@@ -112,6 +112,7 @@ class BugsnagPlugin implements Plugin<Project> {
 
     private static void setupReleasesTask(Project project, BaseVariant variant, BaseVariantOutput output) {
         def releasesTask = project.tasks.create("bugsnagRelease${taskNameForOutput(output)}Task", BugsnagReleasesTask)
+        releasesTask.group = GROUP_NAME
         releasesTask.variantOutput = output
         releasesTask.variant = variant
 

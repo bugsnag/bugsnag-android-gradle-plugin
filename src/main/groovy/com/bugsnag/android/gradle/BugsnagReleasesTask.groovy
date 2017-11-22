@@ -25,7 +25,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
     }
 
     @TaskAction
-    void fetchReleaseInfo() {
+    void fetchReleaseInfo() { // TODO handle manual task
         super.readManifestFile()
 
         if (!isValidPayload(apiKey, versionName)) {
@@ -64,6 +64,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
 
             int statusCode = conn.getResponseCode()
         } catch (IOException e) {
+            project.logger.error(project.bugsnag.releasesEndpoint)
             project.logger.error("Failed to POST request", e)
             // TODO error handling
             // TODO retry count
