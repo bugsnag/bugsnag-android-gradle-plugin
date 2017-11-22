@@ -36,8 +36,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         JSONObject payload = generateJsonPayload()
         String json = payload.toString()
 
-        // TODO change to debug level
-        project.logger.lifecycle("Releases Payload:\n${json}")
+        project.logger.debug("Releases Payload:\n${json}")
 
         new Call(project) {
             @Override
@@ -63,13 +62,20 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
             os.close()
 
             int statusCode = conn.getResponseCode()
+
+            if (statusCode == 200) {
+                project.logger.info("Uploaded release info to Bugsnag")
+                return true
+            } else {
+                project.logger.warn("Release Request failed with statusCode " + statusCode)
+                return false
+            }
+
         } catch (IOException e) {
             project.logger.error(project.bugsnag.releasesEndpoint)
             project.logger.error("Failed to POST request", e)
-            // TODO error handling
-            // TODO retry count
+            return false
         }
-        true // TODO return true/false on success
     }
 
     private JSONObject generateJsonPayload() {
