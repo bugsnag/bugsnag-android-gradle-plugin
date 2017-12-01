@@ -1,7 +1,10 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.ndk.NdkHandler
+import com.android.build.gradle.tasks.ExternalNativeBuildTask
+import com.android.build.gradle.tasks.ProcessAndroidResources
 import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
 import org.apache.http.entity.mime.content.StringBody
@@ -10,7 +13,7 @@ import org.gradle.api.tasks.TaskAction
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
-import static groovy.io.FileType.*
+import static groovy.io.FileType.FILES
 
 /**
  Task to upload shared object mapping files to Bugsnag.
@@ -27,14 +30,12 @@ import static groovy.io.FileType.*
  */
 class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
 
-    File intermediatePath
     File symbolPath
     String variantName
     File projectDir
     File rootDir
     String toolchain
     String sharedObjectPath
-    def joinPath = { String... args -> args.join(File.separator) }
 
     BugsnagUploadNdkTask() {
         super()
@@ -44,8 +45,12 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
     @TaskAction
     def upload() {
         super.readManifestFile()
+        symbolPath = findSymbolPath(variantOutput)
+        project.logger.lifecycle("Symbolpath: ${symbolPath}")
+
         boolean sharedObjectFound = false
-        searchLibraryPaths { String arch, File sharedObject ->
+        Closure processor = { String arch, File sharedObject ->
+            project.logger.lifecycle("Found shared object file (${arch}) ${sharedObject}")
             sharedObjectFound = true
 
             File outputFile = createSymbolsForSharedObject(sharedObject, arch)
@@ -53,57 +58,34 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
                 uploadSymbols(outputFile, arch, sharedObject.name)
             }
         }
-        if (!sharedObjectFound) {
-            project.logger.error("No shared objects found in ${sharedObjectPath ?: intermediatePath}")
-        }
-    }
 
-    /**
-     * Traverse potential library paths, aggregating shared libraries
-     *
-     * Potential locations:
-     * - {project dir}/{defined shared object path}* - {project dir}/obj/local
-     * - {intermediates}/cmake/{variant}/obj
-     * - {intermediates}/binaries/{variant}/obj
-     * - {intermediates}/exploded-aar/{*}/jni
-     *
-     * Each of these locations contain a list of directories indicating which
-     * architecture is targeted and any library (*.so) files.
-     *
-     * @param processor a closure to execute on each parent directory and shared
-     *                  object file
-     */
-    def searchLibraryPaths(Closure processor) {
+        Collection<ExternalNativeBuildTask> tasks = variant.externalNativeBuildTasks
+        for (ExternalNativeBuildTask task : tasks) {
+            File objFolder = task.objFolder
+            File soFolder = task.soFolder
+            findSharedObjectFiles(objFolder, processor)
+            findSharedObjectFiles(soFolder, processor)
+        }
+
         if (sharedObjectPath) {
-            findSharedObjectFiles(joinPath(projectDir.path, sharedObjectPath), processor)
+            File file = new File(projectDir.path, sharedObjectPath)
+            findSharedObjectFiles(file, processor)
         }
-
-        findSharedObjectFiles(joinPath(projectDir.path, "obj", "local"), processor)
-
-        String intermediateDir = intermediatePath?.path
-        if (intermediateDir) {
-            findSharedObjectFiles(joinPath(intermediateDir, "cmake", variantName, "obj"), processor)
-            findSharedObjectFiles(joinPath(intermediateDir, "binaries", variantName, "obj"), processor)
-
-            File explodedLibs = new File(joinPath(intermediateDir, "exploded-aar"))
-            if (explodedLibs.exists()) {
-                searchLibraryJNIPaths(explodedLibs, processor)
-            }
+        if (!sharedObjectFound) {
+            project.logger.error("No shared objects found")
         }
     }
 
-    /**
-     * Recursively searches subdirectories for shared object files
-     */
-    def searchLibraryJNIPaths(File dir, Closure processor) {
-        if (dir.exists()) {
-            dir.eachDir {
-                findSharedObjectFiles(joinPath(it.path, "jni"), processor)
-                searchLibraryJNIPaths(it, processor)
-            }
-        }
-    }
+    private static File findSymbolPath(BaseVariantOutput variantOutput) {
+        ProcessAndroidResources resources = variantOutput.processResources
 
+        def symbolPath = resources.textSymbolOutputFile
+
+        if (symbolPath == null) {
+            throw new IllegalStateException("Could not find symbol path")
+        }
+        symbolPath
+    }
     /**
      * Searches the subdirectories of a given path and executes a block on
      * any shared object files
@@ -112,8 +94,9 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
      * @param processor a closure to execute on each parent directory and shared
      *                  object file
      */
-    static def findSharedObjectFiles(String path, Closure processor) {
-        File dir = new File(path)
+    void findSharedObjectFiles(File dir, Closure processor) {
+        project.logger.lifecycle("Checking dir: ${dir}")
+
         if (dir.exists()) {
             dir.eachDir { arch ->
                 arch.eachFileMatch FILES, ~/.*\.so$/, { processor(arch.name, it) }
@@ -133,29 +116,36 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
         if (objDumpPath != null) {
 
             try {
-                File outputFile = new File(symbolPath.getAbsolutePath() + File.separator + arch + ".txt");
-                File errorOutputFile = new File(symbolPath.getAbsolutePath() + File.separator + arch + ".error.txt");
+                File outputDir = new File(project.buildDir, "bugsnag")
+
+                if (!outputDir.exists()) {
+                    outputDir.mkdir()
+                }
+
+                File outputFile = new File(outputDir, arch + ".txt")
+                File errorOutputFile = new File(outputDir, arch + ".error.txt")
+                project.logger.lifecycle("Creating symbol file at ${outputFile}")
 
                 // Call objdump, redirecting output to the output file
                 ProcessBuilder builder = new ProcessBuilder(objDumpPath.toString(), "--disassemble", "--demangle", "--line-numbers", "--section=.text", sharedObject.toString())
                 builder.redirectError(errorOutputFile)
                 Process process = builder.start()
 
-                InputStream stdout = process.getInputStream();
-                BufferedReader outReader = new BufferedReader(new InputStreamReader(stdout));
+                InputStream stdout = process.getInputStream()
+                BufferedReader outReader = new BufferedReader(new InputStreamReader(stdout))
 
                 if (!outPutSymbolFile(outReader, outputFile, arch)) {
-                    return null;
+                    return null
                 }
 
                 if (process.exitValue() == 0) {
                     return outputFile
                 } else {
-                    project.logger.error("failed to generate symbols for " + arch + ", see " + errorOutputFile.toString() + " for more details");
+                    project.logger.error("failed to generate symbols for " + arch + ", see " + errorOutputFile.toString() + " for more details")
                     return null
                 }
             } catch (Exception e) {
-                project.logger.error("failed to generate symbols for " + arch + ": " + e.getMessage());
+                project.logger.error("failed to generate symbols for " + arch + ": " + e.getMessage())
             }
         } else {
             project.logger.error("Unable to upload NDK symbols: Could not find objdump location for " + arch)
@@ -181,9 +171,9 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
             OutputStreamWriter osw = new OutputStreamWriter(is)
             Writer writer = new BufferedWriter(osw)
 
-            Pattern addressPattern = Pattern.compile("^\\s+([0-9a-f]+):", Pattern.CASE_INSENSITIVE);
-            boolean justSeenAddress = false;
-            String previousAddress = null;
+            Pattern addressPattern = Pattern.compile("^\\s+([0-9a-f]+):", Pattern.CASE_INSENSITIVE)
+            boolean justSeenAddress = false
+            String previousAddress = null
 
             // Loop to remove redundant address lines (just keep the first and last addresses of each block)
             String line = outReader.readLine()
@@ -191,7 +181,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
             while (line != null) {
 
                 // Check to see if the current line is an address
-                addressMatcher = addressPattern.matcher(line);
+                addressMatcher = addressPattern.matcher(line)
                 if (addressMatcher.find()) {
 
                     // Only output the line if this is the start of a block of addresses
@@ -202,7 +192,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
                         previousAddress = line
                     }
 
-                    justSeenAddress = true;
+                    justSeenAddress = true
                 } else {
 
                     // If this is the end of a block of addresses then output the last address
@@ -212,16 +202,16 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
 
                     writer.writeLine(line)
 
-                    previousAddress = null;
-                    justSeenAddress = false;
+                    previousAddress = null
+                    justSeenAddress = false
                 }
 
                 line = outReader.readLine()
             }
 
-            writer.close();
+            writer.close()
         } catch (IOException e) {
-            project.logger.error("failed to write symbols for " + arch + ": " + e.getMessage());
+            project.logger.error("failed to write symbols for " + arch + ": " + e.getMessage())
             return false
         }
 
@@ -253,13 +243,13 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
 
         try {
             Abi abi = Abi.getByName(arch)
-            NdkHandler handler = new NdkHandler(rootDir, null, toolchain, "")
+            NdkHandler handler = new NdkHandler(rootDir, null, toolchain, "", true)
             File objDumpPath = new File(handler.getDefaultGccToolchainPath(abi), "bin/" + abi.getGccExecutablePrefix() + "-objdump")
             return objDumpPath
         } catch (Throwable ex) {
             project.logger.error("Error attempting to calculate objdump location: " + ex.message)
         }
 
-        return null;
+        return null
     }
 }
