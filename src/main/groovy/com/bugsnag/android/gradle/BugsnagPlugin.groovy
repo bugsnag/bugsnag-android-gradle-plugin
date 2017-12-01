@@ -91,15 +91,11 @@ class BugsnagPlugin implements Plugin<Project> {
 
     private static void setupNdkMappingFileUpload(Project project, BaseVariant variant, BaseVariantOutput output) {
         if (project.bugsnag.ndk) {
-            File symbolPath = getSymbolPath(output)
-            File intermediatePath = getIntermediatePath(symbolPath)
 
             // Create a Bugsnag task to upload NDK mapping file(s)
             BugsnagUploadNdkTask uploadNdkTask = project.tasks.create("uploadBugsnagNdk${taskNameForOutput(output)}Mapping", BugsnagUploadNdkTask)
             prepareUploadTask(uploadNdkTask, output, variant, project)
 
-            uploadNdkTask.intermediatePath = intermediatePath
-            uploadNdkTask.symbolPath = symbolPath
             uploadNdkTask.variantName = taskNameForVariant(variant)
             uploadNdkTask.projectDir = project.projectDir
             uploadNdkTask.rootDir = project.rootDir
@@ -204,24 +200,6 @@ class BugsnagPlugin implements Plugin<Project> {
 
         // Ignore any conflicting properties, bail if anything has a disable flag.
         return (variant.productFlavors + variant.buildType).any(hasDisabledBugsnag)
-    }
-
-    private static File getIntermediatePath(File symbolPath) {
-        def intermediatePath = null
-
-        if (symbolPath != null) {
-            intermediatePath = symbolPath.parentFile.parentFile
-        }
-        intermediatePath
-    }
-
-    private static File getSymbolPath(BaseVariantOutput variantOutput) {
-        def symbolPath = variantOutput.processResources.textSymbolOutputFile
-
-        if (symbolPath == null) {
-            throw new IllegalStateException("Could not find symbol path")
-        }
-        symbolPath
     }
 
     /**
