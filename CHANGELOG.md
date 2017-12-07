@@ -1,3 +1,7 @@
+## 3.1.1 (2017-12-07)
+
+* Fix location of shared object files for NDK
+
 ## 3.1.0 (2017-11-17)
 
 * Finalise upload task on assemble rather than build
