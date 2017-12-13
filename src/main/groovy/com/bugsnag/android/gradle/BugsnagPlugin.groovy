@@ -90,7 +90,8 @@ class BugsnagPlugin implements Plugin<Project> {
     }
 
     private static void setupNdkMappingFileUpload(Project project, BaseVariant variant, BaseVariantOutput output) {
-        if (project.bugsnag.ndk) {
+        if (isNdkProject(project)) {
+            project.logger.lifecycle("is ndk project")
 
             // Create a Bugsnag task to upload NDK mapping file(s)
             BugsnagUploadNdkTask uploadNdkTask = project.tasks.create("uploadBugsnagNdk${taskNameForOutput(output)}Mapping", BugsnagUploadNdkTask)
@@ -101,6 +102,15 @@ class BugsnagPlugin implements Plugin<Project> {
             uploadNdkTask.rootDir = project.rootDir
             uploadNdkTask.toolchain = getCmakeToolchain(project, variant)
             uploadNdkTask.sharedObjectPath = project.bugsnag.sharedObjectPath
+        } else {
+            project.logger.lifecycle("is not ndk project")
+        }
+    }
+
+    private static boolean isNdkProject(Project project) {
+        def tasks = project.tasks.findAll()
+        return tasks.stream().anyMatch {
+            it.name.startsWith("externalNativeBuild")
         }
     }
 
