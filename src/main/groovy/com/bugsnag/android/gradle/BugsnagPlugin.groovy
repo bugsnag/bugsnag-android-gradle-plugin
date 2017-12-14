@@ -104,9 +104,13 @@ class BugsnagPlugin implements Plugin<Project> {
     }
 
     private static boolean isNdkProject(Project project) {
-        def tasks = project.tasks.findAll()
-        return tasks.stream().anyMatch {
-            it.name.startsWith("externalNativeBuild")
+        if (project.bugsnag.ndk != null) { // always respect user override
+            return project.bugsnag.ndk
+        } else { // infer whether native build or not
+            def tasks = project.tasks.findAll()
+            return tasks.stream().anyMatch {
+                it.name.startsWith("externalNativeBuild")
+            }
         }
     }
 
