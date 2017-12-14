@@ -11,6 +11,6 @@ class BugsnagPluginExtension {
     def boolean uploadDebugBuildMappings = false
     def boolean overwrite = false
     def int retryCount = 0
-    def boolean ndk = false
+    def Boolean ndk = null
     def String sharedObjectPath = null
 }
