@@ -98,7 +98,7 @@ class BugsnagPlugin implements Plugin<Project> {
     }
 
     private static void setupNdkMappingFileUpload(Project project, BugsnagTaskDeps deps) {
-        if (project.bugsnag.ndk) {
+        if (isNdkProject(project)) {
             File symbolPath = getSymbolPath(deps.output)
             File intermediatePath = getIntermediatePath(symbolPath)
 
@@ -106,13 +106,22 @@ class BugsnagPlugin implements Plugin<Project> {
             BugsnagUploadNdkTask uploadNdkTask = project.tasks.create("uploadBugsnagNdk${taskNameForOutput(deps.output)}Mapping", BugsnagUploadNdkTask)
             prepareUploadTask(uploadNdkTask, deps.output, deps.variant, project)
 
-            uploadNdkTask.intermediatePath = intermediatePath
-            uploadNdkTask.symbolPath = symbolPath
             uploadNdkTask.variantName = taskNameForVariant(deps.variant)
             uploadNdkTask.projectDir = project.projectDir
             uploadNdkTask.rootDir = project.rootDir
             uploadNdkTask.toolchain = getCmakeToolchain(project, deps.variant)
             uploadNdkTask.sharedObjectPath = project.bugsnag.sharedObjectPath
+        }
+    }
+
+    private static boolean isNdkProject(Project project) {
+        if (project.bugsnag.ndk != null) { // always respect user override
+            return project.bugsnag.ndk
+        } else { // infer whether native build or not
+            def tasks = project.tasks.findAll()
+            return tasks.stream().anyMatch {
+                it.name.startsWith("externalNativeBuild")
+            }
         }
     }
 
@@ -232,24 +241,6 @@ class BugsnagPlugin implements Plugin<Project> {
 
         // Ignore any conflicting properties, bail if anything has a disable flag.
         return (variant.productFlavors + variant.buildType).any(hasDisabledBugsnag)
-    }
-
-    private static File getIntermediatePath(File symbolPath) {
-        def intermediatePath = null
-
-        if (symbolPath != null) {
-            intermediatePath = symbolPath.parentFile.parentFile
-        }
-        intermediatePath
-    }
-
-    private static File getSymbolPath(BaseVariantOutput variantOutput) {
-        def symbolPath = variantOutput.processResources.textSymbolOutputFile
-
-        if (symbolPath == null) {
-            throw new IllegalStateException("Could not find symbol path")
-        }
-        symbolPath
     }
 
     /**

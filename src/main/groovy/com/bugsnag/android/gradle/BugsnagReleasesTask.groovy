@@ -25,7 +25,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
     }
 
     @TaskAction
-    void fetchReleaseInfo() { // TODO handle manual task
+    void fetchReleaseInfo() {
         super.readManifestFile()
 
         if (!isValidPayload(apiKey, versionName)) {
