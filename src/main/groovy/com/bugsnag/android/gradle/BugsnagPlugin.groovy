@@ -99,9 +99,6 @@ class BugsnagPlugin implements Plugin<Project> {
 
     private static void setupNdkMappingFileUpload(Project project, BugsnagTaskDeps deps) {
         if (isNdkProject(project)) {
-            File symbolPath = getSymbolPath(deps.output)
-            File intermediatePath = getIntermediatePath(symbolPath)
-
             // Create a Bugsnag task to upload NDK mapping file(s)
             BugsnagUploadNdkTask uploadNdkTask = project.tasks.create("uploadBugsnagNdk${taskNameForOutput(deps.output)}Mapping", BugsnagUploadNdkTask)
             prepareUploadTask(uploadNdkTask, deps.output, deps.variant, project)
