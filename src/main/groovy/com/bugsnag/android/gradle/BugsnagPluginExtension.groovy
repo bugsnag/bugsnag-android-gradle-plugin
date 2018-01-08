@@ -20,7 +20,7 @@ class BugsnagPluginExtension {
     // release API values
     String versionName = null
     Integer versionCode = null
-    String builderName = "whoami"
+    String builderName = null
     String releaseStage = null
     String vcsProvider = null
     String vcsRepository = null
