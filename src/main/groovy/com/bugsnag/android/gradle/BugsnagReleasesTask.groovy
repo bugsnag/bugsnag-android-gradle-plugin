@@ -67,6 +67,13 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
                 project.logger.info("Uploaded release info to Bugsnag")
                 return true
             } else {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.errorStream))
+                String line
+
+                while ((line = reader.readLine()) != null) {
+                    project.logger.error(line)
+                }
+
                 project.logger.warn("Release Request failed with statusCode " + statusCode)
                 return false
             }
@@ -91,6 +98,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
             releaseStage = project.bugsnag.releaseStage
         }
 
+        root.put("apiKey", apiKey)
         root.put("appVersion", versionName)
         root.put("appVersionCode", versionCode)
         root.put("releaseStage", releaseStage)
@@ -149,12 +157,12 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
 
     private Map<String, String> collectDefaultMetaData() {
         Map<String, String> metadata = new HashMap<>()
-        metadata.put(MK_OS_ARCH, System.getProperty(MK_OS_ARCH))
-        metadata.put(MK_OS_NAME, System.getProperty(MK_OS_NAME))
-        metadata.put(MK_OS_VERSION, System.getProperty(MK_OS_VERSION))
-        metadata.put(MK_JAVA_VERSION, System.getProperty(MK_JAVA_VERSION))
-        metadata.put(MK_GRADLE_VERSION, project.gradle.gradleVersion)
-        metadata.put(MK_GIT_VERSION, runCmd("git", "--version"))
+        metadata.put(MK_OS_ARCH.replaceAll(".", "_"), System.getProperty(MK_OS_ARCH))
+        metadata.put(MK_OS_NAME.replaceAll(".", "_"), System.getProperty(MK_OS_NAME))
+        metadata.put(MK_OS_VERSION.replaceAll(".", "_"), System.getProperty(MK_OS_VERSION))
+        metadata.put(MK_JAVA_VERSION.replaceAll(".", "_"), System.getProperty(MK_JAVA_VERSION))
+        metadata.put(MK_GRADLE_VERSION.replaceAll(".", "_"), project.gradle.gradleVersion)
+        metadata.put(MK_GIT_VERSION.replaceAll(".", "_"), runCmd("git", "--version"))
         metadata
     }
 
