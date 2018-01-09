@@ -107,8 +107,9 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         if (project.bugsnag.builderName != null) {
             root.put("builderName", project.bugsnag.builderName)
         } else {
-            root.put("builderName", runCmd("whoami"))
-            project.logger.lifecycle("User: " + runCmd("whoami"))
+            String user = runCmd("whoami")
+            root.put("builderName", user)
+            project.logger.lifecycle("User: " + user)
         }
         root.put("metadata", generateMetadataJson())
         root.put("sourceControl", generateVcsJson())
