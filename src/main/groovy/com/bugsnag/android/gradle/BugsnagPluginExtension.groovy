@@ -6,7 +6,7 @@ package com.bugsnag.android.gradle
 class BugsnagPluginExtension {
 
     String endpoint = 'https://upload.bugsnag.com'
-    String releasesEndpoint = 'https://build.bugsnag.com/'
+    String releasesEndpoint = 'https://build.bugsnag.com'
     String apiKey = null
     boolean autoUpload = true
     boolean autoProguardConfig = true
@@ -18,12 +18,14 @@ class BugsnagPluginExtension {
 
 
     // release API values
-    String versionName = null
-    Integer versionCode = null
+    SourceControl sourceControl = new SourceControl()
     String builderName = null
-    String vcsProvider = null
-    String vcsRepository = null
-    String vcsRevision = null
     Map<String, String> metadata = null
 
+}
+
+class SourceControl {
+    String provider = null
+    String repository = null
+    String revision = null
 }

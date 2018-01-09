@@ -88,13 +88,6 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
     private JSONObject generateJsonPayload() {
         JSONObject root = new JSONObject()
 
-        if (project.bugsnag.versionName != null) {
-            versionName = project.bugsnag.versionName
-        }
-        if (project.bugsnag.versionCode != null) {
-            versionCode = project.bugsnag.versionCode
-        }
-
         root.put("apiKey", apiKey)
         root.put("appVersion", versionName)
         root.put("appVersionCode", versionCode)
@@ -112,9 +105,9 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
     }
 
     private JSONObject generateVcsJson() {
-        String vcsUrl = project.bugsnag.vcsRepository
-        String commitHash = project.bugsnag.vcsRevision
-        String vcsProvider = project.bugsnag.vcsProvider
+        String vcsUrl = project.bugsnag.sourceControl.repository
+        String commitHash = project.bugsnag.sourceControl.revision
+        String vcsProvider = project.bugsnag.sourceControl.provider
 
         if (vcsUrl == null) {
             vcsUrl = runCmd("git", "config", "--get", "remote.origin.url")
