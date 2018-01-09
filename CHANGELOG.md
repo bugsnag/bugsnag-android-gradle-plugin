@@ -1,3 +1,8 @@
+## 3.2.0 (2018-01-09)
+
+* Automatically record release/build information to Bugsnag Build API 
+* NDK projects are now automatically detected
+
 ## 3.1.1 (2017-12-07)
 
 * Fix location of shared object files for NDK
