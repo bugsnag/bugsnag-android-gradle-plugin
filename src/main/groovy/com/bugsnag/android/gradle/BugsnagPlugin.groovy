@@ -10,7 +10,6 @@ import com.android.build.gradle.internal.dsl.BuildType
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-
 /**
  * Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.
  *
@@ -33,6 +32,7 @@ class BugsnagPlugin implements Plugin<Project> {
 
     void apply(Project project) {
         project.extensions.create("bugsnag", BugsnagPluginExtension)
+        project.bugsnag.extensions.create("sourceControl", SourceControl)
 
         project.afterEvaluate {
             // Make sure the android plugin has been applied first
@@ -61,44 +61,51 @@ class BugsnagPlugin implements Plugin<Project> {
 
         // only need to be run once per variant
         setupProguardAutoConfig(project, variant)
-        setupSplitsDiscovery(project, variant)
+        def splitsTask = setupSplitsDiscovery(project, variant)
 
         variant.outputs.each { output ->
             if (!output.name.toLowerCase().endsWith("debug") || project.bugsnag.uploadDebugBuildMappings) {
-                setupManifestUuidTask(project, variant, output)
-                setupMappingFileUpload(project, variant, output)
-                setupNdkMappingFileUpload(project, variant, output)
+                BugsnagTaskDeps deps = new BugsnagTaskDeps()
+                deps.variant = variant
+                deps.output = output
+                deps.splitsTask = splitsTask
+
+                setupManifestUuidTask(project, deps)
+                setupMappingFileUpload(project, deps)
+                setupNdkMappingFileUpload(project, deps)
+                setupReleasesTask(project, deps)
             }
         }
     }
 
-    private static void setupSplitsDiscovery(Project project, BaseVariant variant) {
+    private static def setupSplitsDiscovery(Project project, BaseVariant variant) {
         BugsnagSplitsInfoTask splitsInfoTask = project.tasks.create("bugsnagSplitsInfo${taskNameForVariant(variant)}", BugsnagSplitsInfoTask)
         splitsInfoTask.group = GROUP_NAME
         splitsInfoTask.variant = variant
         dependTaskOnPackageTask(variant, splitsInfoTask)
         splitsInfoTask.mustRunAfter variant.outputs.first().processManifest
+        splitsInfoTask
     }
 
     /**
      * Creates a bugsnag task to upload proguard mapping file
      */
-    private static void setupMappingFileUpload(Project project, BaseVariant variant, BaseVariantOutput output) {
-        def uploadTask = project.tasks.create("uploadBugsnag${taskNameForOutput(output)}Mapping", BugsnagUploadProguardTask)
-        uploadTask.partName = isJackEnabled(project, variant) ? "jack" : "proguard"
-        prepareUploadTask(uploadTask, output, variant, project)
+    private static void setupMappingFileUpload(Project project, BugsnagTaskDeps deps) {
+        def uploadTask = project.tasks.create("uploadBugsnag${taskNameForOutput(deps.output)}Mapping", BugsnagUploadProguardTask)
+        uploadTask.partName = isJackEnabled(project, deps.variant) ? "jack" : "proguard"
+        prepareUploadTask(uploadTask, deps, project)
     }
 
-    private static void setupNdkMappingFileUpload(Project project, BaseVariant variant, BaseVariantOutput output) {
+    private static void setupNdkMappingFileUpload(Project project, BugsnagTaskDeps deps) {
         if (isNdkProject(project)) {
             // Create a Bugsnag task to upload NDK mapping file(s)
-            BugsnagUploadNdkTask uploadNdkTask = project.tasks.create("uploadBugsnagNdk${taskNameForOutput(output)}Mapping", BugsnagUploadNdkTask)
-            prepareUploadTask(uploadNdkTask, output, variant, project)
+            BugsnagUploadNdkTask uploadNdkTask = project.tasks.create("uploadBugsnagNdk${taskNameForOutput(deps.output)}Mapping", BugsnagUploadNdkTask)
+            prepareUploadTask(uploadNdkTask, deps.output, deps.variant, project)
 
-            uploadNdkTask.variantName = taskNameForVariant(variant)
+            uploadNdkTask.variantName = taskNameForVariant(deps.variant)
             uploadNdkTask.projectDir = project.projectDir
             uploadNdkTask.rootDir = project.rootDir
-            uploadNdkTask.toolchain = getCmakeToolchain(project, variant)
+            uploadNdkTask.toolchain = getCmakeToolchain(project, deps.variant)
             uploadNdkTask.sharedObjectPath = project.bugsnag.sharedObjectPath
         }
     }
@@ -114,20 +121,49 @@ class BugsnagPlugin implements Plugin<Project> {
         }
     }
 
-    private static void prepareUploadTask(uploadTask, BaseVariantOutput output, BaseVariant variant, Project project) {
-        uploadTask.group = GROUP_NAME
-        uploadTask.variantOutput = output
-        uploadTask.variant = variant
-        uploadTask.applicationId = variant.applicationId
+    private static void setupReleasesTask(Project project, BugsnagTaskDeps deps) {
+        def releasesTask = project.tasks.create("bugsnagRelease${taskNameForOutput(deps.output)}Task", BugsnagReleasesTask)
+        setupBugsnagTask(releasesTask, deps)
 
+        findAssembleTasks(deps.output, project).forEach {
+            releasesTask.mustRunAfter it
 
-        // Expected behaviour:
-        // assemble
-        // assembleJavaExampleRelease
-        // assembleJavaExample
-        // assembleRelease
+            if (project.bugsnag.autoUpload) {
+                it.finalizedBy releasesTask
+            }
+        }
+    }
 
+    private static def setupBugsnagTask(BugsnagVariantOutputTask task, BugsnagTaskDeps deps) {
+        task.group = GROUP_NAME
+        task.variantOutput = deps.output
+        task.variant = deps.variant
+        task.dependsOn deps.splitsTask
+    }
 
+    private static void prepareUploadTask(BugsnagMultiPartUploadTask uploadTask, BugsnagTaskDeps deps, Project project) {
+        setupBugsnagTask(uploadTask, deps)
+        uploadTask.applicationId = deps.variant.applicationId
+
+        findAssembleTasks(deps.output, project).forEach {
+            uploadTask.mustRunAfter it
+
+            if (project.bugsnag.autoUpload) {
+                it.finalizedBy uploadTask
+            }
+        }
+    }
+
+    /**
+     * Fetches all the assemble tasks in the current project that match the variant
+     *
+     * Expected behaviour: assemble, assembleJavaExampleRelease, assembleJavaExample, assembleRelease
+     *
+     * @param output the variantOutput
+     * @param project the current project
+     * @return the assemble tasks
+     */
+    private static Set<Task> findAssembleTasks(BaseVariantOutput output, Project project) {
         String variantName = output.name.split("-")[0].capitalize()
         String assembleTaskName = output.assemble.name
         String buildTypeTaskName = assembleTaskName.replaceAll(variantName, "")
@@ -143,22 +179,13 @@ class BugsnagPlugin implements Plugin<Project> {
         project.tasks.findAll {
             taskNames.contains(it.name)
         }
-        .forEach {
-            uploadTask.mustRunAfter it
-
-            if (project.bugsnag.autoUpload) {
-                it.finalizedBy uploadTask
-            }
-        }
     }
 
-    private static void setupManifestUuidTask(Project project, BaseVariant variant, BaseVariantOutput output) {
-        BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${taskNameForOutput(output)}Manifest", BugsnagManifestTask)
-        manifestTask.variantOutput = output
-        manifestTask.variant = variant
-        manifestTask.group = GROUP_NAME
-        manifestTask.mustRunAfter output.processManifest
-        dependTaskOnPackageTask(variant, manifestTask)
+    private static void setupManifestUuidTask(Project project, BugsnagTaskDeps deps) {
+        BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${taskNameForOutput(deps.output)}Manifest", BugsnagManifestTask)
+        setupBugsnagTask(manifestTask, deps)
+        manifestTask.mustRunAfter deps.output.processManifest
+        dependTaskOnPackageTask(deps.variant, manifestTask)
     }
 
     /**
@@ -313,5 +340,11 @@ class BugsnagPlugin implements Plugin<Project> {
             }
         }
         return null
+    }
+
+    private static class BugsnagTaskDeps {
+        BaseVariant variant
+        BaseVariantOutput output
+        def splitsTask
     }
 }
