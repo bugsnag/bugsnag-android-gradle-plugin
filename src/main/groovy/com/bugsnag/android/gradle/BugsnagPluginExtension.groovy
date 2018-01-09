@@ -18,7 +18,6 @@ class BugsnagPluginExtension {
 
 
     // release API values
-    SourceControl sourceControl = new SourceControl()
     String builderName = null
     Map<String, String> metadata = null
 
