@@ -18,7 +18,6 @@ class BugsnagVariantOutputTask extends DefaultTask {
     String versionCode
     String buildUUID
     String versionName
-    String releaseStage
 
     /**
      * Gets the manifest for a given Variant Output, accounting for any APK splits.
@@ -134,7 +133,6 @@ class BugsnagVariantOutputTask extends DefaultTask {
 
         // Uniquely identify the build so that we can identify the proguard file.
         buildUUID = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.BUILD_UUID_TAG)
-        releaseStage = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.RELEASE_STAGE_TAG)
 
         // Get the version name
         versionName = getVersionName(xml, ns)

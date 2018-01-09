@@ -94,15 +94,10 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         if (project.bugsnag.versionCode != null) {
             versionCode = project.bugsnag.versionCode
         }
-        if (project.bugsnag.releaseStage != null) {
-            releaseStage = project.bugsnag.releaseStage
-        }
 
         root.put("apiKey", apiKey)
         root.put("appVersion", versionName)
         root.put("appVersionCode", versionCode)
-        root.put("releaseStage", releaseStage)
-        root.put("autoAssignRelease", project.bugsnag.autoAssignRelease)
 
         if (project.bugsnag.builderName != null) {
             root.put("builderName", project.bugsnag.builderName)

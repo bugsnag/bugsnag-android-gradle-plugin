@@ -21,11 +21,9 @@ class BugsnagPluginExtension {
     String versionName = null
     Integer versionCode = null
     String builderName = null
-    String releaseStage = null
     String vcsProvider = null
     String vcsRepository = null
     String vcsRevision = null
-    boolean autoAssignRelease = false
     Map<String, String> metadata = null
 
 }
