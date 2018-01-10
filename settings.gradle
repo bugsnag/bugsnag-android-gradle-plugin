@@ -1,0 +1,3 @@
+include ':appvanilla', ':appflavors', ':appsplits', ':appflavorsplits'
+
+
