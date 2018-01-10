@@ -7,7 +7,7 @@ class BugsnagNdkSetupTask extends DefaultTask {
 
     BugsnagNdkSetupTask() {
         super()
-        this.description = "Assembles information about the build that will be sent to the releases API"
+        this.description = "Copies shared object files from the bugsnag-android AAR to the required build directory"
     }
 
     @TaskAction
