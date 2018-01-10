@@ -1,5 +1,5 @@
 language: groovy
-script: ./gradlew clean build --stacktrace
+script: ./gradlew clean install --stacktrace && ./gradlew clean build --stacktrace
 before_cache:
   - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
 cache:
