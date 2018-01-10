@@ -35,6 +35,7 @@ class BugsnagPlugin implements Plugin<Project> {
         project.bugsnag.extensions.create("sourceControl", SourceControl)
 
         project.afterEvaluate {
+
             // Make sure the android plugin has been applied first
             if (project.plugins.hasPlugin(AppPlugin)) {
                 project.android.applicationVariants.all { variant ->
@@ -47,6 +48,27 @@ class BugsnagPlugin implements Plugin<Project> {
             } else {
                 throw new IllegalStateException('Must apply \'com.android.application\' first!')
             }
+
+            if (isNdkProject(project)) {
+                setupNdkProject(project)
+            }
+        }
+    }
+
+    private static void setupNdkProject(Project project) {
+        def cleanTasks = project.tasks.findAll {
+            it.name.startsWith("externalNative") && it.name.contains("Clean")
+        }
+        def buildTasks = project.tasks.findAll {
+            it.name.startsWith("externalNative") && !it.name.contains("Clean")
+        }
+
+        def ndkSetupTask = project.tasks.create("bugsnagInstallJniLibsTask", BugsnagNdkSetupTask)
+
+        buildTasks.forEach {
+            ndkSetupTask.mustRunAfter(cleanTasks)
+            it.dependsOn ndkSetupTask
+            it.doFirst { ndkSetupTask }
         }
     }
 
@@ -100,7 +122,7 @@ class BugsnagPlugin implements Plugin<Project> {
         if (isNdkProject(project)) {
             // Create a Bugsnag task to upload NDK mapping file(s)
             BugsnagUploadNdkTask uploadNdkTask = project.tasks.create("uploadBugsnagNdk${taskNameForOutput(deps.output)}Mapping", BugsnagUploadNdkTask)
-            prepareUploadTask(uploadNdkTask, deps.output, deps.variant, project)
+            prepareUploadTask(uploadNdkTask, deps, project)
 
             uploadNdkTask.variantName = taskNameForVariant(deps.variant)
             uploadNdkTask.projectDir = project.projectDir
@@ -116,7 +138,7 @@ class BugsnagPlugin implements Plugin<Project> {
         } else { // infer whether native build or not
             def tasks = project.tasks.findAll()
             return tasks.stream().anyMatch {
-                it.name.startsWith("externalNativeBuild")
+                it.name.startsWith("externalNative")
             }
         }
     }
