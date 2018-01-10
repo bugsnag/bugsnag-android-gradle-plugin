@@ -34,6 +34,13 @@ android {
             universalApk true
         }
     }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard.pro'
+        }
+    }
 }
 
 apply plugin: 'com.bugsnag.android.gradle'

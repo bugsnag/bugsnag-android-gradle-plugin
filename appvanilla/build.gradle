@@ -21,6 +21,13 @@ android {
         versionCode Integer.parseInt(project.SAMPLE_VERSION_CODE)
         versionName project.SAMPLE_VERSION_NAME
     }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard.pro'
+        }
+    }
 }
 
 apply plugin: 'com.bugsnag.android.gradle'
