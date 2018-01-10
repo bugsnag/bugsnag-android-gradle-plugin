@@ -1,3 +1,7 @@
+## 3.2.1 (2018-01-10)
+
+* Automatically add copy task for shared object files to NDK projects
+
 ## 3.2.0 (2018-01-09)
 
 * Automatically record release/build information to Bugsnag Build API 
