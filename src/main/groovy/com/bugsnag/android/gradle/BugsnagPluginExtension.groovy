@@ -9,6 +9,7 @@ class BugsnagPluginExtension {
     String releasesEndpoint = 'https://build.bugsnag.com'
     String apiKey = null
     boolean autoUpload = true
+    boolean autoReportBuilds = true
     boolean autoProguardConfig = true
     boolean uploadDebugBuildMappings = false
     boolean overwrite = false

@@ -150,7 +150,7 @@ class BugsnagPlugin implements Plugin<Project> {
         findAssembleTasks(deps.output, project).forEach {
             releasesTask.mustRunAfter it
 
-            if (project.bugsnag.autoUpload) {
+            if (project.bugsnag.autoReportBuilds) {
                 it.finalizedBy releasesTask
             }
         }
