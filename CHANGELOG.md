@@ -1,3 +1,7 @@
+## 3.2.2 (2018-01-15)
+
+* Fixes versionCode cast exception in upload task
+
 ## 3.2.1 (2018-01-10)
 
 * Automatically add copy task for shared object files to NDK projects
