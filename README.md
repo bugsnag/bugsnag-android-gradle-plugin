@@ -1,7 +1,7 @@
 Bugsnag Android Gradle Plugin
 =============================
 
-This Gradle plugin automatically uploads [ProGuard](https://developer.android.com/tools/help/proguard.html) and [DexGuard](https://www.guardsquare.com/en/dexguard) mapping files to Bugsnag.
+This Gradle plugin automatically uploads [ProGuard](https://developer.android.com/tools/help/proguard.html), [DexGuard](https://www.guardsquare.com/en/dexguard) and NDK library mapping files, and sends build notifications to Bugsnag.
 
 If you aren't using Gradle or need more manual control, [see the API docs](https://bugsnag.com/docs/notifiers/android/proguard) for alternative ways to use Bugsnag with Proguard.
 
