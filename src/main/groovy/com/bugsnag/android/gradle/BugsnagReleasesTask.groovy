@@ -88,6 +88,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
     private JSONObject generateJsonPayload() {
         JSONObject root = new JSONObject()
 
+        root.put("buildTool", "gradle-android")
         root.put("apiKey", apiKey)
         root.put("appVersion", versionName)
         root.put("appVersionCode", versionCode)

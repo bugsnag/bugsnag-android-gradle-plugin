@@ -168,7 +168,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
         xml.attributes()[ns.versionName]
     }
 
-    Integer getVersionCode(Node xml, Namespace ns) {
+    String getVersionCode(Node xml, Namespace ns) {
         xml.attributes()[ns.versionCode]
     }
 
