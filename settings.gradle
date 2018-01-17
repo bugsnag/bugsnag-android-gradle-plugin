@@ -1,3 +1,3 @@
-include ':examples:appvanilla', ':examples:appflavors', ':examples:appsplits', ':examples:appflavorsplits', ':examples:libvanilla'
+include ':examples:appvanilla', ':examples:appflavors', ':examples:appsplits', ':examples:appflavorsplits', ':examples:libvanilla', ':examples:appabisplits'
 
 
