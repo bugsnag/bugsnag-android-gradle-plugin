@@ -1,5 +1,20 @@
-language: groovy
-script: ./gradlew clean build --stacktrace
+language: android
+sudo: false
+
+android:
+  components:
+    - tools
+    - platform-tools
+    - build-tools-27.0.0
+    - android-27
+    - sys-img-armeabi-v7a-android-21
+
+# see https://github.com/travis-ci/travis-ci/issues/8874
+before_install:
+  - yes | sdkmanager "platforms;android-27"
+
+script: ./gradlew clean install --stacktrace && ./gradlew clean build --stacktrace && ./gradlew build | if grep -wq "Failed to find manifest"; then echo "Failed to find manifest"; exit 1; else exit 0; fi
+
 before_cache:
   - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
 cache:
