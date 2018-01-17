@@ -22,17 +22,6 @@ android {
         versionName project.SAMPLE_VERSION_NAME
     }
 
-    flavorDimensions "regular"
-
-    productFlavors {
-        foo {
-            applicationIdSuffix ".foo"
-        }
-        bar {
-            applicationIdSuffix ".bar"
-        }
-    }
-
     buildTypes {
         release {
             minifyEnabled true
@@ -44,6 +33,5 @@ android {
 apply plugin: 'com.bugsnag.android.gradle'
 
 bugsnag {
-    endpoint "http://localhost:1000"
-    releasesEndpoint "http://localhost:1000"
+    // configure here
 }

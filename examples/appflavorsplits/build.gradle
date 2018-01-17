@@ -21,17 +21,21 @@ android {
         versionCode Integer.parseInt(project.SAMPLE_VERSION_CODE)
         versionName project.SAMPLE_VERSION_NAME
     }
+    flavorDimensions "regular"
+
+    productFlavors {
+        foo {
+            applicationIdSuffix ".foo"
+        }
+        bar {
+            applicationIdSuffix ".bar"
+        }
+    }
     splits {
         density {
             enable true
             reset()
             include "mdpi", "hdpi"
-        }
-        abi {
-            enable true
-            reset()
-            include 'armeabi-v7a', 'x86'
-            universalApk true
         }
     }
 
@@ -46,6 +50,5 @@ android {
 apply plugin: 'com.bugsnag.android.gradle'
 
 bugsnag {
-    endpoint "http://localhost:1000"
-    releasesEndpoint "http://localhost:1000"
+    // configure here
 }
