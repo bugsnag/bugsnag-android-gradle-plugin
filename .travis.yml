@@ -13,7 +13,7 @@ android:
 before_install:
   - yes | sdkmanager "platforms;android-27"
 
-script: ./gradlew clean install --stacktrace && ./gradlew clean build --stacktrace
+script: ./gradlew clean install --stacktrace && ./gradlew clean build --stacktrace && ./gradlew build | if grep -q "Failed to find manifest"; then exit 1; else exit 0; fi
 
 before_cache:
   - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
