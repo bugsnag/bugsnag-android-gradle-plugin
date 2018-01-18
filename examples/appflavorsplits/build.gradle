@@ -5,7 +5,7 @@ buildscript {
         mavenLocal()
     }
     dependencies {
-        classpath "com.bugsnag:bugsnag-android-gradle-plugin:${project.version}"
+        classpath "com.bugsnag:bugsnag-android-gradle-plugin:${project.example_plugin_version}"
     }
 }
 
@@ -34,8 +34,6 @@ android {
     splits {
         density {
             enable true
-            reset()
-            include "mdpi", "hdpi"
         }
     }
 
