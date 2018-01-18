@@ -83,7 +83,6 @@ class BugsnagPlugin implements Plugin<Project> {
 
         // only need to be run once per variant
         setupProguardAutoConfig(project, variant)
-        def splitsTask = setupSplitsDiscovery(project, variant)
 
         variant.outputs.each { output ->
             if (!output.name.toLowerCase().endsWith("debug") || project.bugsnag.uploadDebugBuildMappings) {
@@ -98,15 +97,6 @@ class BugsnagPlugin implements Plugin<Project> {
                 setupReleasesTask(project, deps)
             }
         }
-    }
-
-    private static def setupSplitsDiscovery(Project project, BaseVariant variant) {
-        BugsnagSplitsInfoTask splitsInfoTask = project.tasks.create("bugsnagSplitsInfo${taskNameForVariant(variant)}", BugsnagSplitsInfoTask)
-        splitsInfoTask.group = GROUP_NAME
-        splitsInfoTask.variant = variant
-        dependTaskOnPackageTask(variant, splitsInfoTask)
-        splitsInfoTask.mustRunAfter variant.outputs.first().processManifest
-        splitsInfoTask
     }
 
     /**
