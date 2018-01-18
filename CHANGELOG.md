@@ -1,3 +1,8 @@
+## 3.2.3 (2018-01-19)
+
+* Add example projects with gradle plugin
+* Fix manifest lookup in project with only APK splits enabled
+
 ## 3.2.2 (2018-01-15)
 
 * Fixes versionCode cast exception in upload task
