@@ -89,7 +89,6 @@ class BugsnagPlugin implements Plugin<Project> {
                 BugsnagTaskDeps deps = new BugsnagTaskDeps()
                 deps.variant = variant
                 deps.output = output
-                deps.splitsTask = splitsTask
 
                 setupManifestUuidTask(project, deps)
                 setupMappingFileUpload(project, deps)
@@ -150,7 +149,6 @@ class BugsnagPlugin implements Plugin<Project> {
         task.group = GROUP_NAME
         task.variantOutput = deps.output
         task.variant = deps.variant
-        task.dependsOn deps.splitsTask
     }
 
     private static void prepareUploadTask(BugsnagMultiPartUploadTask uploadTask, BugsnagTaskDeps deps, Project project) {
@@ -357,6 +355,5 @@ class BugsnagPlugin implements Plugin<Project> {
     private static class BugsnagTaskDeps {
         BaseVariant variant
         BaseVariantOutput output
-        def splitsTask
     }
 }
