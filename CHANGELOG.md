@@ -1,4 +1,8 @@
-## 3.2.3 (2018-01-19)
+## 3.2.4 (2018-01-19)
+
+* Remove reference to unused task resulting in build failure
+
+## 3.2.3 (2018-01-18)
 
 * Add example projects with gradle plugin
 * Fix manifest lookup in project with only APK splits enabled
