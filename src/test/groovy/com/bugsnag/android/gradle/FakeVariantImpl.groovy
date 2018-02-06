@@ -161,11 +161,6 @@ class FakeVariantImpl implements BaseVariant {
     }
 
     @Override
-    FileCollection getDataBindingDependencyArtifacts() {
-        return null
-    }
-
-    @Override
     NdkCompile getNdkCompile() {
         return null
     }
