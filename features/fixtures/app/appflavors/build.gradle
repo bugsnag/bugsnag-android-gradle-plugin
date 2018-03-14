@@ -5,11 +5,11 @@ buildscript {
         mavenLocal()
     }
     dependencies {
-        classpath "com.bugsnag:bugsnag-android-gradle-plugin:${project.example_plugin_version}"
+        classpath "com.bugsnag:bugsnag-android-gradle-plugin:${project.plugin_version}"
     }
 }
 
-apply plugin: 'com.android.library'
+apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion Integer.parseInt(project.ANDROID_COMPILE_SDK_VERSION)
@@ -22,13 +22,23 @@ android {
         versionName project.SAMPLE_VERSION_NAME
     }
 
-    buildTypes {
-        release {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+    flavorDimensions "regular"
+
+    productFlavors {
+        foo {
+            applicationIdSuffix ".foo"
+        }
+        bar {
+            applicationIdSuffix ".bar"
         }
     }
 
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard.pro'
+        }
+    }
 }
 
 apply plugin: 'com.bugsnag.android.gradle'
