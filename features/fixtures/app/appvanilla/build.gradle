@@ -36,3 +36,4 @@ bugsnag {
     endpoint "http://localhost:${System.env.MOCK_API_PORT}"
     releasesEndpoint "http://localhost:${System.env.MOCK_API_PORT}"
 }
+
