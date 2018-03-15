@@ -33,5 +33,6 @@ android {
 apply plugin: 'com.bugsnag.android.gradle'
 
 bugsnag {
-    // configure here
+    endpoint "http://localhost:${System.env.MOCK_API_PORT}"
+    releasesEndpoint "http://localhost:${System.env.MOCK_API_PORT}"
 }

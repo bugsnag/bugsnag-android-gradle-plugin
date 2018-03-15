@@ -1,11 +1,5 @@
-Feature: Ordering anything with lemon
+Feature: Reporting Unhandled Exceptions
 
-Scenario: Lemon cake is in the online menu
-  When I select "lemon cake" on the website
-  Then I should receive a request
-  And the payload body matches the JSON fixture in "features/fixtures/lemon.json"
-
-Scenario: Lemon meringue is in the online menu
-  When I select "lemon meringue" on the website
-  Then I should receive a request
-  And the payload body matches the JSON fixture in "features/fixtures/lemon.json"
+Scenario: Test Unhandled Kotlin Exception without Session
+    When I build the "appvanilla" module
+    Then I should receive a request
