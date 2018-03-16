@@ -1,4 +1,4 @@
-package com.bugsnag.libvanilla;
+package com.bugsnag.android.gradle.plugin;
 
 public class Foo {
 

@@ -1,0 +1,20 @@
+buildscript {
+    repositories {
+        jcenter()
+        google()
+        mavenLocal()
+    }
+    dependencies {
+        classpath "com.bugsnag:bugsnag-android-gradle-plugin:${project.plugin_version}"
+    }
+}
+
+def moduleConfig = System.env.MODULE_CONFIG
+def bugsnagConfig = System.env.BUGSNAG_CONFIG
+
+// apply android module configuration (e.g. APK splits enabled)
+apply from: "config/android/${moduleConfig}.gradle"
+
+// apply bugsnag plugin configuration (e.g. custom sourceControl info)
+apply plugin: 'com.bugsnag.android.gradle'
+apply from: "config/bugsnag/${bugsnagConfig}.gradle"
