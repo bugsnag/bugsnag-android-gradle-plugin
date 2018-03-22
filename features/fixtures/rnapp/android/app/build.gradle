@@ -98,7 +98,7 @@ android {
     buildToolsVersion "26.0.2"
 
     defaultConfig {
-        applicationId "com.rnapp"
+        applicationId "com.bugsnag.android.rnapp"
         minSdkVersion 16
         targetSdkVersion 26
         versionCode 1
@@ -153,8 +153,6 @@ task copyDownloadableDepsToLibs(type: Copy) {
 apply plugin: 'com.bugsnag.android.gradle'
 
 bugsnag {
-//    endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
-//    releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
-    endpoint = "http://localhost:1234"
-    releasesEndpoint = "http://localhost:1234"
+    endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+    releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
 }

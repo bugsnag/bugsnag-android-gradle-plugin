@@ -16,3 +16,10 @@ steps %Q{
   And I wait for 1 second
 }
 end
+
+When("I build the React Native app") do
+steps %Q{
+  And I run the script "features/scripts/build_react_native_app.sh" synchronously
+  And I wait for 1 second
+}
+end
