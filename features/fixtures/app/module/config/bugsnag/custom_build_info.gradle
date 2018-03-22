@@ -5,12 +5,12 @@ project.afterEvaluate {
 
     project.bugsnag.builderName = "Mark Twain"
     project.bugsnag.sourceControl.provider = "bitbucket"
-    project.bugsnag.sourceControl.provider = "https://example.com/bar/foo.git"
+    project.bugsnag.sourceControl.repository = "https://example.com/bar/foo.git"
     project.bugsnag.sourceControl.revision = "fab8721"
 
     def map = new HashMap()
     map.put("MyKey", "MyValue")
     map.put("os_version", "BeOS")
-    project.bugsnag.sourceControl.metadata = map
+    project.bugsnag.metadata = map
 
 }

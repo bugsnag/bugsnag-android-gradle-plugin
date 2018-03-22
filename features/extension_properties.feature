@@ -24,6 +24,5 @@ Scenario: Alter build API values
     And the payload field "sourceControl.provider" equals "bitbucket" for request 0
     And the payload field "sourceControl.repository" equals "https://example.com/bar/foo.git" for request 0
     And the payload field "sourceControl.revision" equals "fab8721" for request 0
-    And the payload field "sourceControl.metadata" equals "fab8721" for request 0
     And the payload field "metadata.MyKey" equals "MyValue"
     And the payload field "metadata.os_version" equals "BeOS"
