@@ -6,9 +6,12 @@ Scenario: Disable autoReportBuilds
     And the request 0 is valid for the Android Mapping API
 
 Scenario: Enable debug mapping upload
-    When I build "default_app" using the "upload_debug_enabled" bugsnag config
-    Then I should receive 0 request
-#    And the request 0 is valid for the Android Mapping API
+    When I build "debug_proguard" using the "upload_debug_enabled" bugsnag config
+    Then I should receive 4 requests
+    And the request 0 is valid for the Build API
+    And the request 1 is valid for the Build API
+    And the request 2 is valid for the Android Mapping API
+    And the request 3 is valid for the Android Mapping API
 
 Scenario: Enable overwrite
     When I build "default_app" using the "overwrite_enabled" bugsnag config
