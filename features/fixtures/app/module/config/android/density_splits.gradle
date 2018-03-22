@@ -1,0 +1,10 @@
+apply plugin: 'com.android.application'
+apply from: 'config/android/common.gradle'
+
+android {
+    splits {
+        density {
+            enable true
+        }
+    }
+}
