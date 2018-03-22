@@ -1,4 +1,4 @@
-Feature: Plugin integrated in project with Density APK splits
+Feature: Plugin integrated in project with ABI APK splits
 
 Scenario: ABI Splits project builds successfully
     When I build "abi_splits" using the "standard" bugsnag config
@@ -27,8 +27,8 @@ Scenario: ABI Splits project builds successfully
 
     And the request 7 is valid for the Build API
     And the payload field "appVersionCode" equals "8" for request 7
-    And the payload field "appVersion" equals "1.0" for request 6
-    And the payload field "apiKey" equals "TEST_API_KEY" for request 6
+    And the payload field "appVersion" equals "1.0" for request 7
+    And the payload field "apiKey" equals "TEST_API_KEY" for request 7
 
     And the request 8 is valid for the Android Mapping API
     And the part "versionCode" for request 8 equals "2"
