@@ -1,8 +1,9 @@
 apply plugin: 'com.android.application'
 apply from: 'config/android/common.gradle'
 
-android {
+ext.densityCodes = [mdpi: 2, xxhdpi: 3]
 
+android {
     flavorDimensions "regular"
 
     productFlavors {
@@ -15,7 +16,20 @@ android {
     }
     splits {
         density {
+            reset()
+            include("mdpi", "xxhdpi")
             enable true
+        }
+    }
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def densityVersionCode =
+                project.ext.densityCodes.get(output.getFilter("DENSITY"))
+
+            if (densityVersionCode == null) {
+                densityVersionCode = 1
+            }
+            output.versionCodeOverride = densityVersionCode
         }
     }
 }
