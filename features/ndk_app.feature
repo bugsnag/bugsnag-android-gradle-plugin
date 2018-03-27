@@ -2,7 +2,7 @@ Feature: Plugin integrated in NDK app
 
 Scenario: NDK apps send requests
     When I build the NDK app
-    Then I should receive 5 requests
+    Then I should receive 6 requests
 
     And the request 0 is valid for the Build API
     And the payload field "appVersion" equals "1.0" for request 0
