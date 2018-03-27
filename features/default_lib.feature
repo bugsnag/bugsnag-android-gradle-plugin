@@ -11,7 +11,7 @@ Scenario: Single-module default library builds successfully
     And the payload field "buildTool" equals "gradle-android" for request 0
     And the payload field "appVersionCode" equals "1" for request 0
     And the payload field "sourceControl.provider" equals "github" for request 0
-    And the payload field "sourceControl.repository" equals "https://github.com/bugsnag/bugsnag-android-gradle-plugin.git" for request 0
+    And the payload field "sourceControl.repository" equals "https://github.com/bugsnag/agp.git" for request 0
     And the payload field "sourceControl.revision" is not null for request 0
 
     And the payload field "metadata.os_arch" is not null for request 0
