@@ -97,6 +97,10 @@ pluginBundle {
     }
 }
 
+install {
+    version = project.hasProperty("localVersion") ? project.getProperty("localVersion") : project.version
+}
+
 publishing {
     publications {
         Publication(MavenPublication) {
