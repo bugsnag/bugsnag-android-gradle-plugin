@@ -12,8 +12,15 @@ android:
 # see https://github.com/travis-ci/travis-ci/issues/8874
 before_install:
   - yes | sdkmanager "platforms;android-27"
+  - sudo apt-get -qq update
+  - sudo apt-get install -y nodejs
+  - gem install bundler
+  - bundle install
 
-script: ./gradlew clean install --stacktrace && ./gradlew clean build --stacktrace
+script:
+  - ./gradlew clean install --stacktrace
+  - ./gradlew clean build --stacktrace
+  - bundle exec maze-runner -c
 
 before_cache:
   - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
