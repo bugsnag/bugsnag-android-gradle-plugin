@@ -1,1 +1,4 @@
-apply from: 'config/bugsnag/common.gradle'
+project.afterEvaluate {
+    project.bugsnag.endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+    project.bugsnag.releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+}
