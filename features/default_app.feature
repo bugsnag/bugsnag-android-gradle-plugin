@@ -26,4 +26,3 @@ Scenario: Single-module default app builds successfully
     And the part "versionCode" for request 1 equals "1"
     And the part "versionName" for request 1 equals "1.0"
     And the part "appId" for request 1 equals "com.bugsnag.android.example"
-
