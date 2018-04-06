@@ -1,3 +1,13 @@
+## 3.2.5 (2018-02-20)
+
+### Bug fixes
+
+* Support applying the gradle plugin to a module separate from the base
+  application by changing the task execution order when generating and attaching
+  build UUIDs
+  [Jamie Lynch](https://github.com/fractalwrench)
+  [#87](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/87)
+
 ## 3.2.4 (2018-01-19)
 
 * Remove reference to unused task resulting in build failure
@@ -17,7 +27,7 @@
 
 ## 3.2.0 (2018-01-09)
 
-* Automatically record release/build information to Bugsnag Build API 
+* Automatically record release/build information to Bugsnag Build API
 * NDK projects are now automatically detected
 
 ## 3.1.1 (2017-12-07)

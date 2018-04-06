@@ -1,5 +1,6 @@
 package com.bugsnag.android.gradle
 
+import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.internal.ExecException
 import org.json.simple.JSONObject
@@ -189,10 +190,10 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
             project.exec {
                 commandLine cmd
                 standardOutput = baos
+                logging.captureStandardError LogLevel.INFO
             }
             new String(baos.toByteArray(), Charset.forName("UTF-8")).trim()
-        } catch (ExecException e) {
-            project.logger.warn("Command failed", e)
+        } catch (ExecException ignored) {
             null
         }
     }
