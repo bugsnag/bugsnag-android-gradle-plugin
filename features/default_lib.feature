@@ -25,4 +25,4 @@ Scenario: Single-module default library builds successfully
     And the part "apiKey" for request 1 equals "TEST_API_KEY"
     And the part "versionCode" for request 1 equals "1"
     And the part "versionName" for request 1 equals "1.0"
-    And the part "appId" for request 1 equals "com.bugsnag.android.example"
+    And the part "appId" for request 1 equals "com.bugsnag.libvanilla"
