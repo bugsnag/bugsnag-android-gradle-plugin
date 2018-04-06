@@ -1,3 +1,11 @@
+## 3.2.6 (TBD)
+
+### Bug fixes
+
+* Fix serialisation of metadata values in build API
+  [Jamie Lynch](https://github.com/fractalwrench)
+  [#91](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/91)
+
 ## 3.2.5 (2018-02-20)
 
 ### Bug fixes
