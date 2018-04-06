@@ -1,0 +1,39 @@
+apply plugin: 'com.android.application'
+apply from: 'config/android/common.gradle'
+
+ext.abiCodes = ['arm64-v8a': 2, armeabi: 3, x86: 4, 'x86_64': 5]
+ext.densityCodes = [xhdpi: 2, xxxhdpi: 3]
+
+android {
+    splits {
+        abi {
+            reset()
+            include("arm64-v8a", "x86", "armeabi", "x86_64")
+            universalApk true
+            enable true
+        }
+        density {
+            reset()
+            include("xhdpi", "xxxhdpi")
+            enable true
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def abiVersionCode =
+                project.ext.abiCodes.get(output.getFilter("ABI"))
+            def densityVersionCode =
+                project.ext.densityCodes.get(output.getFilter("DENSITY"))
+
+            if (densityVersionCode == null) {
+                densityVersionCode = 1
+            }
+            if (abiVersionCode == null) {
+                abiVersionCode = 1
+            }
+
+            output.versionCodeOverride = (abiVersionCode * 10) + densityVersionCode
+        }
+    }
+}

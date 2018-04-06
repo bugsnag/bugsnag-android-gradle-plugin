@@ -23,3 +23,19 @@ steps %Q{
   And I wait for 1 second
 }
 end
+
+When("I build the NDK app") do
+steps %Q{
+  And I run the script "features/scripts/build_ndk_app.sh" synchronously
+  And I wait for 1 second
+}
+end
+
+Then(/^the request (\d+) is valid for the Android NDK Mapping API$/) do |request_index|
+  parts = find_request(request_index)[:body]
+  assert_not_nil(parts["soMappingFile"], "'soMappingFile' should not be nil")
+  assert_not_nil(parts["apiKey"], "'apiKey' should not be nil")
+  assert_not_nil(parts["sharedObjectName"], "'sharedObjectName' should not be nil")
+  assert_not_nil(parts["appId"], "'appId' should not be nil")
+  assert_not_nil(parts["arch"], "'arch' should not be nil")
+end
