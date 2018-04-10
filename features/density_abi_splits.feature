@@ -44,43 +44,43 @@ Scenario: Density ABI Splits project builds successfully
     And the payload field "appVersionCode" equals "53" for request 12
 
     And the request 13 is valid for the Android Mapping API
-    And the part "versionCode" for request 13 equals "21"
+    And the field "versionCode" for multipart request 13 equals "21"
 
     And the request 14 is valid for the Android Mapping API
-    And the part "versionCode" for request 14 equals "31"
+    And the field "versionCode" for multipart request 14 equals "31"
 
     And the request 15 is valid for the Android Mapping API
-    And the part "versionCode" for request 15 equals "11"
+    And the field "versionCode" for multipart request 15 equals "11"
 
     And the request 16 is valid for the Android Mapping API
-    And the part "versionCode" for request 16 equals "41"
+    And the field "versionCode" for multipart request 16 equals "41"
 
     And the request 17 is valid for the Android Mapping API
-    And the part "versionCode" for request 17 equals "51"
+    And the field "versionCode" for multipart request 17 equals "51"
 
     And the request 18 is valid for the Android Mapping API
-    And the part "versionCode" for request 18 equals "22"
+    And the field "versionCode" for multipart request 18 equals "22"
 
     And the request 19 is valid for the Android Mapping API
-    And the part "versionCode" for request 19 equals "32"
+    And the field "versionCode" for multipart request 19 equals "32"
 
     And the request 20 is valid for the Android Mapping API
-    And the part "versionCode" for request 20 equals "42"
+    And the field "versionCode" for multipart request 20 equals "42"
 
     And the request 21 is valid for the Android Mapping API
-    And the part "versionCode" for request 21 equals "52"
+    And the field "versionCode" for multipart request 21 equals "52"
 
     And the request 22 is valid for the Android Mapping API
-    And the part "versionCode" for request 22 equals "23"
+    And the field "versionCode" for multipart request 22 equals "23"
 
     And the request 23 is valid for the Android Mapping API
-    And the part "versionCode" for request 23 equals "33"
+    And the field "versionCode" for multipart request 23 equals "33"
 
     And the request 24 is valid for the Android Mapping API
-    And the part "versionCode" for request 24 equals "43"
+    And the field "versionCode" for multipart request 24 equals "43"
 
     And the request 25 is valid for the Android Mapping API
-    And the part "versionCode" for request 25 equals "53"
+    And the field "versionCode" for multipart request 25 equals "53"
 
 Scenario: Density ABI Splits automatic upload disabled
     When I build "density_abi_splits" using the "all_disabled" bugsnag config
@@ -90,4 +90,4 @@ Scenario: Density ABI Splits manual upload of build API
     When I build the "XxxhdpiArmeabi-release" variantOutput for "density_abi_splits" using the "all_disabled" bugsnag config
     Then I should receive 1 request
     And the request 0 is valid for the Android Mapping API
-    And the part "versionCode" for request 0 equals "33"
+    And the field "versionCode" for multipart request 0 equals "33"
