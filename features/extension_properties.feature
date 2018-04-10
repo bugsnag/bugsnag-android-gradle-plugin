@@ -17,7 +17,7 @@ Scenario: Enable overwrite
     When I build "default_app" using the "overwrite_enabled" bugsnag config
     Then I should receive 1 request
     And the request 0 is valid for the Android Mapping API
-    And the part "overwrite" for request 0 equals "true"
+    And the field "overwrite" for multipart request 0 equals "true"
 
 Scenario: Alter build API values
     When I build "default_app" using the "custom_build_info" bugsnag config
