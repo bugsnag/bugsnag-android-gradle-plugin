@@ -26,3 +26,4 @@ Scenario: Single-module default app builds successfully
     And the field "versionCode" for multipart request 1 equals "1"
     And the field "versionName" for multipart request 1 equals "1.0"
     And the field "appId" for multipart request 1 equals "com.bugsnag.android.example"
+    And the field "overwrite" for multipart request 1 is null
