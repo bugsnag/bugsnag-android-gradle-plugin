@@ -28,28 +28,28 @@ Scenario: Density Splits project builds successfully
     And the payload field "apiKey" equals "TEST_API_KEY" for request 6
 
     And the request 7 is valid for the Android Mapping API
-    And the part "versionCode" for request 7 equals "4"
+    And the field "versionCode" for multipart request 7 equals "4"
 
     And the request 8 is valid for the Android Mapping API
-    And the part "versionCode" for request 8 equals "2"
+    And the field "versionCode" for multipart request 8 equals "2"
 
     And the request 9 is valid for the Android Mapping API
-    And the part "versionCode" for request 9 equals "3"
+    And the field "versionCode" for multipart request 9 equals "3"
 
     And the request 10 is valid for the Android Mapping API
-    And the part "versionCode" for request 10 equals "1"
+    And the field "versionCode" for multipart request 10 equals "1"
 
     And the request 11 is valid for the Android Mapping API
-    And the part "versionCode" for request 11 equals "5"
+    And the field "versionCode" for multipart request 11 equals "5"
 
     And the request 12 is valid for the Android Mapping API
-    And the part "versionCode" for request 12 equals "6"
+    And the field "versionCode" for multipart request 12 equals "6"
 
     And the request 13 is valid for the Android Mapping API
-    And the part "versionCode" for request 13 equals "7"
-    And the part "apiKey" for request 7 equals "TEST_API_KEY"
-    And the part "versionName" for request 7 equals "1.0"
-    And the part "appId" for request 7 equals "com.bugsnag.android.example"
+    And the field "versionCode" for multipart request 13 equals "7"
+    And the field "apiKey" for multipart request 7 equals "TEST_API_KEY"
+    And the field "versionName" for multipart request 7 equals "1.0"
+    And the field "appId" for multipart request 7 equals "com.bugsnag.android.example"
 
 Scenario: Density Splits automatic upload disabled
     When I build "density_splits" using the "all_disabled" bugsnag config
@@ -59,7 +59,7 @@ Scenario: Density Splits manual upload of build API
     When I build the "Hdpi-release" variantOutput for "density_splits" using the "all_disabled" bugsnag config
     Then I should receive 1 request
     And the request 0 is valid for the Android Mapping API
-    And the part "apiKey" for request 0 equals "TEST_API_KEY"
-    And the part "versionCode" for request 0 equals "4"
-    And the part "versionName" for request 0 equals "1.0"
-    And the part "appId" for request 0 equals "com.bugsnag.android.example"
+    And the field "apiKey" for multipart request 0 equals "TEST_API_KEY"
+    And the field "versionCode" for multipart request 0 equals "4"
+    And the field "versionName" for multipart request 0 equals "1.0"
+    And the field "appId" for multipart request 0 equals "com.bugsnag.android.example"

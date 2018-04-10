@@ -12,7 +12,7 @@ Scenario: React Native sends requests
     And the payload field "appVersionCode" equals "1" for request 0
 
     And the request 1 is valid for the Android Mapping API
-    And the part "apiKey" for request 1 equals "YOUR-API-KEY-HERE"
-    And the part "versionCode" for request 1 equals "1"
-    And the part "versionName" for request 1 equals "1.0"
-    And the part "appId" for request 1 equals "com.bugsnag.android.rnapp"
+    And the field "apiKey" for multipart request 1 equals "YOUR-API-KEY-HERE"
+    And the field "versionCode" for multipart request 1 equals "1"
+    And the field "versionName" for multipart request 1 equals "1.0"
+    And the field "appId" for multipart request 1 equals "com.bugsnag.android.rnapp"
