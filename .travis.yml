@@ -20,6 +20,7 @@ before_install:
 
   - sudo apt-get -qq update
   - sudo apt-get install -y nodejs
+  - sudo apt-get install npm
   - gem install bundler
   - bundle install
 
