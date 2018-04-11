@@ -138,14 +138,14 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
                     return null
                 }
 
-                if (process.exitValue() == 0) {
+                if (process.waitFor() == 0) {
                     return outputFile
                 } else {
                     project.logger.error("failed to generate symbols for " + arch + ", see " + errorOutputFile.toString() + " for more details")
                     return null
                 }
             } catch (Exception e) {
-                project.logger.error("failed to generate symbols for " + arch + ": " + e.getMessage())
+                project.logger.error("failed to generate symbols for " + arch + ": " + e.getMessage(), e)
             }
         } else {
             project.logger.error("Unable to upload NDK symbols: Could not find objdump location for " + arch)

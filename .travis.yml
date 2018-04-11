@@ -29,7 +29,7 @@ install:
 script:
   - ./gradlew clean install --stacktrace
   - ./gradlew clean build --stacktrace
-  - bundle exec maze-runner -c --verbose
+  - bundle exec maze-runner features/ndk_app.feature -c --verbose
 
 before_cache:
   - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
