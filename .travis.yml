@@ -18,12 +18,12 @@ before_install:
   - echo y | sdkmanager "cmake;3.6.4111459"
   - git clone --depth 1 https://github.com/bugsnag/android-ndk $HOME/android-ndk-root
   - export ANDROID_NDK_HOME=$HOME/android-ndk-root
-
-  - sudo apt-get -qq update
-  - sudo apt-get install -y nodejs
-  - sudo apt-get install npm
   - gem install bundler
   - bundle install
+
+install:
+  - curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+  - sudo apt-get install -y nodejs
 
 script:
   - ./gradlew clean install --stacktrace
