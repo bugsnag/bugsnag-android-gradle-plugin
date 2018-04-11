@@ -1,3 +1,12 @@
+## TBD
+
+### Bug fixes
+
+* Fix possible failed NDK symbol map uploads which could occur if the mapping
+  file was still being written when the process status was checked
+  [Jamie Lynch](https://github.com/fractalwrench)
+  [#104](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/104)
+
 ## 3.2.5 (2018-02-20)
 
 ### Bug fixes
