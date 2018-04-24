@@ -8,3 +8,4 @@ build/
 gradle-app.setting
 .idea/
 local.properties
+maze_output/

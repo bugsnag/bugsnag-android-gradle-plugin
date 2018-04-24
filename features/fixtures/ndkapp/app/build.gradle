@@ -1,0 +1,55 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 26
+    defaultConfig {
+        applicationId "com.bugsnag.android.ndkapp"
+        minSdkVersion 14
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+        externalNativeBuild {
+            cmake {
+                cppFlags ""
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+
+    flavorDimensions "regular"
+
+    productFlavors {
+        x86 {
+            ndk {
+                abiFilter "x86"
+            }
+        }
+        arm {
+            ndk {
+                abiFilters "armeabi-v7a", "armeabi"
+            }
+        }
+    }
+}
+
+dependencies {
+    compile 'com.bugsnag:bugsnag-android-ndk:1.+'
+}
+
+apply plugin: 'com.bugsnag.android.gradle'
+
+bugsnag {
+    ndk true
+    endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+    releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+}

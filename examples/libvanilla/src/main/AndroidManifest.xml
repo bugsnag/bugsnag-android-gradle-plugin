@@ -1,9 +1,0 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="com.bugsnag.libvanilla" >
-  <application>
-
-    <meta-data
-      android:name="com.bugsnag.android.API_KEY"
-      android:value="YOUR_API_KEY" />
-  </application>
-</manifest>

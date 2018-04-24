@@ -1,10 +1,21 @@
-## 3.2.6 (TBD)
+## 3.2.6 (2018-04-24)
 
 ### Bug fixes
 
-* Fix serialisation of metadata values in build API
+* Fix possible failed NDK symbol map uploads which could occur if the mapping
+  file was still being written when the process status was checked
+  [Jamie Lynch](https://github.com/fractalwrench)
+  [#104](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/104)
+
+* Fix malformed metadata uploaded by release task
   [Jamie Lynch](https://github.com/fractalwrench)
   [#91](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/91)
+
+* Reduce log level of failed shell commands in the release task. Shell commands
+  are used to automatically detect source control information and are not a
+  critical error if one fails to run.
+  [Jamie Lynch](https://github.com/fractalwrench)
+  [#88](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/88)
 
 ## 3.2.5 (2018-02-20)
 
