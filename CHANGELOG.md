@@ -1,5 +1,7 @@
 ## 3.2.6 (2018-04-24)
 
+* Update Android Plugin for Gradle version to 3.1.0
+
 ### Bug fixes
 
 * Fix possible failed NDK symbol map uploads which could occur if the mapping
