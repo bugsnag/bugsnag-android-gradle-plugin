@@ -2,7 +2,7 @@
 
 ### Bug fixes
 
-* Gradle 4.8-rc-1 compat fix - use def when finding the buildType
+* Add compatibility with Gradle 4.8-rc1 - use def rather than TreeSet when finding the buildType
 [Jamie Lynch](https://github.com/fractalwrench) [#110](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/110)
 
 ## 3.2.6 (2018-04-24)
