@@ -259,7 +259,7 @@ class BugsnagPlugin implements Plugin<Project> {
     private static boolean isJackEnabled(Project project, BaseVariant variant) {
 
         // First check the selected build type to see if there are jack settings
-        TreeSet buildTypes = project.android.buildTypes.store
+        def buildTypes = project.android.buildTypes.store
         BuildType b = findNode(buildTypes, variant.baseName)
 
         if (b?.hasProperty('jackOptions')
@@ -287,7 +287,7 @@ class BugsnagPlugin implements Plugin<Project> {
         String toolchain = null
 
         // First check the selected build type to see if there are cmake arguments
-        TreeSet buildTypes = project.android.buildTypes.store
+        def buildTypes = project.android.buildTypes.store
         BuildType b = findNode(buildTypes, variant.baseName)
 
         if (b != null
@@ -340,7 +340,7 @@ class BugsnagPlugin implements Plugin<Project> {
      * @param name The name of the buildtype to search for
      * @return The buildtype, or null if not found
      */
-    private static BuildType findNode(TreeSet<BuildType> set, String name) {
+    private static BuildType findNode(def set, String name) {
         Iterator<BuildType> iterator = set.iterator()
 
         while (iterator.hasNext()) {
