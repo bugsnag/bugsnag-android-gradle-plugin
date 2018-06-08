@@ -2,7 +2,7 @@ Feature: Plugin integrated in NDK app
 
 Scenario: NDK apps send requests
     When I build the NDK app
-    Then I should receive 7 requests
+    Then I should receive 6 requests
 
     And the request 0 is valid for the Build API
     And the payload field "appVersion" equals "1.0" for request 0
@@ -27,8 +27,5 @@ Scenario: NDK apps send requests
     And the request 4 is valid for the Android NDK Mapping API
     And the payload field "apiKey" equals "your-api-key-here" for request 4
 
-    And the request 5 is valid for the Android NDK Mapping API
+    And the request 5 is valid for the Android Mapping API
     And the payload field "apiKey" equals "your-api-key-here" for request 5
-
-    And the request 6 is valid for the Android Mapping API
-    And the payload field "apiKey" equals "your-api-key-here" for request 6
