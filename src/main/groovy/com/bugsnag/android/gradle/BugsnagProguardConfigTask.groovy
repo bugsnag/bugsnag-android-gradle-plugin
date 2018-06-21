@@ -17,6 +17,7 @@ class BugsnagProguardConfigTask extends DefaultTask {
     static final String PROGUARD_CONFIG_SETTINGS = """\
     -keepattributes LineNumberTable,SourceFile
     -keep class com.bugsnag.android.NativeInterface { *; }
+    -keep class com.bugsnag.android.Breadcrumb { *; }
     -keep class com.bugsnag.android.Breadcrumbs { *; }
     -keep class com.bugsnag.android.Breadcrumbs\$Breadcrumb { *; }
     -keep class com.bugsnag.android.BreadcrumbType { *; }
