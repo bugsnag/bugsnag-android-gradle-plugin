@@ -1,3 +1,10 @@
+## 3.2.8 (2018-06-21)
+
+### Bug fixes
+
+* Update ProGuard keep rules for Breadcrumb class, fixing NDK compatibility
+[Jamie Lynch](https://github.com/fractalwrench) [#114](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/114)
+
 ## 3.2.7 (2018-06-05)
 
 ### Bug fixes
