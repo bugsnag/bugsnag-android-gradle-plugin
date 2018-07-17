@@ -385,6 +385,13 @@ class BugsnagPlugin implements Plugin<Project> {
         return null
     }
 
+    /**
+     * Returns true if the DexGuard plugin has been applied to the project
+     */
+    static boolean hasDexguardPlugin(Project project) {
+        return project.pluginManager.hasPlugin("dexguard")
+    }
+
     private static class BugsnagTaskDeps {
         BaseVariant variant
         BaseVariantOutput output

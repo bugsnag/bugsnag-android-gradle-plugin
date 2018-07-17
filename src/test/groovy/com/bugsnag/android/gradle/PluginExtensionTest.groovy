@@ -29,7 +29,7 @@ class PluginExtensionTest {
         assertEquals(0, proj.bugsnag.retryCount)
         assertFalse(proj.bugsnag.ndk)
         assertNull(proj.bugsnag.sharedObjectPath)
+        assertFalse(BugsnagPlugin.hasDexguardPlugin(proj))
     }
-
 
 }
