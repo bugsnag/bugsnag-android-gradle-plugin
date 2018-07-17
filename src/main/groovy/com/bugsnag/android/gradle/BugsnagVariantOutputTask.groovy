@@ -40,11 +40,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
         project.logger.info("Filters: ${filters}")
         project.logger.info("OutputType: ${variantOutput.getOutputType()}")
 
-        if (filters.isEmpty() && VariantOutput.OutputType.FULL_SPLIT.toString() == variantOutput.outputType) {
-            directory = new File(directory, "universal") // universal apk is in different dir
-        } else { // apk split
-            directory = findApkSplitDir(filters, directory)
-        }
+        directory = findApkSplitDir(filters, directory, variantOutput.outputType)
         def file = new File(directory, "AndroidManifest.xml")
 
         if (!file.exists()) {
@@ -53,6 +49,15 @@ class BugsnagVariantOutputTask extends DefaultTask {
             project.logger.info("Found manifest at ${file}")
         }
         file
+    }
+
+    static File findApkSplitDir(Collection<FilterData> filters, File directory, String outputType) {
+        if (filters.isEmpty() && VariantOutput.OutputType.FULL_SPLIT.toString() == outputType) {
+            directory = new File(directory, "universal") // universal apk is in different dir
+        } else { // apk split
+            directory = findApkSplitDir(filters, directory)
+        }
+        directory
     }
 
     static File findApkSplitDir(Collection<FilterData> filters, File directory) {
