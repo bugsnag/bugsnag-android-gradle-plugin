@@ -28,7 +28,8 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
 
     @TaskAction
     def upload() {
-        def mappingFile = variant.mappingFile
+
+        File mappingFile = findMappingFile()
 
         // If we haven't enabled proguard for this variant, or the proguard
         // configuration includes -dontobfuscate, the mapping file
@@ -48,6 +49,15 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
 
         // Send the request
         super.uploadMultipartEntity(mpEntity)
+    }
+
+    private File findMappingFile() {
+        // only apply dexguard fix if dexguard plugin is applied and splits are in use
+        if (BugsnagPlugin.hasDexguardPlugin(project) && BugsnagPlugin.hasMultipleOutputs(project)) {
+            return null // FIXME
+        } else {
+            return variant.mappingFile
+        }
     }
 
 }

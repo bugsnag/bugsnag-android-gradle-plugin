@@ -2,11 +2,13 @@ package com.bugsnag.android.gradle
 
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.LibraryPlugin
+import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
 import com.android.build.gradle.internal.core.Toolchain
 import com.android.build.gradle.internal.dsl.BuildType
+import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -390,6 +392,23 @@ class BugsnagPlugin implements Plugin<Project> {
      */
     static boolean hasDexguardPlugin(Project project) {
         return project.pluginManager.hasPlugin("dexguard")
+    }
+
+    /**
+     * Returns true if a project has configured multiple variant outputs.
+     *
+     * This calculation is based on a heuristic - the number of variantOutputs in a project must be
+     * greater than the number of variants.
+     */
+    static boolean hasMultipleOutputs(Project project) {
+        DomainObjectSet<ApplicationVariant> variants = project.android.applicationVariants
+        int variantSize = variants.size()
+        int outputSize = 0
+
+        variants.forEach { variant ->
+            outputSize += variant.outputs.size()
+        }
+        return outputSize > variantSize
     }
 
     private static class BugsnagTaskDeps {
