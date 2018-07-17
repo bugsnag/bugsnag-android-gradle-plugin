@@ -43,17 +43,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
         if (filters.isEmpty() && VariantOutput.OutputType.FULL_SPLIT.toString() == variantOutput.outputType) {
             directory = new File(directory, "universal") // universal apk is in different dir
         } else { // apk split
-            String abi = null
-            String density = null
-
-            for (FilterData filterData : filters) {
-                if (VariantOutput.FilterType.ABI.toString() == filterData.filterType) {
-                    abi = filterData.identifier
-                } else if (VariantOutput.FilterType.DENSITY.toString() == filterData.filterType) {
-                    density = filterData.identifier
-                }
-            }
-            directory = findManifestDirForSplit(density, abi, directory)
+            directory = findApkSplitDir(filters, directory)
         }
         def file = new File(directory, "AndroidManifest.xml")
 
@@ -63,6 +53,21 @@ class BugsnagVariantOutputTask extends DefaultTask {
             project.logger.info("Found manifest at ${file}")
         }
         file
+    }
+
+    static File findApkSplitDir(Collection<FilterData> filters, File directory) {
+        String abi = null
+        String density = null
+
+        for (FilterData filterData : filters) {
+            if (VariantOutput.FilterType.ABI.toString() == filterData.filterType) {
+                abi = filterData.identifier
+            } else if (VariantOutput.FilterType.DENSITY.toString() == filterData.filterType) {
+                density = filterData.identifier
+            }
+        }
+        directory = findManifestDirForSplit(density, abi, directory)
+        directory
     }
 
     static File findManifestDirForSplit(String density, String abi, File manifestDir) {

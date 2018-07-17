@@ -1,38 +1,74 @@
 package com.bugsnag.android.gradle
 
-import org.gradle.api.Project
-import org.gradle.testfixtures.ProjectBuilder
-import org.junit.Before
+import com.android.build.FilterData
+import com.android.build.VariantOutput
 import org.junit.Test
 
+import static com.android.build.VariantOutput.FilterType.*
+import static com.bugsnag.android.gradle.BugsnagVariantOutputTask.findApkSplitDir
+import static com.bugsnag.android.gradle.BugsnagVariantOutputTask.findManifestDirForSplit
 import static org.junit.Assert.assertEquals
 
 class ManifestPathTest {
-
-    private BugsnagVariantOutputTask task
-
-    @Before
-    void setUp() throws Exception {
-        Project proj = ProjectBuilder.builder().build()
-        proj.pluginManager.apply 'com.bugsnag.android.gradle'
-        task = proj.getTasks().create("variantTask", BugsnagVariantOutputTask.class)
-    }
 
     @Test
     void testSplitManifestDir() {
         File dir = new File("build")
 
         def abiAndDensity = new File(new File(dir, "armeabi-v7a"), "mdpi")
-        assertEquals(abiAndDensity, task.findManifestDirForSplit("mdpi", "armeabi-v7a", dir))
+        assertEquals(abiAndDensity, findManifestDirForSplit("mdpi", "armeabi-v7a", dir))
 
         def abiOnly = new File(dir, "x86")
-        assertEquals(abiOnly, task.findManifestDirForSplit(null, "x86", dir))
+        assertEquals(abiOnly, findManifestDirForSplit(null, "x86", dir))
 
         def densityOnly = new File(dir, "xhdpi")
-        assertEquals(densityOnly, task.findManifestDirForSplit("xhdpi", null, dir))
+        assertEquals(densityOnly, findManifestDirForSplit("xhdpi", null, dir))
 
         // default case, no apk splits
-        assertEquals(dir, task.findManifestDirForSplit(null, null, dir))
+        assertEquals(dir, findManifestDirForSplit(null, null, dir))
+    }
+
+    @Test
+    void testFindApkSplitDir() {
+        File dir = new File("build")
+
+        def abiAndDensityFilters = Arrays.asList(
+            new FakeFilterData("x86_64", ABI.toString()),
+            new FakeFilterData("hdpi", DENSITY.toString())
+        )
+        def abiAndDensity = new File(new File(dir, "x86_64"), "hdpi")
+        assertEquals(abiAndDensity, findApkSplitDir(abiAndDensityFilters, dir))
+
+        def abiFilters = Collections.singletonList(new FakeFilterData("x86_64", ABI.toString()))
+        def abiOnly = new File(dir, "x86_64")
+        assertEquals(abiOnly, findApkSplitDir(abiFilters, dir))
+
+        def densityFilters = Collections.singletonList(new FakeFilterData("xxxhdpi", DENSITY.toString()))
+        def densityOnly = new File(dir, "xxxhdpi")
+        assertEquals(densityOnly, findApkSplitDir(densityFilters, dir))
+
+        // default case, no apk splits
+        assertEquals(dir, findApkSplitDir(Collections.emptyList(), dir))
+    }
+
+    static class FakeFilterData implements FilterData {
+        private final String id
+        private final String filterType
+
+        FakeFilterData(String id, String filterType) {
+            this.id = id
+            this.filterType = filterType
+        }
+
+        @Override
+        String getIdentifier() {
+            return id
+        }
+
+        @Override
+        String getFilterType() {
+            return filterType
+        }
     }
 
 }
