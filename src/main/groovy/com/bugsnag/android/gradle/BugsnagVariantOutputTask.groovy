@@ -65,7 +65,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
         file
     }
 
-    private static File findManifestDirForSplit(String density, String abi, File manifestDir) {
+    static File findManifestDirForSplit(String density, String abi, File manifestDir) {
         if (abi != null && density != null) { // abi comes first, then density
             String subdir = abi + File.separator + density
             new File(manifestDir, subdir)
