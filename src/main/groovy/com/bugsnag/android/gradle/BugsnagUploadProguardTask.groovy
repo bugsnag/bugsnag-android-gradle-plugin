@@ -1,5 +1,6 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
@@ -33,6 +34,7 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
     @TaskAction
     def upload() {
         File mappingFile = findMappingFile()
+        project.logger.info("Using mapping file: $mappingFile")
 
         // If we haven't enabled proguard for this variant, or the proguard
         // configuration includes -dontobfuscate, the mapping file
@@ -56,12 +58,12 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
 
     private File findMappingFile() {
         if (BugsnagPlugin.hasDexguardPlugin(project) && BugsnagPlugin.hasMultipleOutputs(project)) {
-            def mappingFile = findDexguardMappingFile(project, variantOutput)
+            def mappingFile = findDexguardMappingFile(project)
 
             if (mappingFile && mappingFile.exists()) {
                 return mappingFile
             } else {
-                project.logger.warn("Could not calculate DexGuard mapping file location," +
+                project.logger.warn("Could not find DexGuard mapping file at: $mappingFile -" +
                     " falling back to AGP mapping file value")
             }
         }
@@ -76,10 +78,10 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
      * variant.mappingFile cannot currently be overridden using the AGP DSL on a per-variantOutput basis, which
      * necessitates this workaround. https://issuetracker.google.com/issues/78921539
      */
-    static File findDexguardMappingFile(Project project, BaseVariantOutput variantOutput) {
+    File findDexguardMappingFile(Project project) {
         String buildDir = project.buildDir.toString()
         String outputDir = variantOutput.dirName
-        return Paths.get(buildDir, "output", "mapping", outputDir, "mapping.txt").toFile()
+        return Paths.get(buildDir, "outputs", "mapping", variant.dirName, outputDir, "mapping.txt").toFile()
     }
 
 }
