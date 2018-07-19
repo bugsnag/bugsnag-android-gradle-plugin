@@ -1,12 +1,13 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.gradle.api.BaseVariant
-import com.android.build.gradle.api.BaseVariantOutput
+import org.apache.http.entity.mime.HttpMultipartMode
 import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
+import org.apache.http.util.TextUtils
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
 
+import java.nio.charset.Charset
 import java.nio.file.Paths
 
 /**
@@ -49,7 +50,8 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
         project.logger.info("Attempting to upload mapping file: ${mappingFile}")
 
         // Construct a basic request
-        MultipartEntity mpEntity = new MultipartEntity()
+        def charset = Charset.forName("UTF-8")
+        MultipartEntity mpEntity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE, null, charset)
         mpEntity.addPart(partName, new FileBody(mappingFile))
 
         // Send the request
@@ -81,6 +83,14 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
     File findDexguardMappingFile(Project project) {
         String buildDir = project.buildDir.toString()
         String outputDir = variantOutput.dirName
+
+        if (variantOutput.dirName.endsWith("dpi" + File.separator)) {
+            outputDir = new File(variantOutput.dirName).parent
+
+            if (outputDir == null) { // if only density splits enabled
+                outputDir = ""
+            }
+        }
         return Paths.get(buildDir, "outputs", "mapping", variant.dirName, outputDir, "mapping.txt").toFile()
     }
 
