@@ -1,0 +1,5 @@
+build
+*.idea
+.gradle
+maze_output
+node_modules
