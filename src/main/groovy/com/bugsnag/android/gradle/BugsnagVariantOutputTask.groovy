@@ -1,19 +1,16 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.FilterData
-import com.android.build.VariantOutput
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import groovy.xml.Namespace
 import org.gradle.api.DefaultTask
 
-class BugsnagVariantOutputTask extends DefaultTask {
+import java.nio.file.Paths
 
-    private static final String SPLIT_UNIVERSAL = "universal"
+class BugsnagVariantOutputTask extends DefaultTask {
 
     BaseVariantOutput variantOutput
     BaseVariant variant
-
 
     // Read from the manifest file
     String apiKey
@@ -35,49 +32,15 @@ class BugsnagVariantOutputTask extends DefaultTask {
      */
     File getManifestPath() {
         File directory = variantOutput.processManifest.manifestOutputDirectory
-        Collection<FilterData> filters = variantOutput.getFilters()
+        File manifestFile = Paths.get(directory.toString(), variantOutput.dirName, "AndroidManifest.xml").toFile()
 
-        project.logger.info("Filters: ${filters}")
-        project.logger.info("OutputType: ${variantOutput.getOutputType()}")
-
-        if (filters.isEmpty() && VariantOutput.OutputType.FULL_SPLIT.toString() == variantOutput.outputType) {
-            directory = new File(directory, "universal") // universal apk is in different dir
-        } else { // apk split
-            String abi = null
-            String density = null
-
-            for (FilterData filterData : filters) {
-                if (VariantOutput.FilterType.ABI.toString() == filterData.filterType) {
-                    abi = filterData.identifier
-                } else if (VariantOutput.FilterType.DENSITY.toString() == filterData.filterType) {
-                    density = filterData.identifier
-                }
-            }
-            directory = findManifestDirForSplit(density, abi, directory)
-        }
-        def file = new File(directory, "AndroidManifest.xml")
-
-        if (!file.exists()) {
-            project.logger.error("Failed to find manifest at ${file}")
+        if (!manifestFile.exists()) {
+            project.logger.error("Failed to find manifest at ${manifestFile}")
         } else {
-            project.logger.info("Found manifest at ${file}")
+            project.logger.info("Found manifest at ${manifestFile}")
         }
-        file
+        manifestFile
     }
-
-    private static File findManifestDirForSplit(String density, String abi, File manifestDir) {
-        if (abi != null && density != null) { // abi comes first, then density
-            String subdir = abi + File.separator + density
-            new File(manifestDir, subdir)
-        } else if (abi != null) {
-            new File(manifestDir, abi)
-        } else if (density != null) {
-            new File(manifestDir, density)
-        } else {
-            manifestDir
-        }
-    }
-
 
     // Read the API key and Build ID etc..
     void readManifestFile() {
@@ -123,7 +86,6 @@ class BugsnagVariantOutputTask extends DefaultTask {
         }
         return apiKey
     }
-
 
     private String getManifestMetaData(metaDataTags, Namespace ns, String key) {
         String value = null

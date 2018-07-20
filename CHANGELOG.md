@@ -1,3 +1,14 @@
+
+## 3.3.0 (2018-07-20)
+
+* Improve support for Dexguard APK splits by manually calculating location of mapping file
+[Jamie Lynch](https://github.com/fractalwrench) [#117](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/117)
+
+### Bug fixes
+
+* Add a version check for bugsnag-android dependency, disabling redundant ProGuard config if >= v4.6.0
+[Jamie Lynch](https://github.com/fractalwrench) [#116](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/116)
+
 ## 3.2.8 (2018-06-21)
 
 ### Bug fixes
