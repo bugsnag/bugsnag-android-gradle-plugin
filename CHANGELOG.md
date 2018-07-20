@@ -1,5 +1,5 @@
 
-## 3.3.0 (TBD)
+## 3.3.0 (2018-07-20)
 
 * Improve support for Dexguard APK splits by manually calculating location of mapping file
 [Jamie Lynch](https://github.com/fractalwrench) [#117](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/117)
