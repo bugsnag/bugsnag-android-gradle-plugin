@@ -15,6 +15,7 @@ class PluginExtensionTest {
     void setUp() throws Exception {
         proj = ProjectBuilder.builder().build()
         proj.pluginManager.apply 'com.bugsnag.android.gradle'
+        proj.pluginManager.apply 'android'
     }
 
     @Test
@@ -29,7 +30,10 @@ class PluginExtensionTest {
         assertEquals(0, proj.bugsnag.retryCount)
         assertFalse(proj.bugsnag.ndk)
         assertNull(proj.bugsnag.sharedObjectPath)
-    }
+        assertFalse(BugsnagPlugin.hasDexguardPlugin(proj))
 
+        assertFalse(BugsnagPlugin.hasMultipleOutputs(proj))
+
+    }
 
 }

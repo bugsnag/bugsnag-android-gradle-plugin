@@ -1,8 +1,14 @@
 package com.bugsnag.android.gradle
 
+import org.apache.http.entity.mime.HttpMultipartMode
 import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
+import org.apache.http.util.TextUtils
+import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
+
+import java.nio.charset.Charset
+import java.nio.file.Paths
 
 /**
  Task to upload ProGuard mapping files to Bugsnag.
@@ -28,13 +34,14 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
 
     @TaskAction
     def upload() {
-        def mappingFile = variant.mappingFile
+        File mappingFile = findMappingFile()
+        project.logger.info("Using mapping file: $mappingFile")
 
         // If we haven't enabled proguard for this variant, or the proguard
         // configuration includes -dontobfuscate, the mapping file
         // will not exist (but we also won't need it).
         if (!mappingFile || !mappingFile.exists()) {
-            project.logger.error("Mapping file not found: ${mappingFile}")
+            project.logger.warn("Mapping file not found: ${mappingFile}")
             return
         }
 
@@ -43,11 +50,48 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
         project.logger.info("Attempting to upload mapping file: ${mappingFile}")
 
         // Construct a basic request
-        MultipartEntity mpEntity = new MultipartEntity()
+        def charset = Charset.forName("UTF-8")
+        MultipartEntity mpEntity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE, null, charset)
         mpEntity.addPart(partName, new FileBody(mappingFile))
 
         // Send the request
         super.uploadMultipartEntity(mpEntity)
+    }
+
+    private File findMappingFile() {
+        if (BugsnagPlugin.hasDexguardPlugin(project) && BugsnagPlugin.hasMultipleOutputs(project)) {
+            def mappingFile = findDexguardMappingFile(project)
+
+            if (mappingFile && mappingFile.exists()) {
+                return mappingFile
+            } else {
+                project.logger.warn("Could not find DexGuard mapping file at: $mappingFile -" +
+                    " falling back to AGP mapping file value")
+            }
+        }
+        // use AGP supplied value by default, or as fallback
+        return variant.mappingFile
+    }
+
+    /**
+     * Retrieves the location of a DexGuard mapping file for the given variantOutput. The expected location for this
+     * is: build/outputs/mapping/<productFlavor>/<buildType>/<split>
+     *
+     * variant.mappingFile cannot currently be overridden using the AGP DSL on a per-variantOutput basis, which
+     * necessitates this workaround. https://issuetracker.google.com/issues/78921539
+     */
+    File findDexguardMappingFile(Project project) {
+        String buildDir = project.buildDir.toString()
+        String outputDir = variantOutput.dirName
+
+        if (variantOutput.dirName.endsWith("dpi" + File.separator)) {
+            outputDir = new File(variantOutput.dirName).parent
+
+            if (outputDir == null) { // if only density splits enabled
+                outputDir = ""
+            }
+        }
+        return Paths.get(buildDir, "outputs", "mapping", variant.dirName, outputDir, "mapping.txt").toFile()
     }
 
 }
