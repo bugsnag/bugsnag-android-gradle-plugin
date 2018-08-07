@@ -4,6 +4,8 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import groovy.xml.Namespace
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.Directory
+import org.gradle.api.provider.Provider
 
 import java.nio.file.Paths
 
@@ -31,7 +33,18 @@ class BugsnagVariantOutputTask extends DefaultTask {
      * https://issuetracker.google.com/issues/37085185
      */
     File getManifestPath() {
-        File directory = variantOutput.processManifest.manifestOutputDirectory
+        File directory
+        def outputDir = variantOutput.processManifest.manifestOutputDirectory
+
+        if (outputDir instanceof File) {
+            directory = outputDir
+        } else {
+            // gradle 4.7 introduced a provider API for lazy evaluation of properties,
+            // AGP subsequently changed the API from File to Provider<File>
+            // see https://docs.gradle.org/4.7/userguide/lazy_configuration.html
+            directory = outputDir.get().asFile
+        }
+
         File manifestFile = Paths.get(directory.toString(), variantOutput.dirName, "AndroidManifest.xml").toFile()
 
         if (!manifestFile.exists()) {
