@@ -1,3 +1,9 @@
+## 3.3.1 (2018-08-10)
+
+### Bug fixes
+
+* Support Provider API introduced in gradle 4.7, which the manifestOutputDirectory in AGP 3.3.0-alpha04 now uses
+[Jamie Lynch](https://github.com/fractalwrench) [#122](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/122)
 
 ## 3.3.0 (2018-07-20)
 
