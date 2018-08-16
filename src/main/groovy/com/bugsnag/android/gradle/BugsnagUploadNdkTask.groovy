@@ -36,7 +36,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
     String sharedObjectPath
     def joinPath = { String ...args -> args.join(File.separator) }
 
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SS'Z'");
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SS");
 
     String getLogPrefix() {
         return "[${dateFormat.format(new Date())}] Bugsnag:"
