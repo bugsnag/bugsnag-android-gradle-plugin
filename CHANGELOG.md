@@ -1,3 +1,7 @@
+## 2.4.3 (2018-08-16)
+
+* Improve logging for NDK symbol upload
+
 ## 2.4.2 (2017-05-10)
 
 ## Bug fixes
