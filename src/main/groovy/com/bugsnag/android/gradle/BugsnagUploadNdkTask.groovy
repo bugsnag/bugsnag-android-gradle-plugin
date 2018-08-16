@@ -34,6 +34,12 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
     String toolchain
     String sharedObjectPath
     def joinPath = { String ...args -> args.join(File.separator) }
+    
+    Date start
+    
+    long elapsedTime() {
+        return new Date().getTime() - start.getTime()
+    }
 
     BugsnagUploadNdkTask() {
         super()
@@ -42,15 +48,23 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
 
     @TaskAction
     def upload() {
+        start = new Date()
+        project.logger.info("Bugsnag ${elapsedTime()}:  Started reading manifest file")
         super.readManifestFile();
+
         boolean sharedObjectFound = false
         searchLibraryPaths { String arch, File sharedObject ->
             sharedObjectFound = true
 
+            project.logger.info("Bugsnag ${elapsedTime()}: Started creating symbols for shared object")
             File outputFile = createSymbolsForSharedObject(sharedObject, arch)
-            if (outputFile)
+
+            if (outputFile) {
+                project.logger.info("Bugsnag ${elapsedTime()}: Started uploading symbols")
                 uploadSymbols(outputFile, arch, sharedObject.name)
+            }
         }
+        project.logger.info("Bugsnag ${elapsedTime()}: Completed NDK upload task")
         if (!sharedObjectFound) {
             project.logger.error("No shared objects found in ${sharedObjectPath?: intermediatePath}")
         }
@@ -135,6 +149,8 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
                 File errorOutputFile = new File(symbolPath.getAbsolutePath() + File.separator + arch + ".error.txt");
 
                 // Call objdump, redirecting output to the output file
+                project.logger.info("Bugsnag ${elapsedTime()}: Calling objdump process")
+
                 ProcessBuilder builder = new ProcessBuilder(objDumpPath.toString(), "--disassemble", "--demangle", "--line-numbers", "--section=.text", sharedObject.toString())
                 builder.redirectError(errorOutputFile)
                 Process process = builder.start()
@@ -142,6 +158,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
                 InputStream stdout = process.getInputStream();
                 BufferedReader outReader = new BufferedReader (new InputStreamReader(stdout));
 
+                project.logger.info("Bugsnag ${elapsedTime()}: Minimising objdump file")
                 if (!outPutSymbolFile(outReader, outputFile, arch)) {
                     return null;
                 }
