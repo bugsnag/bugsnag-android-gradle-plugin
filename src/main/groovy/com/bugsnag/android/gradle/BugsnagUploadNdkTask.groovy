@@ -7,6 +7,7 @@ import org.apache.http.entity.mime.content.FileBody
 import org.apache.http.entity.mime.content.StringBody
 import org.gradle.api.tasks.TaskAction
 
+import java.text.SimpleDateFormat
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -34,11 +35,11 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
     String toolchain
     String sharedObjectPath
     def joinPath = { String ...args -> args.join(File.separator) }
-    
-    Date start
-    
-    long elapsedTime() {
-        return new Date().getTime() - start.getTime()
+
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SS'Z'");
+
+    String getLogPrefix() {
+        return "[${dateFormat.format(new Date())}] Bugsnag:"
     }
 
     BugsnagUploadNdkTask() {
@@ -48,23 +49,22 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
 
     @TaskAction
     def upload() {
-        start = new Date()
-        project.logger.info("Bugsnag ${elapsedTime()}:  Started reading manifest file")
+        project.logger.info("${getLogPrefix()} Started reading manifest file")
         super.readManifestFile();
 
         boolean sharedObjectFound = false
         searchLibraryPaths { String arch, File sharedObject ->
             sharedObjectFound = true
 
-            project.logger.info("Bugsnag ${elapsedTime()}: Started creating symbols for shared object")
+            project.logger.info("${getLogPrefix()} Started creating symbols for shared object")
             File outputFile = createSymbolsForSharedObject(sharedObject, arch)
 
             if (outputFile) {
-                project.logger.info("Bugsnag ${elapsedTime()}: Started uploading symbols")
+                project.logger.info("${getLogPrefix()} Started uploading symbols")
                 uploadSymbols(outputFile, arch, sharedObject.name)
             }
         }
-        project.logger.info("Bugsnag ${elapsedTime()}: Completed NDK upload task")
+        project.logger.info("${getLogPrefix()} Completed NDK upload task")
         if (!sharedObjectFound) {
             project.logger.error("No shared objects found in ${sharedObjectPath?: intermediatePath}")
         }
@@ -149,7 +149,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
                 File errorOutputFile = new File(symbolPath.getAbsolutePath() + File.separator + arch + ".error.txt");
 
                 // Call objdump, redirecting output to the output file
-                project.logger.info("Bugsnag ${elapsedTime()}: Calling objdump process")
+                project.logger.info("${getLogPrefix()} Calling objdump process")
 
                 ProcessBuilder builder = new ProcessBuilder(objDumpPath.toString(), "--disassemble", "--demangle", "--line-numbers", "--section=.text", sharedObject.toString())
                 builder.redirectError(errorOutputFile)
@@ -158,7 +158,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
                 InputStream stdout = process.getInputStream();
                 BufferedReader outReader = new BufferedReader (new InputStreamReader(stdout));
 
-                project.logger.info("Bugsnag ${elapsedTime()}: Minimising objdump file")
+                project.logger.info("${getLogPrefix()} Minimising objdump file")
                 if (!outPutSymbolFile(outReader, outputFile, arch)) {
                     return null;
                 }
