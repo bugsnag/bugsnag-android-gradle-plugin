@@ -48,6 +48,8 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
     }
 
     private boolean deliverPayload(JSONObject payload) {
+        OutputStream os = null
+
         try {
             URL url = new URL(project.bugsnag.releasesEndpoint)
             HttpURLConnection conn = url.openConnection()
@@ -58,9 +60,8 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
             conn.setConnectTimeout(Call.TIMEOUT_MILLIS)
             conn.setDoOutput(true)
 
-            OutputStream os = conn.outputStream
+            os = conn.outputStream
             os.write(payload.toString().getBytes("UTF-8"))
-            os.close()
 
             int statusCode = conn.getResponseCode()
 
@@ -83,6 +84,10 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
             project.logger.error(project.bugsnag.releasesEndpoint)
             project.logger.error("Failed to POST request", e)
             return false
+        } finally {
+            if (os != null) {
+                os.close()
+            }
         }
     }
 

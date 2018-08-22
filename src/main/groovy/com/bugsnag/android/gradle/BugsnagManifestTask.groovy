@@ -51,10 +51,18 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
             application.appendNode('meta-data', [(ns.name): BugsnagPlugin.BUILD_UUID_TAG, (ns.value): buildUUID])
 
             // Write the manifest file
-            def writer = new FileWriter(manifestPath)
-            def printer = new XmlNodePrinter(new PrintWriter(writer))
-            printer.preserveWhitespace = true
-            printer.print(xml)
+            FileWriter writer = null
+
+            try {
+                writer = new FileWriter(manifestPath)
+                def printer = new XmlNodePrinter(new PrintWriter(writer))
+                printer.preserveWhitespace = true
+                printer.print(xml)
+            } finally {
+                if (writer != null) {
+                    writer.close()
+                }
+            }
         } else {
             project.logger.error("Bugsnag detected invalid manifest with no application element so did not write Build UUID")
         }

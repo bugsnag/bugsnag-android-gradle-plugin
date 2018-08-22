@@ -115,6 +115,8 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
         File objDumpPath = getObjDumpExecutable(arch)
         if (objDumpPath != null) {
 
+            Reader outReader = null
+
             try {
                 File outputDir = new File(project.buildDir, "bugsnag")
 
@@ -132,7 +134,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
                 Process process = builder.start()
 
                 InputStream stdout = process.getInputStream()
-                BufferedReader outReader = new BufferedReader(new InputStreamReader(stdout))
+                outReader = new BufferedReader(new InputStreamReader(stdout))
 
                 if (!outPutSymbolFile(outReader, outputFile, arch)) {
                     return null
@@ -146,6 +148,10 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
                 }
             } catch (Exception e) {
                 project.logger.error("failed to generate symbols for " + arch + ": " + e.getMessage(), e)
+            } finally {
+                if (outReader != null) {
+                    outReader.close()
+                }
             }
         } else {
             project.logger.error("Unable to upload NDK symbols: Could not find objdump location for " + arch)
@@ -166,10 +172,12 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
      */
     boolean outPutSymbolFile(BufferedReader outReader, File outputFile, String arch) {
         // Output the file from stdout
+        Writer writer = null
+
         try {
             FileOutputStream is = new FileOutputStream(outputFile)
             OutputStreamWriter osw = new OutputStreamWriter(is)
-            Writer writer = new BufferedWriter(osw)
+            writer = new BufferedWriter(osw)
 
             Pattern addressPattern = Pattern.compile("^\\s+([0-9a-f]+):", Pattern.CASE_INSENSITIVE)
             boolean justSeenAddress = false
@@ -209,10 +217,13 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
                 line = outReader.readLine()
             }
 
-            writer.close()
         } catch (IOException e) {
             project.logger.error("failed to write symbols for " + arch + ": " + e.getMessage())
             return false
+        } finally {
+            if (writer != null) {
+                writer.close()
+            }
         }
 
         return true
