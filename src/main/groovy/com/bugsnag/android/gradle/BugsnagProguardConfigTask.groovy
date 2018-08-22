@@ -47,6 +47,8 @@ class BugsnagProguardConfigTask extends DefaultTask {
             fr = new FileWriter(file.path)
             fr.write(PROGUARD_CONFIG_SETTINGS)
             fr.write("\n")
+        } catch (Exception e) {
+            project.logger.warn("Failed to write Bugsnag ProGuard settings", e)
         } finally {
             fr.close()
         }

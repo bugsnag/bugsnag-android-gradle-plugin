@@ -58,6 +58,8 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
                 def printer = new XmlNodePrinter(new PrintWriter(writer))
                 printer.preserveWhitespace = true
                 printer.print(xml)
+            } catch (Exception e) {
+                project.logger.warn("Failed to update manifest with Bugsnag metadata", e)
             } finally {
                 if (writer != null) {
                     writer.close()
