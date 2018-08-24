@@ -12,6 +12,7 @@ import org.gradle.api.tasks.TaskAction
 
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+import java.util.zip.GZIPOutputStream
 
 import static groovy.io.FileType.FILES
 
@@ -122,7 +123,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
                     outputDir.mkdir()
                 }
 
-                File outputFile = new File(outputDir, arch + ".txt")
+                File outputFile = new File(outputDir, arch + ".gzip")
                 File errorOutputFile = new File(outputDir, arch + ".error.txt")
                 project.logger.lifecycle("Creating symbol file at ${outputFile}")
 
@@ -131,12 +132,9 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
                 builder.redirectError(errorOutputFile)
                 Process process = builder.start()
 
+                // Output the file to a zip
                 InputStream stdout = process.getInputStream()
-                BufferedReader outReader = new BufferedReader(new InputStreamReader(stdout))
-
-                if (!outPutSymbolFile(outReader, outputFile, arch)) {
-                    return null
-                }
+                outputZipFile(stdout, outputFile)
 
                 if (process.waitFor() == 0) {
                     return outputFile
@@ -152,6 +150,24 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
         }
 
         return null
+    }
+
+    /**
+     * Outputs the contents of stdout into the gzip file output file
+     *
+     * @param stdout The input stream
+     * @param outputFile The output file
+     */
+    static void outputZipFile(InputStream stdout, File outputFile) {
+        GZIPOutputStream zipStream = new GZIPOutputStream(new FileOutputStream(outputFile));
+
+        byte[] buffer = new byte[1024];
+        int len;
+        while((len=stdout.read(buffer)) != -1){
+            zipStream.write(buffer, 0, len);
+        }
+        zipStream.close()
+        stdout.close()
     }
 
     /**
@@ -227,6 +243,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
     void uploadSymbols(File mappingFile, String arch, String sharedObjectName) {
         MultipartEntity mpEntity = new MultipartEntity()
         mpEntity.addPart("soMappingFile", new FileBody(mappingFile))
+        mpEntity.addPart("soMappingFileFormat", new StringBody("zip"))
         mpEntity.addPart("arch", new StringBody(arch))
         mpEntity.addPart("sharedObjectName", new StringBody(sharedObjectName))
         mpEntity.addPart("projectRoot", new StringBody(projectDir.toString()))
