@@ -123,7 +123,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
                     outputDir.mkdir()
                 }
 
-                File outputFile = new File(outputDir, arch + ".gzip")
+                File outputFile = new File(outputDir, arch + ".gz")
                 File errorOutputFile = new File(outputDir, arch + ".error.txt")
                 project.logger.lifecycle("Creating symbol file at ${outputFile}")
 
