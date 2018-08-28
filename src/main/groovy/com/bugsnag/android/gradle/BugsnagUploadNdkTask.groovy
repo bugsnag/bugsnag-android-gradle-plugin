@@ -185,7 +185,6 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
     void uploadSymbols(File mappingFile, String arch, String sharedObjectName) {
         MultipartEntity mpEntity = new MultipartEntity()
         mpEntity.addPart("soMappingFile", new FileBody(mappingFile))
-        mpEntity.addPart("soMappingFileFormat", new StringBody("zip"))
         mpEntity.addPart("arch", new StringBody(arch))
         mpEntity.addPart("sharedObjectName", new StringBody(sharedObjectName))
         mpEntity.addPart("projectRoot", new StringBody(projectDir.toString()))
