@@ -10,6 +10,7 @@ import org.gradle.api.tasks.TaskAction
 import java.text.SimpleDateFormat
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+import java.util.zip.GZIPOutputStream
 
 import static groovy.io.FileType.*
 
@@ -145,7 +146,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
         if (objDumpPath != null) {
 
             try {
-                File outputFile = new File(symbolPath.getAbsolutePath() + File.separator + arch + ".txt");
+                File outputFile = new File(symbolPath.getAbsolutePath() + File.separator + arch + ".gz");
                 File errorOutputFile = new File(symbolPath.getAbsolutePath() + File.separator + arch + ".error.txt");
 
                 // Call objdump, redirecting output to the output file
@@ -155,15 +156,11 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
                 builder.redirectError(errorOutputFile)
                 Process process = builder.start()
 
+                // Output the file to a zip
                 InputStream stdout = process.getInputStream();
-                BufferedReader outReader = new BufferedReader (new InputStreamReader(stdout));
+                outputZipFile(stdout, outputFile)
 
-                project.logger.info("${getLogPrefix()} Minimising objdump file")
-                if (!outPutSymbolFile(outReader, outputFile, arch)) {
-                    return null;
-                }
-
-                if (process.exitValue() == 0) {
+                if (process.waitFor() == 0) {
                     return outputFile
                 } else {
                     project.logger.error("failed to generate symbols for " + arch + ", see " + errorOutputFile.toString() + " for more details");
@@ -180,67 +177,29 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
     }
 
     /**
-     * Outputs the contents of the outReader from the objdump command to the outputFile
-     * Removes redundant address lines to minimize file size
+     * Outputs the contents of stdout into the gzip file output file
      *
-     * @param outReader The objdump output
-     * @param outputFile The file to write to
-     * @param arch The arch of the shared object being analysed
-     * @return true if the file was written successfully, else false
-     * @return true if the file was written successfully, else false
+     * @param stdout The input stream
+     * @param outputFile The output file
      */
-    boolean outPutSymbolFile(BufferedReader outReader, File outputFile, String arch) {
-        // Output the file from stdout
+    static void outputZipFile(InputStream stdout, File outputFile) {
+        GZIPOutputStream zipStream = null
+
         try {
-            FileOutputStream is = new FileOutputStream(outputFile)
-            OutputStreamWriter osw = new OutputStreamWriter(is)
-            Writer writer = new BufferedWriter(osw)
+            zipStream = new GZIPOutputStream(new FileOutputStream(outputFile));
 
-            Pattern addressPattern = Pattern.compile("^\\s+([0-9a-f]+):", Pattern.CASE_INSENSITIVE);
-            boolean justSeenAddress = false;
-            String previousAddress = null;
-
-            // Loop to remove redundant address lines (just keep the first and last addresses of each block)
-            String line = outReader.readLine()
-            Matcher addressMatcher = null;
-            while (line != null) {
-
-                // Check to see if the current line is an address
-                addressMatcher = addressPattern.matcher(line);
-                if (addressMatcher.find()) {
-
-                    // Only output the line if this is the start of a block of addresses
-                    if (!justSeenAddress) {
-                        writer.writeLine(line)
-                        previousAddress = null;
-                    } else {
-                        previousAddress = line;
-                    }
-
-                    justSeenAddress = true;
-                } else {
-
-                    // If this is the end of a block of addresses then output the last address
-                    if (justSeenAddress && previousAddress != null) {
-                        writer.writeLine(previousAddress)
-                    }
-
-                    writer.writeLine(line)
-
-                    previousAddress = null;
-                    justSeenAddress = false;
-                }
-
-                line = outReader.readLine()
+            byte[] buffer = new byte[8192];
+            int len;
+            while((len=stdout.read(buffer)) != -1){
+                zipStream.write(buffer, 0, len);
             }
 
-            writer.close();
-        } catch (IOException e) {
-            project.logger.error("failed to write symbols for " + arch + ": " + e.getMessage());
-            return false
+        } finally {
+            if (zipStream != null) {
+                zipStream.close()
+            }
+            stdout.close()
         }
-
-        return true
     }
 
     /**
