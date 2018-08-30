@@ -1,4 +1,4 @@
-## 2.5.0 (2018-08-29)
+## TBD
 
 * Compress Android NDK mapping files to decrease upload times
 [Dave Perryman](https://github.com/Pezzah) [#128](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/128)
