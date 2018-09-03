@@ -50,7 +50,9 @@ class BugsnagProguardConfigTask extends DefaultTask {
         } catch (Exception e) {
             project.logger.warn("Failed to write Bugsnag ProGuard settings", e)
         } finally {
-            fr.close()
+            if (fr != null) {
+                fr.close()
+            }
         }
 
         // Add this proguard settings file to the list
