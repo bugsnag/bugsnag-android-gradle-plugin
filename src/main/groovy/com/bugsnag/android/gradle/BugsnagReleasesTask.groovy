@@ -69,14 +69,20 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
                 project.logger.info("Uploaded release info to Bugsnag")
                 return true
             } else {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.errorStream))
+                BufferedReader reader
                 String line
 
-                while ((line = reader.readLine()) != null) {
-                    project.logger.error(line)
+                try {
+                    reader = new BufferedReader(new InputStreamReader(conn.errorStream))
+                    while ((line = reader.readLine()) != null) {
+                        project.logger.error(line)
+                    }
+                    project.logger.warn("Release Request failed with statusCode " + statusCode)
+                } finally {
+                    if (reader != null) {
+                        reader.close()
+                    }
                 }
-
-                project.logger.warn("Release Request failed with statusCode " + statusCode)
                 return false
             }
 
