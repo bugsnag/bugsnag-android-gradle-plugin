@@ -41,10 +41,19 @@ class BugsnagProguardConfigTask extends DefaultTask {
         file.getParentFile().mkdirs()
 
         // Write our recommended proguard settings to this file
-        FileWriter fr = new FileWriter(file.path)
-        fr.write(PROGUARD_CONFIG_SETTINGS)
-        fr.write("\n")
-        fr.close()
+        FileWriter fr = null
+
+        try {
+            fr = new FileWriter(file.path)
+            fr.write(PROGUARD_CONFIG_SETTINGS)
+            fr.write("\n")
+        } catch (Exception e) {
+            project.logger.warn("Failed to write Bugsnag ProGuard settings", e)
+        } finally {
+            if (fr != null) {
+                fr.close()
+            }
+        }
 
         // Add this proguard settings file to the list
         variant.getBuildType().buildType.proguardFiles(file)

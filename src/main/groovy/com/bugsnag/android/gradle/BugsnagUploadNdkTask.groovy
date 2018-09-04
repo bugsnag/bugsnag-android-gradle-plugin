@@ -10,8 +10,6 @@ import org.apache.http.entity.mime.content.FileBody
 import org.apache.http.entity.mime.content.StringBody
 import org.gradle.api.tasks.TaskAction
 
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 import java.util.zip.GZIPOutputStream
 
 import static groovy.io.FileType.FILES
@@ -116,6 +114,8 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
         File objDumpPath = getObjDumpExecutable(arch)
         if (objDumpPath != null) {
 
+            Reader outReader = null
+
             try {
                 File outputDir = new File(project.buildDir, "bugsnag")
 
@@ -144,6 +144,10 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
                 }
             } catch (Exception e) {
                 project.logger.error("failed to generate symbols for " + arch + ": " + e.getMessage(), e)
+            } finally {
+                if (outReader != null) {
+                    outReader.close()
+                }
             }
         } else {
             project.logger.error("Unable to upload NDK symbols: Could not find objdump location for " + arch)

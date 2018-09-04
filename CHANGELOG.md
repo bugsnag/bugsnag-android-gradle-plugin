@@ -1,3 +1,10 @@
+## 3.X.X (TBD)
+
+### Bug fixes
+
+* Close IO streams after the plugin has finished reading and writing
+[Jamie Lynch](https://github.com/fractalwrench) [#126](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/126)
+
 ## 3.4.0 (2018-08-30)
 
 * Compress Android NDK mapping files to decrease upload times
