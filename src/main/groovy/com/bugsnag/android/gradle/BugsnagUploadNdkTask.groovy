@@ -152,7 +152,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
                 // Call objdump, redirecting output to the output file
                 project.logger.info("${getLogPrefix()} Calling objdump process")
 
-                ProcessBuilder builder = new ProcessBuilder(objDumpPath.toString(), "--disassemble", "--demangle", "--line-numbers", "--section=.text", sharedObject.toString())
+                ProcessBuilder builder = new ProcessBuilder(objDumpPath.toString(), "-W", "-x", "--section=.debug_line", sharedObject.toString())
                 builder.redirectError(errorOutputFile)
                 Process process = builder.start()
 
@@ -210,7 +210,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
      */
     void uploadSymbols(File mappingFile, String arch, String sharedObjectName) {
         MultipartEntity mpEntity = new MultipartEntity()
-        mpEntity.addPart("soMappingFile", new FileBody(mappingFile))
+        mpEntity.addPart("soSymbolFile", new FileBody(mappingFile))
         mpEntity.addPart("arch", new StringBody(arch))
         mpEntity.addPart("sharedObjectName", new StringBody(sharedObjectName))
         mpEntity.addPart("projectRoot", new StringBody(projectDir.toString()))
