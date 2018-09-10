@@ -152,7 +152,7 @@ class BugsnagUploadNdkTask extends BugsnagUploadAbstractTask {
                 // Call objdump, redirecting output to the output file
                 project.logger.info("${getLogPrefix()} Calling objdump process")
 
-                ProcessBuilder builder = new ProcessBuilder(objDumpPath.toString(), "-W", "-x", "--section=.debug_line", sharedObject.toString())
+                ProcessBuilder builder = new ProcessBuilder(objDumpPath.toString(), "--dwarf=info", "--dwarf=rawline", sharedObject.toString())
                 builder.redirectError(errorOutputFile)
                 Process process = builder.start()
 
