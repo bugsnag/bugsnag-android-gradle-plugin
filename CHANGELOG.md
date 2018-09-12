@@ -2,8 +2,13 @@
 
 ### Bug fixes
 
+* Reduce processing requirements to improve upload speed for NDK mapping files
+  [Dave Perryman](https://github.com/Pezzah)
+  [#129](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/129)
+
 * Close IO streams after the plugin has finished reading and writing
-[Jamie Lynch](https://github.com/fractalwrench) [#126](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/126)
+  [Jamie Lynch](https://github.com/fractalwrench)
+  [#126](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/126)
 
 ## 3.4.0 (2018-08-30)
 
