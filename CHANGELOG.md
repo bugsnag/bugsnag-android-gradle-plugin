@@ -1,4 +1,6 @@
-## TBD
+## 2.5.1 (2018-09-11)
+
+## Bug fixes
 
 * Reduce processing requirements to improve upload speed for NDK mapping files
   [Dave Perryman](https://github.com/Pezzah)
