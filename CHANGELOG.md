@@ -1,3 +1,11 @@
+## TBD
+
+### Bug fixes
+
+* Fix native artifact resolution for NDK projects manually installing
+  bugsnag-android-ndk
+  [#130](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/130)
+
 ## 3.4.1 (2018-09-11)
 
 ### Bug fixes
