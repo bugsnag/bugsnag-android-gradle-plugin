@@ -1,26 +1,30 @@
-dist: trusty
 language: android
 sudo: false
+
+env:
+  global:
+  - ANDROID_HOME=/usr/local/android-sdk
+  - ANDROID_NDK_HOME=/usr/local/android-sdk/ndk-bundle
 
 android:
   components:
     - tools
-    - platform-tools
-    - build-tools-27.0.3
+      # see https://github.com/travis-ci/travis-ci/issues/8874
     - android-27
     - sys-img-armeabi-v7a-android-21
     - extra-google-m2repository
     - extra-android-m2repository
+    - cmake
+    - ndk-bundle
+    - lldb
 
-# see https://github.com/travis-ci/travis-ci/issues/8874
 before_install:
-  - yes | sdkmanager "platforms;android-27"
-  - echo y | sdkmanager "cmake;3.6.4111459"
-  - echo y | sdkmanager "ndk-bundle"
-  - echo y | sdkmanager "lldb;3.1"
-
+  - echo y | sdkmanager "platform-tools" >/dev/null
+  - echo y | sdkmanager "tools" >/dev/null
+  - echo y | sdkmanager "build-tools;27.0.3" >/dev/null
   - gem install bundler
   - bundle install
+  - ls $ANDROID_HOME
 
 install:
   - curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
@@ -29,7 +33,7 @@ install:
 script:
   - ./gradlew clean install --stacktrace
   - ./gradlew clean build --stacktrace
-  - bundle exec maze-runner -c
+  - bundle exec maze-runner -c --verbose
 
 before_cache:
   - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
