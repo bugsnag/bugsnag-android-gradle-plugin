@@ -57,17 +57,7 @@ Please follow the testing instructions in [the platforms release checklist](http
 If you are a project maintainer, you can build and release a new version of
 `bugsnag-android-gradle-plugin` as follows:
 
-### 1. Prepare for release
-
--   Update the `CHANGELOG` and `README.md` with any new features
-
--   Run `make VERSION={version_number} release
-
-### 2. Upload the jar to the GitHub releases page
-
-- https://github.com/bugsnag/bugsnag-android-gradle-plugin/releases
-
-### 3. Release to jCenter and Maven Central
+#### 0. One-time setup
 
 -   Create a file `~/.gradle/gradle.properties` with the following contents:
 
@@ -85,6 +75,20 @@ If you are a project maintainer, you can build and release a new version of
     bintray_user=your-bintray-username
     bintray_api_key=your-bintray-api-key
     ```
+-   Get the API key from James and [add it to your Gradle configuration](https://plugins.gradle.org/docs/submit)
+
+#### 1. Prepare for release
+
+- Update the `CHANGELOG` and `README.md` with any new features
+- Run `make VERSION={version_number} bump` to update the version number
+- Inspect the changes, confirm that the changeset behaves as expected
+- Run `make VERSION={version_number} release` to publish the release
+
+#### 2. Upload the jar to the GitHub releases page
+
+- https://github.com/bugsnag/bugsnag-android-gradle-plugin/releases
+
+#### 3. Release to jCenter and Maven Central
 
 -   "Promote" the release build on Maven Central
 
@@ -96,12 +100,10 @@ If you are a project maintainer, you can build and release a new version of
     -   Click the “refresh” button
     -   Select the com.bugsnag closed repository
     -   Click the “release” button in the toolbar
+-   Confirm the release on Bintray
+    - Go to the [Bintray page for the gradle plugin](https://bintray.com/bugsnag/maven/bugsnag-android-gradle-plugin)
+    - Click "Publish" for the newly uploaded artifacts
 
-### 4. Release to plugins.gradle.com
-
--   Get the API key from James and [add it to your Gradle configuration](https://plugins.gradle.org/docs/submit)
--   Run `./gradlew publishPlugins`
-
-### 5. Update docs.bugsnag.com
+### 4. Update docs.bugsnag.com
 
 Update the setup guide for Java (Android) with any new content.

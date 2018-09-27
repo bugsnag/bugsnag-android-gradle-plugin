@@ -4,6 +4,7 @@ ifeq ($(VERSION),)
 endif
 	@echo Bumping the version number to $(VERSION)
 	@sed -i '' "s/version = .*/version = $(VERSION)/" gradle.properties
+	@sed -i '' "s/## TBD/## $(VERSION) ($(shell date '+%Y-%m-%d'))/" CHANGELOG.md
 
 
 # Makes a release and pushes to github
@@ -11,5 +12,8 @@ release:
 ifeq ($(VERSION),)
 	@$(error VERSION is not defined. Run with `make VERSION=number release`)
 endif
-	make VERSION=$(VERSION) bump && git commit -am "v$(VERSION)" && git tag v$(VERSION) \
-	&& git push origin && git push --tags && ./gradlew clean uploadArchives bintrayUpload publishPlugins
+	@git add -p gradle.properties CHANGELOG.md
+	@git commit -m "Release v$(VERSION)"
+	@git tag v$(VERSION)
+	@git push origin master v$(VERSION)
+	@./gradlew clean uploadArchives bintrayUpload publishPlugins
