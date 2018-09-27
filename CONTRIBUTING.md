@@ -82,7 +82,8 @@ If you are a project maintainer, you can build and release a new version of
 - Update the `CHANGELOG` and `README.md` with any new features
 - Run `make VERSION={version_number} bump` to update the version number
 - Inspect the changes, confirm that the changeset behaves as expected
-- Run `make VERSION={version_number} release` to publish the release
+- Run `make VERSION={version_number} release` to publish the release. Press
+  return after running the command to kick off the build.
 
 #### 2. Upload the jar to the GitHub releases page
 
