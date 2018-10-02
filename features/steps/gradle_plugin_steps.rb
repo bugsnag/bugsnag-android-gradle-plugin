@@ -33,7 +33,7 @@ end
 
 Then(/^the request (\d+) is valid for the Android NDK Mapping API$/) do |request_index|
   parts = find_request(request_index)[:body]
-  assert_not_nil(parts["soSymbolFile"], "'soSymbolFile' should not be nil")
+  assert_not_nil(parts["soSymbolFileMulti"], "'soSymbolFileMulti' should not be nil")
   assert_not_nil(parts["apiKey"], "'apiKey' should not be nil")
   assert_not_nil(parts["sharedObjectName"], "'sharedObjectName' should not be nil")
   assert_not_nil(parts["appId"], "'appId' should not be nil")

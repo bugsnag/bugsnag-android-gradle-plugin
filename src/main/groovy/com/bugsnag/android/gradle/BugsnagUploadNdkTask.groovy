@@ -5,6 +5,9 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.android.build.gradle.tasks.ProcessAndroidResources
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream
+import org.apache.commons.compress.utils.IOUtils
 import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
 import org.apache.http.entity.mime.content.StringBody
@@ -112,7 +115,8 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
     File createSymbolsForSharedObject(File sharedObject, String arch) {
         // Get the path the version of objdump to use to get symbols
         File objDumpPath = getObjDumpExecutable(arch)
-        if (objDumpPath != null) {
+        File nmPath = getNmExecutable(arch)
+        if (objDumpPath != null && nmPath != null) {
 
             Reader outReader = null
 
@@ -123,21 +127,35 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
                     outputDir.mkdir()
                 }
 
-                File outputFile = new File(outputDir, arch + ".gz")
+                File outputFile = new File(outputDir, arch + ".tar.gz")
                 File errorOutputFile = new File(outputDir, arch + ".error.txt")
+                File objdumpFile = new File(outputDir, arch + ".objdump.txt")
+                File nmFile = new File(outputDir, arch + ".nm.txt")
                 project.logger.lifecycle("Creating symbol file at ${outputFile}")
 
-                // Call objdump, redirecting output to the output file
-                ProcessBuilder builder = new ProcessBuilder(objDumpPath.toString(), "--dwarf=info", "--dwarf=rawline", sharedObject.toString())
+                ProcessBuilder builder = new ProcessBuilder(nmPath.toString(), "-l", "-C", sharedObject.toString())
                 builder.redirectError(errorOutputFile)
+                builder.redirectOutput(nmFile)
                 Process process = builder.start()
 
-                // Output the file to a zip
-                InputStream stdout = process.getInputStream()
-                outputZipFile(stdout, outputFile)
-
                 if (process.waitFor() == 0) {
-                    return outputFile
+
+                    // Call objdump, redirecting output to the output file
+                    builder = new ProcessBuilder(objDumpPath.toString(), "--dwarf=rawline", sharedObject.toString())
+                    builder.redirectError(errorOutputFile)
+                    builder.redirectOutput(objdumpFile)
+                    process = builder.start()
+
+                    if (process.waitFor() == 0) {
+
+                        // Zip the two files together
+                        outputZipFile(nmFile, objdumpFile, outputFile)
+
+                        return outputFile
+                    } else {
+                        project.logger.error("failed to generate symbols for " + arch + ", see " + errorOutputFile.toString() + " for more details")
+                        return null
+                    }
                 } else {
                     project.logger.error("failed to generate symbols for " + arch + ", see " + errorOutputFile.toString() + " for more details")
                     return null
@@ -162,24 +180,42 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
      * @param stdout The input stream
      * @param outputFile The output file
      */
-    static void outputZipFile(InputStream stdout, File outputFile) {
+    static void outputZipFile(File nmFile, File objDumpFile, File outputFile) {
         GZIPOutputStream zipStream = null;
+        FileOutputStream fileOutput = null;
+        TarArchiveOutputStream tarOutput = null;
 
         try {
-            zipStream = new GZIPOutputStream(new FileOutputStream(outputFile));
+            fileOutput = new FileOutputStream(outputFile);
+            zipStream = new GZIPOutputStream(new BufferedOutputStream(fileOutput));
+            tarOutput = new TarArchiveOutputStream(zipStream);
 
-            byte[] buffer = new byte[8192];
-            int len;
-            while((len=stdout.read(buffer)) != -1){
-                zipStream.write(buffer, 0, len);
-            }
+            // Add the nm file to the tar
+            tarOutput.putArchiveEntry(new TarArchiveEntry(nmFile, "nm.txt"));
+            FileInputStream fileInput = new FileInputStream(nmFile);
+            BufferedInputStream bufferedInput = new BufferedInputStream(fileInput);
+            IOUtils.copy(bufferedInput, tarOutput);
+            tarOutput.closeArchiveEntry();
+            fileInput.close();
+
+            // Add the objdump file to the tar
+            tarOutput.putArchiveEntry(new TarArchiveEntry(objDumpFile, "objdump.txt"));
+            fileInput = new FileInputStream(objDumpFile);
+            bufferedInput = new BufferedInputStream(fileInput);
+            IOUtils.copy(bufferedInput, tarOutput);
+            tarOutput.closeArchiveEntry();
+            fileInput.close();
 
         } finally {
+            if (tarOutput != null) {
+                tarOutput.close();
+            }
             if (zipStream != null) {
                 zipStream.close();
             }
-
-            stdout.close();
+            if (fileOutput != null) {
+                fileOutput.close();
+            }
         }
     }
 
@@ -191,7 +227,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
      */
     void uploadSymbols(File mappingFile, String arch, String sharedObjectName) {
         MultipartEntity mpEntity = new MultipartEntity()
-        mpEntity.addPart("soSymbolFile", new FileBody(mappingFile))
+        mpEntity.addPart("soSymbolFileMulti", new FileBody(mappingFile))
         mpEntity.addPart("arch", new StringBody(arch))
         mpEntity.addPart("sharedObjectName", new StringBody(sharedObjectName))
         mpEntity.addPart("projectRoot", new StringBody(projectDir.toString()))
@@ -213,6 +249,25 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
             return objDumpPath
         } catch (Throwable ex) {
             project.logger.error("Error attempting to calculate objdump location: " + ex.message)
+        }
+
+        return null
+    }
+
+    /**
+     * Gets the path to the nm executable to use to get symbols from a shared object
+     * @param arch The arch of the shared object
+     * @return The nm executable, or null if not found
+     */
+    File getNmExecutable(String arch) {
+
+        try {
+            Abi abi = Abi.getByName(arch)
+            NdkHandler handler = new NdkHandler(rootDir, null, toolchain, "", true)
+            File objDumpPath = new File(handler.getDefaultGccToolchainPath(abi), "bin/" + abi.getGccExecutablePrefix() + "-nm")
+            return objDumpPath
+        } catch (Throwable ex) {
+            project.logger.error("Error attempting to calculate nm location: " + ex.message)
         }
 
         return null
