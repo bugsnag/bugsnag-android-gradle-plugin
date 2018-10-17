@@ -4,7 +4,7 @@ sudo: false
 env:
   global:
   - ANDROID_HOME=/usr/local/android-sdk
-  - ANDROID_NDK_HOME=/usr/local/android-sdk/ndk-bundle
+  - NDK_VERSION=r16b
 
 android:
   components:
@@ -14,9 +14,6 @@ android:
     - sys-img-armeabi-v7a-android-21
     - extra-google-m2repository
     - extra-android-m2repository
-    - cmake
-    - ndk-bundle
-    - lldb
 
 before_install:
   - echo y | sdkmanager "platform-tools" >/dev/null
@@ -25,6 +22,7 @@ before_install:
   - gem install bundler
   - bundle install
   - ls $ANDROID_HOME
+  - ./install_ndk.sh
 
 install:
   - curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
