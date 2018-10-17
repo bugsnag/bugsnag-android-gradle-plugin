@@ -16,7 +16,7 @@ class BugsnagPluginExtension {
     int retryCount = 0
     boolean ndk = false
     String sharedObjectPath = null
-
+    String projectRoot = null
 
     // release API values
     String builderName = null

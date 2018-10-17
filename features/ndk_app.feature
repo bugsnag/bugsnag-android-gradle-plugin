@@ -23,9 +23,22 @@ Scenario: NDK apps send requests
 
     And the request 3 is valid for the Android NDK Mapping API
     And the payload field "apiKey" equals "your-api-key-here" for request 3
+    And the payload field "projectRoot" ends with "features/fixtures/ndkapp/app" for request 3
 
     And the request 4 is valid for the Android NDK Mapping API
     And the payload field "apiKey" equals "your-api-key-here" for request 4
+    And the payload field "projectRoot" ends with "features/fixtures/ndkapp/app" for request 4
 
     And the request 5 is valid for the Android Mapping API
     And the payload field "apiKey" equals "your-api-key-here" for request 5
+
+Scenario: Custom projectRoot is added to payload
+    When I set environment variable "PROJECT_ROOT" to "/repos/custom/my-app"
+    When I build the NDK app
+    Then I should receive 6 requests
+
+    And the request 3 is valid for the Android NDK Mapping API
+    And the payload field "projectRoot" equals "/repos/custom/my-app" for request 3
+
+    And the request 4 is valid for the Android NDK Mapping API
+    And the payload field "projectRoot" equals "/repos/custom/my-app" for request 4
