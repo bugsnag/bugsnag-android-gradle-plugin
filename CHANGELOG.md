@@ -1,3 +1,10 @@
+## 3.5.0 (TBD)
+
+### Bug fixes
+
+* Add option for setting projectRoot on bugsnag plugin extension
+[#133](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/133)
+
 ## 3.4.2 (2018-09-27)
 
 ### Bug fixes
