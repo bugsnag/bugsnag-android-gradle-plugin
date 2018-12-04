@@ -1,8 +1,6 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.BaseVariantOutput
-import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import org.apache.http.entity.mime.MultipartEntity
@@ -33,7 +31,6 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
     String variantName
     File projectDir
     File rootDir
-    String toolchain
     String sharedObjectPath
 
     BugsnagUploadNdkTask() {
@@ -209,9 +206,6 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
     File getObjDumpExecutable(String arch) {
 
         try {
-            Abi abi = Abi.getByName(arch)
-            NdkHandler handler = new NdkHandler(rootDir, null, toolchain, "", true)
-            File objDumpPath = new File(handler.getDefaultGccToolchainPath(abi), "bin/" + abi.getGccExecutablePrefix() + "-objdump")
             return objDumpPath
         } catch (Throwable ex) {
             project.logger.error("Error attempting to calculate objdump location: " + ex.message)

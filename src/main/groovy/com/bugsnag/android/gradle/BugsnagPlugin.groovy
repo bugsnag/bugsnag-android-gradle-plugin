@@ -6,7 +6,6 @@ import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
-import com.android.build.gradle.internal.core.Toolchain
 import com.android.build.gradle.internal.dsl.BuildType
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
@@ -146,7 +145,6 @@ class BugsnagPlugin implements Plugin<Project> {
             uploadNdkTask.variantName = taskNameForVariant(deps.variant)
             uploadNdkTask.projectDir = project.projectDir
             uploadNdkTask.rootDir = project.rootDir
-            uploadNdkTask.toolchain = getCmakeToolchain(project, deps.variant)
             uploadNdkTask.sharedObjectPath = project.bugsnag.sharedObjectPath
         }
     }
@@ -310,63 +308,6 @@ class BugsnagPlugin implements Plugin<Project> {
         } else {
             return false
         }
-    }
-
-    /**
-     * Gets the buildchain that is setup for cmake
-     * @param project The project to check
-     * @param variant The variant to check
-     * @return The buildchain for cmake (or Toolchain.default if not found)
-     */
-    private static String getCmakeToolchain(Project project, BaseVariant variant) {
-        String toolchain = null
-
-        // First check the selected build type to see if there are cmake arguments
-        def buildTypes = project.android.buildTypes.store
-        BuildType b = findNode(buildTypes, variant.baseName)
-
-        if (b != null
-            && b.externalNativeBuildOptions != null
-            && b.externalNativeBuildOptions.cmake != null
-            && b.externalNativeBuildOptions.cmake.arguments != null) {
-
-            ArrayList<String> args = b.externalNativeBuildOptions.cmake.arguments
-            toolchain = getToolchain(args)
-        }
-
-        // Next check to see if there are arguments in the default config section
-        if (toolchain == null) {
-            if (project.android.defaultConfig.externalNativeBuildOptions != null
-                && project.android.defaultConfig.externalNativeBuildOptions.cmake != null
-                && project.android.defaultConfig.externalNativeBuildOptions.cmake.arguments != null) {
-
-                ArrayList<String> args = project.android.defaultConfig.externalNativeBuildOptions.cmake.arguments
-                for (String arg : args) {
-                    toolchain = getToolchain(args)
-                }
-            }
-        }
-
-        // Default to Toolchain.default if not found so far
-        if (toolchain == null) {
-            toolchain = Toolchain.default.name
-        }
-
-        return toolchain
-    }
-
-    /**
-     * Looks for an "ANDROID_TOOLCHAIN" argument in a list of cmake arguments
-     * @param args The cmake args
-     * @return the value of the "ANDROID_TOOLCHAIN" argument, or null if not found
-     */
-    private static String getToolchain(ArrayList<String> args) {
-        for (String arg : args) {
-            if (arg.startsWith("-DANDROID_TOOLCHAIN")) {
-                return arg.substring(arg.indexOf("=") + 1).trim()
-            }
-        }
-        return null
     }
 
     /**
