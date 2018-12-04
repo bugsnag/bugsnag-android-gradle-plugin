@@ -13,6 +13,9 @@ android {
                 cppFlags ""
             }
         }
+        ndk {
+            abiFilters "x86", "x86_64", "armeabi", "armeabi-v7a", "arm64-v8a"
+        }
     }
     buildTypes {
         release {
@@ -25,25 +28,10 @@ android {
             path "CMakeLists.txt"
         }
     }
-
-    flavorDimensions "regular"
-
-    productFlavors {
-        x86 {
-            ndk {
-                abiFilter "x86"
-            }
-        }
-        arm {
-            ndk {
-                abiFilters "armeabi-v7a"
-            }
-        }
-    }
 }
 
 dependencies {
-    compile 'com.bugsnag:bugsnag-android-ndk:1.+'
+    compile 'com.bugsnag:bugsnag-android-ndk:4.+'
 }
 
 apply plugin: 'com.bugsnag.android.gradle'
