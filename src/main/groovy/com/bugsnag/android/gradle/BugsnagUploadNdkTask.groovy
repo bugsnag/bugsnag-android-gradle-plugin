@@ -207,7 +207,14 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
      */
     File getObjDumpExecutable(String arch) {
         try {
-            File objDumpFile = findObjDump(project, arch)
+            String override = getObjDumpOverride(arch)
+            File objDumpFile
+
+            if (override != null) {
+                objDumpFile = new File(override)
+            } else {
+                objDumpFile = findObjDump(project, arch)
+            }
 
             if (!objDumpFile.exists() || !objDumpFile.canExecute()) {
                 throw new RuntimeException("Failed to find executable objdump at $objDumpFile")
@@ -217,6 +224,11 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
             project.logger.error("Error attempting to calculate objdump location: " + ex.message)
         }
         return null
+    }
+
+    private Object getObjDumpOverride(String arch) {
+        Map<String, String> paths = project.bugsnag.objdumpPaths
+        return paths != null ? paths[arch] : null
     }
 
     static File findObjDump(Project project, String arch) {

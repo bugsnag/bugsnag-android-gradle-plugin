@@ -42,8 +42,16 @@ bugsnag {
     releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
 
     def customPath = System.env.PROJECT_ROOT
+    def objdumpLocation = System.env.OBJDUMP_LOCATION
 
     if (customPath != null) {
         projectRoot = customPath
+    }
+
+    if (objdumpLocation != null) {
+        objdumpPaths = [
+                "x86": objdumpLocation,
+                "arm64-v8a": objdumpLocation
+        ]
     }
 }

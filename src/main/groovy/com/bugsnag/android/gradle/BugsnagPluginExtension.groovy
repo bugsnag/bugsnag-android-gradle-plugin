@@ -21,6 +21,7 @@ class BugsnagPluginExtension {
     // release API values
     String builderName = null
     Map<String, String> metadata = null
+    Map<String, String> objdumpPaths = null
 
 }
 
