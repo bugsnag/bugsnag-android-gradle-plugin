@@ -6,6 +6,8 @@ import com.android.build.gradle.tasks.ProcessAndroidResources
 import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
 import org.apache.http.entity.mime.content.StringBody
+import org.apache.tools.ant.taskdefs.condition.Os
+import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
 
 import java.util.zip.GZIPOutputStream
@@ -204,13 +206,44 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
      * @return The objdump executable, or null if not found
      */
     File getObjDumpExecutable(String arch) {
-
         try {
-            return objDumpPath
+            File objDumpFile = findObjDump(project, arch)
+
+            if (!objDumpFile.exists() || !objDumpFile.canExecute()) {
+                throw new RuntimeException("Failed to find executable objdump at $objDumpFile")
+            }
+            return objDumpFile
         } catch (Throwable ex) {
             project.logger.error("Error attempting to calculate objdump location: " + ex.message)
         }
-
         return null
     }
+
+    static File findObjDump(Project project, String arch) {
+        Abi abi = Abi.findByName(arch)
+        String ndkDir = project.android.ndkDirectory
+        String osName = calculateOsName()
+        return calculateObjDumpLocation(ndkDir, abi, osName)
+    }
+
+    static File calculateObjDumpLocation(String ndkDir, Abi abi, String osName) {
+        new File("$ndkDir/toolchains/$abi.toolchainPrefix-4.9/prebuilt/$osName/bin/$abi.objdumpPrefix-objdump")
+    }
+
+    static String calculateOsName() {
+        if (Os.isFamily(Os.FAMILY_MAC)) {
+            return "darwin-x86_64"
+        } else if (Os.isFamily(Os.FAMILY_UNIX)) {
+            return "linux-x86_64"
+        } else if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            if ("x86" == System.getProperty("os.arch")) { // 32-bit
+                return "windows"
+            } else {
+                return "windows-x86_64"
+            }
+        } else {
+            return "unknown"
+        }
+    }
+
 }
