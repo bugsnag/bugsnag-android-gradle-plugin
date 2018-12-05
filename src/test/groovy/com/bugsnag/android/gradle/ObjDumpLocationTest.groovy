@@ -32,7 +32,7 @@ class ObjDumpLocationTest {
         return inputs
     }
 
-    @Parameterized.Parameters(name = "1")
+    @Parameterized.Parameters
     static Collection<String> os() {
         return Arrays.asList("windows", "linux")
     }
