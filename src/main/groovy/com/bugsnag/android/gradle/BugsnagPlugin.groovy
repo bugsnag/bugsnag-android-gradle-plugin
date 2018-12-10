@@ -115,17 +115,19 @@ class BugsnagPlugin implements Plugin<Project> {
         setupProguardAutoConfig(project, variant)
 
         variant.outputs.each { output ->
-            if (!output.name.toLowerCase().endsWith("debug") || project.bugsnag.uploadDebugBuildMappings) {
-                BugsnagTaskDeps deps = new BugsnagTaskDeps()
-                deps.variant = variant
-                deps.output = output
+            BugsnagTaskDeps deps = new BugsnagTaskDeps()
+            deps.variant = variant
+            deps.output = output
 
-                setupManifestUuidTask(project, deps)
-                setupMappingFileUpload(project, deps)
-                setupNdkMappingFileUpload(project, deps)
-                setupReleasesTask(project, deps)
-            }
+            setupManifestUuidTask(project, deps)
+            setupMappingFileUpload(project, deps)
+            setupNdkMappingFileUpload(project, deps)
+            setupReleasesTask(project, deps)
         }
+    }
+
+    private static boolean shouldUploadDebugMappings(Project project, BaseVariantOutput output) {
+        !output.name.toLowerCase().endsWith("debug") || project.bugsnag.uploadDebugBuildMappings
     }
 
     /**
@@ -166,11 +168,13 @@ class BugsnagPlugin implements Plugin<Project> {
         def releasesTask = project.tasks.create("bugsnagRelease${taskNameForOutput(deps.output)}Task", BugsnagReleasesTask)
         setupBugsnagTask(releasesTask, deps)
 
-        findAssembleTasks(deps.output, project).forEach {
-            releasesTask.mustRunAfter it
+        if (shouldUploadDebugMappings(project, deps.output)) {
+            findAssembleTasks(deps.output, project).forEach {
+                releasesTask.mustRunAfter it
 
-            if (project.bugsnag.autoReportBuilds) {
-                it.finalizedBy releasesTask
+                if (project.bugsnag.autoReportBuilds) {
+                    it.finalizedBy releasesTask
+                }
             }
         }
     }
@@ -185,11 +189,13 @@ class BugsnagPlugin implements Plugin<Project> {
         setupBugsnagTask(uploadTask, deps)
         uploadTask.applicationId = deps.variant.applicationId
 
-        findAssembleTasks(deps.output, project).forEach {
-            uploadTask.mustRunAfter it
+        if (shouldUploadDebugMappings(project, deps.output)) {
+            findAssembleTasks(deps.output, project).forEach {
+                uploadTask.mustRunAfter it
 
-            if (project.bugsnag.autoUpload) {
-                it.finalizedBy uploadTask
+                if (project.bugsnag.autoUpload) {
+                    it.finalizedBy uploadTask
+                }
             }
         }
     }
