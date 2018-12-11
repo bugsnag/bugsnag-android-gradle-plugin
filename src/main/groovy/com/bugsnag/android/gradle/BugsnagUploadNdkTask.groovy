@@ -235,6 +235,13 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
         Abi abi = Abi.findByName(arch)
         String ndkDir = project.android.ndkDirectory
         String osName = calculateOsName()
+
+        if (abi == null) {
+            throw new IllegalStateException("Failed to find ABI for $arch")
+        }
+        if (osName == null) {
+            throw new IllegalStateException("Failed to calculate OS name")
+        }
         return calculateObjDumpLocation(ndkDir, abi, osName)
     }
 
@@ -254,7 +261,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
                 return "windows-x86_64"
             }
         } else {
-            return "unknown"
+            return null
         }
     }
 
