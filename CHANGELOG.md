@@ -1,9 +1,12 @@
 ## 3.X.X (TBD)
 
-### Bug fixes
-
 * Support automatic upload when building App Bundles
 [#137](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/137)
+
+### Bug fixes
+
+* Create tasks for debug variant which are not run by default
+[#139](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/139)
 
 ## 3.5.0 (2018-10-18)
 
