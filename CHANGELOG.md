@@ -1,3 +1,8 @@
+## 3.X.X (TBD)
+
+* Create tasks for debug variant which are not run by default
+[#139](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/139)
+
 ## 3.5.0 (2018-10-18)
 
 ### Bug fixes
