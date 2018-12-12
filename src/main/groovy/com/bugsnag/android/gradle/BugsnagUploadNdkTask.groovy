@@ -1,13 +1,13 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.BaseVariantOutput
-import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
 import org.apache.http.entity.mime.content.StringBody
+import org.apache.tools.ant.taskdefs.condition.Os
+import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
 
 import java.util.zip.GZIPOutputStream
@@ -33,7 +33,6 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
     String variantName
     File projectDir
     File rootDir
-    String toolchain
     String sharedObjectPath
 
     BugsnagUploadNdkTask() {
@@ -207,16 +206,63 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
      * @return The objdump executable, or null if not found
      */
     File getObjDumpExecutable(String arch) {
-
         try {
-            Abi abi = Abi.getByName(arch)
-            NdkHandler handler = new NdkHandler(rootDir, null, toolchain, "", true)
-            File objDumpPath = new File(handler.getDefaultGccToolchainPath(abi), "bin/" + abi.getGccExecutablePrefix() + "-objdump")
-            return objDumpPath
+            String override = getObjDumpOverride(arch)
+            File objDumpFile
+
+            if (override != null) {
+                objDumpFile = new File(override)
+            } else {
+                objDumpFile = findObjDump(project, arch)
+            }
+
+            if (!objDumpFile.exists() || !objDumpFile.canExecute()) {
+                throw new RuntimeException("Failed to find executable objdump at $objDumpFile")
+            }
+            return objDumpFile
         } catch (Throwable ex) {
             project.logger.error("Error attempting to calculate objdump location: " + ex.message)
         }
-
         return null
     }
+
+    private Object getObjDumpOverride(String arch) {
+        Map<String, String> paths = project.bugsnag.objdumpPaths
+        return paths != null ? paths[arch] : null
+    }
+
+    static File findObjDump(Project project, String arch) {
+        Abi abi = Abi.findByName(arch)
+        String ndkDir = project.android.ndkDirectory
+        String osName = calculateOsName()
+
+        if (abi == null) {
+            throw new IllegalStateException("Failed to find ABI for $arch")
+        }
+        if (osName == null) {
+            throw new IllegalStateException("Failed to calculate OS name")
+        }
+        return calculateObjDumpLocation(ndkDir, abi, osName)
+    }
+
+    static File calculateObjDumpLocation(String ndkDir, Abi abi, String osName) {
+        new File("$ndkDir/toolchains/$abi.toolchainPrefix-4.9/prebuilt/$osName/bin/$abi.objdumpPrefix-objdump")
+    }
+
+    static String calculateOsName() {
+        if (Os.isFamily(Os.FAMILY_MAC)) {
+            return "darwin-x86_64"
+        } else if (Os.isFamily(Os.FAMILY_UNIX)) {
+            return "linux-x86_64"
+        } else if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            if ("x86" == System.getProperty("os.arch")) { // 32-bit
+                return "windows"
+            } else {
+                return "windows-x86_64"
+            }
+        } else {
+            return null
+        }
+    }
+
 }

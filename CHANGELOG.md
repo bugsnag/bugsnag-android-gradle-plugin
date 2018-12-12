@@ -1,3 +1,10 @@
+## 3.X.X (TBD)
+
+### Bug fixes
+
+* Manually calculate location of objdump in gradle plugin
+[#136](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/136)
+
 ## 3.5.0 (2018-10-18)
 
 ### Bug fixes
