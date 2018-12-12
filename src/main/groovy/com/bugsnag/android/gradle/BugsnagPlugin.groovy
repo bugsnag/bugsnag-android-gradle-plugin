@@ -114,17 +114,19 @@ class BugsnagPlugin implements Plugin<Project> {
         setupProguardAutoConfig(project, variant)
 
         variant.outputs.each { output ->
-            if (!output.name.toLowerCase().endsWith("debug") || project.bugsnag.uploadDebugBuildMappings) {
-                BugsnagTaskDeps deps = new BugsnagTaskDeps()
-                deps.variant = variant
-                deps.output = output
+            BugsnagTaskDeps deps = new BugsnagTaskDeps()
+            deps.variant = variant
+            deps.output = output
 
-                setupManifestUuidTask(project, deps)
-                setupMappingFileUpload(project, deps)
-                setupNdkMappingFileUpload(project, deps)
-                setupReleasesTask(project, deps)
-            }
+            setupManifestUuidTask(project, deps)
+            setupMappingFileUpload(project, deps)
+            setupNdkMappingFileUpload(project, deps)
+            setupReleasesTask(project, deps)
         }
+    }
+
+    private static boolean shouldUploadDebugMappings(Project project, BaseVariantOutput output) {
+        !output.name.toLowerCase().endsWith("debug") || project.bugsnag.uploadDebugBuildMappings
     }
 
     /**
@@ -164,11 +166,13 @@ class BugsnagPlugin implements Plugin<Project> {
         def releasesTask = project.tasks.create("bugsnagRelease${taskNameForOutput(deps.output)}Task", BugsnagReleasesTask)
         setupBugsnagTask(releasesTask, deps)
 
-        findAssembleTasks(deps.output, project).forEach {
-            releasesTask.mustRunAfter it
+        if (shouldUploadDebugMappings(project, deps.output)) {
+            findAssembleBundleTasks(deps.output, project).forEach {
+                releasesTask.mustRunAfter it
 
-            if (project.bugsnag.autoReportBuilds) {
-                it.finalizedBy releasesTask
+                if (project.bugsnag.autoReportBuilds) {
+                    it.finalizedBy releasesTask
+                }
             }
         }
     }
@@ -183,25 +187,44 @@ class BugsnagPlugin implements Plugin<Project> {
         setupBugsnagTask(uploadTask, deps)
         uploadTask.applicationId = deps.variant.applicationId
 
-        findAssembleTasks(deps.output, project).forEach {
-            uploadTask.mustRunAfter it
+        if (shouldUploadDebugMappings(project, deps.output)) {
+            findAssembleBundleTasks(deps.output, project).forEach {
+                uploadTask.mustRunAfter it
 
-            if (project.bugsnag.autoUpload) {
-                it.finalizedBy uploadTask
+                if (project.bugsnag.autoUpload) {
+                    it.finalizedBy uploadTask
+                }
             }
         }
     }
 
     /**
-     * Fetches all the assemble tasks in the current project that match the variant
+     * Fetches all the assemble and bundle tasks in the current project that match the variant
      *
-     * Expected behaviour: assemble, assembleJavaExampleRelease, assembleJavaExample, assembleRelease
+     * Expected behaviour: [assemble, assembleJavaExampleRelease, assembleJavaExample, assembleRelease,
+     * bundle, bundleJavaExampleRelease, bundleJavaExample, bundleRelease]
      *
      * @param output the variantOutput
      * @param project the current project
-     * @return the assemble tasks
+     * @return the assemble + bundle tasks
      */
-    private static Set<Task> findAssembleTasks(BaseVariantOutput output, Project project) {
+    private static Set<Task> findAssembleBundleTasks(BaseVariantOutput output, Project project) {
+        Set<String> taskNames = new HashSet<>()
+        taskNames.addAll(findTaskNamesForPrefix(output, "assemble"))
+        taskNames.addAll(findTaskNamesForPrefix(output, "bundle"))
+
+        project.tasks.findAll {
+            taskNames.contains(it.name)
+        }
+    }
+
+    /**
+     * Finds all the task names which can be used to assemble a variant, and replaces 'assemble' with the given
+     * prefix.
+     *
+     * E.g. [bundle, bundleRelease, bundleFooRelease]
+     */
+    private static Set<String> findTaskNamesForPrefix(BaseVariantOutput output, String prefix) {
         String variantName = output.name.split("-")[0].capitalize()
         String assembleTaskName = output.assemble.name
         String buildTypeTaskName = assembleTaskName.replaceAll(variantName, "")
@@ -209,14 +232,11 @@ class BugsnagPlugin implements Plugin<Project> {
         String variantTaskName = assembleTaskName.replaceAll(buildType, "")
 
         Set<String> taskNames = new HashSet<>()
-        taskNames.add(assembleTaskName)
-        taskNames.add("assemble")
-        taskNames.add(buildTypeTaskName)
-        taskNames.add(variantTaskName)
-
-        project.tasks.findAll {
-            taskNames.contains(it.name)
-        }
+        taskNames.add(prefix)
+        taskNames.add(assembleTaskName.replaceAll("assemble", prefix))
+        taskNames.add(buildTypeTaskName.replaceAll("assemble", prefix))
+        taskNames.add(variantTaskName.replaceAll("assemble", prefix))
+        return taskNames
     }
 
     private static void setupManifestUuidTask(Project project, BugsnagTaskDeps deps) {

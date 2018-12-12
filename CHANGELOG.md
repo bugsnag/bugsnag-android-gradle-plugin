@@ -1,9 +1,15 @@
-## 3.X.X (TBD)
+## 3.6.0 (2018-12-12)
 
-### Bug fixes
+* Support automatic upload when building App Bundles
+[#137](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/137)
 
 * Manually calculate location of objdump in gradle plugin
 [#136](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/136)
+
+### Bug fixes
+
+* Create tasks for debug variant which are not run by default
+[#139](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/139)
 
 ## 3.5.0 (2018-10-18)
 
