@@ -134,7 +134,7 @@ class BugsnagPlugin implements Plugin<Project> {
      */
     private static void setupMappingFileUpload(Project project, BugsnagTaskDeps deps) {
         def uploadTask = project.tasks.create("uploadBugsnag${taskNameForOutput(deps.output)}Mapping", BugsnagUploadProguardTask)
-        uploadTask.partName = isJackEnabled(project, deps.variant) ? "jack" : "proguard"
+        uploadTask.partName = "proguard"
         prepareUploadTask(uploadTask, deps, project)
     }
 
@@ -300,52 +300,6 @@ class BugsnagPlugin implements Plugin<Project> {
 
         // Ignore any conflicting properties, bail if anything has a disable flag.
         return (variant.productFlavors + variant.buildType).any(hasDisabledBugsnag)
-    }
-
-    /**
-     * Checks to see if the Jack compiler is being used for the given variant
-     *
-     * @param project The project to check in
-     * @param variant The variant to check
-     * @return true if Jack is enabled, else false
-     */
-    private static boolean isJackEnabled(Project project, BaseVariant variant) {
-
-        // First check the selected build type to see if there are jack settings
-        def buildTypes = project.android.buildTypes.store
-        BuildType b = findNode(buildTypes, variant.baseName)
-
-        if (b?.hasProperty('jackOptions')
-            && b.jackOptions.enabled instanceof Boolean) {
-
-            return b.jackOptions.enabled
-
-            // Now check the default config to see if any Jack settings are defined
-        } else if (project.android.defaultConfig?.hasProperty('jackOptions')
-            && project.android.defaultConfig.jackOptions.enabled instanceof Boolean) {
-
-            return project.android.defaultConfig.jackOptions.enabled
-        } else {
-            return false
-        }
-    }
-
-    /**
-     * Finds the given build type in a TreeSet of buildtypes
-     * @param set The TreeSet of build types
-     * @param name The name of the buildtype to search for
-     * @return The buildtype, or null if not found
-     */
-    private static BuildType findNode(def set, String name) {
-        Iterator<BuildType> iterator = set.iterator()
-
-        while (iterator.hasNext()) {
-            BuildType node = iterator.next()
-            if (node.getName() == name) {
-                return node
-            }
-        }
-        return null
     }
 
     /**
