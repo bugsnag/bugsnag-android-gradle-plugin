@@ -4,8 +4,6 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import groovy.xml.Namespace
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.Directory
-import org.gradle.api.provider.Provider
 
 import java.nio.file.Paths
 
@@ -55,6 +53,34 @@ class BugsnagVariantOutputTask extends DefaultTask {
         manifestFile
     }
 
+    private String getStringResourcesPath(String key){
+        String keyName = key.substring("@string/".length())
+        String mainFlavorValue = getStringValueFromFlavor("main", keyName)
+        return getStringValueFromFlavor(variant.flavorName, mainFlavorValue)
+    }
+
+    private List getStringValueFromFlavor(String flavor, String pureKey) {
+        String projectPath = getProject().getProjectDir().getPath()
+
+        def valuesFolder = Paths.get(projectPath, "src", flavor, "res", "values").toFile()
+        return Arrays.stream(valuesFolder.listFiles(new StringResourceFilter())).map { f ->
+            Node xml = new XmlParser().parse(f)
+            return getValueOfString(xml['string'], pureKey)
+        }.filter { it != null }.findFirst().orElse(pureKey)
+    }
+
+    private String getValueOfString(NodeList resources, String key) {
+        String value = null
+
+        def res = resources.findAll {
+            (it.attributes()['name'] == key)
+        }
+        if (!res.isEmpty()) {
+            value = res[0].text()
+        }
+        return value
+    }
+
     // Read the API key and Build ID etc..
     void readManifestFile() {
         // Parse the AndroidManifest.xml
@@ -73,6 +99,12 @@ class BugsnagVariantOutputTask extends DefaultTask {
         apiKey = getApiKey(metaDataTags, ns)
         if (!apiKey) {
             project.logger.warn("Could not find apiKey in '$BugsnagPlugin.API_KEY_TAG' <meta-data> tag in your AndroidManifest.xml or in your gradle config")
+        }
+
+        if (apiKey != null && apiKey.startsWith("@string/")){
+            project.logger.info("apiKey starts with @string '$apiKey' and it will be searched in resources")
+            apiKey = getStringResourcesPath(apiKey)
+            project.logger.info("apiKey '$apiKey' after search in resources")
         }
 
         // Get the build version
@@ -120,6 +152,18 @@ class BugsnagVariantOutputTask extends DefaultTask {
 
     String getVersionCode(Node xml, Namespace ns) {
         xml.attributes()[ns.versionCode]
+    }
+
+    private static class StringResourceFilter implements FilenameFilter {
+        @Override
+        public boolean accept(File dir, String name) {
+            if (!name.endsWith("xml"))
+                return false
+
+            File resource = new File(dir, name)
+            Node xml = new XmlParser().parse(resource)
+            return xml['string'].size() > 0
+        }
     }
 
 }
