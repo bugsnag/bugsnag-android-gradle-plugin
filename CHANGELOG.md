@@ -1,3 +1,8 @@
+## 3.X.X (TBD)
+
+* Resolve apiKey from string resource
+[#143](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/143)
+
 ## 3.6.0 (2018-12-12)
 
 * Support automatic upload when building App Bundles
