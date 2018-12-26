@@ -53,7 +53,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
         manifestFile
     }
 
-    private String getStringResourcesPath(String key){
+    private String getValueFromStringResources(String key){
         String keyName = key.substring("@string/".length())
         String mainFlavorValue = getStringValueFromFlavor("main", keyName)
         return getStringValueFromFlavor(variant.flavorName, mainFlavorValue)
@@ -103,7 +103,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
 
         if (apiKey != null && apiKey.startsWith("@string/")){
             project.logger.info("apiKey starts with @string '$apiKey' and it will be searched in resources")
-            apiKey = getStringResourcesPath(apiKey)
+            apiKey = getValueFromStringResources(apiKey)
             project.logger.info("apiKey '$apiKey' after search in resources")
         }
 
