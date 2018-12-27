@@ -53,23 +53,27 @@ class BugsnagVariantOutputTask extends DefaultTask {
         manifestFile
     }
 
-    private String getValueFromStringResources(String key){
-        String keyName = key.substring("@string/".length())
-        String mainFlavorValue = getStringValueFromFlavor("main", keyName)
-        return getStringValueFromFlavor(variant.flavorName, mainFlavorValue)
+    private String getValueFromStringResources(String keyResId){
+        String key = keyResId.substring("@string/".length())
+        String mainVariantValue = getStringValueFromVariant("main", key, keyResId)
+        String flavorValue = getStringValueFromVariant(variant.flavorName, key, mainVariantValue)
+        String buildTypeValue = getStringValueFromVariant(variant.buildType.name, key, flavorValue)
+        return getStringValueFromVariant(variant.flavorName + variant.buildType.name.capitalize(), key, buildTypeValue)
     }
 
-    private List getStringValueFromFlavor(String flavor, String pureKey) {
+    private String getStringValueFromVariant(String flavor, String key, String defValue) {
         String projectPath = getProject().getProjectDir().getPath()
-
         def valuesFolder = Paths.get(projectPath, "src", flavor, "res", "values").toFile()
+        if (!valuesFolder.exists()){
+            return defValue
+        }
         return Arrays.stream(valuesFolder.listFiles(new StringResourceFilter())).map { f ->
             Node xml = new XmlParser().parse(f)
-            return getValueOfString(xml['string'], pureKey)
-        }.filter { it != null }.findFirst().orElse(pureKey)
+            return getValueOfString(xml['string'], key)
+        }.filter { it != null }.findFirst().orElse(defValue)
     }
 
-    private String getValueOfString(NodeList resources, String key) {
+    String getValueOfString(NodeList resources, String key) {
         String value = null
 
         def res = resources.findAll {
