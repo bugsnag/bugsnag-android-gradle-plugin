@@ -250,8 +250,16 @@ class BugsnagPlugin implements Plugin<Project> {
     private static void setupManifestUuidTask(Project project, BugsnagTaskDeps deps) {
         BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${taskNameForOutput(deps.output)}Manifest", BugsnagManifestTask)
         setupBugsnagTask(manifestTask, deps)
-        def processManifest = deps.output.processManifest
+        def processManifest = resolveProcessManifest(deps.output)
         processManifest.finalizedBy(manifestTask)
+    }
+
+    static def resolveProcessManifest(BaseVariantOutput output) {
+        try {
+            return output.processManifestProvider.get()
+        } catch (Throwable ignored) {
+            return output.processManifest
+        }
     }
 
     /**
