@@ -6,7 +6,6 @@ import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
-import com.android.build.gradle.internal.dsl.BuildType
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -167,7 +166,7 @@ class BugsnagPlugin implements Plugin<Project> {
         setupBugsnagTask(releasesTask, deps)
 
         if (shouldUploadDebugMappings(project, deps.output)) {
-            findAssembleBundleTasks(deps.output, project).forEach {
+            findAssembleBundleTasks(deps.variant, deps.output, project).forEach {
                 releasesTask.mustRunAfter it
 
                 if (project.bugsnag.autoReportBuilds) {
@@ -188,7 +187,7 @@ class BugsnagPlugin implements Plugin<Project> {
         uploadTask.applicationId = deps.variant.applicationId
 
         if (shouldUploadDebugMappings(project, deps.output)) {
-            findAssembleBundleTasks(deps.output, project).forEach {
+            findAssembleBundleTasks(deps.variant, deps.output, project).forEach {
                 uploadTask.mustRunAfter it
 
                 if (project.bugsnag.autoUpload) {
@@ -208,10 +207,10 @@ class BugsnagPlugin implements Plugin<Project> {
      * @param project the current project
      * @return the assemble + bundle tasks
      */
-    private static Set<Task> findAssembleBundleTasks(BaseVariantOutput output, Project project) {
+    private static Set<Task> findAssembleBundleTasks(BaseVariant variant, BaseVariantOutput output, Project project) {
         Set<String> taskNames = new HashSet<>()
-        taskNames.addAll(findTaskNamesForPrefix(output, "assemble"))
-        taskNames.addAll(findTaskNamesForPrefix(output, "bundle"))
+        taskNames.addAll(findTaskNamesForPrefix(variant, output, "assemble"))
+        taskNames.addAll(findTaskNamesForPrefix(variant, output, "bundle"))
 
         project.tasks.findAll {
             taskNames.contains(it.name)
@@ -224,9 +223,10 @@ class BugsnagPlugin implements Plugin<Project> {
      *
      * E.g. [bundle, bundleRelease, bundleFooRelease]
      */
-    private static Set<String> findTaskNamesForPrefix(BaseVariantOutput output, String prefix) {
+    private static Set<String> findTaskNamesForPrefix(BaseVariant variant, BaseVariantOutput output, String prefix) {
         String variantName = output.name.split("-")[0].capitalize()
-        String assembleTaskName = output.assemble.name
+        def assembleTask = resolveAssembleTask(variant)
+        String assembleTaskName = assembleTask.name
         String buildTypeTaskName = assembleTaskName.replaceAll(variantName, "")
         String buildType = buildTypeTaskName.replaceAll("assemble", "")
         String variantTaskName = assembleTaskName.replaceAll(buildType, "")
@@ -237,6 +237,14 @@ class BugsnagPlugin implements Plugin<Project> {
         taskNames.add(buildTypeTaskName.replaceAll("assemble", prefix))
         taskNames.add(variantTaskName.replaceAll("assemble", prefix))
         return taskNames
+    }
+
+    private static def resolveAssembleTask(BaseVariant variant) {
+        try {
+            return variant.assembleProvider.get()
+        } catch (Throwable ignored) {
+            return variant.assemble
+        }
     }
 
     private static void setupManifestUuidTask(Project project, BugsnagTaskDeps deps) {
