@@ -57,8 +57,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
             }
         }
 
-        Collection<ExternalNativeBuildTask> tasks = variant.externalNativeBuildTasks
-        for (ExternalNativeBuildTask task : tasks) {
+        for (ExternalNativeBuildTask task : resolveExternalNativeBuildTasks()) {
             File objFolder = task.objFolder
             File soFolder = task.soFolder
             findSharedObjectFiles(objFolder, processor)
@@ -71,6 +70,17 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
         }
         if (!sharedObjectFound) {
             project.logger.error("No shared objects found")
+        }
+    }
+
+    private Collection<ExternalNativeBuildTask> resolveExternalNativeBuildTasks() {
+        try {
+            return variant.externalNativeBuildProviders
+                .stream()
+                .map({ it.get() })
+                .collect()
+        } catch (Throwable ignored) {
+            return variant.externalNativeBuildTasks
         }
     }
 
