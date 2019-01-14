@@ -2,7 +2,6 @@ package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
-import com.android.build.gradle.tasks.ProcessAndroidResources
 import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
 import org.apache.http.entity.mime.content.StringBody
@@ -85,14 +84,21 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
     }
 
     private static File findSymbolPath(BaseVariantOutput variantOutput) {
-        ProcessAndroidResources resources = variantOutput.processResources
-
+        def resources = resolveProcessAndroidResources(variantOutput)
         def symbolPath = resources.textSymbolOutputFile
 
         if (symbolPath == null) {
             throw new IllegalStateException("Could not find symbol path")
         }
         symbolPath
+    }
+
+    private static def resolveProcessAndroidResources(BaseVariantOutput variantOutput) {
+        try {
+            return variantOutput.processResourcesProvider.get()
+        } catch (Throwable ignored) {
+            return variantOutput.processResources
+        }
     }
     /**
      * Searches the subdirectories of a given path and executes a block on
