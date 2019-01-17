@@ -305,7 +305,15 @@ class BugsnagPlugin implements Plugin<Project> {
         if (variant instanceof LibraryVariant) {
             variant.getPackageLibrary().dependsOn task
         } else {
-            variant.getPackageApplication().dependsOn task
+            resolvePackageApplication(variant).dependsOn task
+        }
+    }
+
+    static def resolvePackageApplication(BaseVariant variant) {
+        try {
+            return variant.getPackageApplicationProvider().get()
+        } catch (Throwable ignored) {
+            return variant.getPackageApplication()
         }
     }
 
