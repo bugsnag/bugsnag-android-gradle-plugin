@@ -4,8 +4,6 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import groovy.xml.Namespace
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.Directory
-import org.gradle.api.provider.Provider
 
 import java.nio.file.Paths
 
@@ -34,7 +32,8 @@ class BugsnagVariantOutputTask extends DefaultTask {
      */
     File getManifestPath() {
         File directory
-        def outputDir = variantOutput.processManifest.manifestOutputDirectory
+        def processManifest = BugsnagPlugin.resolveProcessManifest(variantOutput)
+        def outputDir = processManifest.manifestOutputDirectory
 
         if (outputDir instanceof File) {
             directory = outputDir

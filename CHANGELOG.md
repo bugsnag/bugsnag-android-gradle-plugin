@@ -1,3 +1,11 @@
+## 4.0.0 (TBD)
+
+* Remove support for Jack compiler
+[#142](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/142)
+
+* Address provider api warnings
+[#146](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/146)
+
 ## 3.6.0 (2018-12-12)
 
 * Support automatic upload when building App Bundles

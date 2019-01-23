@@ -6,7 +6,6 @@ import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
-import com.android.build.gradle.internal.dsl.BuildType
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -134,7 +133,7 @@ class BugsnagPlugin implements Plugin<Project> {
      */
     private static void setupMappingFileUpload(Project project, BugsnagTaskDeps deps) {
         def uploadTask = project.tasks.create("uploadBugsnag${taskNameForOutput(deps.output)}Mapping", BugsnagUploadProguardTask)
-        uploadTask.partName = isJackEnabled(project, deps.variant) ? "jack" : "proguard"
+        uploadTask.partName = "proguard"
         prepareUploadTask(uploadTask, deps, project)
     }
 
@@ -167,7 +166,7 @@ class BugsnagPlugin implements Plugin<Project> {
         setupBugsnagTask(releasesTask, deps)
 
         if (shouldUploadDebugMappings(project, deps.output)) {
-            findAssembleBundleTasks(deps.output, project).forEach {
+            findAssembleBundleTasks(deps.variant, deps.output, project).forEach {
                 releasesTask.mustRunAfter it
 
                 if (project.bugsnag.autoReportBuilds) {
@@ -188,7 +187,7 @@ class BugsnagPlugin implements Plugin<Project> {
         uploadTask.applicationId = deps.variant.applicationId
 
         if (shouldUploadDebugMappings(project, deps.output)) {
-            findAssembleBundleTasks(deps.output, project).forEach {
+            findAssembleBundleTasks(deps.variant, deps.output, project).forEach {
                 uploadTask.mustRunAfter it
 
                 if (project.bugsnag.autoUpload) {
@@ -208,10 +207,10 @@ class BugsnagPlugin implements Plugin<Project> {
      * @param project the current project
      * @return the assemble + bundle tasks
      */
-    private static Set<Task> findAssembleBundleTasks(BaseVariantOutput output, Project project) {
+    private static Set<Task> findAssembleBundleTasks(BaseVariant variant, BaseVariantOutput output, Project project) {
         Set<String> taskNames = new HashSet<>()
-        taskNames.addAll(findTaskNamesForPrefix(output, "assemble"))
-        taskNames.addAll(findTaskNamesForPrefix(output, "bundle"))
+        taskNames.addAll(findTaskNamesForPrefix(variant, output, "assemble"))
+        taskNames.addAll(findTaskNamesForPrefix(variant, output, "bundle"))
 
         project.tasks.findAll {
             taskNames.contains(it.name)
@@ -224,9 +223,10 @@ class BugsnagPlugin implements Plugin<Project> {
      *
      * E.g. [bundle, bundleRelease, bundleFooRelease]
      */
-    private static Set<String> findTaskNamesForPrefix(BaseVariantOutput output, String prefix) {
+    private static Set<String> findTaskNamesForPrefix(BaseVariant variant, BaseVariantOutput output, String prefix) {
         String variantName = output.name.split("-")[0].capitalize()
-        String assembleTaskName = output.assemble.name
+        def assembleTask = resolveAssembleTask(variant)
+        String assembleTaskName = assembleTask.name
         String buildTypeTaskName = assembleTaskName.replaceAll(variantName, "")
         String buildType = buildTypeTaskName.replaceAll("assemble", "")
         String variantTaskName = assembleTaskName.replaceAll(buildType, "")
@@ -239,11 +239,27 @@ class BugsnagPlugin implements Plugin<Project> {
         return taskNames
     }
 
+    private static def resolveAssembleTask(BaseVariant variant) {
+        try {
+            return variant.assembleProvider.get()
+        } catch (Throwable ignored) {
+            return variant.assemble
+        }
+    }
+
     private static void setupManifestUuidTask(Project project, BugsnagTaskDeps deps) {
         BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${taskNameForOutput(deps.output)}Manifest", BugsnagManifestTask)
         setupBugsnagTask(manifestTask, deps)
-        def processManifest = deps.output.processManifest
+        def processManifest = resolveProcessManifest(deps.output)
         processManifest.finalizedBy(manifestTask)
+    }
+
+    static def resolveProcessManifest(BaseVariantOutput output) {
+        try {
+            return output.processManifestProvider.get()
+        } catch (Throwable ignored) {
+            return output.processManifest
+        }
     }
 
     /**
@@ -289,7 +305,15 @@ class BugsnagPlugin implements Plugin<Project> {
         if (variant instanceof LibraryVariant) {
             variant.getPackageLibrary().dependsOn task
         } else {
-            variant.getPackageApplication().dependsOn task
+            resolvePackageApplication(variant).dependsOn task
+        }
+    }
+
+    static def resolvePackageApplication(BaseVariant variant) {
+        try {
+            return variant.getPackageApplicationProvider().get()
+        } catch (Throwable ignored) {
+            return variant.getPackageApplication()
         }
     }
 
@@ -300,52 +324,6 @@ class BugsnagPlugin implements Plugin<Project> {
 
         // Ignore any conflicting properties, bail if anything has a disable flag.
         return (variant.productFlavors + variant.buildType).any(hasDisabledBugsnag)
-    }
-
-    /**
-     * Checks to see if the Jack compiler is being used for the given variant
-     *
-     * @param project The project to check in
-     * @param variant The variant to check
-     * @return true if Jack is enabled, else false
-     */
-    private static boolean isJackEnabled(Project project, BaseVariant variant) {
-
-        // First check the selected build type to see if there are jack settings
-        def buildTypes = project.android.buildTypes.store
-        BuildType b = findNode(buildTypes, variant.baseName)
-
-        if (b?.hasProperty('jackOptions')
-            && b.jackOptions.enabled instanceof Boolean) {
-
-            return b.jackOptions.enabled
-
-            // Now check the default config to see if any Jack settings are defined
-        } else if (project.android.defaultConfig?.hasProperty('jackOptions')
-            && project.android.defaultConfig.jackOptions.enabled instanceof Boolean) {
-
-            return project.android.defaultConfig.jackOptions.enabled
-        } else {
-            return false
-        }
-    }
-
-    /**
-     * Finds the given build type in a TreeSet of buildtypes
-     * @param set The TreeSet of build types
-     * @param name The name of the buildtype to search for
-     * @return The buildtype, or null if not found
-     */
-    private static BuildType findNode(def set, String name) {
-        Iterator<BuildType> iterator = set.iterator()
-
-        while (iterator.hasNext()) {
-            BuildType node = iterator.next()
-            if (node.getName() == name) {
-                return node
-            }
-        }
-        return null
     }
 
     /**
