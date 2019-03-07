@@ -4,6 +4,7 @@ import org.apache.http.entity.mime.HttpMultipartMode
 import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
 import org.apache.http.util.TextUtils
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
 
@@ -42,7 +43,11 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
         // will not exist (but we also won't need it).
         if (!mappingFile || !mappingFile.exists()) {
             project.logger.warn("Mapping file not found: ${mappingFile}")
-            return
+            if (project.bugsnag.failOnUploadError) {
+                throw new GradleException("Mapping file not found: ${mappingFile}")
+            } else {
+                return
+            }
         }
 
         // Read the API key and Build ID etc..

@@ -31,6 +31,7 @@ class PluginExtensionTest {
         assertFalse(proj.bugsnag.ndk)
         assertNull(proj.bugsnag.sharedObjectPath)
         assertFalse(BugsnagPlugin.hasDexguardPlugin(proj))
+        assertFalse(proj.bugsnag.failOnUploadError)
 
         assertFalse(BugsnagPlugin.hasMultipleOutputs(proj))
 
