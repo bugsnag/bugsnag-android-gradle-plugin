@@ -17,7 +17,7 @@ class BugsnagPluginExtension {
     boolean ndk = false
     String sharedObjectPath = null
     String projectRoot = null
-    boolean failOnUploadError = false
+    boolean failOnUploadError = true
 
     // release API values
     String builderName = null
