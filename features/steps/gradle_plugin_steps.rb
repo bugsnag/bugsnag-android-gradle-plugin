@@ -58,3 +58,17 @@ Then(/^the request (\d+) is valid for the Android NDK Mapping API$/) do |request
   assert_not_nil(parts["appId"], "'appId' should not be nil")
   assert_not_nil(parts["arch"], "'arch' should not be nil")
 end
+
+When("I build the failing {string} using the {string} bugsnag config") do |module_config, bugsnag_config|
+  begin
+    steps %Q{
+      When I build "#{module_config}" using the "#{bugsnag_config}" bugsnag config
+    }
+    assert(false, "Expected script to fail with non-zero exit code")
+  rescue SystemExit
+  end
+end
+
+Then(/^the exit code equals (\d+)$/) do |exit_code|
+  assert_equal(exit_code, $?.exitstatus.to_i)
+end
