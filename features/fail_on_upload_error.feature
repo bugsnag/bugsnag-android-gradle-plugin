@@ -6,10 +6,8 @@ Scenario: Upload successfully with API key, mapping file, and correct endpoint
     And the exit code equals 0
 
 Scenario: No uploads or build failures when obfuscation is disabled
-    When I build the failing "disabled_obfuscation" using the "standard" bugsnag config
-    Then I should receive 1 request
-    And the request 0 is valid for the Build API
-    And the exit code equals 0
+    When I build "disabled_obfuscation" using the "standard" bugsnag config
+    Then I should receive 0 requests
 
 Scenario: Upload failure due to empty API key
     When I build the failing "default_app" using the "empty_api_key" bugsnag config
