@@ -37,7 +37,7 @@ abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
     }
 
     def uploadMultipartEntity(MultipartEntity mpEntity) {
-        if (apiKey == null) {
+        if (apiKey == null || "" == apiKey) {
             project.logger.warn("Skipping upload due to invalid parameters")
             if (project.bugsnag.failOnUploadError) {
                 throw new GradleException("Skipping upload due to invalid parameters")
