@@ -1,4 +1,4 @@
-## 4.X.X (TBD)
+## 4.1.0 (2019-03-13)
 
 Note: this version of the plugin will fail the build if a mapping file is not uploaded successfully.
 Previously if this occurred the failure would have been logged as an error and the build would have continued.
@@ -6,7 +6,7 @@ Previously if this occurred the failure would have been logged as an error and t
 * Fail on upload error
 [#151](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/151)
 
-## 4.0.0 (TBD)
+## 4.0.0 (2019-01-23)
 
 * Remove support for Jack compiler
 [#142](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/142)
