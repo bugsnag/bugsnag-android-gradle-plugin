@@ -3,6 +3,8 @@
 Note: this version of the plugin will fail the build if a mapping file is not uploaded successfully.
 Previously if this occurred the failure would have been logged as an error and the build would have continued.
 
+This behaviour can be disabled by setting `failOnUploadError` to `false`.
+
 * Fail on upload error
 [#151](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/151)
 
