@@ -113,6 +113,10 @@ class BugsnagPlugin implements Plugin<Project> {
         setupProguardAutoConfig(project, variant)
 
         variant.outputs.each { output ->
+            if (!variant.buildType.minifyEnabled && !hasDexguardPlugin(project)) {
+                return
+            }
+
             BugsnagTaskDeps deps = new BugsnagTaskDeps()
             deps.variant = variant
             deps.output = output

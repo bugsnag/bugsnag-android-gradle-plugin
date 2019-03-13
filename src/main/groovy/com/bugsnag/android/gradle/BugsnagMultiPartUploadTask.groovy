@@ -9,6 +9,9 @@ import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.params.HttpConnectionParams
 import org.apache.http.params.HttpParams
 import org.apache.http.util.EntityUtils
+import org.gradle.api.GradleException
+import org.gradle.api.GradleScriptException
+
 /**
  Task to upload ProGuard mapping files to Bugsnag.
 
@@ -34,9 +37,13 @@ abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
     }
 
     def uploadMultipartEntity(MultipartEntity mpEntity) {
-        if (apiKey == null) {
+        if (apiKey == null || apiKey == "") {
             project.logger.warn("Skipping upload due to invalid parameters")
-            return
+            if (project.bugsnag.failOnUploadError) {
+                throw new GradleException("Skipping upload due to invalid parameters")
+            } else {
+                return
+            }
         }
 
         addPropertiesToMultipartEntity(mpEntity)
@@ -50,6 +57,10 @@ abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
                 maxRetryCount - retryCount + 1, maxRetryCount))
             uploadSuccessful = uploadToServer(mpEntity)
             retryCount--
+        }
+
+        if (!uploadSuccessful && project.bugsnag.failOnUploadError) {
+            throw new GradleException("Upload did not succeed")
         }
     }
 
