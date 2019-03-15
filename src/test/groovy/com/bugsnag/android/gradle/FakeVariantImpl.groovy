@@ -14,9 +14,7 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.FileCollection
-import org.gradle.api.resources.TextResource
 import org.gradle.api.tasks.AbstractCopyTask
-import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 
 class FakeVariantImpl implements BaseVariant {
@@ -108,17 +106,7 @@ class FakeVariantImpl implements BaseVariant {
     }
 
     @Override
-    TextResource getApplicationIdTextResource() {
-        return null
-    }
-
-    @Override
     Task getPreBuild() {
-        return null
-    }
-
-    @Override
-    TaskProvider<Task> getPreBuildProvider() {
         return null
     }
 
@@ -128,17 +116,7 @@ class FakeVariantImpl implements BaseVariant {
     }
 
     @Override
-    TaskProvider<Task> getCheckManifestProvider() {
-        return null
-    }
-
-    @Override
     AidlCompile getAidlCompile() {
-        return null
-    }
-
-    @Override
-    TaskProvider<AidlCompile> getAidlCompileProvider() {
         return null
     }
 
@@ -148,17 +126,7 @@ class FakeVariantImpl implements BaseVariant {
     }
 
     @Override
-    TaskProvider<RenderscriptCompile> getRenderscriptCompileProvider() {
-        return null
-    }
-
-    @Override
     MergeResources getMergeResources() {
-        return null
-    }
-
-    @Override
-    TaskProvider<MergeResources> getMergeResourcesProvider() {
         return null
     }
 
@@ -168,27 +136,12 @@ class FakeVariantImpl implements BaseVariant {
     }
 
     @Override
-    TaskProvider<MergeSourceSetFolders> getMergeAssetsProvider() {
-        return null
-    }
-
-    @Override
     GenerateBuildConfig getGenerateBuildConfig() {
         return null
     }
 
     @Override
-    TaskProvider<GenerateBuildConfig> getGenerateBuildConfigProvider() {
-        return null
-    }
-
-    @Override
     JavaCompile getJavaCompile() throws IllegalStateException {
-        return null
-    }
-
-    @Override
-    TaskProvider<JavaCompile> getJavaCompileProvider() {
         return null
     }
 
@@ -213,17 +166,7 @@ class FakeVariantImpl implements BaseVariant {
     }
 
     @Override
-    TaskProvider<NdkCompile> getNdkCompileProvider() {
-        return null
-    }
-
-    @Override
     Collection<ExternalNativeBuildTask> getExternalNativeBuildTasks() {
-        return null
-    }
-
-    @Override
-    Collection<TaskProvider<ExternalNativeBuildTask>> getExternalNativeBuildProviders() {
         return null
     }
 
@@ -243,17 +186,7 @@ class FakeVariantImpl implements BaseVariant {
     }
 
     @Override
-    TaskProvider<AbstractCopyTask> getProcessJavaResourcesProvider() {
-        return null
-    }
-
-    @Override
     Task getAssemble() {
-        return null
-    }
-
-    @Override
-    TaskProvider<Task> getAssembleProvider() {
         return null
     }
 
@@ -345,15 +278,5 @@ class FakeVariantImpl implements BaseVariant {
     @Override
     boolean getOutputsAreSigned() {
         return false
-    }
-
-    @Override
-    FileCollection getAllRawAndroidResources() {
-        return null
-    }
-
-    @Override
-    void register(Task task) {
-
     }
 }
