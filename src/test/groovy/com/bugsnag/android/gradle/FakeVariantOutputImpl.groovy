@@ -7,7 +7,7 @@ class FakeVariantOutputImpl extends BaseVariantOutputImpl {
     private final String name
 
     protected FakeVariantOutputImpl(String name) {
-        super(null, null)
+        super(null, null, null)
         this.name = name
     }
 

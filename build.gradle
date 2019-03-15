@@ -5,7 +5,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.0'
+        classpath 'com.android.tools.build:gradle:3.3.2'
     }
 }
 
@@ -42,7 +42,7 @@ compileGroovy {
 dependencies {
     compile gradleApi()
     compile localGroovy()
-    compile 'com.android.tools.build:gradle:3.1.0'
+    compile 'com.android.tools.build:gradle:3.3.2'
     compile 'org.apache.httpcomponents:httpclient:4.5.2'
     compile 'org.apache.httpcomponents:httpmime:4.5.2'
     testCompile 'junit:junit:4.12'

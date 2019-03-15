@@ -30,8 +30,11 @@ class BugsnagVariantOutputTask extends DefaultTask {
      * See: https://developer.android.com/studio/build/configure-apk-splits.html#build-apks-filename
      * https://issuetracker.google.com/issues/37085185
      */
-    File getManifestPath() {
+    List<File> getManifestPaths() {
         File directory
+        File directoryBundle
+        List<File> manifestPaths = new ArrayList<>()
+
         def processManifest = BugsnagPlugin.resolveProcessManifest(variantOutput)
         def outputDir = processManifest.manifestOutputDirectory
 
@@ -50,42 +53,58 @@ class BugsnagVariantOutputTask extends DefaultTask {
             project.logger.error("Failed to find manifest at ${manifestFile}")
         } else {
             project.logger.info("Found manifest at ${manifestFile}")
+            manifestPaths.add(manifestFile)
         }
-        manifestFile
+
+        // Attempt to get the bundle manifest directory
+        if (processManifest.hasProperty("bundleManifestOutputDirectory")) {
+            directoryBundle = processManifest.bundleManifestOutputDirectory
+            File manifestFileBundle = Paths.get(directoryBundle.toString(), variantOutput.dirName, "AndroidManifest.xml").toFile()
+            manifestPaths.add(manifestFileBundle)
+        }
+
+        manifestPaths
     }
 
     // Read the API key and Build ID etc..
     void readManifestFile() {
+        def manifestRead = false
+
         // Parse the AndroidManifest.xml
         Namespace ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
-        File manifestPath = getManifestPath()
+        List<File> manifestPaths = getManifestPaths()
 
-        if (!manifestPath.exists()) {
-            return
+        manifestPaths.each { manifestPath ->
+
+            if (!manifestPath.exists() || manifestRead) {
+                return
+            }
+            project.logger.debug("Reading manifest at: ${manifestPath}")
+
+            Node xml = new XmlParser().parse(manifestPath)
+            def metaDataTags = xml.application['meta-data']
+
+            // Get the Bugsnag API key
+            apiKey = getApiKey(metaDataTags, ns)
+            if (!apiKey) {
+                project.logger.warn("Could not find apiKey in '$BugsnagPlugin.API_KEY_TAG' <meta-data> tag in your AndroidManifest.xml or in your gradle config")
+            }
+
+            // Get the build version
+            versionCode = getVersionCode(xml, ns)
+            if (versionCode == null) {
+                project.logger.warn("Could not find 'android:versionCode' value in your AndroidManifest.xml")
+                return
+            }
+
+            // Uniquely identify the build so that we can identify the proguard file.
+            buildUUID = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.BUILD_UUID_TAG)
+
+            // Get the version name
+            versionName = getVersionName(xml, ns)
+
+            manifestRead = true
         }
-        project.logger.debug("Reading manifest at: ${manifestPath}")
-
-        Node xml = new XmlParser().parse(manifestPath)
-        def metaDataTags = xml.application['meta-data']
-
-        // Get the Bugsnag API key
-        apiKey = getApiKey(metaDataTags, ns)
-        if (!apiKey) {
-            project.logger.warn("Could not find apiKey in '$BugsnagPlugin.API_KEY_TAG' <meta-data> tag in your AndroidManifest.xml or in your gradle config")
-        }
-
-        // Get the build version
-        versionCode = getVersionCode(xml, ns)
-        if (versionCode == null) {
-            project.logger.warn("Could not find 'android:versionCode' value in your AndroidManifest.xml")
-            return
-        }
-
-        // Uniquely identify the build so that we can identify the proguard file.
-        buildUUID = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.BUILD_UUID_TAG)
-
-        // Get the version name
-        versionName = getVersionName(xml, ns)
     }
 
     String getApiKey(metaDataTags, Namespace ns) {
@@ -99,7 +118,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
         return apiKey
     }
 
-    private String getManifestMetaData(metaDataTags, Namespace ns, String key) {
+    private String getManifestMetaData(def metaDataTags, Namespace ns, String key) {
         String value = null
 
         def tags = metaDataTags.findAll {
