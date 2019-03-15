@@ -98,7 +98,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
             }
 
             // Uniquely identify the build so that we can identify the proguard file.
-            buildUUID = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.BUILD_UUID_TAG)
+            buildUUID = getBuildUuid(metaDataTags, ns)
 
             // Get the version name
             versionName = getVersionName(xml, ns)
@@ -118,7 +118,11 @@ class BugsnagVariantOutputTask extends DefaultTask {
         return apiKey
     }
 
-    private String getManifestMetaData(def metaDataTags, Namespace ns, String key) {
+    String getBuildUuid(metaDataTags, Namespace ns) {
+        return getManifestMetaData(metaDataTags, ns, BugsnagPlugin.BUILD_UUID_TAG)
+    }
+
+    private String getManifestMetaData(metaDataTags, Namespace ns, String key) {
         String value = null
 
         def tags = metaDataTags.findAll {
