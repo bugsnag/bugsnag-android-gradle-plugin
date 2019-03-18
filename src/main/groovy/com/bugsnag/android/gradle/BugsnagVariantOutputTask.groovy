@@ -4,6 +4,7 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import groovy.xml.Namespace
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 
 import java.nio.file.Paths
 
@@ -70,7 +71,10 @@ class BugsnagVariantOutputTask extends DefaultTask {
         }
 
         // Attempt to get the bundle manifest directory if required
-        if (getBundleManifest && processManifest.hasProperty("bundleManifestOutputDirectory")) {
+        if (getBundleManifest) {
+            if (!processManifest.hasProperty("bundleManifestOutputDirectory")) {
+                throw new GradleException("Android Gradle plugin version 3.3.0 or higher is required to get the bundle manifest")
+            }
             directoryBundle = processManifest.bundleManifestOutputDirectory
             File manifestFileBundle = Paths.get(directoryBundle.toString(), variantOutput.dirName, "AndroidManifest.xml").toFile()
             if (!manifestFileBundle.exists()) {
