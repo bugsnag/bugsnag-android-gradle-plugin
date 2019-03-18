@@ -26,9 +26,9 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
         // Uniquely identify the build so that we can identify the proguard file.
         def buildUUID = UUID.randomUUID().toString()
 
-        manifestPaths.each { manifestPath ->
+        for (def manifestPath in manifestPaths) {
             if (!manifestPath.exists()) {
-                return
+                continue
             }
 
             project.logger.debug("Updating manifest with build UUID: " + manifestPath)
@@ -77,12 +77,11 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
     }
 
     def shouldRun() {
-        def shouldRun = false
         def manifestPaths = getManifestPaths()
 
-        manifestPaths.each { manifestPath ->
-            if (!manifestPath.exists() || shouldRun) {
-                return
+        for (def manifestPath in manifestPaths) {
+            if (!manifestPath.exists()) {
+                continue
             }
 
             def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
@@ -91,10 +90,11 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
                 def tagCount = app['meta-data'].findAll {
                     (it.attributes()[ns.name] == BugsnagPlugin.BUILD_UUID_TAG)
                 }.size()
-                shouldRun = tagCount == 0 || !isInstantRun()
+                if (tagCount == 0 || !isInstantRun()) {
+                    return true
+                }
             }
         }
-        shouldRun
+        return false
     }
-
 }

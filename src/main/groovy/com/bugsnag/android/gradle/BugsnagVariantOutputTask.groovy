@@ -68,17 +68,15 @@ class BugsnagVariantOutputTask extends DefaultTask {
 
     // Read the API key and Build ID etc..
     void readManifestFile() {
-        def manifestRead = false
-
         // Parse the AndroidManifest.xml
         Namespace ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
         List<File> manifestPaths = getManifestPaths()
 
-        manifestPaths.each { manifestPath ->
-
-            if (!manifestPath.exists() || manifestRead) {
-                return
+        for (def manifestPath in manifestPaths) {
+            if (!manifestPath.exists()) {
+                continue
             }
+
             project.logger.debug("Reading manifest at: ${manifestPath}")
 
             Node xml = new XmlParser().parse(manifestPath)
@@ -94,7 +92,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
             versionCode = getVersionCode(xml, ns)
             if (versionCode == null) {
                 project.logger.warn("Could not find 'android:versionCode' value in your AndroidManifest.xml")
-                return
+                continue
             }
 
             // Uniquely identify the build so that we can identify the proguard file.
@@ -103,7 +101,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
             // Get the version name
             versionName = getVersionName(xml, ns)
 
-            manifestRead = true
+            return
         }
     }
 
