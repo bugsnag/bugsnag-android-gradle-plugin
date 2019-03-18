@@ -354,6 +354,35 @@ class BugsnagPlugin implements Plugin<Project> {
         return outputSize > variantSize
     }
 
+    /**
+     * Whether or not an assemble task is going to be run for this variant
+     */
+    static boolean isRunningAssembleTask(BaseVariant variant, BaseVariantOutput output, Project project) {
+        return isRunningTaskWithPrefix(variant, output, project, "assemble")
+    }
+
+    /**
+     * Whether or not a bundle task is going to be run for this variant
+     */
+    static boolean isRunningBundleTask(BaseVariant variant, BaseVariantOutput output, Project project) {
+        return isRunningTaskWithPrefix(variant, output, project, "bundle")
+    }
+
+    /**
+     * Whether or any of a list of the task names for a prefix are going to be run by checking the list
+     * against all of the tasks in the task graph
+     */
+    private static boolean isRunningTaskWithPrefix(BaseVariant variant, BaseVariantOutput output, Project project, String prefix) {
+        Set<String> taskNames = new HashSet<>()
+        taskNames.addAll(findTaskNamesForPrefix(variant, output, prefix))
+
+        return project.gradle.taskGraph.getAllTasks().any { task ->
+            taskNames.any {
+                task.name.endsWith(it)
+            }
+        }
+    }
+
     private static class BugsnagTaskDeps {
         BaseVariant variant
         BaseVariantOutput output
