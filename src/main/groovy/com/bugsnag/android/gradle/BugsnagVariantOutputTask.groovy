@@ -39,11 +39,9 @@ class BugsnagVariantOutputTask extends DefaultTask {
         boolean getAssembleManifest = BugsnagPlugin.isRunningAssembleTask(variant, variantOutput, project)
         boolean getBundleManifest = BugsnagPlugin.isRunningBundleTask(variant, variantOutput, project)
 
-        // If the manifest location could not be reliably determined, return both the assemble and bundle manifest
-        // for processing
+        // If the manifest location could not be reliably determined, fall back to the APK manifest
         if (!getAssembleManifest && !getBundleManifest) {
             getAssembleManifest = true
-            getBundleManifest = true
         }
 
         def processManifest = BugsnagPlugin.resolveProcessManifest(variantOutput)
