@@ -39,9 +39,10 @@ class BugsnagVariantOutputTask extends DefaultTask {
         boolean getAssembleManifest = BugsnagPlugin.isRunningAssembleTask(variant, variantOutput, project)
         boolean getBundleManifest = BugsnagPlugin.isRunningBundleTask(variant, variantOutput, project)
 
-        // If the manifest location could not be reliably determined, fall back to the APK manifest
+        // If the manifest location could not be reliably determined, attempt to get both
         if (!getAssembleManifest && !getBundleManifest) {
             getAssembleManifest = true
+            getBundleManifest = true
         }
 
         def processManifest = BugsnagPlugin.resolveProcessManifest(variantOutput)
@@ -71,15 +72,16 @@ class BugsnagVariantOutputTask extends DefaultTask {
         // Attempt to get the bundle manifest directory if required
         if (getBundleManifest) {
             if (!processManifest.hasProperty("bundleManifestOutputDirectory")) {
-                throw new GradleException("Android Gradle plugin version 3.3.0 or higher is required to get the bundle manifest")
-            }
-            directoryBundle = processManifest.bundleManifestOutputDirectory
-            File manifestFileBundle = Paths.get(directoryBundle.toString(), variantOutput.dirName, "AndroidManifest.xml").toFile()
-            if (!manifestFileBundle.exists()) {
-                project.logger.error("Failed to find bundle manifest at ${manifestFileBundle}")
+                project.logger.error("Android Gradle plugin version 3.3.0 or higher is required to read/write the bundle manifest")
             } else {
-                project.logger.info("Found bundle manifest at ${manifestFileBundle}")
-                manifestPaths.add(manifestFileBundle)
+                directoryBundle = processManifest.bundleManifestOutputDirectory
+                File manifestFileBundle = Paths.get(directoryBundle.toString(), variantOutput.dirName, "AndroidManifest.xml").toFile()
+                if (!manifestFileBundle.exists()) {
+                    project.logger.error("Failed to find bundle manifest at ${manifestFileBundle}")
+                } else {
+                    project.logger.info("Found bundle manifest at ${manifestFileBundle}")
+                    manifestPaths.add(manifestFileBundle)
+                }
             }
         }
 
@@ -101,6 +103,11 @@ class BugsnagVariantOutputTask extends DefaultTask {
 
             Node xml = new XmlParser().parse(manifestPath)
             def metaDataTags = xml.application['meta-data']
+
+            // If the current manifest does not contain the build ID then try the next manifest in the list (if any)
+            if (!(manifestPath == manifestPaths.last()) && !hasBuildUuid(metaDataTags, ns)) {
+                continue
+            }
 
             // Get the Bugsnag API key
             apiKey = getApiKey(metaDataTags, ns)
@@ -134,6 +141,12 @@ class BugsnagVariantOutputTask extends DefaultTask {
             apiKey = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.API_KEY_TAG)
         }
         return apiKey
+    }
+
+    boolean hasBuildUuid(metaDataTags, Namespace ns) {
+        return metaDataTags.any {
+            it.attributes()[ns.name] == BugsnagPlugin.BUILD_UUID_TAG
+        }
     }
 
     String getBuildUuid(metaDataTags, Namespace ns) {
