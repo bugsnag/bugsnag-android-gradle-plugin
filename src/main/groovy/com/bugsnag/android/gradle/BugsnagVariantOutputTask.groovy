@@ -31,56 +31,54 @@ class BugsnagVariantOutputTask extends DefaultTask {
      * https://issuetracker.google.com/issues/37085185
      */
     List<File> getManifestPaths() {
-        File directory
+        File directoryMerged
         File directoryBundle
         List<File> manifestPaths = new ArrayList<>()
 
-        boolean getAssembleManifest = BugsnagPlugin.isRunningAssembleTask(variant, variantOutput, project)
+        boolean getMergedManifest = BugsnagPlugin.isRunningAssembleTask(variant, variantOutput, project)
         boolean getBundleManifest = BugsnagPlugin.isRunningBundleTask(variant, variantOutput, project)
 
         // If the manifest location could not be reliably determined, attempt to get both
-        if (!getAssembleManifest && !getBundleManifest) {
-            getAssembleManifest = true
+        if (!getMergedManifest && !getBundleManifest) {
+            getMergedManifest = true
             getBundleManifest = true
         }
 
         def processManifest = BugsnagPlugin.resolveProcessManifest(variantOutput)
 
-        if (getAssembleManifest) {
+        if (getMergedManifest) {
             def outputDir = processManifest.manifestOutputDirectory
 
             if (outputDir instanceof File) {
-                directory = outputDir
+                directoryMerged = outputDir
             } else {
                 // gradle 4.7 introduced a provider API for lazy evaluation of properties,
                 // AGP subsequently changed the API from File to Provider<File>
                 // see https://docs.gradle.org/4.7/userguide/lazy_configuration.html
-                directory = outputDir.get().asFile
+                directoryMerged = outputDir.get().asFile
             }
 
-            File manifestFile = Paths.get(directory.toString(), variantOutput.dirName, "AndroidManifest.xml").toFile()
-
-            if (!manifestFile.exists()) {
-                project.logger.error("Failed to find manifest at ${manifestFile}")
-            } else {
-                project.logger.info("Found manifest at ${manifestFile}")
-                manifestPaths.add(manifestFile)
-            }
+            addManifestPath(manifestPaths, directoryMerged)
         }
 
         // Attempt to get the bundle manifest directory if required
         if (getBundleManifest) {
             directoryBundle = BugsnagPlugin.resolveBundleManifestOutputDirectory(processManifest)
-            File manifestFileBundle = Paths.get(directoryBundle.toString(), variantOutput.dirName, "AndroidManifest.xml").toFile()
-            if (!manifestFileBundle.exists()) {
-                project.logger.error("Failed to find bundle manifest at ${manifestFileBundle}")
-            } else {
-                project.logger.info("Found bundle manifest at ${manifestFileBundle}")
-                manifestPaths.add(manifestFileBundle)
-            }
+            addManifestPath(manifestPaths, directoryBundle)
         }
 
         manifestPaths
+    }
+
+    void addManifestPath(List<File> manifestPaths, File directory) {
+        File manifestFile = Paths.get(directory.toString(), variantOutput.dirName, "AndroidManifest.xml").toFile()
+
+        if (!manifestFile.exists()) {
+            project.logger.error("Failed to find manifest at ${manifestFile}")
+        } else {
+            project.logger.info("Found manifest at ${manifestFile}")
+            manifestPaths.add(manifestFile)
+        }
     }
 
     // Read the API key and Build ID etc..
