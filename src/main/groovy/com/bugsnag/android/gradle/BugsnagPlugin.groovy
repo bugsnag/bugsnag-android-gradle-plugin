@@ -6,6 +6,7 @@ import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
+import com.android.build.gradle.tasks.ManifestProcessorTask
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -263,6 +264,16 @@ class BugsnagPlugin implements Plugin<Project> {
             return output.processManifestProvider.get()
         } catch (Throwable ignored) {
             return output.processManifest
+        }
+    }
+
+    static File resolveBundleManifestOutputDirectory(ManifestProcessorTask processManifest) {
+        if (processManifest.hasProperty("bundleManifestOutputDirectory")) {
+            // For AGP versions >= 3.3.0 the bundle manifest is output to its own directory
+            return processManifest.bundleManifestOutputDirectory
+        } else {
+            // For AGP versions < 3.3.0 the bundle manifest is the merged manifest
+            return processManifest.manifestOutputDirectory
         }
     }
 
