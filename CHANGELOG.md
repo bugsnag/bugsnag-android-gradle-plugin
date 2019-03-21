@@ -1,3 +1,8 @@
+## 4.1.1 (2019-03-21)
+
+* Add BUILD_UUID to app bundle manifests
+[#153](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/153)
+
 ## 4.1.0 (2019-03-13)
 
 Note: this version of the plugin will fail the build if a mapping file is not uploaded successfully.
