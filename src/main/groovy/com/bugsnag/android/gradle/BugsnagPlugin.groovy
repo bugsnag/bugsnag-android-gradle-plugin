@@ -6,6 +6,7 @@ import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
+import com.android.build.gradle.tasks.ManifestProcessorTask
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -266,6 +267,16 @@ class BugsnagPlugin implements Plugin<Project> {
         }
     }
 
+    static File resolveBundleManifestOutputDirectory(ManifestProcessorTask processManifest) {
+        if (processManifest.hasProperty("bundleManifestOutputDirectory")) {
+            // For AGP versions >= 3.3.0 the bundle manifest is output to its own directory
+            return processManifest.bundleManifestOutputDirectory
+        } else {
+            // For AGP versions < 3.3.0 the bundle manifest is the merged manifest
+            return processManifest.manifestOutputDirectory
+        }
+    }
+
     /**
      * Automatically add the "edit proguard settings" task to the
      * build process.
@@ -352,6 +363,35 @@ class BugsnagPlugin implements Plugin<Project> {
             outputSize += variant.outputs.size()
         }
         return outputSize > variantSize
+    }
+
+    /**
+     * Whether or not an assemble task is going to be run for this variant
+     */
+    static boolean isRunningAssembleTask(BaseVariant variant, BaseVariantOutput output, Project project) {
+        return isRunningTaskWithPrefix(variant, output, project, "assemble")
+    }
+
+    /**
+     * Whether or not a bundle task is going to be run for this variant
+     */
+    static boolean isRunningBundleTask(BaseVariant variant, BaseVariantOutput output, Project project) {
+        return isRunningTaskWithPrefix(variant, output, project, "bundle")
+    }
+
+    /**
+     * Whether or any of a list of the task names for a prefix are going to be run by checking the list
+     * against all of the tasks in the task graph
+     */
+    private static boolean isRunningTaskWithPrefix(BaseVariant variant, BaseVariantOutput output, Project project, String prefix) {
+        Set<String> taskNames = new HashSet<>()
+        taskNames.addAll(findTaskNamesForPrefix(variant, output, prefix))
+
+        return project.gradle.taskGraph.getAllTasks().any { task ->
+            taskNames.any {
+                task.name.endsWith(it)
+            }
+        }
     }
 
     private static class BugsnagTaskDeps {
