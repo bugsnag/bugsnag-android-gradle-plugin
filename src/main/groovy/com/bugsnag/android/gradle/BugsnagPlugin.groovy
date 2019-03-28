@@ -262,7 +262,7 @@ class BugsnagPlugin implements Plugin<Project> {
 
         def resourceTasks = project.tasks.findAll {
             def name = it.name.toLowerCase()
-            name.contains("bundle") && name.contains("resources")
+            name.startsWith("bundle") && name.endsWith("resources")
         }
 
         resourceTasks.forEach {
