@@ -1,3 +1,8 @@
+## 4.1.2 (2019-04-02)
+
+* Fix task ordering of build UUID generation when shrinkResources enabled
+[#155](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/155)
+
 ## 4.1.1 (2019-03-21)
 
 * Add BUILD_UUID to app bundle manifests
