@@ -1,3 +1,8 @@
+## 4.X.X (TBD)
+
+* Alter NDK project detection to check for the cmake/ndkbuild path
+[#156](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/156)
+
 ## 4.1.2 (2019-04-02)
 
 * Fix task ordering of build UUID generation when shrinkResources enabled
