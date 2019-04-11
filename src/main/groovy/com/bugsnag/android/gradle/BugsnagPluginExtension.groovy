@@ -14,7 +14,7 @@ class BugsnagPluginExtension {
     boolean uploadDebugBuildMappings = false
     boolean overwrite = false
     int retryCount = 0
-    boolean ndk = false
+    Boolean ndk = null
     String sharedObjectPath = null
     String projectRoot = null
     boolean failOnUploadError = true
