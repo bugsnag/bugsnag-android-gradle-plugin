@@ -1,3 +1,8 @@
+## 4.X.X (TBD)
+
+* Disable proguard mapping task setup when variant does not obfuscate
+[#157](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/157)
+
 ## 4.1.2 (2019-04-02)
 
 * Fix task ordering of build UUID generation when shrinkResources enabled
