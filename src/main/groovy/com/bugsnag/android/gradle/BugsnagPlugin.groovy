@@ -159,10 +159,9 @@ class BugsnagPlugin implements Plugin<Project> {
         if (project.bugsnag.ndk != null) { // always respect user override
             return project.bugsnag.ndk
         } else { // infer whether native build or not
-            def tasks = project.tasks.findAll()
-            return tasks.stream().anyMatch {
-                it.name.startsWith("externalNative")
-            }
+            boolean usesCmake = project.android.externalNativeBuild.cmake.path != null
+            boolean usesNdkBuild = project.android.externalNativeBuild.ndkBuild.path != null
+            return usesCmake || usesNdkBuild
         }
     }
 
