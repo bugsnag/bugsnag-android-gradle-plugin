@@ -28,7 +28,7 @@ class PluginExtensionTest {
         assertFalse(proj.bugsnag.uploadDebugBuildMappings)
         assertFalse(proj.bugsnag.overwrite)
         assertEquals(0, proj.bugsnag.retryCount)
-        assertFalse(proj.bugsnag.ndk)
+        assertNull(proj.bugsnag.ndk)
         assertNull(proj.bugsnag.sharedObjectPath)
         assertFalse(BugsnagPlugin.hasDexguardPlugin(proj))
         assertTrue(proj.bugsnag.failOnUploadError)
