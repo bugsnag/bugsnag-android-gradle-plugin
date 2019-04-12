@@ -30,6 +30,7 @@ install:
   - sudo apt-get install -y nodejs
 
 script:
+  - ./gradlew check
   - ./gradlew clean install --stacktrace
   - ./gradlew clean build --stacktrace
   - bundle exec maze-runner -c --verbose
