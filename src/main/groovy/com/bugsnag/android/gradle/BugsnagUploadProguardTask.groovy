@@ -3,7 +3,6 @@ package com.bugsnag.android.gradle
 import org.apache.http.entity.mime.HttpMultipartMode
 import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
-import org.apache.http.util.TextUtils
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction

@@ -10,7 +10,6 @@ import org.apache.http.params.HttpConnectionParams
 import org.apache.http.params.HttpParams
 import org.apache.http.util.EntityUtils
 import org.gradle.api.GradleException
-import org.gradle.api.GradleScriptException
 
 /**
  Task to upload ProGuard mapping files to Bugsnag.
