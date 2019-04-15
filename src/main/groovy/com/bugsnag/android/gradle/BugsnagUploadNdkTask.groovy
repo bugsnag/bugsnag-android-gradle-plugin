@@ -178,23 +178,23 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
      * @param outputFile The output file
      */
     static void outputZipFile(InputStream stdout, File outputFile) {
-        GZIPOutputStream zipStream = null;
+        GZIPOutputStream zipStream = null
 
         try {
-            zipStream = new GZIPOutputStream(new FileOutputStream(outputFile));
+            zipStream = new GZIPOutputStream(new FileOutputStream(outputFile))
 
-            byte[] buffer = new byte[8192];
-            int len;
+            byte[] buffer = new byte[8192]
+            int len
             while((len=stdout.read(buffer)) != -1){
-                zipStream.write(buffer, 0, len);
+                zipStream.write(buffer, 0, len)
             }
 
         } finally {
             if (zipStream != null) {
-                zipStream.close();
+                zipStream.close()
             }
 
-            stdout.close();
+            stdout.close()
         }
     }
 

@@ -26,7 +26,7 @@ enum Abi {
         "x86_64",
         "x86_64",
         "x86_64-linux-android"
-    );
+    )
 
     final String abiName
     final String toolchainPrefix
