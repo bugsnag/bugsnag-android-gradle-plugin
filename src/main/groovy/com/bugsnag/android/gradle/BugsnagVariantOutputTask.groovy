@@ -74,11 +74,11 @@ class BugsnagVariantOutputTask extends DefaultTask {
         File manifestFile = Paths.get(directory.toString(), variantOutput.dirName,
             "AndroidManifest.xml").toFile()
 
-        if (!manifestFile.exists()) {
-            project.logger.error("Failed to find manifest at ${manifestFile}")
-        } else {
+        if (manifestFile.exists()) {
             project.logger.info("Found manifest at ${manifestFile}")
             manifestPaths.add(manifestFile)
+        } else {
+            project.logger.error("Failed to find manifest at ${manifestFile}")
         }
     }
 
