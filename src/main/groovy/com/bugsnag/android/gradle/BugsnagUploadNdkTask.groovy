@@ -1,5 +1,7 @@
 package com.bugsnag.android.gradle
 
+import static groovy.io.FileType.FILES
+
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import org.apache.http.entity.mime.MultipartEntity
@@ -10,8 +12,6 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
 
 import java.util.zip.GZIPOutputStream
-
-import static groovy.io.FileType.FILES
 
 /**
  Task to upload shared object mapping files to Bugsnag.
