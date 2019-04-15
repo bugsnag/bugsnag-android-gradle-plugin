@@ -143,7 +143,8 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
                 project.logger.lifecycle("Creating symbol file at ${outputFile}")
 
                 // Call objdump, redirecting output to the output file
-                ProcessBuilder builder = new ProcessBuilder(objDumpPath.toString(), "--dwarf=info", "--dwarf=rawline", sharedObject.toString())
+                ProcessBuilder builder = new ProcessBuilder(objDumpPath.toString(),
+                    "--dwarf=info", "--dwarf=rawline", sharedObject.toString())
                 builder.redirectError(errorOutputFile)
                 Process process = builder.start()
 
@@ -154,7 +155,8 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
                 if (process.waitFor() == 0) {
                     return outputFile
                 } else {
-                    project.logger.error("failed to generate symbols for " + arch + ", see " + errorOutputFile.toString() + " for more details")
+                    project.logger.error("failed to generate symbols for " + arch + ", see "
+                        + errorOutputFile.toString() + " for more details")
                     return null
                 }
             } catch (Exception e) {
@@ -262,7 +264,8 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
     }
 
     static File calculateObjDumpLocation(String ndkDir, Abi abi, String osName) {
-        new File("$ndkDir/toolchains/$abi.toolchainPrefix-4.9/prebuilt/$osName/bin/$abi.objdumpPrefix-objdump")
+        new File("$ndkDir/toolchains/$abi.toolchainPrefix-4.9/prebuilt/" +
+            "$osName/bin/$abi.objdumpPrefix-objdump")
     }
 
     static String calculateOsName() {

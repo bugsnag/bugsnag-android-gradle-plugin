@@ -71,7 +71,8 @@ class BugsnagVariantOutputTask extends DefaultTask {
     }
 
     void addManifestPath(List<File> manifestPaths, File directory) {
-        File manifestFile = Paths.get(directory.toString(), variantOutput.dirName, "AndroidManifest.xml").toFile()
+        File manifestFile = Paths.get(directory.toString(), variantOutput.dirName,
+            "AndroidManifest.xml").toFile()
 
         if (!manifestFile.exists()) {
             project.logger.error("Failed to find manifest at ${manifestFile}")
@@ -105,7 +106,8 @@ class BugsnagVariantOutputTask extends DefaultTask {
             // Get the Bugsnag API key
             apiKey = getApiKey(metaDataTags, ns)
             if (!apiKey) {
-                project.logger.warn("Could not find apiKey in '$BugsnagPlugin.API_KEY_TAG' <meta-data> tag in your AndroidManifest.xml or in your gradle config")
+                project.logger.warn("Could not find apiKey in '$BugsnagPlugin.API_KEY_TAG' " +
+                    "<meta-data> tag in your AndroidManifest.xml or in your gradle config")
             }
 
             // Get the build version

@@ -67,7 +67,8 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
                     }
                 }
             } else {
-                project.logger.error("Bugsnag detected invalid manifest with no application element so did not write Build UUID")
+                project.logger.error("Bugsnag detected invalid manifest with no " +
+                    "application element so did not write Build UUID")
             }
         }
     }

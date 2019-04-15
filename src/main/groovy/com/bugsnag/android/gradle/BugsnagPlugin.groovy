@@ -137,7 +137,8 @@ class BugsnagPlugin implements Plugin<Project> {
      * Creates a bugsnag task to upload proguard mapping file
      */
     private static void setupMappingFileUpload(Project project, BugsnagTaskDeps deps) {
-        def uploadTask = project.tasks.create("uploadBugsnag${taskNameForOutput(deps.output)}Mapping", BugsnagUploadProguardTask)
+        String taskName = "uploadBugsnag${taskNameForOutput(deps.output)}Mapping"
+        def uploadTask = project.tasks.create(taskName, BugsnagUploadProguardTask)
         uploadTask.partName = "proguard"
         prepareUploadTask(uploadTask, deps, project)
     }
@@ -145,7 +146,8 @@ class BugsnagPlugin implements Plugin<Project> {
     private static void setupNdkMappingFileUpload(Project project, BugsnagTaskDeps deps) {
         if (isNdkProject(project)) {
             // Create a Bugsnag task to upload NDK mapping file(s)
-            BugsnagUploadNdkTask uploadNdkTask = project.tasks.create("uploadBugsnagNdk${taskNameForOutput(deps.output)}Mapping", BugsnagUploadNdkTask)
+            def taskName = "uploadBugsnagNdk${taskNameForOutput(deps.output)}Mapping"
+            BugsnagUploadNdkTask uploadNdkTask = project.tasks.create(taskName, BugsnagUploadNdkTask)
             prepareUploadTask(uploadNdkTask, deps, project)
 
             uploadNdkTask.variantName = taskNameForVariant(deps.variant)
@@ -166,7 +168,8 @@ class BugsnagPlugin implements Plugin<Project> {
     }
 
     private static void setupReleasesTask(Project project, BugsnagTaskDeps deps) {
-        def releasesTask = project.tasks.create("bugsnagRelease${taskNameForOutput(deps.output)}Task", BugsnagReleasesTask)
+        String taskName = "bugsnagRelease${taskNameForOutput(deps.output)}Task"
+        def releasesTask = project.tasks.create(taskName, BugsnagReleasesTask)
         setupBugsnagTask(releasesTask, deps)
 
         if (shouldUploadDebugMappings(project, deps.output)) {
@@ -186,7 +189,8 @@ class BugsnagPlugin implements Plugin<Project> {
         task.variant = deps.variant
     }
 
-    private static void prepareUploadTask(BugsnagMultiPartUploadTask uploadTask, BugsnagTaskDeps deps, Project project) {
+    private static void prepareUploadTask(BugsnagMultiPartUploadTask uploadTask,
+                                          BugsnagTaskDeps deps, Project project) {
         setupBugsnagTask(uploadTask, deps)
         uploadTask.applicationId = deps.variant.applicationId
 
@@ -252,7 +256,8 @@ class BugsnagPlugin implements Plugin<Project> {
     }
 
     private static void setupManifestUuidTask(Project project, BugsnagTaskDeps deps) {
-        BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${taskNameForOutput(deps.output)}Manifest", BugsnagManifestTask)
+        String taskName = "processBugsnag${taskNameForOutput(deps.output)}Manifest"
+        BugsnagManifestTask manifestTask = project.tasks.create(taskName, BugsnagManifestTask)
         setupBugsnagTask(manifestTask, deps)
         ManifestProcessorTask processManifest = resolveProcessManifest(deps.output)
 
@@ -303,7 +308,8 @@ class BugsnagPlugin implements Plugin<Project> {
      * as it is now part of the "transforms" process.
      */
     private void setupProguardAutoConfig(Project project, BaseVariant variant) {
-        BugsnagProguardConfigTask proguardConfigTask = project.tasks.create("processBugsnag${taskNameForVariant(variant)}Proguard", BugsnagProguardConfigTask)
+        String taskname = "processBugsnag${taskNameForVariant(variant)}Proguard"
+        BugsnagProguardConfigTask proguardConfigTask = project.tasks.create(taskname, BugsnagProguardConfigTask)
         proguardConfigTask.group = GROUP_NAME
         proguardConfigTask.variant = variant
 
@@ -393,7 +399,8 @@ class BugsnagPlugin implements Plugin<Project> {
      * Whether or any of a list of the task names for a prefix are going to be run by checking the list
      * against all of the tasks in the task graph
      */
-    private static boolean isRunningTaskWithPrefix(BaseVariant variant, BaseVariantOutput output, Project project, String prefix) {
+    private static boolean isRunningTaskWithPrefix(BaseVariant variant,
+                                                   BaseVariantOutput output, Project project, String prefix) {
         Set<String> taskNames = new HashSet<>()
         taskNames.addAll(findTaskNamesForPrefix(variant, output, prefix))
 
