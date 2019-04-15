@@ -37,7 +37,7 @@ class BugsnagProguardConfigTask extends DefaultTask {
         File file = project.file(PROGUARD_CONFIG_PATH)
 
         // Create the directory if it doesnt exist already
-        file.getParentFile().mkdirs()
+        file.parentFile.mkdirs()
 
         // Write our recommended proguard settings to this file
         FileWriter fr = null

@@ -149,7 +149,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
                 Process process = builder.start()
 
                 // Output the file to a zip
-                InputStream stdout = process.getInputStream()
+                InputStream stdout = process.inputStream
                 outputZipFile(stdout, outputFile)
 
                 if (process.waitFor() == 0) {
@@ -160,7 +160,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
                     return null
                 }
             } catch (Exception e) {
-                project.logger.error("failed to generate symbols for " + arch + ": " + e.getMessage(), e)
+                project.logger.error("failed to generate symbols for " + arch + ": " + e.message, e)
             } finally {
                 if (outReader != null) {
                     outReader.close()

@@ -86,9 +86,9 @@ class BugsnagVariantOutputTask extends DefaultTask {
     void readManifestFile() {
         // Parse the AndroidManifest.xml
         Namespace ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
-        List<File> manifestPaths = getManifestPaths()
+        List<File> paths = manifestPaths
 
-        for (File manifestPath in manifestPaths) {
+        for (File manifestPath in paths) {
             if (!manifestPath.exists()) {
                 continue
             }
@@ -99,7 +99,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
             def metaDataTags = xml.application['meta-data']
 
             // If the current manifest does not contain the build ID then try the next manifest in the list (if any)
-            if (!(manifestPath == manifestPaths.last()) && !hasBuildUuid(metaDataTags, ns)) {
+            if (!(manifestPath == paths.last()) && !hasBuildUuid(metaDataTags, ns)) {
                 continue
             }
 

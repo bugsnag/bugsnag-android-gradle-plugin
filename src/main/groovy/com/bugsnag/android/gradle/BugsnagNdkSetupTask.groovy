@@ -15,12 +15,12 @@ class BugsnagNdkSetupTask extends DefaultTask {
         def configs = project.configurations.findAll {
             it.toString().contains('CompileClasspath')
         }.each { config ->
-            def artifact = config.resolvedConfiguration.getResolvedArtifacts().find {
-                String identifier = it.getId().getComponentIdentifier().toString()
-                identifier.contains("bugsnag-android-ndk") && it.getFile() != null
+            def artifact = config.resolvedConfiguration.resolvedArtifacts.find {
+                String identifier = it.id.componentIdentifier.toString()
+                identifier.contains("bugsnag-android-ndk") && it.file != null
             }
             if (artifact) {
-                File artifactFile = artifact.getFile()
+                File artifactFile = artifact.file
                 File buildDir = project.buildDir
                 File dst = new File(buildDir, "/intermediates/bugsnag-libs")
 

@@ -65,7 +65,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
             os = conn.outputStream
             os.write(payload.toString().getBytes(CHARSET_UTF8))
 
-            int statusCode = conn.getResponseCode()
+            int statusCode = conn.responseCode
 
             if (statusCode == 200) {
                 project.logger.info("Uploaded release info to Bugsnag")

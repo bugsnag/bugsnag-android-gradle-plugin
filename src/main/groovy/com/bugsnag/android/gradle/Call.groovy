@@ -19,7 +19,7 @@ abstract class Call {
     void execute() {
         boolean uploadSuccessful = makeApiCall()
 
-        int maxRetryCount = getRetryCount()
+        int maxRetryCount = retryCount
         int retryCount = maxRetryCount
         while (!uploadSuccessful && retryCount > 0) {
             project.logger.warn(String.format("Retrying Bugsnag upload (%d/%d) ...",

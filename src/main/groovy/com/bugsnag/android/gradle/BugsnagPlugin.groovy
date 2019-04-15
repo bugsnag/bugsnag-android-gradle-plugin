@@ -339,7 +339,7 @@ class BugsnagPlugin implements Plugin<Project> {
 
     private static void dependTaskOnPackageTask(BaseVariant variant, Task task) {
         if (variant instanceof LibraryVariant) {
-            variant.getPackageLibrary().dependsOn task
+            variant.packageLibrary.dependsOn task
         } else {
             resolvePackageApplication(variant).dependsOn task
         }
@@ -409,7 +409,7 @@ class BugsnagPlugin implements Plugin<Project> {
         Set<String> taskNames = new HashSet<>()
         taskNames.addAll(findTaskNamesForPrefix(variant, output, prefix))
 
-        project.gradle.taskGraph.getAllTasks().any { task ->
+        project.gradle.taskGraph.allTasks.any { task ->
             taskNames.any {
                 task.name.endsWith(it)
             }

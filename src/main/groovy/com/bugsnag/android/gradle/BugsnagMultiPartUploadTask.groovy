@@ -1,5 +1,6 @@
 package com.bugsnag.android.gradle
 
+import org.apache.http.HttpEntity
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpPost
@@ -49,7 +50,7 @@ abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
 
         boolean uploadSuccessful = uploadToServer(mpEntity)
 
-        int maxRetryCount = getRetryCount()
+        int maxRetryCount = retryCount
         int retryCount = maxRetryCount
         while (!uploadSuccessful && retryCount > 0) {
             project.logger.warn(String.format("Retrying Bugsnag upload (%d/%d) ...",
@@ -96,7 +97,7 @@ abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
         httpPost.setEntity(mpEntity)
 
         HttpClient httpClient = new DefaultHttpClient()
-        HttpParams params = httpClient.getParams()
+        HttpParams params = httpClient.params
         HttpConnectionParams.setConnectionTimeout(params, TIMEOUT_MILLIS)
         HttpConnectionParams.setSoTimeout(params, TIMEOUT_MILLIS)
 
@@ -104,8 +105,9 @@ abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
         def responseEntity
         try {
             HttpResponse response = httpClient.execute(httpPost)
-            statusCode = response.getStatusLine().getStatusCode()
-            responseEntity = EntityUtils.toString(response.getEntity(), "utf-8")
+            statusCode = response.statusLine.statusCode
+            HttpEntity entity = response.entity
+            responseEntity = EntityUtils.toString(entity, "utf-8")
         } catch (Exception e) {
             project.logger.error(String.format("Bugsnag upload failed: %s", e))
             return false

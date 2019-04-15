@@ -26,12 +26,12 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
 
     @TaskAction
     void updateManifest() {
-        List<File> manifestPaths = getManifestPaths()
+        List<File> paths = manifestPaths
 
         // Uniquely identify the build so that we can identify the proguard file.
         String buildUUID = UUID.randomUUID().toString()
 
-        for (File manifestPath in manifestPaths) {
+        for (File manifestPath in paths) {
             if (!manifestPath.exists()) {
                 continue
             }
@@ -83,9 +83,9 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
     }
 
     boolean shouldRun() {
-        List<File> manifestPaths = getManifestPaths()
+        List<File> paths = manifestPaths
 
-        for (File manifestPath in manifestPaths) {
+        for (File manifestPath in paths) {
             if (!manifestPath.exists()) {
                 continue
             }
