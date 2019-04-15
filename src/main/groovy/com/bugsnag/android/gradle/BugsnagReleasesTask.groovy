@@ -42,7 +42,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         new Call(project) {
             @Override
             boolean makeApiCall() {
-                return deliverPayload(payload)
+                deliverPayload(payload)
             }
         }.execute()
     }
@@ -171,11 +171,11 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
     }
 
     static boolean isValidPayload(String apiKey, String versionName) {
-        return apiKey != null && versionName != null
+        apiKey != null && versionName != null
     }
 
     static boolean isValidVcsProvider(String provider) {
-        return provider == null || VALID_VCS_PROVIDERS.contains(provider)
+        provider == null || VALID_VCS_PROVIDERS.contains(provider)
     }
 
     static String parseProviderUrl(String url) {

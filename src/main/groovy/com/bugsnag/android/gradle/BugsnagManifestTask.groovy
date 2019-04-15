@@ -96,6 +96,6 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
                 }
             }
         }
-        return false
+        false
     }
 }

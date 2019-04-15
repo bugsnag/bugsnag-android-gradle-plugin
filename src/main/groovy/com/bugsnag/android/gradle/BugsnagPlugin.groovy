@@ -76,12 +76,12 @@ class BugsnagPlugin implements Plugin<Project> {
             .flatten()
 
         def bugsnagVersion = deps.stream()
-            .filter { dep -> return dep.group == "com.bugsnag" && dep.name == "bugsnag-android" }
+            .filter { dep -> dep.group == "com.bugsnag" && dep.name == "bugsnag-android" }
             .distinct()
-            .map({ dep -> return dep.version })
+            .map({ dep -> dep.version })
             .findFirst()
 
-        return bugsnagVersion.present ? VersionNumber.parse(bugsnagVersion.get()) : VersionNumber.UNKNOWN
+        bugsnagVersion.present ? VersionNumber.parse(bugsnagVersion.get()) : VersionNumber.UNKNOWN
     }
 
     private static void setupNdkProject(Project project) {
@@ -244,7 +244,7 @@ class BugsnagPlugin implements Plugin<Project> {
         taskNames.add(assembleTaskName.replaceAll("assemble", prefix))
         taskNames.add(buildTypeTaskName.replaceAll("assemble", prefix))
         taskNames.add(variantTaskName.replaceAll("assemble", prefix))
-        return taskNames
+        taskNames
     }
 
     private static def resolveAssembleTask(BaseVariant variant) {
@@ -354,14 +354,14 @@ class BugsnagPlugin implements Plugin<Project> {
         }
 
         // Ignore any conflicting properties, bail if anything has a disable flag.
-        return (variant.productFlavors + variant.buildType).any(hasDisabledBugsnag)
+        (variant.productFlavors + variant.buildType).any(hasDisabledBugsnag)
     }
 
     /**
      * Returns true if the DexGuard plugin has been applied to the project
      */
     static boolean hasDexguardPlugin(Project project) {
-        return project.pluginManager.hasPlugin("dexguard")
+        project.pluginManager.hasPlugin("dexguard")
     }
 
     /**
@@ -378,21 +378,21 @@ class BugsnagPlugin implements Plugin<Project> {
         variants.forEach { variant ->
             outputSize += variant.outputs.size()
         }
-        return outputSize > variantSize
+        outputSize > variantSize
     }
 
     /**
      * Whether or not an assemble task is going to be run for this variant
      */
     static boolean isRunningAssembleTask(BaseVariant variant, BaseVariantOutput output, Project project) {
-        return isRunningTaskWithPrefix(variant, output, project, "assemble")
+        isRunningTaskWithPrefix(variant, output, project, "assemble")
     }
 
     /**
      * Whether or not a bundle task is going to be run for this variant
      */
     static boolean isRunningBundleTask(BaseVariant variant, BaseVariantOutput output, Project project) {
-        return isRunningTaskWithPrefix(variant, output, project, "bundle")
+        isRunningTaskWithPrefix(variant, output, project, "bundle")
     }
 
     /**
@@ -404,7 +404,7 @@ class BugsnagPlugin implements Plugin<Project> {
         Set<String> taskNames = new HashSet<>()
         taskNames.addAll(findTaskNamesForPrefix(variant, output, prefix))
 
-        return project.gradle.taskGraph.getAllTasks().any { task ->
+        project.gradle.taskGraph.getAllTasks().any { task ->
             taskNames.any {
                 task.name.endsWith(it)
             }

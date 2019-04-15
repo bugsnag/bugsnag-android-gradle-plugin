@@ -44,7 +44,7 @@ abstract class Call {
      * @return the retry count
      */
     int getRetryCount() {
-        return project.bugsnag.retryCount >= MAX_RETRY_COUNT ? MAX_RETRY_COUNT : project.bugsnag.retryCount
+        project.bugsnag.retryCount >= MAX_RETRY_COUNT ? MAX_RETRY_COUNT : project.bugsnag.retryCount
     }
 
 }

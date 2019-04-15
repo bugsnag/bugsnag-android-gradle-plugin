@@ -169,8 +169,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
         } else {
             project.logger.error("Unable to upload NDK symbols: Could not find objdump location for " + arch)
         }
-
-        return null
+        null
     }
 
     /**
@@ -241,12 +240,12 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
         } catch (Throwable ex) {
             project.logger.error("Error attempting to calculate objdump location: " + ex.message)
         }
-        return null
+        null
     }
 
     private Object getObjDumpOverride(String arch) {
         Map<String, String> paths = project.bugsnag.objdumpPaths
-        return paths != null ? paths[arch] : null
+        paths != null ? paths[arch] : null
     }
 
     static File findObjDump(Project project, String arch) {
@@ -260,7 +259,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
         if (osName == null) {
             throw new IllegalStateException("Failed to calculate OS name")
         }
-        return calculateObjDumpLocation(ndkDir, abi, osName)
+        calculateObjDumpLocation(ndkDir, abi, osName)
     }
 
     static File calculateObjDumpLocation(String ndkDir, Abi abi, String osName) {

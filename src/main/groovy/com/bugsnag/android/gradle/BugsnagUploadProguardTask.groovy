@@ -75,7 +75,7 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
             }
         }
         // use AGP supplied value by default, or as fallback
-        return variant.mappingFile
+        variant.mappingFile
     }
 
     /**
@@ -96,7 +96,7 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
                 outputDir = ""
             }
         }
-        return Paths.get(buildDir, "outputs", "mapping", variant.dirName, outputDir, "mapping.txt").toFile()
+        Paths.get(buildDir, "outputs", "mapping", variant.dirName, outputDir, "mapping.txt").toFile()
     }
 
 }

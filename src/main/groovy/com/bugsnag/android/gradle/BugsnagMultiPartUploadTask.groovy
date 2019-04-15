@@ -119,7 +119,7 @@ abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
 
         project.logger.error(String.format("Bugsnag upload failed with code %d: %s",
             statusCode, responseEntity))
-        return false
+        false
     }
 
     /**
@@ -129,7 +129,7 @@ abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
      * @return the retry count
      */
     int getRetryCount() {
-        return project.bugsnag.retryCount >= MAX_RETRY_COUNT ? MAX_RETRY_COUNT : project.bugsnag.retryCount
+        project.bugsnag.retryCount >= MAX_RETRY_COUNT ? MAX_RETRY_COUNT : project.bugsnag.retryCount
     }
 
 }

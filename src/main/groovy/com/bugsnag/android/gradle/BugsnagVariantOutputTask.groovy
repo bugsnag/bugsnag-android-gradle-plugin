@@ -135,17 +135,17 @@ class BugsnagVariantOutputTask extends DefaultTask {
         } else {
             apiKey = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.API_KEY_TAG)
         }
-        return apiKey
+        apiKey
     }
 
     boolean hasBuildUuid(metaDataTags, Namespace ns) {
-        return metaDataTags.any {
+        metaDataTags.any {
             it.attributes()[ns.name] == BugsnagPlugin.BUILD_UUID_TAG
         }
     }
 
     String getBuildUuid(metaDataTags, Namespace ns) {
-        return getManifestMetaData(metaDataTags, ns, BugsnagPlugin.BUILD_UUID_TAG)
+        getManifestMetaData(metaDataTags, ns, BugsnagPlugin.BUILD_UUID_TAG)
     }
 
     private String getManifestMetaData(metaDataTags, Namespace ns, String key) {
@@ -159,7 +159,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
         } else {
             value = tags[0].attributes()[ns.value]
         }
-        return value
+        value
     }
 
     String getVersionName(Node xml, Namespace ns) {
