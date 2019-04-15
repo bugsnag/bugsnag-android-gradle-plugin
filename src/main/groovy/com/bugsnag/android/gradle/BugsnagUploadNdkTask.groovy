@@ -186,7 +186,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
 
             byte[] buffer = new byte[8192]
             int len
-            while((len=stdout.read(buffer)) != -1){
+            while ((len = stdout.read(buffer)) != -1) {
                 zipStream.write(buffer, 0, len)
             }
 

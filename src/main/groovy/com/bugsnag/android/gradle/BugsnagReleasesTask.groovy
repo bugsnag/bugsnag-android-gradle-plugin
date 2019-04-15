@@ -209,5 +209,3 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         }
     }
 }
-
-
