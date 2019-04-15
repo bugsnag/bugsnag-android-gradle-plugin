@@ -2,6 +2,7 @@ package com.bugsnag.android.gradle
 
 import groovy.xml.Namespace
 import org.gradle.api.tasks.TaskAction
+
 /**
  Task to add a unique build UUID to AndroidManifest.xml during the build
  process. This is used by Bugsnag to identify which proguard mapping file
