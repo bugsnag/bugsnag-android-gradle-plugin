@@ -15,6 +15,10 @@ import org.gradle.api.tasks.TaskAction
  */
 class BugsnagManifestTask extends BugsnagVariantOutputTask {
 
+    private static final String TAG_META_DATA = 'meta-data'
+    private static final String NS_URI_ANDROID = "http://schemas.android.com/apk/res/android"
+    private static final String NS_PREFIX_ANDROID = "android"
+
     BugsnagManifestTask() {
         super()
         this.description = "Adds a unique build UUID to AndroidManifest to link proguard mappings to crash reports"
@@ -35,12 +39,12 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
             project.logger.debug("Updating manifest with build UUID: " + manifestPath)
 
             // Parse the AndroidManifest.xml
-            def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
+            def ns = new Namespace(NS_URI_ANDROID, NS_PREFIX_ANDROID)
             def xml = new XmlParser().parse(manifestPath)
 
             def application = xml.application[0]
             if (application) {
-                def metaDataTags = application['meta-data']
+                def metaDataTags = application[TAG_META_DATA]
 
                 // remove any old BUILD_UUID_TAG elements
                 metaDataTags.findAll {
@@ -50,7 +54,7 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
                 }
 
                 // Add the new BUILD_UUID_TAG element
-                application.appendNode('meta-data', [(ns.name): BugsnagPlugin.BUILD_UUID_TAG, (ns.value): buildUUID])
+                application.appendNode(TAG_META_DATA, [(ns.name): BugsnagPlugin.BUILD_UUID_TAG, (ns.value): buildUUID])
 
                 // Write the manifest file
                 FileWriter writer = null
@@ -86,10 +90,10 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
                 continue
             }
 
-            def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
+            def ns = new Namespace(NS_URI_ANDROID, NS_PREFIX_ANDROID)
             def app = new XmlParser().parse(manifestPath).application[0]
             if (app) {
-                def tagCount = app['meta-data'].findAll {
+                def tagCount = app[TAG_META_DATA].findAll {
                     (it.attributes()[ns.name] == BugsnagPlugin.BUILD_UUID_TAG)
                 }.size()
                 if (tagCount == 0 || !isInstantRun()) {

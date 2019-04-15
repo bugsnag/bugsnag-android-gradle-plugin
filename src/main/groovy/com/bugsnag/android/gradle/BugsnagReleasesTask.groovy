@@ -19,6 +19,8 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
     private static final String MK_JAVA_VERSION = "java.version"
     private static final String MK_GRADLE_VERSION = "gradle.version"
     private static final String MK_GIT_VERSION = "git.version"
+    private static final String VCS_COMMAND = "git"
+    private static final String CHARSET_UTF8 = "UTF-8"
 
     BugsnagReleasesTask() {
         super()
@@ -61,7 +63,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
             conn.setDoOutput(true)
 
             os = conn.outputStream
-            os.write(payload.toString().getBytes("UTF-8"))
+            os.write(payload.toString().getBytes(CHARSET_UTF8))
 
             int statusCode = conn.getResponseCode()
 
@@ -105,12 +107,14 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         root.put("appVersion", versionName)
         root.put("appVersionCode", versionCode)
 
+        String user
         if (project.bugsnag.builderName != null) {
-            root.put("builderName", project.bugsnag.builderName)
+            user = project.bugsnag.builderName
         } else {
-            String user = runCmd("whoami")
-            root.put("builderName", user)
+            user = runCmd("whoami")
         }
+        root.put("builderName", user)
+
         root.put("metadata", generateMetadataJson())
         root.put("sourceControl", generateVcsJson())
         root
@@ -122,10 +126,10 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         String vcsProvider = project.bugsnag.sourceControl.provider
 
         if (vcsUrl == null) {
-            vcsUrl = runCmd("git", "config", "--get", "remote.origin.url")
+            vcsUrl = runCmd(VCS_COMMAND, "config", "--get", "remote.origin.url")
         }
         if (commitHash == null) {
-            commitHash = runCmd("git", "rev-parse", "HEAD")
+            commitHash = runCmd(VCS_COMMAND, "rev-parse", "HEAD")
         }
         if (vcsProvider == null) {
             vcsProvider = parseProviderUrl(vcsUrl)
@@ -166,7 +170,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         metadata.put("os_version", System.getProperty(MK_OS_VERSION))
         metadata.put("java_version", System.getProperty(MK_JAVA_VERSION))
         metadata.put("gradle_version", project.gradle.gradleVersion)
-        metadata.put("git_version", runCmd("git", "--version"))
+        metadata.put("git_version", runCmd(VCS_COMMAND, "--version"))
         metadata
     }
 
@@ -203,7 +207,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
                 standardOutput = baos
                 logging.captureStandardError LogLevel.INFO
             }
-            new String(baos.toByteArray(), Charset.forName("UTF-8")).trim()
+            new String(baos.toByteArray(), Charset.forName(CHARSET_UTF8)).trim()
         } catch (ExecException ignored) {
             null
         }

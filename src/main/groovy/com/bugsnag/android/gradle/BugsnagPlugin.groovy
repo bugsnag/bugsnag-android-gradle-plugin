@@ -35,6 +35,11 @@ class BugsnagPlugin implements Plugin<Project> {
     static final String BUILD_UUID_TAG = 'com.bugsnag.android.BUILD_UUID'
     static final String GROUP_NAME = 'Bugsnag'
 
+    private static final String NDK_PROJ_TASK = "externalNative"
+    private static final String CLEAN_TASK = "Clean"
+    private static final String ASSEMBLE_TASK = "assemble"
+    private static final String BUNDLE_TASK = "bundle"
+
     VersionNumber bugsnagVersionNumber
 
     void apply(Project project) {
@@ -86,10 +91,10 @@ class BugsnagPlugin implements Plugin<Project> {
 
     private static void setupNdkProject(Project project) {
         def cleanTasks = project.tasks.findAll {
-            it.name.startsWith("externalNative") && it.name.contains("Clean")
+            it.name.startsWith(NDK_PROJ_TASK) && it.name.contains(CLEAN_TASK)
         }
         def buildTasks = project.tasks.findAll {
-            it.name.startsWith("externalNative") && !it.name.contains("Clean")
+            it.name.startsWith(NDK_PROJ_TASK) && !it.name.contains(CLEAN_TASK)
         }
 
         def ndkSetupTask = project.tasks.create("bugsnagInstallJniLibsTask", BugsnagNdkSetupTask)
@@ -217,8 +222,8 @@ class BugsnagPlugin implements Plugin<Project> {
      */
     private static Set<Task> findAssembleBundleTasks(BaseVariant variant, BaseVariantOutput output, Project project) {
         Set<String> taskNames = new HashSet<>()
-        taskNames.addAll(findTaskNamesForPrefix(variant, output, "assemble"))
-        taskNames.addAll(findTaskNamesForPrefix(variant, output, "bundle"))
+        taskNames.addAll(findTaskNamesForPrefix(variant, output, ASSEMBLE_TASK))
+        taskNames.addAll(findTaskNamesForPrefix(variant, output, BUNDLE_TASK))
 
         project.tasks.findAll {
             taskNames.contains(it.name)
@@ -236,14 +241,14 @@ class BugsnagPlugin implements Plugin<Project> {
         def assembleTask = resolveAssembleTask(variant)
         String assembleTaskName = assembleTask.name
         String buildTypeTaskName = assembleTaskName.replaceAll(variantName, "")
-        String buildType = buildTypeTaskName.replaceAll("assemble", "")
+        String buildType = buildTypeTaskName.replaceAll(ASSEMBLE_TASK, "")
         String variantTaskName = assembleTaskName.replaceAll(buildType, "")
 
         Set<String> taskNames = new HashSet<>()
         taskNames.add(prefix)
-        taskNames.add(assembleTaskName.replaceAll("assemble", prefix))
-        taskNames.add(buildTypeTaskName.replaceAll("assemble", prefix))
-        taskNames.add(variantTaskName.replaceAll("assemble", prefix))
+        taskNames.add(assembleTaskName.replaceAll(ASSEMBLE_TASK, prefix))
+        taskNames.add(buildTypeTaskName.replaceAll(ASSEMBLE_TASK, prefix))
+        taskNames.add(variantTaskName.replaceAll(ASSEMBLE_TASK, prefix))
         taskNames
     }
 
@@ -266,7 +271,7 @@ class BugsnagPlugin implements Plugin<Project> {
 
         def resourceTasks = project.tasks.findAll {
             def name = it.name.toLowerCase()
-            name.startsWith("bundle") && name.endsWith("resources")
+            name.startsWith(BUNDLE_TASK) && name.endsWith("resources")
         }
 
         resourceTasks.forEach {
@@ -385,14 +390,14 @@ class BugsnagPlugin implements Plugin<Project> {
      * Whether or not an assemble task is going to be run for this variant
      */
     static boolean isRunningAssembleTask(BaseVariant variant, BaseVariantOutput output, Project project) {
-        isRunningTaskWithPrefix(variant, output, project, "assemble")
+        isRunningTaskWithPrefix(variant, output, project, ASSEMBLE_TASK)
     }
 
     /**
      * Whether or not a bundle task is going to be run for this variant
      */
     static boolean isRunningBundleTask(BaseVariant variant, BaseVariantOutput output, Project project) {
-        isRunningTaskWithPrefix(variant, output, project, "bundle")
+        isRunningTaskWithPrefix(variant, output, project, BUNDLE_TASK)
     }
 
     /**
