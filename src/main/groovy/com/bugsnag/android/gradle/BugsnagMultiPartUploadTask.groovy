@@ -35,7 +35,7 @@ abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
         super()
     }
 
-    def uploadMultipartEntity(MultipartEntity mpEntity) {
+    void uploadMultipartEntity(MultipartEntity mpEntity) {
         if (apiKey == null || apiKey == "") {
             project.logger.warn("Skipping upload due to invalid parameters")
             if (project.bugsnag.failOnUploadError) {
@@ -49,8 +49,8 @@ abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
 
         boolean uploadSuccessful = uploadToServer(mpEntity)
 
-        def maxRetryCount = getRetryCount()
-        def retryCount = maxRetryCount
+        int maxRetryCount = getRetryCount()
+        int retryCount = maxRetryCount
         while (!uploadSuccessful && retryCount > 0) {
             project.logger.warn(String.format("Retrying Bugsnag upload (%d/%d) ...",
                 maxRetryCount - retryCount + 1, maxRetryCount))

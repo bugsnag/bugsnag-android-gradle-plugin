@@ -32,9 +32,9 @@ class BugsnagProguardConfigTask extends DefaultTask {
     }
 
     @TaskAction
-    def createProguardConfig() {
+    void createProguardConfig() {
         // Create a file handle for the Bugsnag proguard config file
-        def file = project.file(PROGUARD_CONFIG_PATH)
+        File file = project.file(PROGUARD_CONFIG_PATH)
 
         // Create the directory if it doesnt exist already
         file.getParentFile().mkdirs()

@@ -40,7 +40,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
     }
 
     @TaskAction
-    def upload() {
+    void upload() {
         super.readManifestFile()
         symbolPath = findSymbolPath(variantOutput)
         project.logger.lifecycle("Symbolpath: ${symbolPath}")

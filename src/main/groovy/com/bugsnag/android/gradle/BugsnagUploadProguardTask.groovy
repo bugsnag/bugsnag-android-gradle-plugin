@@ -33,7 +33,7 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
     }
 
     @TaskAction
-    def upload() {
+    void upload() {
         File mappingFile = findMappingFile()
         project.logger.info("Using mapping file: $mappingFile")
 
@@ -54,7 +54,7 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
         project.logger.info("Attempting to upload mapping file: ${mappingFile}")
 
         // Construct a basic request
-        def charset = Charset.forName("UTF-8")
+        Charset charset = Charset.forName("UTF-8")
         MultipartEntity mpEntity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE, null, charset)
         mpEntity.addPart(partName, new FileBody(mappingFile))
 
@@ -64,7 +64,7 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
 
     private File findMappingFile() {
         if (BugsnagPlugin.hasDexguardPlugin(project) && BugsnagPlugin.hasMultipleOutputs(project)) {
-            def mappingFile = findDexguardMappingFile(project)
+            File mappingFile = findDexguardMappingFile(project)
 
             if (mappingFile && mappingFile.exists()) {
                 return mappingFile

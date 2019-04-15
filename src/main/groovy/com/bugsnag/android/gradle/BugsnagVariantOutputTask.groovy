@@ -88,7 +88,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
         Namespace ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
         List<File> manifestPaths = getManifestPaths()
 
-        for (def manifestPath in manifestPaths) {
+        for (File manifestPath in manifestPaths) {
             if (!manifestPath.exists()) {
                 continue
             }

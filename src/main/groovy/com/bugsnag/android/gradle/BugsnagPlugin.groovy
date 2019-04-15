@@ -151,7 +151,7 @@ class BugsnagPlugin implements Plugin<Project> {
     private static void setupNdkMappingFileUpload(Project project, BugsnagTaskDeps deps) {
         if (isNdkProject(project)) {
             // Create a Bugsnag task to upload NDK mapping file(s)
-            def taskName = "uploadBugsnagNdk${taskNameForOutput(deps.output)}Mapping"
+            String taskName = "uploadBugsnagNdk${taskNameForOutput(deps.output)}Mapping"
             BugsnagUploadNdkTask uploadNdkTask = project.tasks.create(taskName, BugsnagUploadNdkTask)
             prepareUploadTask(uploadNdkTask, deps, project)
 
@@ -270,7 +270,7 @@ class BugsnagPlugin implements Plugin<Project> {
         manifestTask.dependsOn(processManifest)
 
         def resourceTasks = project.tasks.findAll {
-            def name = it.name.toLowerCase()
+            String name = it.name.toLowerCase()
             name.startsWith(BUNDLE_TASK) && name.endsWith("resources")
         }
 

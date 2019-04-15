@@ -25,13 +25,13 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
     }
 
     @TaskAction
-    def updateManifest() {
-        def manifestPaths = getManifestPaths()
+    void updateManifest() {
+        List<File> manifestPaths = getManifestPaths()
 
         // Uniquely identify the build so that we can identify the proguard file.
-        def buildUUID = UUID.randomUUID().toString()
+        String buildUUID = UUID.randomUUID().toString()
 
-        for (def manifestPath in manifestPaths) {
+        for (File manifestPath in manifestPaths) {
             if (!manifestPath.exists()) {
                 continue
             }
@@ -39,8 +39,8 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
             project.logger.debug("Updating manifest with build UUID: " + manifestPath)
 
             // Parse the AndroidManifest.xml
-            def ns = new Namespace(NS_URI_ANDROID, NS_PREFIX_ANDROID)
-            def xml = new XmlParser().parse(manifestPath)
+            Namespace ns = new Namespace(NS_URI_ANDROID, NS_PREFIX_ANDROID)
+            Node xml = new XmlParser().parse(manifestPath)
 
             def application = xml.application[0]
             if (application) {
@@ -61,7 +61,7 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
 
                 try {
                     writer = new FileWriter(manifestPath)
-                    def printer = new XmlNodePrinter(new PrintWriter(writer))
+                    XmlNodePrinter printer = new XmlNodePrinter(new PrintWriter(writer))
                     printer.preserveWhitespace = true
                     printer.print(xml)
                 } catch (Exception e) {
@@ -78,22 +78,22 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
         }
     }
 
-    def isInstantRun() {
+    boolean isInstantRun() {
         project.properties["android.optional.compilation"]?.contains("INSTANT_DEV")
     }
 
-    def shouldRun() {
-        def manifestPaths = getManifestPaths()
+    boolean shouldRun() {
+        List<File> manifestPaths = getManifestPaths()
 
-        for (def manifestPath in manifestPaths) {
+        for (File manifestPath in manifestPaths) {
             if (!manifestPath.exists()) {
                 continue
             }
 
-            def ns = new Namespace(NS_URI_ANDROID, NS_PREFIX_ANDROID)
+            Namespace ns = new Namespace(NS_URI_ANDROID, NS_PREFIX_ANDROID)
             def app = new XmlParser().parse(manifestPath).application[0]
             if (app) {
-                def tagCount = app[TAG_META_DATA].findAll {
+                int tagCount = app[TAG_META_DATA].findAll {
                     (it.attributes()[ns.name] == BugsnagPlugin.BUILD_UUID_TAG)
                 }.size()
                 if (tagCount == 0 || !isInstantRun()) {
