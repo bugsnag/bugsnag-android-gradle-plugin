@@ -1,7 +1,10 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.internal.api.BaseVariantOutputImpl
+import groovy.transform.CompileStatic
 
+@CompileStatic
+@SuppressWarnings(["GetterMethodCouldBeProperty", "UnnecessaryReturnKeyword", "ReturnsNullInsteadOfEmptyCollection"])
 class FakeVariantOutputImpl extends BaseVariantOutputImpl {
 
     private final String name

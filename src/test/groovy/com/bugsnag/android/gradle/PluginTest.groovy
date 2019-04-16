@@ -1,14 +1,16 @@
 package com.bugsnag.android.gradle
 
+import static org.junit.Assert.assertEquals
+import static org.junit.Assert.assertNotNull
+
+import groovy.transform.CompileStatic
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Test
 
-import static org.junit.Assert.assertEquals
-import static org.junit.Assert.assertNotNull
-
+@CompileStatic
 class PluginTest {
 
     private Project proj

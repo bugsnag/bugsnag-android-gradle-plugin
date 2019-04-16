@@ -4,10 +4,17 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.api.SourceKind
-import com.android.build.gradle.tasks.*
+import com.android.build.gradle.tasks.AidlCompile
+import com.android.build.gradle.tasks.ExternalNativeBuildTask
+import com.android.build.gradle.tasks.GenerateBuildConfig
+import com.android.build.gradle.tasks.MergeResources
+import com.android.build.gradle.tasks.MergeSourceSetFolders
+import com.android.build.gradle.tasks.NdkCompile
+import com.android.build.gradle.tasks.RenderscriptCompile
 import com.android.builder.model.BuildType
 import com.android.builder.model.ProductFlavor
 import com.android.builder.model.SourceProvider
+import groovy.transform.CompileStatic
 import org.gradle.api.DomainObjectCollection
 import org.gradle.api.Task
 import org.gradle.api.artifacts.ArtifactCollection
@@ -17,6 +24,9 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.compile.JavaCompile
 
+@CompileStatic
+@SuppressWarnings(["GetterMethodCouldBeProperty", "UnnecessaryReturnKeyword",
+    "ReturnsNullInsteadOfEmptyCollection", "MethodCount", "BuilderMethodWithSideEffects",])
 class FakeVariantImpl implements BaseVariant {
 
     private final String name

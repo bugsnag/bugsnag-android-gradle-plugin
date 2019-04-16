@@ -1,11 +1,14 @@
 package com.bugsnag.android.gradle
 
+import static org.junit.Assert.assertEquals
+import static org.junit.Assert.assertFalse
+import static org.junit.Assert.assertNull
+import static org.junit.Assert.assertTrue
+
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Test
-
-import static org.junit.Assert.*
 
 class PluginExtensionTest {
 
@@ -32,9 +35,7 @@ class PluginExtensionTest {
         assertNull(proj.bugsnag.sharedObjectPath)
         assertFalse(BugsnagPlugin.hasDexguardPlugin(proj))
         assertTrue(proj.bugsnag.failOnUploadError)
-
         assertFalse(BugsnagPlugin.hasMultipleOutputs(proj))
-
     }
 
 }
