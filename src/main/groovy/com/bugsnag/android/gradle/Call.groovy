@@ -9,7 +9,7 @@ abstract class Call {
 
     private final Project project // 60 seconds
 
-    Call(Project project) {
+    protected Call(Project project) {
         this.project = project
     }
 

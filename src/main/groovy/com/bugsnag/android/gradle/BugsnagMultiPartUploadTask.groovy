@@ -3,7 +3,6 @@ package com.bugsnag.android.gradle
 import org.apache.http.HttpEntity
 import org.apache.http.HttpResponse
 import org.apache.http.ParseException
-import org.apache.http.client.ClientProtocolException
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.mime.MultipartEntity
@@ -27,16 +26,12 @@ import org.gradle.api.GradleException
  it is usually safe to have this be the absolute last task executed during
  a build.
  */
-abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
+class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
 
     static final int MAX_RETRY_COUNT = 5
     static final int TIMEOUT_MILLIS = 60000 // 60 seconds
 
     String applicationId
-
-    BugsnagMultiPartUploadTask() {
-        super()
-    }
 
     void uploadMultipartEntity(MultipartEntity mpEntity) {
         if (apiKey == null || apiKey == "") {
