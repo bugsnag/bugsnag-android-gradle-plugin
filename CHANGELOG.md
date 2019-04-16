@@ -1,4 +1,4 @@
-## 4.X.X (TBD)
+## 4.2.0 (2019-04-16)
 
 * Alter NDK project detection to check for the cmake/ndkbuild path
 [#156](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/156)
