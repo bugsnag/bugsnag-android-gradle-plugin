@@ -20,7 +20,9 @@
   <ruleset-ref path='rulesets/imports.xml'/>
   <ruleset-ref path='rulesets/logging.xml'/>
   <ruleset-ref path='rulesets/naming.xml'/>
-  <ruleset-ref path='rulesets/security.xml'/>
+  <ruleset-ref path='rulesets/security.xml'>
+    <exclude name="JavaIoPackageAccess"/> <!-- We need to perform IO and don't care about meeting the Java Bean spec -->
+  </ruleset-ref>
   <ruleset-ref path='rulesets/serialization.xml'/>
   <ruleset-ref path='rulesets/size.xml'/>
   <ruleset-ref path='rulesets/unnecessary.xml'>
