@@ -17,8 +17,6 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
     private static final String MK_OS_NAME = "os.name"
     private static final String MK_OS_VERSION = "os.version"
     private static final String MK_JAVA_VERSION = "java.version"
-    private static final String MK_GRADLE_VERSION = "gradle.version"
-    private static final String MK_GIT_VERSION = "git.version"
     private static final String VCS_COMMAND = "git"
     private static final String CHARSET_UTF8 = "UTF-8"
 
@@ -55,39 +53,41 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         try {
             URL url = new URL(project.bugsnag.releasesEndpoint)
             HttpURLConnection conn = url.openConnection()
-            conn.setRequestMethod("POST")
-            conn.setRequestProperty("Content-Type", "application/json")
-            conn.setRequestProperty("Bugsnag-Api-Key", apiKey)
-            conn.setReadTimeout(Call.TIMEOUT_MILLIS)
-            conn.setConnectTimeout(Call.TIMEOUT_MILLIS)
-            conn.setDoOutput(true)
 
-            os = conn.outputStream
-            os.write(payload.toString().getBytes(CHARSET_UTF8))
+            conn.with {
+                setRequestMethod("POST")
+                setRequestProperty("Content-Type", "application/json")
+                setRequestProperty("Bugsnag-Api-Key", apiKey)
+                setReadTimeout(Call.TIMEOUT_MILLIS)
+                setConnectTimeout(Call.TIMEOUT_MILLIS)
+                setDoOutput(true)
 
-            int statusCode = conn.responseCode
+                os = outputStream
+                os.write(payload.toString().getBytes(CHARSET_UTF8))
 
-            if (statusCode == 200) {
-                project.logger.info("Uploaded release info to Bugsnag")
-                return true
-            } else {
-                BufferedReader reader
-                String line
+                int statusCode = responseCode
 
-                try {
-                    reader = new BufferedReader(new InputStreamReader(conn.errorStream))
-                    while ((line = reader.readLine()) != null) {
-                        project.logger.error(line)
+                if (statusCode == 200) {
+                    project.logger.info("Uploaded release info to Bugsnag")
+                    return true
+                } else {
+                    BufferedReader reader
+                    String line
+
+                    try {
+                        reader = new BufferedReader(new InputStreamReader(errorStream))
+                        while ((line = reader.readLine()) != null) {
+                            project.logger.error(line)
+                        }
+                        project.logger.warn("Release Request failed with statusCode " + statusCode)
+                    } finally {
+                        if (reader != null) {
+                            reader.close()
+                        }
                     }
-                    project.logger.warn("Release Request failed with statusCode " + statusCode)
-                } finally {
-                    if (reader != null) {
-                        reader.close()
-                    }
+                    return false
                 }
-                return false
             }
-
         } catch (IOException e) {
             project.logger.error(project.bugsnag.releasesEndpoint)
             project.logger.error("Failed to POST request", e)
@@ -165,12 +165,16 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
 
     private Map<String, String> collectDefaultMetaData() {
         Map<String, String> metadata = new HashMap<>()
-        metadata.put("os_arch", System.getProperty(MK_OS_ARCH))
-        metadata.put("os_name", System.getProperty(MK_OS_NAME))
-        metadata.put("os_version", System.getProperty(MK_OS_VERSION))
-        metadata.put("java_version", System.getProperty(MK_JAVA_VERSION))
-        metadata.put("gradle_version", project.gradle.gradleVersion)
-        metadata.put("git_version", runCmd(VCS_COMMAND, "--version"))
+        String version = project.gradle.gradleVersion
+
+        metadata.with {
+            put("os_arch", System.getProperty(MK_OS_ARCH))
+            put("os_name", System.getProperty(MK_OS_NAME))
+            put("os_version", System.getProperty(MK_OS_VERSION))
+            put("java_version", System.getProperty(MK_JAVA_VERSION))
+            put("gradle_version", version)
+            put("git_version", runCmd(VCS_COMMAND, "--version"))
+        }
         metadata
     }
 

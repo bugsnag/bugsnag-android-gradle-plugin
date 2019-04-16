@@ -1,5 +1,6 @@
 package com.bugsnag.android.gradle
 
+@SuppressWarnings('DuplicateStringLiteral')
 enum Abi {
 
     ARMEABI(
