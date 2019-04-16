@@ -52,7 +52,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
             project.logger.lifecycle("Found shared object file (${arch}) ${sharedObject}")
             sharedObjectFound = true
 
-            File outputFile = createSymbolsForSharedObject(sharedObject, arch)
+            File outputFile = generateSymbolsForSharedObject(sharedObject, arch)
             if (outputFile) {
                 uploadSymbols(outputFile, arch, sharedObject.name)
             }
@@ -126,7 +126,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
      * @param arch the arch of the file
      * @return the output file location, or null on error
      */
-    File createSymbolsForSharedObject(File sharedObject, String arch) {
+    File generateSymbolsForSharedObject(File sharedObject, String arch) {
         // Get the path the version of objdump to use to get symbols
         File objDumpPath = getObjDumpExecutable(arch)
         if (objDumpPath != null) {

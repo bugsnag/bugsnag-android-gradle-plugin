@@ -32,7 +32,7 @@ class BugsnagProguardConfigTask extends DefaultTask {
     }
 
     @TaskAction
-    void createProguardConfig() {
+    void writeBugsnagProguardConfig() {
         // Create a file handle for the Bugsnag proguard config file
         File file = project.file(PROGUARD_CONFIG_PATH)
 
