@@ -147,6 +147,6 @@ task wrapper(type: Wrapper) {
 
 codenarc {
     // ignore baseline violations for now
-    maxPriority2Violations 86
-    maxPriority3Violations 146
+    maxPriority2Violations 7
+    maxPriority3Violations 8
 }

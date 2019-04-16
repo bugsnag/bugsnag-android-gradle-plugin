@@ -87,7 +87,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
 
     private static File findSymbolPath(BaseVariantOutput variantOutput) {
         ProcessAndroidResources resources = resolveProcessAndroidResources(variantOutput)
-        def symbolPath = resources.textSymbolOutputFile
+        File symbolPath = resources.textSymbolOutputFile
 
         if (symbolPath == null) {
             throw new IllegalStateException("Could not find symbol path")
@@ -157,12 +157,12 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
                 if (process.waitFor() == 0) {
                     return outputFile
                 } else {
-                    project.logger.error("failed to generate symbols for " + arch + ", see "
+                    project.logger.error("failed to generate symbols for $arch, see "
                         + errorOutputFile.toString() + " for more details")
                     return null
                 }
             } catch (Exception e) {
-                project.logger.error("failed to generate symbols for " + arch + ": " + e.message, e)
+                project.logger.error("failed to generate symbols for $arch $e.message", e)
             } finally {
                 if (outReader != null) {
                     outReader.close()
@@ -236,7 +236,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
             }
 
             if (!objDumpFile.exists() || !objDumpFile.canExecute()) {
-                throw new RuntimeException("Failed to find executable objdump at $objDumpFile")
+                throw new IllegalStateException("Failed to find executable objdump at $objDumpFile")
             }
             return objDumpFile
         } catch (Throwable ex) {
@@ -275,11 +275,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
         } else if (Os.isFamily(Os.FAMILY_UNIX)) {
             return "linux-x86_64"
         } else if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            if ("x86" == System.getProperty("os.arch")) { // 32-bit
-                return "windows"
-            } else {
-                return "windows-x86_64"
-            }
+            return "x86" == System.getProperty("os.arch") ? "windows" : "windows-x86_64"
         } else {
             return null
         }

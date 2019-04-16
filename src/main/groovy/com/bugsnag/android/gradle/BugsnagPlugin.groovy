@@ -7,6 +7,7 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
 import com.android.build.gradle.tasks.ManifestProcessorTask
+import com.android.build.gradle.tasks.PackageApplication
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -345,11 +346,11 @@ class BugsnagPlugin implements Plugin<Project> {
         }
     }
 
-    static def resolvePackageApplication(BaseVariant variant) {
+    static PackageApplication resolvePackageApplication(BaseVariant variant) {
         try {
-            return variant.getPackageApplicationProvider().get()
+            return variant.packageApplicationProvider.get()
         } catch (Throwable ignored) {
-            return variant.getPackageApplication()
+            return variant.packageApplication
         }
     }
 
