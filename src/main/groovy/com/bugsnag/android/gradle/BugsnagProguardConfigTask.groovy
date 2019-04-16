@@ -1,6 +1,7 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.BaseVariant
+import groovy.transform.CompileStatic
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
@@ -10,6 +11,7 @@ import org.gradle.api.tasks.TaskAction
 
  This task must be called before ProGuard is run.
  */
+@CompileStatic
 class BugsnagProguardConfigTask extends DefaultTask {
 
     static final String PROGUARD_CONFIG_PATH = "build/intermediates/bugsnag/bugsnag.pro"
@@ -55,6 +57,6 @@ class BugsnagProguardConfigTask extends DefaultTask {
         }
 
         // Add this proguard settings file to the list
-        variant.getBuildType().buildType.proguardFiles(file)
+        variant.buildType.proguardFiles.add(file)
     }
 }

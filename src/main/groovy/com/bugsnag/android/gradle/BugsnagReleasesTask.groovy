@@ -165,16 +165,12 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
 
     private Map<String, String> collectDefaultMetaData() {
         Map<String, String> metadata = new HashMap<>()
-        String version = project.gradle.gradleVersion
-
-        metadata.with {
-            put("os_arch", System.getProperty(MK_OS_ARCH))
-            put("os_name", System.getProperty(MK_OS_NAME))
-            put("os_version", System.getProperty(MK_OS_VERSION))
-            put("java_version", System.getProperty(MK_JAVA_VERSION))
-            put("gradle_version", version)
-            put("git_version", runCmd(VCS_COMMAND, "--version"))
-        }
+        metadata.put("os_arch", System.getProperty(MK_OS_ARCH))
+        metadata.put("os_name", System.getProperty(MK_OS_NAME))
+        metadata.put("os_version", System.getProperty(MK_OS_VERSION))
+        metadata.put("java_version", System.getProperty(MK_JAVA_VERSION))
+        metadata.put("gradle_version", project.gradle.gradleVersion)
+        metadata.put("git_version", runCmd(VCS_COMMAND, "--version"))
         metadata
     }
 

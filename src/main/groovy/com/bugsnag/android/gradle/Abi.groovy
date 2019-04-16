@@ -1,6 +1,9 @@
 package com.bugsnag.android.gradle
 
+import groovy.transform.CompileStatic
+
 @SuppressWarnings('DuplicateStringLiteral')
+@CompileStatic
 enum Abi {
 
     ARMEABI(

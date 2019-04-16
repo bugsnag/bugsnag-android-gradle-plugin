@@ -1,8 +1,11 @@
 package com.bugsnag.android.gradle
 
+import groovy.transform.CompileStatic
+
 /**
  * Defines configuration options (Gradle plugin extensions) for the BugsnagPlugin
  */
+@CompileStatic
 class BugsnagPluginExtension {
 
     String endpoint = 'https://upload.bugsnag.com'
@@ -26,6 +29,7 @@ class BugsnagPluginExtension {
 
 }
 
+@CompileStatic
 class SourceControl {
     String provider = null
     String repository = null
