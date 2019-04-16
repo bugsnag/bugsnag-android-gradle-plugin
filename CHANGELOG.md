@@ -1,3 +1,8 @@
+## 4.X.X (TBD)
+
+* Resolve pre-existing CodeNarc style violations
+[#160](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/160)
+
 ## 4.2.0 (2019-04-16)
 
 * Alter NDK project detection to check for the cmake/ndkbuild path
