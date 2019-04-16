@@ -54,7 +54,7 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
                 }
 
                 // Add the new BUILD_UUID_TAG element
-                application.appendNode(TAG_META_DATA, [(ns.name): BugsnagPlugin.BUILD_UUID_TAG, (ns.value): buildUUID])
+                application.appendNode(TAG_META_DATA, [(ns.name):BugsnagPlugin.BUILD_UUID_TAG, (ns.value):buildUUID])
 
                 // Write the manifest file
                 FileWriter writer = null

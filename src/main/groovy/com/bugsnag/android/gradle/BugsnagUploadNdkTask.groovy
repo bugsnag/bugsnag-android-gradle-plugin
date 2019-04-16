@@ -1,8 +1,8 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.gradle.tasks.ProcessAndroidResources
-
 import static groovy.io.FileType.FILES
+
+import com.android.build.gradle.tasks.ProcessAndroidResources
 
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
