@@ -188,7 +188,7 @@ class BugsnagPlugin implements Plugin<Project> {
         }
     }
 
-    private static def setupBugsnagTask(BugsnagVariantOutputTask task, BugsnagTaskDeps deps) {
+    private static void setupBugsnagTask(BugsnagVariantOutputTask task, BugsnagTaskDeps deps) {
         task.group = GROUP_NAME
         task.variantOutput = deps.output
         task.variant = deps.variant
@@ -252,7 +252,7 @@ class BugsnagPlugin implements Plugin<Project> {
         taskNames
     }
 
-    private static def resolveAssembleTask(BaseVariant variant) {
+    private static Task resolveAssembleTask(BaseVariant variant) {
         try {
             return variant.assembleProvider.get()
         } catch (Throwable ignored) {
@@ -279,7 +279,7 @@ class BugsnagPlugin implements Plugin<Project> {
         }
     }
 
-    static def resolveProcessManifest(BaseVariantOutput output) {
+    static ManifestProcessorTask resolveProcessManifest(BaseVariantOutput output) {
         try {
             return output.processManifestProvider.get()
         } catch (Throwable ignored) {
