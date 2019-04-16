@@ -1,6 +1,7 @@
 package com.bugsnag.android.gradle
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.tasks.TaskAction
 
 class BugsnagNdkSetupTask extends DefaultTask {
@@ -12,10 +13,10 @@ class BugsnagNdkSetupTask extends DefaultTask {
 
     @TaskAction
     void setupNdkProject() {
-        def configs = project.configurations.findAll {
+        project.configurations.findAll {
             it.toString().contains('CompileClasspath')
         }.each { config ->
-            def artifact = config.resolvedConfiguration.resolvedArtifacts.find {
+            ResolvedArtifact artifact = config.resolvedConfiguration.resolvedArtifacts.find {
                 String identifier = it.id.componentIdentifier.toString()
                 identifier.contains("bugsnag-android-ndk") && it.file != null
             }

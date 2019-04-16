@@ -80,7 +80,7 @@ class BugsnagPlugin implements Plugin<Project> {
             .collect()
             .flatten()
 
-        def bugsnagVersion = deps.stream()
+        Optional<String> bugsnagVersion = deps.stream()
             .filter { dep -> dep.group == "com.bugsnag" && dep.name == "bugsnag-android" }
             .distinct()
             .map({ dep -> dep.version })
@@ -90,14 +90,14 @@ class BugsnagPlugin implements Plugin<Project> {
     }
 
     private static void setupNdkProject(Project project) {
-        def cleanTasks = project.tasks.findAll {
+        Set<Task> cleanTasks = project.tasks.findAll {
             it.name.startsWith(NDK_PROJ_TASK) && it.name.contains(CLEAN_TASK)
         }
-        def buildTasks = project.tasks.findAll {
+        Set<Task> buildTasks = project.tasks.findAll {
             it.name.startsWith(NDK_PROJ_TASK) && !it.name.contains(CLEAN_TASK)
         }
 
-        def ndkSetupTask = project.tasks.create("bugsnagInstallJniLibsTask", BugsnagNdkSetupTask)
+        BugsnagNdkSetupTask ndkSetupTask = project.tasks.create("bugsnagInstallJniLibsTask", BugsnagNdkSetupTask)
 
         buildTasks.forEach {
             ndkSetupTask.mustRunAfter(cleanTasks)
@@ -143,7 +143,7 @@ class BugsnagPlugin implements Plugin<Project> {
      */
     private static void setupMappingFileUpload(Project project, BugsnagTaskDeps deps) {
         String taskName = "uploadBugsnag${taskNameForOutput(deps.output)}Mapping"
-        def uploadTask = project.tasks.create(taskName, BugsnagUploadProguardTask)
+        BugsnagUploadProguardTask uploadTask = project.tasks.create(taskName, BugsnagUploadProguardTask)
         uploadTask.partName = "proguard"
         prepareUploadTask(uploadTask, deps, project)
     }
@@ -174,7 +174,7 @@ class BugsnagPlugin implements Plugin<Project> {
 
     private static void setupReleasesTask(Project project, BugsnagTaskDeps deps) {
         String taskName = "bugsnagRelease${taskNameForOutput(deps.output)}Task"
-        def releasesTask = project.tasks.create(taskName, BugsnagReleasesTask)
+        BugsnagReleasesTask releasesTask = project.tasks.create(taskName, BugsnagReleasesTask)
         setupBugsnagTask(releasesTask, deps)
 
         if (shouldUploadDebugMappings(project, deps.output)) {
@@ -238,7 +238,7 @@ class BugsnagPlugin implements Plugin<Project> {
      */
     private static Set<String> findTaskNamesForPrefix(BaseVariant variant, BaseVariantOutput output, String prefix) {
         String variantName = output.name.split("-")[0].capitalize()
-        def assembleTask = resolveAssembleTask(variant)
+        Task assembleTask = resolveAssembleTask(variant)
         String assembleTaskName = assembleTask.name
         String buildTypeTaskName = assembleTaskName.replaceAll(variantName, "")
         String buildType = buildTypeTaskName.replaceAll(ASSEMBLE_TASK, "")
@@ -269,7 +269,7 @@ class BugsnagPlugin implements Plugin<Project> {
         processManifest.finalizedBy(manifestTask)
         manifestTask.dependsOn(processManifest)
 
-        def resourceTasks = project.tasks.findAll {
+        Set<Task> resourceTasks = project.tasks.findAll {
             String name = it.name.toLowerCase()
             name.startsWith(BUNDLE_TASK) && name.endsWith("resources")
         }
@@ -354,7 +354,7 @@ class BugsnagPlugin implements Plugin<Project> {
     }
 
     private static boolean hasDisabledBugsnag(BaseVariant variant) {
-        def hasDisabledBugsnag = {
+        Closure<Boolean> hasDisabledBugsnag = {
             it.ext.properties.containsKey("enableBugsnag") && !it.ext.enableBugsnag
         }
 

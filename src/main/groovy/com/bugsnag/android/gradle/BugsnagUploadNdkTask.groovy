@@ -86,7 +86,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
     }
 
     private static File findSymbolPath(BaseVariantOutput variantOutput) {
-        def resources = resolveProcessAndroidResources(variantOutput)
+        ProcessAndroidResources resources = resolveProcessAndroidResources(variantOutput)
         def symbolPath = resources.textSymbolOutputFile
 
         if (symbolPath == null) {

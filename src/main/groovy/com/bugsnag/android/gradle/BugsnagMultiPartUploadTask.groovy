@@ -64,7 +64,7 @@ abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
         }
     }
 
-    def addPropertiesToMultipartEntity(MultipartEntity mpEntity) {
+    void addPropertiesToMultipartEntity(MultipartEntity mpEntity) {
         mpEntity.addPart("apiKey", new StringBody(apiKey))
         mpEntity.addPart("appId", new StringBody(applicationId))
         mpEntity.addPart("versionCode", new StringBody(versionCode))
@@ -102,7 +102,7 @@ abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
         HttpConnectionParams.setSoTimeout(params, TIMEOUT_MILLIS)
 
         int statusCode
-        def responseEntity
+        String responseEntity
         try {
             HttpResponse response = httpClient.execute(httpPost)
             statusCode = response.statusLine.statusCode

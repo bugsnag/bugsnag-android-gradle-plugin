@@ -2,6 +2,7 @@ package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
+import com.android.build.gradle.tasks.ManifestProcessorTask
 import groovy.xml.Namespace
 import org.gradle.api.DefaultTask
 
@@ -44,10 +45,10 @@ class BugsnagVariantOutputTask extends DefaultTask {
             getBundleManifest = true
         }
 
-        def processManifest = BugsnagPlugin.resolveProcessManifest(variantOutput)
+        ManifestProcessorTask processManifest = BugsnagPlugin.resolveProcessManifest(variantOutput)
 
         if (getMergedManifest) {
-            def outputDir = processManifest.manifestOutputDirectory
+            Object outputDir = processManifest.manifestOutputDirectory
 
             if (outputDir instanceof File) {
                 directoryMerged = outputDir
