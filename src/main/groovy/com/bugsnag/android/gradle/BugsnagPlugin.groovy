@@ -7,6 +7,7 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
 import com.android.build.gradle.tasks.ManifestProcessorTask
+import com.android.build.gradle.tasks.PackageApplication
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -34,6 +35,11 @@ class BugsnagPlugin implements Plugin<Project> {
     static final String API_KEY_TAG = 'com.bugsnag.android.API_KEY'
     static final String BUILD_UUID_TAG = 'com.bugsnag.android.BUILD_UUID'
     static final String GROUP_NAME = 'Bugsnag'
+
+    private static final String NDK_PROJ_TASK = "externalNative"
+    private static final String CLEAN_TASK = "Clean"
+    private static final String ASSEMBLE_TASK = "assemble"
+    private static final String BUNDLE_TASK = "bundle"
 
     VersionNumber bugsnagVersionNumber
 
@@ -75,24 +81,24 @@ class BugsnagPlugin implements Plugin<Project> {
             .collect()
             .flatten()
 
-        def bugsnagVersion = deps.stream()
-            .filter { dep -> return dep.group == "com.bugsnag" && dep.name == "bugsnag-android" }
+        Optional<String> bugsnagVersion = deps.stream()
+            .filter { dep -> dep.group == "com.bugsnag" && dep.name == "bugsnag-android" }
             .distinct()
-            .map({ dep -> return dep.version })
+            .map({ dep -> dep.version })
             .findFirst()
 
-        return bugsnagVersion.present ? VersionNumber.parse(bugsnagVersion.get()) : VersionNumber.UNKNOWN
+        bugsnagVersion.present ? VersionNumber.parse(bugsnagVersion.get()) : VersionNumber.UNKNOWN
     }
 
     private static void setupNdkProject(Project project) {
-        def cleanTasks = project.tasks.findAll {
-            it.name.startsWith("externalNative") && it.name.contains("Clean")
+        Set<Task> cleanTasks = project.tasks.findAll {
+            it.name.startsWith(NDK_PROJ_TASK) && it.name.contains(CLEAN_TASK)
         }
-        def buildTasks = project.tasks.findAll {
-            it.name.startsWith("externalNative") && !it.name.contains("Clean")
+        Set<Task> buildTasks = project.tasks.findAll {
+            it.name.startsWith(NDK_PROJ_TASK) && !it.name.contains(CLEAN_TASK)
         }
 
-        def ndkSetupTask = project.tasks.create("bugsnagInstallJniLibsTask", BugsnagNdkSetupTask)
+        BugsnagNdkSetupTask ndkSetupTask = project.tasks.create("bugsnagInstallJniLibsTask", BugsnagNdkSetupTask)
 
         buildTasks.forEach {
             ndkSetupTask.mustRunAfter(cleanTasks)
@@ -137,7 +143,8 @@ class BugsnagPlugin implements Plugin<Project> {
      * Creates a bugsnag task to upload proguard mapping file
      */
     private static void setupMappingFileUpload(Project project, BugsnagTaskDeps deps) {
-        def uploadTask = project.tasks.create("uploadBugsnag${taskNameForOutput(deps.output)}Mapping", BugsnagUploadProguardTask)
+        String taskName = "uploadBugsnag${taskNameForOutput(deps.output)}Mapping"
+        BugsnagUploadProguardTask uploadTask = project.tasks.create(taskName, BugsnagUploadProguardTask)
         uploadTask.partName = "proguard"
         prepareUploadTask(uploadTask, deps, project)
     }
@@ -145,7 +152,8 @@ class BugsnagPlugin implements Plugin<Project> {
     private static void setupNdkMappingFileUpload(Project project, BugsnagTaskDeps deps) {
         if (isNdkProject(project)) {
             // Create a Bugsnag task to upload NDK mapping file(s)
-            BugsnagUploadNdkTask uploadNdkTask = project.tasks.create("uploadBugsnagNdk${taskNameForOutput(deps.output)}Mapping", BugsnagUploadNdkTask)
+            String taskName = "uploadBugsnagNdk${taskNameForOutput(deps.output)}Mapping"
+            BugsnagUploadNdkTask uploadNdkTask = project.tasks.create(taskName, BugsnagUploadNdkTask)
             prepareUploadTask(uploadNdkTask, deps, project)
 
             uploadNdkTask.variantName = taskNameForVariant(deps.variant)
@@ -166,7 +174,8 @@ class BugsnagPlugin implements Plugin<Project> {
     }
 
     private static void setupReleasesTask(Project project, BugsnagTaskDeps deps) {
-        def releasesTask = project.tasks.create("bugsnagRelease${taskNameForOutput(deps.output)}Task", BugsnagReleasesTask)
+        String taskName = "bugsnagRelease${taskNameForOutput(deps.output)}Task"
+        BugsnagReleasesTask releasesTask = project.tasks.create(taskName, BugsnagReleasesTask)
         setupBugsnagTask(releasesTask, deps)
 
         if (shouldUploadDebugMappings(project, deps.output)) {
@@ -180,13 +189,14 @@ class BugsnagPlugin implements Plugin<Project> {
         }
     }
 
-    private static def setupBugsnagTask(BugsnagVariantOutputTask task, BugsnagTaskDeps deps) {
+    private static void setupBugsnagTask(BugsnagVariantOutputTask task, BugsnagTaskDeps deps) {
         task.group = GROUP_NAME
         task.variantOutput = deps.output
         task.variant = deps.variant
     }
 
-    private static void prepareUploadTask(BugsnagMultiPartUploadTask uploadTask, BugsnagTaskDeps deps, Project project) {
+    private static void prepareUploadTask(BugsnagMultiPartUploadTask uploadTask,
+                                          BugsnagTaskDeps deps, Project project) {
         setupBugsnagTask(uploadTask, deps)
         uploadTask.applicationId = deps.variant.applicationId
 
@@ -213,8 +223,8 @@ class BugsnagPlugin implements Plugin<Project> {
      */
     private static Set<Task> findAssembleBundleTasks(BaseVariant variant, BaseVariantOutput output, Project project) {
         Set<String> taskNames = new HashSet<>()
-        taskNames.addAll(findTaskNamesForPrefix(variant, output, "assemble"))
-        taskNames.addAll(findTaskNamesForPrefix(variant, output, "bundle"))
+        taskNames.addAll(findTaskNamesForPrefix(variant, output, ASSEMBLE_TASK))
+        taskNames.addAll(findTaskNamesForPrefix(variant, output, BUNDLE_TASK))
 
         project.tasks.findAll {
             taskNames.contains(it.name)
@@ -229,21 +239,21 @@ class BugsnagPlugin implements Plugin<Project> {
      */
     private static Set<String> findTaskNamesForPrefix(BaseVariant variant, BaseVariantOutput output, String prefix) {
         String variantName = output.name.split("-")[0].capitalize()
-        def assembleTask = resolveAssembleTask(variant)
+        Task assembleTask = resolveAssembleTask(variant)
         String assembleTaskName = assembleTask.name
         String buildTypeTaskName = assembleTaskName.replaceAll(variantName, "")
-        String buildType = buildTypeTaskName.replaceAll("assemble", "")
+        String buildType = buildTypeTaskName.replaceAll(ASSEMBLE_TASK, "")
         String variantTaskName = assembleTaskName.replaceAll(buildType, "")
 
         Set<String> taskNames = new HashSet<>()
         taskNames.add(prefix)
-        taskNames.add(assembleTaskName.replaceAll("assemble", prefix))
-        taskNames.add(buildTypeTaskName.replaceAll("assemble", prefix))
-        taskNames.add(variantTaskName.replaceAll("assemble", prefix))
-        return taskNames
+        taskNames.add(assembleTaskName.replaceAll(ASSEMBLE_TASK, prefix))
+        taskNames.add(buildTypeTaskName.replaceAll(ASSEMBLE_TASK, prefix))
+        taskNames.add(variantTaskName.replaceAll(ASSEMBLE_TASK, prefix))
+        taskNames
     }
 
-    private static def resolveAssembleTask(BaseVariant variant) {
+    private static Task resolveAssembleTask(BaseVariant variant) {
         try {
             return variant.assembleProvider.get()
         } catch (Throwable ignored) {
@@ -252,16 +262,17 @@ class BugsnagPlugin implements Plugin<Project> {
     }
 
     private static void setupManifestUuidTask(Project project, BugsnagTaskDeps deps) {
-        BugsnagManifestTask manifestTask = project.tasks.create("processBugsnag${taskNameForOutput(deps.output)}Manifest", BugsnagManifestTask)
+        String taskName = "processBugsnag${taskNameForOutput(deps.output)}Manifest"
+        BugsnagManifestTask manifestTask = project.tasks.create(taskName, BugsnagManifestTask)
         setupBugsnagTask(manifestTask, deps)
         ManifestProcessorTask processManifest = resolveProcessManifest(deps.output)
 
         processManifest.finalizedBy(manifestTask)
         manifestTask.dependsOn(processManifest)
 
-        def resourceTasks = project.tasks.findAll {
-            def name = it.name.toLowerCase()
-            name.startsWith("bundle") && name.endsWith("resources")
+        Set<Task> resourceTasks = project.tasks.findAll {
+            String name = it.name.toLowerCase()
+            name.startsWith(BUNDLE_TASK) && name.endsWith("resources")
         }
 
         resourceTasks.forEach {
@@ -269,7 +280,7 @@ class BugsnagPlugin implements Plugin<Project> {
         }
     }
 
-    static def resolveProcessManifest(BaseVariantOutput output) {
+    static ManifestProcessorTask resolveProcessManifest(BaseVariantOutput output) {
         try {
             return output.processManifestProvider.get()
         } catch (Throwable ignored) {
@@ -303,7 +314,8 @@ class BugsnagPlugin implements Plugin<Project> {
      * as it is now part of the "transforms" process.
      */
     private void setupProguardAutoConfig(Project project, BaseVariant variant) {
-        BugsnagProguardConfigTask proguardConfigTask = project.tasks.create("processBugsnag${taskNameForVariant(variant)}Proguard", BugsnagProguardConfigTask)
+        String taskname = "processBugsnag${taskNameForVariant(variant)}Proguard"
+        BugsnagProguardConfigTask proguardConfigTask = project.tasks.create(taskname, BugsnagProguardConfigTask)
         proguardConfigTask.group = GROUP_NAME
         proguardConfigTask.variant = variant
 
@@ -328,34 +340,34 @@ class BugsnagPlugin implements Plugin<Project> {
 
     private static void dependTaskOnPackageTask(BaseVariant variant, Task task) {
         if (variant instanceof LibraryVariant) {
-            variant.getPackageLibrary().dependsOn task
+            variant.packageLibrary.dependsOn task
         } else {
             resolvePackageApplication(variant).dependsOn task
         }
     }
 
-    static def resolvePackageApplication(BaseVariant variant) {
+    static PackageApplication resolvePackageApplication(BaseVariant variant) {
         try {
-            return variant.getPackageApplicationProvider().get()
+            return variant.packageApplicationProvider.get()
         } catch (Throwable ignored) {
-            return variant.getPackageApplication()
+            return variant.packageApplication
         }
     }
 
     private static boolean hasDisabledBugsnag(BaseVariant variant) {
-        def hasDisabledBugsnag = {
+        Closure<Boolean> hasDisabledBugsnag = {
             it.ext.properties.containsKey("enableBugsnag") && !it.ext.enableBugsnag
         }
 
         // Ignore any conflicting properties, bail if anything has a disable flag.
-        return (variant.productFlavors + variant.buildType).any(hasDisabledBugsnag)
+        (variant.productFlavors + variant.buildType).any(hasDisabledBugsnag)
     }
 
     /**
      * Returns true if the DexGuard plugin has been applied to the project
      */
     static boolean hasDexguardPlugin(Project project) {
-        return project.pluginManager.hasPlugin("dexguard")
+        project.pluginManager.hasPlugin("dexguard")
     }
 
     /**
@@ -372,32 +384,33 @@ class BugsnagPlugin implements Plugin<Project> {
         variants.forEach { variant ->
             outputSize += variant.outputs.size()
         }
-        return outputSize > variantSize
+        outputSize > variantSize
     }
 
     /**
      * Whether or not an assemble task is going to be run for this variant
      */
     static boolean isRunningAssembleTask(BaseVariant variant, BaseVariantOutput output, Project project) {
-        return isRunningTaskWithPrefix(variant, output, project, "assemble")
+        isRunningTaskWithPrefix(variant, output, project, ASSEMBLE_TASK)
     }
 
     /**
      * Whether or not a bundle task is going to be run for this variant
      */
     static boolean isRunningBundleTask(BaseVariant variant, BaseVariantOutput output, Project project) {
-        return isRunningTaskWithPrefix(variant, output, project, "bundle")
+        isRunningTaskWithPrefix(variant, output, project, BUNDLE_TASK)
     }
 
     /**
      * Whether or any of a list of the task names for a prefix are going to be run by checking the list
      * against all of the tasks in the task graph
      */
-    private static boolean isRunningTaskWithPrefix(BaseVariant variant, BaseVariantOutput output, Project project, String prefix) {
+    private static boolean isRunningTaskWithPrefix(BaseVariant variant,
+                                                   BaseVariantOutput output, Project project, String prefix) {
         Set<String> taskNames = new HashSet<>()
         taskNames.addAll(findTaskNamesForPrefix(variant, output, prefix))
 
-        return project.gradle.taskGraph.getAllTasks().any { task ->
+        project.gradle.taskGraph.allTasks.any { task ->
             taskNames.any {
                 task.name.endsWith(it)
             }

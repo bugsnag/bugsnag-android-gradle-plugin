@@ -1,12 +1,13 @@
 package com.bugsnag.android.gradle
 
+import static org.junit.Assert.assertEquals
+
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
-import static org.junit.Assert.*
-
-@RunWith(Parameterized.class)
+@RunWith(Parameterized)
+@SuppressWarnings(["PublicInstanceField", "NonFinalPublicField", "NestedForLoop"])
 class ObjDumpLocationTest {
 
     @Parameterized.Parameter(0)
@@ -20,21 +21,21 @@ class ObjDumpLocationTest {
 
     @Parameterized.Parameters
     static Collection<Object[]> inputs() {
-        Collection<Object> inputs = new ArrayList<>();
+        Collection<Object> inputs = new ArrayList<>()
 
-        for (Abi abi: Abi.values()) {
-            for (String os: ["darwin-x86_64", "linux-x86_64", "windows", "windows-x86_64"]) {
-                for (String ndkDir: ["/Users/bob/Library/Android/sdk/ndk-bundle", "/etc/ndk-bundle"]) {
+        for (Abi abi : Abi.values()) {
+            for (String os : ["darwin-x86_64", "linux-x86_64", "windows", "windows-x86_64"]) {
+                for (String ndkDir : ["/Users/bob/Library/Android/sdk/ndk-bundle", "/etc/ndk-bundle"]) {
                     inputs.add([abi, os, ndkDir].toArray())
                 }
             }
         }
-        return inputs
+        inputs
     }
 
     @Parameterized.Parameters
     static Collection<String> os() {
-        return Arrays.asList("windows", "linux")
+        Arrays.asList("windows", "linux")
     }
 
     @Test
@@ -43,5 +44,4 @@ class ObjDumpLocationTest {
         String expected = "$ndkDir/toolchains/$abi.toolchainPrefix-4.9/prebuilt/$osName/bin/$abi.objdumpPrefix-objdump"
         assertEquals(expected, file.path)
     }
-
 }

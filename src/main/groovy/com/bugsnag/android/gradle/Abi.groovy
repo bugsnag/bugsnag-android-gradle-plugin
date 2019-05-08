@@ -1,5 +1,9 @@
 package com.bugsnag.android.gradle
 
+import groovy.transform.CompileStatic
+
+@SuppressWarnings('DuplicateStringLiteral')
+@CompileStatic
 enum Abi {
 
     ARMEABI(
@@ -26,7 +30,7 @@ enum Abi {
         "x86_64",
         "x86_64",
         "x86_64-linux-android"
-    );
+    )
 
     final String abiName
     final String toolchainPrefix
@@ -44,6 +48,6 @@ enum Abi {
                 return value
             }
         }
-        return null
+        null
     }
 }

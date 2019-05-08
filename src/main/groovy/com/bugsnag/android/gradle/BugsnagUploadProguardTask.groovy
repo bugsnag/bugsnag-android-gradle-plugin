@@ -3,7 +3,6 @@ package com.bugsnag.android.gradle
 import org.apache.http.entity.mime.HttpMultipartMode
 import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
-import org.apache.http.util.TextUtils
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
@@ -34,7 +33,7 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
     }
 
     @TaskAction
-    def upload() {
+    void upload() {
         File mappingFile = findMappingFile()
         project.logger.info("Using mapping file: $mappingFile")
 
@@ -55,7 +54,7 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
         project.logger.info("Attempting to upload mapping file: ${mappingFile}")
 
         // Construct a basic request
-        def charset = Charset.forName("UTF-8")
+        Charset charset = Charset.forName("UTF-8")
         MultipartEntity mpEntity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE, null, charset)
         mpEntity.addPart(partName, new FileBody(mappingFile))
 
@@ -65,7 +64,7 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
 
     private File findMappingFile() {
         if (BugsnagPlugin.hasDexguardPlugin(project) && BugsnagPlugin.hasMultipleOutputs(project)) {
-            def mappingFile = findDexguardMappingFile(project)
+            File mappingFile = findDexguardMappingFile(project)
 
             if (mappingFile && mappingFile.exists()) {
                 return mappingFile
@@ -75,7 +74,7 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
             }
         }
         // use AGP supplied value by default, or as fallback
-        return variant.mappingFile
+        variant.mappingFile
     }
 
     /**
@@ -96,7 +95,7 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
                 outputDir = ""
             }
         }
-        return Paths.get(buildDir, "outputs", "mapping", variant.dirName, outputDir, "mapping.txt").toFile()
+        Paths.get(buildDir, "outputs", "mapping", variant.dirName, outputDir, "mapping.txt").toFile()
     }
 
 }

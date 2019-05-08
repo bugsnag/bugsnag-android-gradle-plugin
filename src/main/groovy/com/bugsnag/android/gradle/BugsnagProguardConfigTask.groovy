@@ -4,7 +4,6 @@ import com.android.build.gradle.api.BaseVariant
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
-
 /**
  Task to add an additional ProGuard configuration file (bugsnag.pro)
  which ensures that our required ProGuard settings are applied.
@@ -33,12 +32,12 @@ class BugsnagProguardConfigTask extends DefaultTask {
     }
 
     @TaskAction
-    def createProguardConfig() {
+    void writeBugsnagProguardConfig() {
         // Create a file handle for the Bugsnag proguard config file
-        def file = project.file(PROGUARD_CONFIG_PATH)
+        File file = project.file(PROGUARD_CONFIG_PATH)
 
         // Create the directory if it doesnt exist already
-        file.getParentFile().mkdirs()
+        file.parentFile.mkdirs()
 
         // Write our recommended proguard settings to this file
         FileWriter fr = null
@@ -47,7 +46,7 @@ class BugsnagProguardConfigTask extends DefaultTask {
             fr = new FileWriter(file.path)
             fr.write(PROGUARD_CONFIG_SETTINGS)
             fr.write("\n")
-        } catch (Exception e) {
+        } catch (IOException e) {
             project.logger.warn("Failed to write Bugsnag ProGuard settings", e)
         } finally {
             if (fr != null) {

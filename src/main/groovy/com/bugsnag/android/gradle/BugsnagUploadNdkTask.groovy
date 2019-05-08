@@ -1,5 +1,9 @@
 package com.bugsnag.android.gradle
 
+import static groovy.io.FileType.FILES
+
+import com.android.build.gradle.tasks.ProcessAndroidResources
+
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import org.apache.http.entity.mime.MultipartEntity
@@ -10,8 +14,6 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
 
 import java.util.zip.GZIPOutputStream
-
-import static groovy.io.FileType.FILES
 
 /**
  Task to upload shared object mapping files to Bugsnag.
@@ -40,7 +42,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
     }
 
     @TaskAction
-    def upload() {
+    void upload() {
         super.readManifestFile()
         symbolPath = findSymbolPath(variantOutput)
         project.logger.lifecycle("Symbolpath: ${symbolPath}")
@@ -50,7 +52,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
             project.logger.lifecycle("Found shared object file (${arch}) ${sharedObject}")
             sharedObjectFound = true
 
-            File outputFile = createSymbolsForSharedObject(sharedObject, arch)
+            File outputFile = generateSymbolsForSharedObject(sharedObject, arch)
             if (outputFile) {
                 uploadSymbols(outputFile, arch, sharedObject.name)
             }
@@ -84,8 +86,8 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
     }
 
     private static File findSymbolPath(BaseVariantOutput variantOutput) {
-        def resources = resolveProcessAndroidResources(variantOutput)
-        def symbolPath = resources.textSymbolOutputFile
+        ProcessAndroidResources resources = resolveProcessAndroidResources(variantOutput)
+        File symbolPath = resources.textSymbolOutputFile
 
         if (symbolPath == null) {
             throw new IllegalStateException("Could not find symbol path")
@@ -93,7 +95,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
         symbolPath
     }
 
-    private static def resolveProcessAndroidResources(BaseVariantOutput variantOutput) {
+    private static ProcessAndroidResources resolveProcessAndroidResources(BaseVariantOutput variantOutput) {
         try {
             return variantOutput.processResourcesProvider.get()
         } catch (Throwable ignored) {
@@ -124,7 +126,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
      * @param arch the arch of the file
      * @return the output file location, or null on error
      */
-    File createSymbolsForSharedObject(File sharedObject, String arch) {
+    File generateSymbolsForSharedObject(File sharedObject, String arch) {
         // Get the path the version of objdump to use to get symbols
         File objDumpPath = getObjDumpExecutable(arch)
         if (objDumpPath != null) {
@@ -143,22 +145,24 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
                 project.logger.lifecycle("Creating symbol file at ${outputFile}")
 
                 // Call objdump, redirecting output to the output file
-                ProcessBuilder builder = new ProcessBuilder(objDumpPath.toString(), "--dwarf=info", "--dwarf=rawline", sharedObject.toString())
+                ProcessBuilder builder = new ProcessBuilder(objDumpPath.toString(),
+                    "--dwarf=info", "--dwarf=rawline", sharedObject.toString())
                 builder.redirectError(errorOutputFile)
                 Process process = builder.start()
 
                 // Output the file to a zip
-                InputStream stdout = process.getInputStream()
+                InputStream stdout = process.inputStream
                 outputZipFile(stdout, outputFile)
 
                 if (process.waitFor() == 0) {
                     return outputFile
                 } else {
-                    project.logger.error("failed to generate symbols for " + arch + ", see " + errorOutputFile.toString() + " for more details")
+                    project.logger.error("failed to generate symbols for $arch, see "
+                        + errorOutputFile.toString() + " for more details")
                     return null
                 }
             } catch (Exception e) {
-                project.logger.error("failed to generate symbols for " + arch + ": " + e.getMessage(), e)
+                project.logger.error("failed to generate symbols for $arch $e.message", e)
             } finally {
                 if (outReader != null) {
                     outReader.close()
@@ -167,8 +171,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
         } else {
             project.logger.error("Unable to upload NDK symbols: Could not find objdump location for " + arch)
         }
-
-        return null
+        null
     }
 
     /**
@@ -178,23 +181,23 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
      * @param outputFile The output file
      */
     static void outputZipFile(InputStream stdout, File outputFile) {
-        GZIPOutputStream zipStream = null;
+        GZIPOutputStream zipStream = null
 
         try {
-            zipStream = new GZIPOutputStream(new FileOutputStream(outputFile));
+            zipStream = new GZIPOutputStream(new FileOutputStream(outputFile))
 
-            byte[] buffer = new byte[8192];
-            int len;
-            while((len=stdout.read(buffer)) != -1){
-                zipStream.write(buffer, 0, len);
+            byte[] buffer = new byte[8192]
+            int len
+            while ((len = stdout.read(buffer)) != -1) {
+                zipStream.write(buffer, 0, len)
             }
 
         } finally {
             if (zipStream != null) {
-                zipStream.close();
+                zipStream.close()
             }
 
-            stdout.close();
+            stdout.close()
         }
     }
 
@@ -233,18 +236,18 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
             }
 
             if (!objDumpFile.exists() || !objDumpFile.canExecute()) {
-                throw new RuntimeException("Failed to find executable objdump at $objDumpFile")
+                throw new IllegalStateException("Failed to find executable objdump at $objDumpFile")
             }
             return objDumpFile
         } catch (Throwable ex) {
             project.logger.error("Error attempting to calculate objdump location: " + ex.message)
         }
-        return null
+        null
     }
 
     private Object getObjDumpOverride(String arch) {
         Map<String, String> paths = project.bugsnag.objdumpPaths
-        return paths != null ? paths[arch] : null
+        paths != null ? paths[arch] : null
     }
 
     static File findObjDump(Project project, String arch) {
@@ -258,11 +261,12 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
         if (osName == null) {
             throw new IllegalStateException("Failed to calculate OS name")
         }
-        return calculateObjDumpLocation(ndkDir, abi, osName)
+        calculateObjDumpLocation(ndkDir, abi, osName)
     }
 
     static File calculateObjDumpLocation(String ndkDir, Abi abi, String osName) {
-        new File("$ndkDir/toolchains/$abi.toolchainPrefix-4.9/prebuilt/$osName/bin/$abi.objdumpPrefix-objdump")
+        new File("$ndkDir/toolchains/$abi.toolchainPrefix-4.9/prebuilt/" +
+            "$osName/bin/$abi.objdumpPrefix-objdump")
     }
 
     static String calculateOsName() {
@@ -271,11 +275,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
         } else if (Os.isFamily(Os.FAMILY_UNIX)) {
             return "linux-x86_64"
         } else if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            if ("x86" == System.getProperty("os.arch")) { // 32-bit
-                return "windows"
-            } else {
-                return "windows-x86_64"
-            }
+            return "x86" == System.getProperty("os.arch") ? "windows" : "windows-x86_64"
         } else {
             return null
         }

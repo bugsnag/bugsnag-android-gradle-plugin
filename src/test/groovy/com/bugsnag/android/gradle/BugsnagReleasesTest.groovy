@@ -1,16 +1,25 @@
 package com.bugsnag.android.gradle
 
+import static com.bugsnag.android.gradle.BugsnagReleasesTask.isValidPayload
+import static com.bugsnag.android.gradle.BugsnagReleasesTask.isValidVcsProvider
+import static com.bugsnag.android.gradle.BugsnagReleasesTask.parseProviderUrl
+import static org.junit.Assert.assertEquals
+import static org.junit.Assert.assertNull
+import static org.junit.Assert.assertTrue
+import static org.junit.Assert.assertFalse
+
+import groovy.transform.CompileStatic
+
 import org.junit.Test
 
-import static com.bugsnag.android.gradle.BugsnagReleasesTask.*
-import static org.junit.Assert.*
-
+@CompileStatic
 class BugsnagReleasesTest {
 
     @Test
     void ensureProviderValidation() {
         assertTrue(isValidVcsProvider(null))
-        Collection<String> valid = Arrays.asList("github", "github-enterprise", "bitbucket", "bitbucket-server", "gitlab", "gitlab-onpremise")
+        Collection<String> valid = Arrays.asList("github", "github-enterprise",
+            "bitbucket", "bitbucket-server", "gitlab", "gitlab-onpremise")
 
         for (String provider : valid) {
             assertTrue(isValidVcsProvider(provider))

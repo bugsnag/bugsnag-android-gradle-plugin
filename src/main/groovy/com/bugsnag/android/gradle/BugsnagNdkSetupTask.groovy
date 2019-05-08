@@ -1,6 +1,7 @@
 package com.bugsnag.android.gradle
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.tasks.TaskAction
 
 class BugsnagNdkSetupTask extends DefaultTask {
@@ -12,15 +13,15 @@ class BugsnagNdkSetupTask extends DefaultTask {
 
     @TaskAction
     void setupNdkProject() {
-        def configs = project.configurations.findAll {
+        project.configurations.findAll {
             it.toString().contains('CompileClasspath')
         }.each { config ->
-            def artifact = config.resolvedConfiguration.getResolvedArtifacts().find {
-                def identifier = it.getId().getComponentIdentifier().toString()
-                identifier.contains("bugsnag-android-ndk") && it.getFile() != null
+            ResolvedArtifact artifact = config.resolvedConfiguration.resolvedArtifacts.find {
+                String identifier = it.id.componentIdentifier.toString()
+                identifier.contains("bugsnag-android-ndk") && it.file != null
             }
             if (artifact) {
-                def artifactFile = artifact.getFile()
+                File artifactFile = artifact.file
                 File buildDir = project.buildDir
                 File dst = new File(buildDir, "/intermediates/bugsnag-libs")
 
@@ -31,7 +32,4 @@ class BugsnagNdkSetupTask extends DefaultTask {
             }
         }
     }
-
 }
-
-

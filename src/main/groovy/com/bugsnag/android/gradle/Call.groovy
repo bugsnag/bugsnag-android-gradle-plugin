@@ -9,7 +9,7 @@ abstract class Call {
 
     private final Project project // 60 seconds
 
-    Call(Project project) {
+    protected Call(Project project) {
         this.project = project
     }
 
@@ -19,8 +19,8 @@ abstract class Call {
     void execute() {
         boolean uploadSuccessful = makeApiCall()
 
-        def maxRetryCount = getRetryCount()
-        def retryCount = maxRetryCount
+        int maxRetryCount = retryCount
+        int retryCount = maxRetryCount
         while (!uploadSuccessful && retryCount > 0) {
             project.logger.warn(String.format("Retrying Bugsnag upload (%d/%d) ...",
                 maxRetryCount - retryCount + 1, maxRetryCount))
@@ -44,7 +44,7 @@ abstract class Call {
      * @return the retry count
      */
     int getRetryCount() {
-        return project.bugsnag.retryCount >= MAX_RETRY_COUNT ? MAX_RETRY_COUNT : project.bugsnag.retryCount
+        project.bugsnag.retryCount >= MAX_RETRY_COUNT ? MAX_RETRY_COUNT : project.bugsnag.retryCount
     }
 
 }

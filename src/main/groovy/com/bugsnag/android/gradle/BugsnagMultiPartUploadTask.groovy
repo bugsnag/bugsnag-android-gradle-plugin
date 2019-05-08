@@ -1,6 +1,8 @@
 package com.bugsnag.android.gradle
 
+import org.apache.http.HttpEntity
 import org.apache.http.HttpResponse
+import org.apache.http.ParseException
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.mime.MultipartEntity
@@ -10,7 +12,6 @@ import org.apache.http.params.HttpConnectionParams
 import org.apache.http.params.HttpParams
 import org.apache.http.util.EntityUtils
 import org.gradle.api.GradleException
-import org.gradle.api.GradleScriptException
 
 /**
  Task to upload ProGuard mapping files to Bugsnag.
@@ -25,22 +26,18 @@ import org.gradle.api.GradleScriptException
  it is usually safe to have this be the absolute last task executed during
  a build.
  */
-abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
+class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
 
     static final int MAX_RETRY_COUNT = 5
     static final int TIMEOUT_MILLIS = 60000 // 60 seconds
 
     String applicationId
 
-    BugsnagMultiPartUploadTask() {
-        super()
-    }
-
-    def uploadMultipartEntity(MultipartEntity mpEntity) {
+    void uploadMultipartEntity(MultipartEntity mpEntity) {
         if (apiKey == null || apiKey == "") {
             project.logger.warn("Skipping upload due to invalid parameters")
             if (project.bugsnag.failOnUploadError) {
-                throw new GradleException("Skipping upload due to invalid parameters")
+                throw new GradleException("Aborting upload due to invalid parameters")
             } else {
                 return
             }
@@ -50,8 +47,8 @@ abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
 
         boolean uploadSuccessful = uploadToServer(mpEntity)
 
-        def maxRetryCount = getRetryCount()
-        def retryCount = maxRetryCount
+        int maxRetryCount = retryCount
+        int retryCount = maxRetryCount
         while (!uploadSuccessful && retryCount > 0) {
             project.logger.warn(String.format("Retrying Bugsnag upload (%d/%d) ...",
                 maxRetryCount - retryCount + 1, maxRetryCount))
@@ -64,7 +61,7 @@ abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
         }
     }
 
-    def addPropertiesToMultipartEntity(MultipartEntity mpEntity) {
+    void addPropertiesToMultipartEntity(MultipartEntity mpEntity) {
         mpEntity.addPart("apiKey", new StringBody(apiKey))
         mpEntity.addPart("appId", new StringBody(applicationId))
         mpEntity.addPart("versionCode", new StringBody(versionCode))
@@ -97,17 +94,18 @@ abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
         httpPost.setEntity(mpEntity)
 
         HttpClient httpClient = new DefaultHttpClient()
-        HttpParams params = httpClient.getParams()
+        HttpParams params = httpClient.params
         HttpConnectionParams.setConnectionTimeout(params, TIMEOUT_MILLIS)
         HttpConnectionParams.setSoTimeout(params, TIMEOUT_MILLIS)
 
         int statusCode
-        def responseEntity
+        String responseEntity
         try {
             HttpResponse response = httpClient.execute(httpPost)
-            statusCode = response.getStatusLine().getStatusCode()
-            responseEntity = EntityUtils.toString(response.getEntity(), "utf-8")
-        } catch (Exception e) {
+            statusCode = response.statusLine.statusCode
+            HttpEntity entity = response.entity
+            responseEntity = EntityUtils.toString(entity, "utf-8")
+        } catch (IOException | ParseException e) {
             project.logger.error(String.format("Bugsnag upload failed: %s", e))
             return false
         }
@@ -119,7 +117,7 @@ abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
 
         project.logger.error(String.format("Bugsnag upload failed with code %d: %s",
             statusCode, responseEntity))
-        return false
+        false
     }
 
     /**
@@ -129,7 +127,7 @@ abstract class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
      * @return the retry count
      */
     int getRetryCount() {
-        return project.bugsnag.retryCount >= MAX_RETRY_COUNT ? MAX_RETRY_COUNT : project.bugsnag.retryCount
+        project.bugsnag.retryCount >= MAX_RETRY_COUNT ? MAX_RETRY_COUNT : project.bugsnag.retryCount
     }
 
 }

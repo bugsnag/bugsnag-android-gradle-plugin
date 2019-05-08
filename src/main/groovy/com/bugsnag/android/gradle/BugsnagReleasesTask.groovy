@@ -17,8 +17,8 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
     private static final String MK_OS_NAME = "os.name"
     private static final String MK_OS_VERSION = "os.version"
     private static final String MK_JAVA_VERSION = "java.version"
-    private static final String MK_GRADLE_VERSION = "gradle.version"
-    private static final String MK_GIT_VERSION = "git.version"
+    private static final String VCS_COMMAND = "git"
+    private static final String CHARSET_UTF8 = "UTF-8"
 
     BugsnagReleasesTask() {
         super()
@@ -42,7 +42,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         new Call(project) {
             @Override
             boolean makeApiCall() {
-                return deliverPayload(payload)
+                deliverPayload(payload)
             }
         }.execute()
     }
@@ -53,39 +53,41 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         try {
             URL url = new URL(project.bugsnag.releasesEndpoint)
             HttpURLConnection conn = url.openConnection()
-            conn.setRequestMethod("POST")
-            conn.setRequestProperty("Content-Type", "application/json")
-            conn.setRequestProperty("Bugsnag-Api-Key", apiKey)
-            conn.setReadTimeout(Call.TIMEOUT_MILLIS)
-            conn.setConnectTimeout(Call.TIMEOUT_MILLIS)
-            conn.setDoOutput(true)
 
-            os = conn.outputStream
-            os.write(payload.toString().getBytes("UTF-8"))
+            conn.with {
+                setRequestMethod("POST")
+                setRequestProperty("Content-Type", "application/json")
+                setRequestProperty("Bugsnag-Api-Key", apiKey)
+                setReadTimeout(Call.TIMEOUT_MILLIS)
+                setConnectTimeout(Call.TIMEOUT_MILLIS)
+                setDoOutput(true)
 
-            int statusCode = conn.getResponseCode()
+                os = outputStream
+                os.write(payload.toString().getBytes(CHARSET_UTF8))
 
-            if (statusCode == 200) {
-                project.logger.info("Uploaded release info to Bugsnag")
-                return true
-            } else {
-                BufferedReader reader
-                String line
+                int statusCode = responseCode
 
-                try {
-                    reader = new BufferedReader(new InputStreamReader(conn.errorStream))
-                    while ((line = reader.readLine()) != null) {
-                        project.logger.error(line)
+                if (statusCode == 200) {
+                    project.logger.info("Uploaded release info to Bugsnag")
+                    return true
+                } else {
+                    BufferedReader reader
+                    String line
+
+                    try {
+                        reader = new BufferedReader(new InputStreamReader(errorStream))
+                        while ((line = reader.readLine()) != null) {
+                            project.logger.error(line)
+                        }
+                        project.logger.warn("Release Request failed with statusCode " + statusCode)
+                    } finally {
+                        if (reader != null) {
+                            reader.close()
+                        }
                     }
-                    project.logger.warn("Release Request failed with statusCode " + statusCode)
-                } finally {
-                    if (reader != null) {
-                        reader.close()
-                    }
+                    return false
                 }
-                return false
             }
-
         } catch (IOException e) {
             project.logger.error(project.bugsnag.releasesEndpoint)
             project.logger.error("Failed to POST request", e)
@@ -105,12 +107,14 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         root.put("appVersion", versionName)
         root.put("appVersionCode", versionCode)
 
+        String user
         if (project.bugsnag.builderName != null) {
-            root.put("builderName", project.bugsnag.builderName)
+            user = project.bugsnag.builderName
         } else {
-            String user = runCmd("whoami")
-            root.put("builderName", user)
+            user = runCmd("whoami")
         }
+        root.put("builderName", user)
+
         root.put("metadata", generateMetadataJson())
         root.put("sourceControl", generateVcsJson())
         root
@@ -122,10 +126,10 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         String vcsProvider = project.bugsnag.sourceControl.provider
 
         if (vcsUrl == null) {
-            vcsUrl = runCmd("git", "config", "--get", "remote.origin.url")
+            vcsUrl = runCmd(VCS_COMMAND, "config", "--get", "remote.origin.url")
         }
         if (commitHash == null) {
-            commitHash = runCmd("git", "rev-parse", "HEAD")
+            commitHash = runCmd(VCS_COMMAND, "rev-parse", "HEAD")
         }
         if (vcsProvider == null) {
             vcsProvider = parseProviderUrl(vcsUrl)
@@ -166,16 +170,16 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         metadata.put("os_version", System.getProperty(MK_OS_VERSION))
         metadata.put("java_version", System.getProperty(MK_JAVA_VERSION))
         metadata.put("gradle_version", project.gradle.gradleVersion)
-        metadata.put("git_version", runCmd("git", "--version"))
+        metadata.put("git_version", runCmd(VCS_COMMAND, "--version"))
         metadata
     }
 
     static boolean isValidPayload(String apiKey, String versionName) {
-        return apiKey != null && versionName != null
+        apiKey != null && versionName != null
     }
 
     static boolean isValidVcsProvider(String provider) {
-        return provider == null || VALID_VCS_PROVIDERS.contains(provider)
+        provider == null || VALID_VCS_PROVIDERS.contains(provider)
     }
 
     static String parseProviderUrl(String url) {
@@ -203,11 +207,9 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
                 standardOutput = baos
                 logging.captureStandardError LogLevel.INFO
             }
-            new String(baos.toByteArray(), Charset.forName("UTF-8")).trim()
+            new String(baos.toByteArray(), Charset.forName(CHARSET_UTF8)).trim()
         } catch (ExecException ignored) {
             null
         }
     }
 }
-
-

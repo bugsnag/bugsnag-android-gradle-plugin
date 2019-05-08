@@ -2,6 +2,7 @@ package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
+import com.android.build.gradle.tasks.ManifestProcessorTask
 import groovy.xml.Namespace
 import org.gradle.api.DefaultTask
 
@@ -44,10 +45,10 @@ class BugsnagVariantOutputTask extends DefaultTask {
             getBundleManifest = true
         }
 
-        def processManifest = BugsnagPlugin.resolveProcessManifest(variantOutput)
+        ManifestProcessorTask processManifest = BugsnagPlugin.resolveProcessManifest(variantOutput)
 
         if (getMergedManifest) {
-            def outputDir = processManifest.manifestOutputDirectory
+            Object outputDir = processManifest.manifestOutputDirectory
 
             if (outputDir instanceof File) {
                 directoryMerged = outputDir
@@ -71,13 +72,14 @@ class BugsnagVariantOutputTask extends DefaultTask {
     }
 
     void addManifestPath(List<File> manifestPaths, File directory) {
-        File manifestFile = Paths.get(directory.toString(), variantOutput.dirName, "AndroidManifest.xml").toFile()
+        File manifestFile = Paths.get(directory.toString(), variantOutput.dirName,
+            "AndroidManifest.xml").toFile()
 
-        if (!manifestFile.exists()) {
-            project.logger.error("Failed to find manifest at ${manifestFile}")
-        } else {
+        if (manifestFile.exists()) {
             project.logger.info("Found manifest at ${manifestFile}")
             manifestPaths.add(manifestFile)
+        } else {
+            project.logger.error("Failed to find manifest at ${manifestFile}")
         }
     }
 
@@ -85,9 +87,9 @@ class BugsnagVariantOutputTask extends DefaultTask {
     void readManifestFile() {
         // Parse the AndroidManifest.xml
         Namespace ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
-        List<File> manifestPaths = getManifestPaths()
+        List<File> paths = manifestPaths
 
-        for (def manifestPath in manifestPaths) {
+        for (File manifestPath in paths) {
             if (!manifestPath.exists()) {
                 continue
             }
@@ -98,14 +100,15 @@ class BugsnagVariantOutputTask extends DefaultTask {
             def metaDataTags = xml.application['meta-data']
 
             // If the current manifest does not contain the build ID then try the next manifest in the list (if any)
-            if (!(manifestPath == manifestPaths.last()) && !hasBuildUuid(metaDataTags, ns)) {
+            if (!(manifestPath == paths.last()) && !hasBuildUuid(metaDataTags, ns)) {
                 continue
             }
 
             // Get the Bugsnag API key
             apiKey = getApiKey(metaDataTags, ns)
             if (!apiKey) {
-                project.logger.warn("Could not find apiKey in '$BugsnagPlugin.API_KEY_TAG' <meta-data> tag in your AndroidManifest.xml or in your gradle config")
+                project.logger.warn("Could not find apiKey in '$BugsnagPlugin.API_KEY_TAG' " +
+                    "<meta-data> tag in your AndroidManifest.xml or in your gradle config")
             }
 
             // Get the build version
@@ -133,17 +136,17 @@ class BugsnagVariantOutputTask extends DefaultTask {
         } else {
             apiKey = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.API_KEY_TAG)
         }
-        return apiKey
+        apiKey
     }
 
     boolean hasBuildUuid(metaDataTags, Namespace ns) {
-        return metaDataTags.any {
+        metaDataTags.any {
             it.attributes()[ns.name] == BugsnagPlugin.BUILD_UUID_TAG
         }
     }
 
     String getBuildUuid(metaDataTags, Namespace ns) {
-        return getManifestMetaData(metaDataTags, ns, BugsnagPlugin.BUILD_UUID_TAG)
+        getManifestMetaData(metaDataTags, ns, BugsnagPlugin.BUILD_UUID_TAG)
     }
 
     private String getManifestMetaData(metaDataTags, Namespace ns, String key) {
@@ -157,7 +160,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
         } else {
             value = tags[0].attributes()[ns.value]
         }
-        return value
+        value
     }
 
     String getVersionName(Node xml, Namespace ns) {
