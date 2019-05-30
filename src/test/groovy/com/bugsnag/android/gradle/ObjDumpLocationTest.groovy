@@ -41,7 +41,8 @@ class ObjDumpLocationTest {
     @Test
     void defaultObjDumpLocation() {
         File file = BugsnagUploadNdkTask.calculateObjDumpLocation(ndkDir, abi, osName)
-        String expected = "$ndkDir/toolchains/$abi.toolchainPrefix-4.9/prebuilt/$osName/bin/$abi.objdumpPrefix-objdump"
+        String exec = osName.startsWith("windows") ? "objdump.exe" : "objdump"
+        String expected = "$ndkDir/toolchains/$abi.toolchainPrefix-4.9/prebuilt/$osName/bin/$abi.objdumpPrefix-$exec"
         assertEquals(expected, file.path)
     }
 }
