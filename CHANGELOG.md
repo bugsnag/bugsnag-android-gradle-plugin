@@ -1,4 +1,4 @@
-## 4.X.X (TBD)
+## 4.3.0 (2019-05-30)
 
 * Resolve pre-existing CodeNarc style violations
 [#160](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/160)
