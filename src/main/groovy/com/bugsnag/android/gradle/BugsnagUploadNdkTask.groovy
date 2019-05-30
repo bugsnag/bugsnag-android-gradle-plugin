@@ -265,8 +265,9 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
     }
 
     static File calculateObjDumpLocation(String ndkDir, Abi abi, String osName) {
+        String executable = osName.startsWith("windows") ? "objdump.exe" : "objdump"
         new File("$ndkDir/toolchains/$abi.toolchainPrefix-4.9/prebuilt/" +
-            "$osName/bin/$abi.objdumpPrefix-objdump")
+            "$osName/bin/$abi.objdumpPrefix-$executable")
     }
 
     static String calculateOsName() {
