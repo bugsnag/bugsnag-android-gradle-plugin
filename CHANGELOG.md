@@ -1,4 +1,4 @@
-## TBD
+## 4.3.1 (2019-05-31)
 
 * Calculate correct location for objdump on windows, fixing NDK symbol upload
 [#163](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/163)
