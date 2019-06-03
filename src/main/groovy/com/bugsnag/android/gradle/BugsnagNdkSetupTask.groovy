@@ -18,7 +18,7 @@ class BugsnagNdkSetupTask extends DefaultTask {
         }.each { config ->
             ResolvedArtifact artifact = config.resolvedConfiguration.resolvedArtifacts.find {
                 String identifier = it.id.componentIdentifier.toString()
-                identifier.contains("bugsnag-android-ndk") && it.file != null
+                identifier.contains("bugsnag-android") && it.file != null
             }
             if (artifact) {
                 File artifactFile = artifact.file
