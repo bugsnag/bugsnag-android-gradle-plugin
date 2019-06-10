@@ -2,7 +2,7 @@
 
 This release is companion update for bugsnag-android v4.15.0, which supports detecting and reporting C/C++ crashes without a separate library. 
 
-Extract shared object C libraries (*.so files) from bugsnag-android artifact to support using the Native API
+Since `bugsnag-android` now contains native code, update shared object extraction to include libraries from there as well as `bugsnag-android-ndk`
 [#164](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/164)
 
 ## 4.3.1 (2019-05-31)
