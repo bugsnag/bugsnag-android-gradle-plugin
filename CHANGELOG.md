@@ -1,4 +1,4 @@
-## 4.4.0 TBD
+## 4.4.0 (2019-06-10)
 
 This release is companion update for bugsnag-android v4.15.0, which supports detecting and reporting C/C++ crashes without a separate library. 
 
