@@ -30,6 +30,8 @@ import java.util.zip.GZIPOutputStream
  */
 class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
 
+    private static final int VALID_SO_FILE_THRESHOLD = 1024
+
     File symbolPath
     String variantName
     File projectDir
@@ -208,6 +210,14 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
      * @param sharedObjectName the original shared object name
      */
     void uploadSymbols(File mappingFile, String arch, String sharedObjectName) {
+
+        // a SO file may not contain debug info. if that's the case then the mapping file should be very small,
+        // so we try and reject it here as otherwise the event-worker will reject it with a 400 status code.
+        if (!mappingFile.exists() || mappingFile.length() < VALID_SO_FILE_THRESHOLD) {
+            project.logger.warn("Skipping upload of empty/invalid mapping file: $mappingFile")
+            return
+        }
+
         MultipartEntity mpEntity = new MultipartEntity()
         mpEntity.addPart("soSymbolFile", new FileBody(mappingFile))
         mpEntity.addPart("arch", new StringBody(arch))
