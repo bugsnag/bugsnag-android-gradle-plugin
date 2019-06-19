@@ -1,3 +1,8 @@
+## TBD
+
+Skip uploading mapping files for shared objects which have no debug info
+[#166](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/166)
+
 ## 4.4.0 (2019-06-10)
 
 This release is companion update for bugsnag-android v4.15.0, which supports detecting and reporting C/C++ crashes without a separate library. 
