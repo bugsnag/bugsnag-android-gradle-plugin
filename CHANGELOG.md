@@ -1,6 +1,6 @@
 ## TBD
 
-Update plugin to search for shared object files in new artefact locations
+Search for shared object files in the new artefact locations introduced by modularisation of `bugsnag-android`. This affects versions v4.17.0 and above of `bugsnag-android` and `bugsnag-android-ndk`.
 [#168](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/168)
 
 ## 4.4.1 (2019-06-19)
