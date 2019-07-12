@@ -1,3 +1,8 @@
+## TBD
+
+Update plugin to search for shared object files in new artefact locations
+[#168](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/168)
+
 ## 4.4.1 (2019-06-19)
 
 Skip uploading mapping files for shared objects which have no debug info
