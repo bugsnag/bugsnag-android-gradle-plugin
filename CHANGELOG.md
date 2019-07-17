@@ -1,3 +1,8 @@
+## 4.5.2 TBD
+
+Update plugin to extract SO files from transitive dependencies
+[#171](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/171)
+
 ## 4.5.1 (2019-07-17)
 
 Lookup shared object files correctly in new artefact IDs
