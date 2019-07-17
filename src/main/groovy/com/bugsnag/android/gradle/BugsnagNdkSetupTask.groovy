@@ -20,7 +20,11 @@ class BugsnagNdkSetupTask extends DefaultTask {
                 String identifier = it.id.componentIdentifier.toString()
                 List<String> soArtefacts = ["bugsnag-android", "bugsnag-android-ndk",
                                    "bugsnag-plugin-android-anr", "bugsnag-plugin-android-ndk",]
-                soArtefacts.contains(identifier) && it.file != null
+
+                boolean isBugsnagArtefact = soArtefacts.stream().anyMatch {
+                    identifier.contains(it)
+                }
+                isBugsnagArtefact && it.file != null
             }
             if (artifact) {
                 File artifactFile = artifact.file
