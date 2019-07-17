@@ -1,3 +1,8 @@
+## 4.5.1 (2019-07-17)
+
+Lookup shared object files correctly in new artefact IDs
+[#170](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/170)
+
 ## 4.5.0 (2019-07-15)
 
 Search for shared object files in the new artefact locations introduced by modularisation of `bugsnag-android`. This affects versions v4.17.0 and above of `bugsnag-android` and `bugsnag-android-ndk`.
