@@ -1,4 +1,4 @@
-## 4.5.2 TBD
+## 4.5.2 (2019-07-18)
 
 Update plugin to extract SO files from transitive dependencies
 [#171](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/171)
