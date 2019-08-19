@@ -9,6 +9,10 @@ buildscript {
     }
 }
 
+plugins {
+    id "com.github.hierynomus.license" version "0.15.0"
+}
+
 // Gradle plugins
 plugins {
     id 'groovy'
@@ -149,4 +153,13 @@ codenarc {
     // ignore baseline violations for now
     maxPriority2Violations 7
     maxPriority3Violations 9
+}
+
+// license checking
+license {
+    header rootProject.file('LICENSE')
+    ignoreFailures true
+}
+downloadLicenses {
+  dependencyConfiguration "compile"
 }
