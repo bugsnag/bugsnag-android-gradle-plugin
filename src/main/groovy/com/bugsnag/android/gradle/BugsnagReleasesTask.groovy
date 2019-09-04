@@ -58,8 +58,8 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
                 setRequestMethod("POST")
                 setRequestProperty("Content-Type", "application/json")
                 setRequestProperty("Bugsnag-Api-Key", apiKey)
-                setReadTimeout(Call.TIMEOUT_MILLIS)
-                setConnectTimeout(Call.TIMEOUT_MILLIS)
+                setReadTimeout(project.bugsnag.requestTimeoutMs)
+                setConnectTimeout(project.bugsnag.requestTimeoutMs)
                 setDoOutput(true)
 
                 os = outputStream
