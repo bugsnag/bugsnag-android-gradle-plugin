@@ -21,6 +21,7 @@ class BugsnagPluginExtension {
     String sharedObjectPath = null
     String projectRoot = null
     boolean failOnUploadError = true
+    int requestTimeoutMs = 60000
 
     // release API values
     String builderName = null

@@ -5,7 +5,6 @@ import org.gradle.api.Project
 abstract class Call {
 
     static final int MAX_RETRY_COUNT = 5
-    static final int TIMEOUT_MILLIS = 60000
 
     private final Project project // 60 seconds
 

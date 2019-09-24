@@ -1,3 +1,8 @@
+## 4.6.0 (2019-09-24)
+
+Add configurable timeout for all http requests
+[#173](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/173)
+
 ## 4.5.2 (2019-07-18)
 
 Update plugin to extract SO files from transitive dependencies

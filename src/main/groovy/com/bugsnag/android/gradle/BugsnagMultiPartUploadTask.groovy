@@ -29,7 +29,6 @@ import org.gradle.api.GradleException
 class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
 
     static final int MAX_RETRY_COUNT = 5
-    static final int TIMEOUT_MILLIS = 60000 // 60 seconds
 
     String applicationId
 
@@ -95,8 +94,8 @@ class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
 
         HttpClient httpClient = new DefaultHttpClient()
         HttpParams params = httpClient.params
-        HttpConnectionParams.setConnectionTimeout(params, TIMEOUT_MILLIS)
-        HttpConnectionParams.setSoTimeout(params, TIMEOUT_MILLIS)
+        HttpConnectionParams.setConnectionTimeout(params, project.bugsnag.requestTimeoutMs)
+        HttpConnectionParams.setSoTimeout(params, project.bugsnag.requestTimeoutMs)
 
         int statusCode
         String responseEntity
