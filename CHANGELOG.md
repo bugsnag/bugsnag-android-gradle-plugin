@@ -1,4 +1,4 @@
-## TBD
+## 4.6.0 (2019-09-24)
 
 Add configurable timeout for all http requests
 [#173](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/173)
