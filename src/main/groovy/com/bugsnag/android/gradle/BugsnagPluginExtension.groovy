@@ -11,6 +11,7 @@ class BugsnagPluginExtension {
     String endpoint = 'https://upload.bugsnag.com'
     String releasesEndpoint = 'https://build.bugsnag.com'
     String apiKey = null
+    Integer versionCode = null
     boolean autoUpload = true
     boolean autoReportBuilds = true
     boolean autoProguardConfig = true
