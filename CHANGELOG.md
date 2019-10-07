@@ -1,3 +1,8 @@
+## TBD
+
+Add ability to override reported value for versionCode
+[#175](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/175)
+
 ## 4.6.0 (2019-09-24)
 
 Add configurable timeout for all http requests
