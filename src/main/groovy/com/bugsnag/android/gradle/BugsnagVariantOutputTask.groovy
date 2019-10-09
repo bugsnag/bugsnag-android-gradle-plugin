@@ -106,7 +106,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
 
             // Get the Bugsnag API key
             apiKey = getApiKey(metaDataTags, ns)
-            if (!apiKey) {
+            if (apiKey == null) {
                 project.logger.warn("Could not find apiKey in '$BugsnagPlugin.API_KEY_TAG' " +
                     "<meta-data> tag in your AndroidManifest.xml or in your gradle config")
             }
@@ -119,11 +119,17 @@ class BugsnagVariantOutputTask extends DefaultTask {
             }
 
             // Uniquely identify the build so that we can identify the proguard file.
-            buildUUID = getBuildUuid(metaDataTags, ns)
+            buildUUID = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.BUILD_UUID_TAG)
+            if (buildUUID == null) {
+                project.logger.warn("Could not find '$BugsnagPlugin.BUILD_UUID_TAG'" +
+                    " <meta-data> tag in your AndroidManifest.xml")
+            }
 
             // Get the version name
             versionName = getVersionName(xml, ns)
-
+            if (versionName == null) {
+                project.logger.warn("Could not find 'android:versionName' value in your AndroidManifest.xml")
+            }
             return
         }
     }
@@ -135,11 +141,6 @@ class BugsnagVariantOutputTask extends DefaultTask {
             apiKey = project.bugsnag.apiKey
         } else {
             apiKey = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.API_KEY_TAG)
-
-            if (apiKey == null) {
-                project.logger.warn("Could not find '$BugsnagPlugin.API_KEY_TAG' " +
-                    "<meta-data> tag in your AndroidManifest.xml")
-            }
         }
         apiKey
     }
@@ -148,15 +149,6 @@ class BugsnagVariantOutputTask extends DefaultTask {
         metaDataTags.any {
             it.attributes()[ns.name] == BugsnagPlugin.BUILD_UUID_TAG
         }
-    }
-
-    String getBuildUuid(metaDataTags, Namespace ns) {
-        String data = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.BUILD_UUID_TAG)
-        if (data == null) {
-            project.logger.warn("Could not find '$BugsnagPlugin.BUILD_UUID_TAG'" +
-                " <meta-data> tag in your AndroidManifest.xml")
-        }
-        data
     }
 
     private String getManifestMetaData(metaDataTags, Namespace ns, String key) {
