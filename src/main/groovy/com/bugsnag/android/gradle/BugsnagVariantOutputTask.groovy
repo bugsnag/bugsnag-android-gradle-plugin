@@ -168,13 +168,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
     }
 
     String getVersionCode(metaDataTags, Node xml, Namespace ns) {
-        String versionCode
-
-        if (project.bugsnag.versionCode != null) {
-            versionCode = project.bugsnag.versionCode
-        } else {
-            versionCode = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.VERSION_CODE_TAG)
-        }
+        String versionCode = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.VERSION_CODE_TAG)
 
         if (versionCode != null) {
             return versionCode
