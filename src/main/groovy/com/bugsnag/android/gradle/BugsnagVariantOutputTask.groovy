@@ -106,24 +106,30 @@ class BugsnagVariantOutputTask extends DefaultTask {
 
             // Get the Bugsnag API key
             apiKey = getApiKey(metaDataTags, ns)
-            if (!apiKey) {
+            if (apiKey == null) {
                 project.logger.warn("Could not find apiKey in '$BugsnagPlugin.API_KEY_TAG' " +
                     "<meta-data> tag in your AndroidManifest.xml or in your gradle config")
             }
 
             // Get the build version
-            versionCode = getVersionCode(xml, ns)
+            versionCode = getVersionCode(metaDataTags, xml, ns)
             if (versionCode == null) {
                 project.logger.warn("Could not find 'android:versionCode' value in your AndroidManifest.xml")
                 continue
             }
 
             // Uniquely identify the build so that we can identify the proguard file.
-            buildUUID = getBuildUuid(metaDataTags, ns)
+            buildUUID = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.BUILD_UUID_TAG)
+            if (buildUUID == null) {
+                project.logger.warn("Could not find '$BugsnagPlugin.BUILD_UUID_TAG'" +
+                    " <meta-data> tag in your AndroidManifest.xml")
+            }
 
             // Get the version name
             versionName = getVersionName(xml, ns)
-
+            if (versionName == null) {
+                project.logger.warn("Could not find 'android:versionName' value in your AndroidManifest.xml")
+            }
             return
         }
     }
@@ -145,19 +151,13 @@ class BugsnagVariantOutputTask extends DefaultTask {
         }
     }
 
-    String getBuildUuid(metaDataTags, Namespace ns) {
-        getManifestMetaData(metaDataTags, ns, BugsnagPlugin.BUILD_UUID_TAG)
-    }
-
     private String getManifestMetaData(metaDataTags, Namespace ns, String key) {
         String value = null
 
         def tags = metaDataTags.findAll {
             (it.attributes()[ns.name] == key)
         }
-        if (tags.isEmpty()) {
-            project.logger.warn("Could not find '$key' <meta-data> tag in your AndroidManifest.xml")
-        } else {
+        if (!tags.isEmpty()) {
             value = tags[0].attributes()[ns.value]
         }
         value
@@ -167,7 +167,13 @@ class BugsnagVariantOutputTask extends DefaultTask {
         xml.attributes()[ns.versionName]
     }
 
-    String getVersionCode(Node xml, Namespace ns) {
-        xml.attributes()[ns.versionCode]
+    String getVersionCode(metaDataTags, Node xml, Namespace ns) {
+        String versionCode = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.VERSION_CODE_TAG)
+
+        if (versionCode != null) {
+            return versionCode
+        } else {
+            return xml.attributes()[ns.versionCode]
+        }
     }
 }
