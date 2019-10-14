@@ -1,4 +1,4 @@
-## TBD
+## 4.7.0 (2019-10-14)
 
 Add ability to override reported value for versionCode
 [#175](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/175)
