@@ -10,6 +10,8 @@ class BugsnagPluginExtension {
 
     String endpoint = 'https://upload.bugsnag.com'
     String releasesEndpoint = 'https://build.bugsnag.com'
+
+    @Deprecated
     String apiKey = null
     boolean autoUpload = true
     boolean autoReportBuilds = true
