@@ -291,8 +291,16 @@ class BugsnagPlugin implements Plugin<Project> {
 
     static File resolveBundleManifestOutputDirectory(ManifestProcessorTask processManifest) {
         if (processManifest.hasProperty("bundleManifestOutputDirectory")) {
+
             // For AGP versions >= 3.3.0 the bundle manifest is output to its own directory
-            return processManifest.bundleManifestOutputDirectory
+            def directory = processManifest.getBundleManifestOutputDirectory()
+
+            if (directory instanceof File) { // 3.3.X - 3.5.X returns a File
+                return directory
+            } else { // 3.6.+ returns a DirectoryProperty
+                return directory.asFile.get()
+            }
+
         } else {
             // For AGP versions < 3.3.0 the bundle manifest is the merged manifest
             return processManifest.manifestOutputDirectory
