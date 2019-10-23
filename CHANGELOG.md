@@ -1,5 +1,8 @@
 ## TBD
 
+Fix AGP 3.6.0 breaking project builds due to changed return type of `getBundleManifestOutputDirectory()`
+[#179](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/179)
+
 Avoid uploading zero-length proguard mapping files
 [#180](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/180)
 
