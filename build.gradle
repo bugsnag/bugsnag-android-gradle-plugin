@@ -152,7 +152,7 @@ task wrapper(type: Wrapper) {
 codenarc {
     // ignore baseline violations for now
     maxPriority2Violations 7
-    maxPriority3Violations 11
+    maxPriority3Violations 10
 }
 
 // license checking

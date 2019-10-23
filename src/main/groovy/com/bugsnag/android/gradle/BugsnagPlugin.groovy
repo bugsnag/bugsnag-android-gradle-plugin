@@ -293,7 +293,7 @@ class BugsnagPlugin implements Plugin<Project> {
         if (processManifest.hasProperty("bundleManifestOutputDirectory")) {
 
             // For AGP versions >= 3.3.0 the bundle manifest is output to its own directory
-            def directory = processManifest.getBundleManifestOutputDirectory()
+            def directory = processManifest.bundleManifestOutputDirectory
 
             if (directory instanceof File) { // 3.3.X - 3.5.X returns a File
                 return directory
