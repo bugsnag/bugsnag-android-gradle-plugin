@@ -47,6 +47,8 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
             } else {
                 return
             }
+        } else if (mappingFile.length() == 0) { // proguard's -dontobfuscate generates an empty mapping file
+            return
         }
 
         // Read the API key and Build ID etc..
