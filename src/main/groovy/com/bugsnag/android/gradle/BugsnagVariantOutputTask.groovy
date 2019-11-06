@@ -126,7 +126,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
             }
 
             // Get the version name
-            versionName = getVersionName(xml, ns)
+            versionName = getVersionName(metaDataTags, xml, ns)
             if (versionName == null) {
                 project.logger.warn("Could not find 'android:versionName' value in your AndroidManifest.xml")
             }
@@ -163,8 +163,14 @@ class BugsnagVariantOutputTask extends DefaultTask {
         value
     }
 
-    String getVersionName(Node xml, Namespace ns) {
-        xml.attributes()[ns.versionName]
+    String getVersionName(metaDataTags, Node xml, Namespace ns) {
+        String versionName = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.APP_VERSION_TAG)
+
+        if (versionName != null) {
+            return versionName
+        } else {
+            return xml.attributes()[ns.versionName]
+        }
     }
 
     String getVersionCode(metaDataTags, Node xml, Namespace ns) {
