@@ -1,3 +1,8 @@
+## TBD
+
+Allow overriding the 'appVersion' field from the AndroidManifest
+[#181](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/181)
+
 ## 4.7.1 (2019-10-24)
 
 Fix AGP 3.6.0 breaking project builds due to changed return type of `getBundleManifestOutputDirectory()`
