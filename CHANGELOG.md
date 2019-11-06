@@ -1,4 +1,4 @@
-## TBD
+## 4.7.2 (2019-11-06)
 
 Allow overriding the 'appVersion' field from the AndroidManifest
 [#181](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/181)
