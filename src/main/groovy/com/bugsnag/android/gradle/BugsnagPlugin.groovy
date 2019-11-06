@@ -35,6 +35,7 @@ class BugsnagPlugin implements Plugin<Project> {
     static final String API_KEY_TAG = 'com.bugsnag.android.API_KEY'
     static final String BUILD_UUID_TAG = 'com.bugsnag.android.BUILD_UUID'
     static final String VERSION_CODE_TAG = 'com.bugsnag.android.VERSION_CODE'
+    static final String APP_VERSION_TAG = 'com.bugsnag.android.APP_VERSION'
     static final String GROUP_NAME = 'Bugsnag'
 
     private static final String NDK_PROJ_TASK = "externalNative"
