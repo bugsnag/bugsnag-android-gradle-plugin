@@ -299,7 +299,7 @@ class BugsnagPlugin implements Plugin<Project> {
             if (directory instanceof File) { // 3.3.X - 3.5.X returns a File
                 return directory
             } else { // 3.6.+ returns a DirectoryProperty
-                return directory.asFile.get()
+                return directory.asFile.getOrNull()
             }
 
         } else {
