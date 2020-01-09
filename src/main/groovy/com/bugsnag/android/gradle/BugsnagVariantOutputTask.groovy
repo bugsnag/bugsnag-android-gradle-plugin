@@ -5,6 +5,7 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.tasks.ManifestProcessorTask
 import groovy.xml.Namespace
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.Directory
 
 import java.nio.file.Paths
 
@@ -47,6 +48,10 @@ class BugsnagVariantOutputTask extends DefaultTask {
 
         ManifestProcessorTask processManifest = BugsnagPlugin.resolveProcessManifest(variantOutput)
 
+        if (processManifest == null) {
+            return manifestPaths
+        }
+
         if (getMergedManifest) {
             Object outputDir = processManifest.manifestOutputDirectory
 
@@ -56,16 +61,25 @@ class BugsnagVariantOutputTask extends DefaultTask {
                 // gradle 4.7 introduced a provider API for lazy evaluation of properties,
                 // AGP subsequently changed the API from File to Provider<File>
                 // see https://docs.gradle.org/4.7/userguide/lazy_configuration.html
-                directoryMerged = outputDir.get().asFile
+                Directory dir = outputDir.getOrNull()
+
+                if (dir != null) {
+                    directoryMerged = dir.asFile
+                }
             }
 
-            addManifestPath(manifestPaths, directoryMerged)
+            if (directoryMerged != null) {
+                addManifestPath(manifestPaths, directoryMerged)
+            }
         }
 
         // Attempt to get the bundle manifest directory if required
         if (getBundleManifest) {
             directoryBundle = BugsnagPlugin.resolveBundleManifestOutputDirectory(processManifest)
-            addManifestPath(manifestPaths, directoryBundle)
+
+            if (directoryBundle != null) {
+                addManifestPath(manifestPaths, directoryBundle)
+            }
         }
 
         manifestPaths

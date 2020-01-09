@@ -242,22 +242,26 @@ class BugsnagPlugin implements Plugin<Project> {
     private static Set<String> findTaskNamesForPrefix(BaseVariant variant, BaseVariantOutput output, String prefix) {
         String variantName = output.name.split("-")[0].capitalize()
         Task assembleTask = resolveAssembleTask(variant)
-        String assembleTaskName = assembleTask.name
-        String buildTypeTaskName = assembleTaskName.replaceAll(variantName, "")
-        String buildType = buildTypeTaskName.replaceAll(ASSEMBLE_TASK, "")
-        String variantTaskName = assembleTaskName.replaceAll(buildType, "")
 
         Set<String> taskNames = new HashSet<>()
         taskNames.add(prefix)
-        taskNames.add(assembleTaskName.replaceAll(ASSEMBLE_TASK, prefix))
-        taskNames.add(buildTypeTaskName.replaceAll(ASSEMBLE_TASK, prefix))
-        taskNames.add(variantTaskName.replaceAll(ASSEMBLE_TASK, prefix))
+
+        if (assembleTask != null) {
+            String assembleTaskName = assembleTask.name
+            String buildTypeTaskName = assembleTaskName.replaceAll(variantName, "")
+            String buildType = buildTypeTaskName.replaceAll(ASSEMBLE_TASK, "")
+            String variantTaskName = assembleTaskName.replaceAll(buildType, "")
+
+            taskNames.add(assembleTaskName.replaceAll(ASSEMBLE_TASK, prefix))
+            taskNames.add(buildTypeTaskName.replaceAll(ASSEMBLE_TASK, prefix))
+            taskNames.add(variantTaskName.replaceAll(ASSEMBLE_TASK, prefix))
+        }
         taskNames
     }
 
     private static Task resolveAssembleTask(BaseVariant variant) {
         try {
-            return variant.assembleProvider.get()
+            return variant.assembleProvider.getOrNull()
         } catch (Throwable ignored) {
             return variant.assemble
         }
@@ -268,6 +272,10 @@ class BugsnagPlugin implements Plugin<Project> {
         BugsnagManifestTask manifestTask = project.tasks.create(taskName, BugsnagManifestTask)
         setupBugsnagTask(manifestTask, deps)
         ManifestProcessorTask processManifest = resolveProcessManifest(deps.output)
+
+        if (processManifest == null) {
+            return
+        }
 
         processManifest.finalizedBy(manifestTask)
         manifestTask.dependsOn(processManifest)
@@ -284,7 +292,7 @@ class BugsnagPlugin implements Plugin<Project> {
 
     static ManifestProcessorTask resolveProcessManifest(BaseVariantOutput output) {
         try {
-            return output.processManifestProvider.get()
+            return output.processManifestProvider.getOrNull()
         } catch (Throwable ignored) {
             return output.processManifest
         }
@@ -299,7 +307,7 @@ class BugsnagPlugin implements Plugin<Project> {
             if (directory instanceof File) { // 3.3.X - 3.5.X returns a File
                 return directory
             } else { // 3.6.+ returns a DirectoryProperty
-                return directory.asFile.get()
+                return directory.asFile.getOrNull()
             }
 
         } else {
@@ -352,13 +360,17 @@ class BugsnagPlugin implements Plugin<Project> {
         if (variant instanceof LibraryVariant) {
             variant.packageLibrary.dependsOn task
         } else {
-            resolvePackageApplication(variant).dependsOn task
+            PackageApplication application = resolvePackageApplication(variant)
+
+            if (application != null) {
+                application.dependsOn task
+            }
         }
     }
 
     static PackageApplication resolvePackageApplication(BaseVariant variant) {
         try {
-            return variant.packageApplicationProvider.get()
+            return variant.packageApplicationProvider.getOrNull()
         } catch (Throwable ignored) {
             return variant.packageApplication
         }

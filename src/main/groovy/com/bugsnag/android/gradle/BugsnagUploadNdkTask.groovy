@@ -47,6 +47,11 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
     void upload() {
         super.readManifestFile()
         symbolPath = findSymbolPath(variantOutput)
+
+        if (symbolPath == null) {
+            return
+        }
+
         project.logger.lifecycle("Symbolpath: ${symbolPath}")
 
         boolean sharedObjectFound = false
@@ -80,7 +85,8 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
         try {
             return variant.externalNativeBuildProviders
                 .stream()
-                .map({ it.get() })
+                .map({ it.getOrNull() })
+                .filter({ it != null })
                 .collect()
         } catch (Throwable ignored) {
             return variant.externalNativeBuildTasks
@@ -89,6 +95,11 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
 
     private static File findSymbolPath(BaseVariantOutput variantOutput) {
         ProcessAndroidResources resources = resolveProcessAndroidResources(variantOutput)
+
+        if (resources == null) {
+            return null
+        }
+
         File symbolPath = resources.textSymbolOutputFile
 
         if (symbolPath == null) {
@@ -99,7 +110,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
 
     private static ProcessAndroidResources resolveProcessAndroidResources(BaseVariantOutput variantOutput) {
         try {
-            return variantOutput.processResourcesProvider.get()
+            return variantOutput.processResourcesProvider.getOrNull()
         } catch (Throwable ignored) {
             return variantOutput.processResources
         }
