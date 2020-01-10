@@ -21,7 +21,7 @@ before_install:
   - echo y | sdkmanager "tools" >/dev/null
   - echo y | sdkmanager "build-tools;27.0.3" >/dev/null
   - echo y | sdkmanager 'cmake;3.6.4111459'
-  - gem install bundler
+  # - gem install bundler
   - bundle install -V
   - ls $ANDROID_HOME
   - ./install_ndk.sh
