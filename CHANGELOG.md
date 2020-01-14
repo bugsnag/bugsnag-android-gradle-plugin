@@ -1,4 +1,4 @@
-## TBD
+## 4.7.3 (2020-01-14)
 
 Use getOrNull() rather than Provider#get()
 [#188](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/188)
