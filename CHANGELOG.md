@@ -1,3 +1,8 @@
+## TBD
+
+Prevent existing buildUuid being overridden by gradle plugin
+[#192](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/192)
+
 ## 4.7.3 (2020-01-14)
 
 Use getOrNull() rather than Provider#get()
