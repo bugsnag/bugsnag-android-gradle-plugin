@@ -1,4 +1,4 @@
-## TBD
+## 4.7.4 (2020-03-11)
 
 Prevent existing buildUuid being overridden by gradle plugin
 [#192](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/192)
