@@ -147,6 +147,7 @@ class BugsnagPlugin implements Plugin<Project> {
     private static void setupMappingFileUpload(Project project, BugsnagTaskDeps deps) {
         String taskName = "uploadBugsnag${taskNameForOutput(deps.output)}Mapping"
         BugsnagUploadProguardTask uploadTask = project.tasks.create(taskName, BugsnagUploadProguardTask)
+        uploadTask.variantMappingFile.set(deps.variant.mappingFileProvider)
         uploadTask.partName.set("proguard")
         prepareUploadTask(uploadTask, deps, project)
     }

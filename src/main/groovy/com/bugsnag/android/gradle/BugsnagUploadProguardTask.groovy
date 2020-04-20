@@ -5,8 +5,10 @@ import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.TaskAction
 
 import java.nio.charset.Charset
@@ -26,6 +28,10 @@ import java.nio.file.Paths
  a build.
  */
 abstract class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
+
+    // This is empty if no mapping file is available
+    @InputFiles
+    ConfigurableFileCollection variantMappingFile
 
     @Input
     Property<String> partName
@@ -78,8 +84,13 @@ abstract class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
                     " falling back to AGP mapping file value")
             }
         }
+
         // use AGP supplied value by default, or as fallback
-        variant.mappingFile
+        if (variantMappingFile.isEmpty()) {
+            throw new RuntimeException("Could not find a mapping file.")
+        } else {
+            return variantMappingFile.first()
+        }
     }
 
     /**
