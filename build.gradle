@@ -145,10 +145,6 @@ bintray {
     }
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.4'
-}
-
 codenarc {
     // ignore baseline violations for now
     maxPriority2Violations 7
