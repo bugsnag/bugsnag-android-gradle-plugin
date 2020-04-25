@@ -1,15 +1,21 @@
 package com.bugsnag.android.gradle
 
 import org.apache.http.HttpEntity
+import org.apache.http.HttpHost
 import org.apache.http.HttpResponse
 import org.apache.http.ParseException
-import org.apache.http.client.HttpClient
+import org.apache.http.auth.AuthScope
+import org.apache.http.auth.UsernamePasswordCredentials
+import org.apache.http.client.CredentialsProvider
+import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.StringBody
+import org.apache.http.impl.client.BasicCredentialsProvider
+import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.params.HttpConnectionParams
-import org.apache.http.params.HttpParams
+import org.apache.http.impl.client.HttpClientBuilder
+import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
 import org.gradle.api.GradleException
 
@@ -28,7 +34,12 @@ import org.gradle.api.GradleException
  */
 class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
 
+    static final int DEFAULT_PROXY_PORT = 80
     static final int MAX_RETRY_COUNT = 5
+    static final int KEY_PROXY_HOST = "http.proxyHost"
+    static final int KEY_PROXY_PORT = "http.proxyPort"
+    static final int KEY_PROXY_USER = "http.proxyUser"
+    static final int KEY_PROXY_PASSWORD = "http.proxyPassword"
 
     String applicationId
 
@@ -92,10 +103,38 @@ class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
         HttpPost httpPost = new HttpPost(project.bugsnag.endpoint)
         httpPost.setEntity(mpEntity)
 
-        HttpClient httpClient = new DefaultHttpClient()
-        HttpParams params = httpClient.params
-        HttpConnectionParams.setConnectionTimeout(params, project.bugsnag.requestTimeoutMs)
-        HttpConnectionParams.setSoTimeout(params, project.bugsnag.requestTimeoutMs)
+        RequestConfig.Builder requestConfigBuilder = RequestConfig.custom()
+            .setConnectTimeout(project.bugsnag.requestTimeoutMs)
+            .setSocketTimeout(project.bugsnag.requestTimeoutMs)
+        HttpClientBuilder httpClientBuilder = HttpClients.custom()
+
+        String proxyHost = System.getProperty(KEY_PROXY_HOST)
+        if (proxyHost != null) {
+            int proxyPort = DEFAULT_PROXY_PORT
+            String proxyPortString = System.getProperty(KEY_PROXY_PORT)
+            if (proxyPortString != null) {
+                proxyPort = proxyPortString.toInteger()
+            }
+
+            HttpHost proxy = new HttpHost(proxyHost, proxyPort)
+            requestConfigBuilder
+                .setProxy(proxy)
+                .build()
+
+            String proxyUser = System.getProperty(KEY_PROXY_USER)
+            if (proxyUser != null) {
+                String proxyPass = System.getProperty(KEY_PROXY_PASSWORD)
+                CredentialsProvider credentialsProvider = new BasicCredentialsProvider()
+                credentialsProvider.setCredentials(
+                    new AuthScope(proxyHostname, proxyPort),
+                    new UsernamePasswordCredentials(proxyUser, proxyPass)
+                )
+                httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)
+            }
+        }
+
+        httpPost.setConfig(requestConfigBuilder.build())
+        CloseableHttpClient httpClient = httpClientBuilder.build()
 
         int statusCode
         String responseEntity
@@ -128,5 +167,4 @@ class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
     int getRetryCount() {
         project.bugsnag.retryCount >= MAX_RETRY_COUNT ? MAX_RETRY_COUNT : project.bugsnag.retryCount
     }
-
 }
