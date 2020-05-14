@@ -1,3 +1,8 @@
+## TBD
+
+Add compatibility with AGP 4.0 by using the `mappingFileProvider` API when possible
+[#202](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/202)
+
 ## 4.7.3 (2020-01-14)
 
 Use getOrNull() rather than Provider#get()
