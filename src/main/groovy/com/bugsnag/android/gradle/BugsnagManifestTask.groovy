@@ -46,11 +46,12 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
             if (application) {
                 def metaDataTags = application[TAG_META_DATA]
 
-                // remove any old BUILD_UUID_TAG elements
-                metaDataTags.findAll {
+                // if BUILD_UUID is already present don't override what user has specified
+                def tags = metaDataTags.findAll {
                     (it.attributes()[ns.name] == BugsnagPlugin.BUILD_UUID_TAG)
-                }.each {
-                    it.parent().remove(it)
+                }
+                if (tags.size() > 0) {
+                    return
                 }
 
                 // Add the new BUILD_UUID_TAG element
