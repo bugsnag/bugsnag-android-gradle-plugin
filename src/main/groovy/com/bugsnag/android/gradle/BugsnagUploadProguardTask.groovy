@@ -5,6 +5,7 @@ import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskAction
 
 import java.nio.charset.Charset
@@ -75,7 +76,20 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
                     " falling back to AGP mapping file value")
             }
         }
-        // use AGP supplied value by default, or as fallback
+
+        // Use AGP supplied value, preferring the new "getMappingFileProvider" API but falling back
+        // to the old "mappingFile" API if necessary
+        if (variant.respondsTo("getMappingFileProvider")) {
+            FileCollection mappingFileProvider = variant.mappingFileProvider.getOrNull()
+
+            // We will warn about not finding a mapping file later, so there's no need to warn here
+            if (mappingFileProvider == null || mappingFileProvider.isEmpty()) {
+                return null
+            }
+
+            return mappingFileProvider.first()
+        }
+
         variant.mappingFile
     }
 

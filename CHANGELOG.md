@@ -1,3 +1,8 @@
+## 4.7.5 (2020-05-18)
+
+Add compatibility with AGP 4.0 by using the `mappingFileProvider` API when possible
+[#202](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/202)
+
 ## 4.7.4 (2020-03-11)
 
 Prevent existing buildUuid being overridden by gradle plugin
