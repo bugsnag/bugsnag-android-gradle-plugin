@@ -1,6 +1,5 @@
 package com.bugsnag.android.gradle
 
-import groovy.xml.Namespace
 import org.gradle.api.tasks.TaskAction
 
 /**
@@ -34,31 +33,5 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
 
             ManifestUtil.patchManifest(manifestPath, buildUUID, logger)
         }
-    }
-
-    boolean isInstantRun() {
-        project.properties["android.optional.compilation"]?.contains("INSTANT_DEV")
-    }
-
-    boolean shouldRun() {
-        List<File> paths = manifestPaths
-
-        for (File manifestPath in paths) {
-            if (!manifestPath.exists()) {
-                continue
-            }
-
-            Namespace ns = new Namespace(NS_URI_ANDROID, NS_PREFIX_ANDROID)
-            def app = new XmlParser().parse(manifestPath).application[0]
-            if (app) {
-                int tagCount = app[TAG_META_DATA].findAll {
-                    (it.attributes()[ns.name] == BugsnagPlugin.BUILD_UUID_TAG)
-                }.size()
-                if (tagCount == 0 || !isInstantRun()) {
-                    return true
-                }
-            }
-        }
-        false
     }
 }
