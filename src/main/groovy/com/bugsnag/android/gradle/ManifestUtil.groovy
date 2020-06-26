@@ -12,12 +12,16 @@ final class ManifestUtil {
     private ManifestUtil() {
     }
 
-    static void patchManifest(String manifestPath, String buildUUID, Logger logger) {
-        logger.debug("Updating manifest with build UUID: " + manifestPath)
+    static void patchManifest(String inputManifestPath,
+        String outputManifestPath,
+        String buildUUID,
+        Logger logger
+    ) {
+        logger.debug("Updating manifest with build UUID: " + inputManifestPath)
 
         // Parse the AndroidManifest.xml
         Namespace ns = new Namespace(NS_URI_ANDROID, NS_PREFIX_ANDROID)
-        Node xml = new XmlParser().parse(manifestPath)
+        Node xml = new XmlParser().parse(inputManifestPath)
 
         def application = xml.application[0]
         if (application) {
@@ -38,7 +42,7 @@ final class ManifestUtil {
             FileWriter writer = null
 
             try {
-                writer = new FileWriter(manifestPath)
+                writer = new FileWriter(outputManifestPath)
                 XmlNodePrinter printer = new XmlNodePrinter(new PrintWriter(writer))
                 printer.preserveWhitespace = true
                 printer.print(xml)

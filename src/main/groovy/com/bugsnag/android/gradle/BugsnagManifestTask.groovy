@@ -31,7 +31,7 @@ class BugsnagManifestTask extends BugsnagVariantOutputTask {
                 continue
             }
 
-            ManifestUtil.patchManifest(manifestPath, buildUUID, logger)
+            ManifestUtil.patchManifest(manifestPath, manifestPath, buildUUID, logger)
         }
     }
 }
