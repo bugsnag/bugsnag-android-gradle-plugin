@@ -1,19 +1,26 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.tasks.ManifestProcessorTask
 import com.android.build.gradle.tasks.PackageApplication
+import kotlin.jvm.functions.Function1
+import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.util.VersionNumber
 
 /**
@@ -269,24 +276,54 @@ class BugsnagPlugin implements Plugin<Project> {
 
     private static void setupManifestUuidTask(Project project, BugsnagTaskDeps deps) {
         String taskName = "processBugsnag${taskNameForOutput(deps.output)}Manifest"
-        BugsnagManifestTask manifestTask = project.tasks.create(taskName, BugsnagManifestTask)
-        setupBugsnagTask(manifestTask, deps)
-        ManifestProcessorTask processManifest = resolveProcessManifest(deps.output)
+        if (BugsnagManifestTaskV2.isApplicable()) {
+            BaseAppModuleExtension android = project.extensions.getByType(BaseAppModuleExtension)
+            android.onVariantProperties(new Action<ApplicationVariantProperties>() {
+                @Override
+                void execute(ApplicationVariantProperties applicationVariantProperties) {
+                    TaskProvider<BugsnagManifestTaskV2> manifestUpdater =
+                        project.tasks.register(taskName, BugsnagManifestTaskV2)
+                    applicationVariantProperties.artifacts
+                        .use(manifestUpdater)
+                        .wiredWithFiles(
+                            new Function1<BugsnagManifestTaskV2, RegularFileProperty>() {
+                                @Override
+                                RegularFileProperty invoke(
+                                    BugsnagManifestTaskV2 bugsnagManifestV2Task) {
+                                    return bugsnagManifestV2Task.mergedManifest
+                                }
+                            },
+                            new Function1<BugsnagManifestTaskV2, RegularFileProperty>() {
+                                @Override
+                                RegularFileProperty invoke(
+                                    BugsnagManifestTaskV2 bugsnagManifestV2Task) {
+                                    return bugsnagManifestV2Task.updatedManifest
+                                }
+                            }
+                        )
+                        .toTransform(ArtifactType.MERGED_MANIFEST)
+                }
+            })
+        } else {
+            BugsnagManifestTask manifestTask = project.tasks.create(taskName, BugsnagManifestTask)
+            setupBugsnagTask(manifestTask, deps)
+            ManifestProcessorTask processManifest = resolveProcessManifest(deps.output)
 
-        if (processManifest == null) {
-            return
-        }
+            if (processManifest == null) {
+                return
+            }
 
-        processManifest.finalizedBy(manifestTask)
-        manifestTask.dependsOn(processManifest)
+            processManifest.finalizedBy(manifestTask)
+            manifestTask.dependsOn(processManifest)
 
-        Set<Task> resourceTasks = project.tasks.findAll {
-            String name = it.name.toLowerCase()
-            name.startsWith(BUNDLE_TASK) && name.endsWith("resources")
-        }
+            Set<Task> resourceTasks = project.tasks.findAll {
+                String name = it.name.toLowerCase()
+                name.startsWith(BUNDLE_TASK) && name.endsWith("resources")
+            }
 
-        resourceTasks.forEach {
-            it.dependsOn manifestTask
+            resourceTasks.forEach {
+                it.dependsOn manifestTask
+            }
         }
     }
 
