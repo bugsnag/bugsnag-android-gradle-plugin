@@ -16,7 +16,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Bugsnag.init(this);
+        Bugsnag.start(this);
         TextView view = new TextView(this);
         view.setText(stringFromJNI());
         setContentView(view);

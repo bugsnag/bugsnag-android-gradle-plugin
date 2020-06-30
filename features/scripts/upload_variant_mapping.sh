@@ -6,4 +6,4 @@ if [ -z "$VARIANT_OUTPUT_NAME" ]; then
 fi
 
 cd features/fixtures/app
-./gradlew :module:clean :module:build uploadBugsnag${VARIANT_OUTPUT_NAME}Mapping --stacktrace
+./gradlew :module:clean :module:build -x lint uploadBugsnag${VARIANT_OUTPUT_NAME}Mapping --stacktrace
