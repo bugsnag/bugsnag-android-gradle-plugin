@@ -6,6 +6,9 @@ Remove unused BugsnagProguardConfigTask
 Make AGP dependency compile only
 [#211](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/211)
 
+Remove apiKey property from bugsnag plugin extension
+[#210](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/210)
+
 ## 4.7.5 (2020-05-18)
 
 Add compatibility with AGP 4.0 by using the `mappingFileProvider` API when possible

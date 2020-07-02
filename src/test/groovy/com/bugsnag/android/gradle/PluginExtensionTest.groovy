@@ -24,7 +24,6 @@ class PluginExtensionTest {
     @Test
     void ensureExtensionDefaults() {
         assertEquals("https://upload.bugsnag.com", proj.bugsnag.endpoint)
-        assertNull(proj.bugsnag.apiKey)
         assertTrue(proj.bugsnag.autoUpload)
         assertTrue(proj.bugsnag.autoReportBuilds)
         assertFalse(proj.bugsnag.uploadDebugBuildMappings)

@@ -4,6 +4,6 @@
 
     <meta-data
       android:name="com.bugsnag.android.API_KEY"
-      android:value="TEST_API_KEY" />
+      android:value="${BUGSNAG_API_KEY}" />
   </application>
 </manifest>

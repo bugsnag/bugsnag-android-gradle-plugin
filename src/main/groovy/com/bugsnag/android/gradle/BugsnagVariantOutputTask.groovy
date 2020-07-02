@@ -119,7 +119,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
             }
 
             // Get the Bugsnag API key
-            apiKey = getApiKey(metaDataTags, ns)
+            apiKey = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.API_KEY_TAG)
             if (apiKey == null) {
                 project.logger.warn("Could not find apiKey in '$BugsnagPlugin.API_KEY_TAG' " +
                     "<meta-data> tag in your AndroidManifest.xml or in your gradle config")
@@ -146,17 +146,6 @@ class BugsnagVariantOutputTask extends DefaultTask {
             }
             return
         }
-    }
-
-    String getApiKey(metaDataTags, Namespace ns) {
-        String apiKey
-
-        if (project.bugsnag.apiKey != null) {
-            apiKey = project.bugsnag.apiKey
-        } else {
-            apiKey = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.API_KEY_TAG)
-        }
-        apiKey
     }
 
     boolean hasBuildUuid(metaDataTags, Namespace ns) {
