@@ -1,3 +1,8 @@
+## 5.0.0 (TBD)
+
+Remove unused BugsnagProguardConfigTask
+[#209](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/209)
+
 ## 4.7.5 (2020-05-18)
 
 Add compatibility with AGP 4.0 by using the `mappingFileProvider` API when possible

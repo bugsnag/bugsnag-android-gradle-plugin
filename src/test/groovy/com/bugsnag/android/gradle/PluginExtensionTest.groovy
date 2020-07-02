@@ -27,7 +27,6 @@ class PluginExtensionTest {
         assertNull(proj.bugsnag.apiKey)
         assertTrue(proj.bugsnag.autoUpload)
         assertTrue(proj.bugsnag.autoReportBuilds)
-        assertTrue(proj.bugsnag.autoProguardConfig)
         assertFalse(proj.bugsnag.uploadDebugBuildMappings)
         assertFalse(proj.bugsnag.overwrite)
         assertEquals(0, proj.bugsnag.retryCount)
