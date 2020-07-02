@@ -122,7 +122,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
             apiKey = getManifestMetaData(metaDataTags, ns, BugsnagPlugin.API_KEY_TAG)
             if (apiKey == null) {
                 project.logger.warn("Could not find apiKey in '$BugsnagPlugin.API_KEY_TAG' " +
-                    "<meta-data> tag in your AndroidManifest.xml or in your gradle config")
+                    "<meta-data> tag in your AndroidManifest.xml")
             }
 
             // Get the build version
