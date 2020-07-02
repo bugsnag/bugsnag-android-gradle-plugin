@@ -5,16 +5,11 @@ import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
-import com.android.build.gradle.api.LibraryVariant
 import com.android.build.gradle.tasks.ManifestProcessorTask
-import com.android.build.gradle.tasks.PackageApplication
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.Dependency
-import org.gradle.util.VersionNumber
 
 /**
  * Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.
@@ -43,16 +38,11 @@ class BugsnagPlugin implements Plugin<Project> {
     private static final String ASSEMBLE_TASK = "assemble"
     private static final String BUNDLE_TASK = "bundle"
 
-    VersionNumber bugsnagVersionNumber
-
     void apply(Project project) {
         project.extensions.create("bugsnag", BugsnagPluginExtension)
         project.bugsnag.extensions.create("sourceControl", SourceControl)
 
         project.afterEvaluate {
-            bugsnagVersionNumber = getBugsnagAndroidVersionNumber(project)
-            project.logger.debug("Using bugsnag-android version number: $bugsnagVersionNumber")
-
             // Make sure the android plugin has been applied first
             if (project.plugins.hasPlugin(AppPlugin)) {
                 project.android.applicationVariants.all { variant ->
@@ -70,26 +60,6 @@ class BugsnagPlugin implements Plugin<Project> {
                 setupNdkProject(project)
             }
         }
-    }
-
-    /**
-     * Retrieves the VersionNumber used by com.bugsnag.android in the given project. This can be used
-     * to conditionally perform tasks depending on the artefact version.
-     */
-    static VersionNumber getBugsnagAndroidVersionNumber(Project project) {
-        List<Configuration> configs = project.configurations.collect()
-        List<Dependency> deps = configs.stream()
-            .map { conf -> conf.allDependencies }
-            .collect()
-            .flatten()
-
-        Optional<String> bugsnagVersion = deps.stream()
-            .filter { dep -> dep.group == "com.bugsnag" && dep.name == "bugsnag-android" }
-            .distinct()
-            .map({ dep -> dep.version })
-            .findFirst()
-
-        bugsnagVersion.present ? VersionNumber.parse(bugsnagVersion.get()) : VersionNumber.UNKNOWN
     }
 
     private static void setupNdkProject(Project project) {
@@ -117,9 +87,6 @@ class BugsnagPlugin implements Plugin<Project> {
         if (hasDisabledBugsnag(variant)) {
             return
         }
-
-        // only need to be run once per variant
-        setupProguardAutoConfig(project, variant)
 
         variant.outputs.each { output ->
             BugsnagTaskDeps deps = new BugsnagTaskDeps()
@@ -316,64 +283,12 @@ class BugsnagPlugin implements Plugin<Project> {
         }
     }
 
-    /**
-     * Automatically add the "edit proguard settings" task to the
-     * build process.
-     *
-     * This task must be called before ProGuard is run, but since
-     * the name of the ProGuard task changed between 1.0 and 1.5
-     * of the Android build tools, we'll hook into the "package"
-     * task as a dependency, since this is always run before
-     * ProGuard.
-     *
-     * For reference, in Android Build Tools 1.0, the ProGuard
-     * task was named `proguardRelease`, and in 1.5+ the ProGuard
-     * task is named `transformClassesAndResourcesWithProguardForRelease`
-     * as it is now part of the "transforms" process.
-     */
-    private void setupProguardAutoConfig(Project project, BaseVariant variant) {
-        String taskname = "processBugsnag${taskNameForVariant(variant)}Proguard"
-        BugsnagProguardConfigTask proguardConfigTask = project.tasks.create(taskname, BugsnagProguardConfigTask)
-        proguardConfigTask.group = GROUP_NAME
-        proguardConfigTask.variant = variant
-
-        // consumer proguard rules were added to the library in 4.6.0
-        boolean hasConsumerRules = bugsnagVersionNumber.major >= 4 && bugsnagVersionNumber.minor >= 6
-
-        if (project.bugsnag.autoProguardConfig && !hasConsumerRules) {
-            project.logger.debug("Bugsnag autoproguard config enabled")
-            dependTaskOnPackageTask(variant, proguardConfigTask)
-        } else {
-            project.logger.debug("ProGuard has consumer rules, skipping write")
-        }
-    }
-
     static String taskNameForVariant(BaseVariant variant) {
         variant.name.capitalize()
     }
 
     static String taskNameForOutput(BaseVariantOutput output) {
         output.name.capitalize()
-    }
-
-    private static void dependTaskOnPackageTask(BaseVariant variant, Task task) {
-        if (variant instanceof LibraryVariant) {
-            variant.packageLibrary.dependsOn task
-        } else {
-            PackageApplication application = resolvePackageApplication(variant)
-
-            if (application != null) {
-                application.dependsOn task
-            }
-        }
-    }
-
-    static PackageApplication resolvePackageApplication(BaseVariant variant) {
-        try {
-            return variant.packageApplicationProvider.getOrNull()
-        } catch (Throwable ignored) {
-            return variant.packageApplication
-        }
     }
 
     private static boolean hasDisabledBugsnag(BaseVariant variant) {
