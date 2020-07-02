@@ -9,22 +9,21 @@ import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.android.build.gradle.tasks.GenerateBuildConfig
 import com.android.build.gradle.tasks.MergeResources
 import com.android.build.gradle.tasks.MergeSourceSetFolders
-import com.android.build.gradle.tasks.NdkCompile
 import com.android.build.gradle.tasks.RenderscriptCompile
 import com.android.builder.model.BuildType
 import com.android.builder.model.ProductFlavor
 import com.android.builder.model.SourceProvider
-import groovy.transform.CompileStatic
 import org.gradle.api.DomainObjectCollection
 import org.gradle.api.Task
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.FileCollection
+import org.gradle.api.resources.TextResource
 import org.gradle.api.tasks.AbstractCopyTask
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 
-@CompileStatic
 @SuppressWarnings(["GetterMethodCouldBeProperty", "UnnecessaryReturnKeyword",
     "ReturnsNullInsteadOfEmptyCollection", "MethodCount", "BuilderMethodWithSideEffects",])
 class FakeVariantImpl implements BaseVariant {
@@ -171,11 +170,6 @@ class FakeVariantImpl implements BaseVariant {
     }
 
     @Override
-    NdkCompile getNdkCompile() {
-        return null
-    }
-
-    @Override
     Collection<ExternalNativeBuildTask> getExternalNativeBuildTasks() {
         return null
     }
@@ -288,5 +282,75 @@ class FakeVariantImpl implements BaseVariant {
     @Override
     boolean getOutputsAreSigned() {
         return false
+    }
+
+    @Override
+    TextResource getApplicationIdTextResource() {
+        return null
+    }
+
+    @Override
+    TaskProvider<Task> getPreBuildProvider() {
+        return null
+    }
+
+    @Override
+    TaskProvider<Task> getCheckManifestProvider() {
+        return null
+    }
+
+    @Override
+    TaskProvider<AidlCompile> getAidlCompileProvider() {
+        return null
+    }
+
+    @Override
+    TaskProvider<RenderscriptCompile> getRenderscriptCompileProvider() {
+        return null
+    }
+
+    @Override
+    TaskProvider<MergeResources> getMergeResourcesProvider() {
+        return null
+    }
+
+    @Override
+    TaskProvider<MergeSourceSetFolders> getMergeAssetsProvider() {
+        return null
+    }
+
+    @Override
+    TaskProvider<GenerateBuildConfig> getGenerateBuildConfigProvider() {
+        return null
+    }
+
+    @Override
+    TaskProvider<JavaCompile> getJavaCompileProvider() {
+        return null
+    }
+
+    @Override
+    Collection<TaskProvider<ExternalNativeBuildTask>> getExternalNativeBuildProviders() {
+        return null
+    }
+
+    @Override
+    TaskProvider<AbstractCopyTask> getProcessJavaResourcesProvider() {
+        return null
+    }
+
+    @Override
+    TaskProvider<Task> getAssembleProvider() {
+        return null
+    }
+
+    @Override
+    FileCollection getAllRawAndroidResources() {
+        return null
+    }
+
+    @Override
+    void register(Task task) {
+
     }
 }

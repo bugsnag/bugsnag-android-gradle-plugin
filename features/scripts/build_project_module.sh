@@ -11,4 +11,4 @@ function resetGitConfig {
 trap resetGitConfig EXIT
 
 cd features/fixtures/app
-./gradlew :module:clean :module:build --stacktrace
+./gradlew :module:clean :module:build -x lint --stacktrace

@@ -24,9 +24,7 @@ class PluginTest {
     @Test
     void ensureNoTasksApplied() {
         // no variants, so no tasks applied
-        Set<Task> tasks = proj.tasks.findAll()
-        assertNotNull(tasks)
-        assertEquals(0, tasks.size())
+        assertEquals(0, proj.tasks.size())
     }
 
     @Test
