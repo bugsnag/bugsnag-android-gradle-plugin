@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
-cd features/fixtures/rnapp/android
+cd $RN_FIXTURE_DIR
+echo "Test fixture used: $RN_FIXTURE_DIR"
 npm install
-./gradlew :app:clean :app:build -x lint --stacktrace
+./gradlew :app:clean :app:assemble -x lint --stacktrace

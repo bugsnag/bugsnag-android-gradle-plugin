@@ -10,5 +10,6 @@ function resetGitConfig {
 
 trap resetGitConfig EXIT
 
-cd features/fixtures/app
-./gradlew :module:clean :module:build -x lint --stacktrace
+cd $APP_FIXTURE_DIR
+echo "Test fixture used: $APP_FIXTURE_DIR"
+./gradlew :module:clean :module:assemble -x lint --stacktrace

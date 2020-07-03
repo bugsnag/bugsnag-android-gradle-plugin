@@ -95,6 +95,7 @@ def enableProguardInReleaseBuilds = true
 
 android {
     compileSdkVersion 28
+    ndkVersion "16.1.4479499"
 
     defaultConfig {
         applicationId "com.bugsnag.android.rnapp"
