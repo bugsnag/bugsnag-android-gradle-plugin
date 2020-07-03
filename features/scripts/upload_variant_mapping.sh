@@ -5,5 +5,5 @@ if [ -z "$VARIANT_OUTPUT_NAME" ]; then
     exit 1
 fi
 
-cd features/fixtures/app
+cd features/fixtures/app_agp340
 ./gradlew :module:clean :module:build -x lint uploadBugsnag${VARIANT_OUTPUT_NAME}Mapping --stacktrace

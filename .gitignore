@@ -9,4 +9,4 @@ gradle-app.setting
 .idea/
 local.properties
 maze_output/
-features/fixtures/rnapp/package-lock.json
+features/fixtures/rnapp_agp340/package-lock.json
