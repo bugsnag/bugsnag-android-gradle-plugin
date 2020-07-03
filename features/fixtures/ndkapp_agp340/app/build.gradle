@@ -1,0 +1,61 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 29
+
+    defaultConfig {
+        applicationId "com.bugsnag.android.ndkapp"
+        minSdkVersion 14
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+        externalNativeBuild {
+            cmake {
+                cppFlags ""
+            }
+        }
+        ndk {
+            abiFilters "x86", "x86_64", "armeabi-v7a", "arm64-v8a"
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+    lintOptions {
+        checkReleaseBuilds false
+    }
+}
+
+dependencies {
+    compile 'com.bugsnag:bugsnag-android:5.0.0'
+}
+
+apply plugin: 'com.bugsnag.android.gradle'
+
+bugsnag {
+    ndk true
+    endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+    releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+
+    def customPath = System.env.PROJECT_ROOT
+    def objdumpLocation = System.env.OBJDUMP_LOCATION
+
+    if (customPath != null) {
+        projectRoot = customPath
+    }
+
+    if (objdumpLocation != null) {
+        objdumpPaths = [
+                "x86": objdumpLocation,
+                "arm64-v8a": objdumpLocation
+        ]
+    }
+}
