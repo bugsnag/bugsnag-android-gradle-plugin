@@ -1,7 +1,7 @@
 Feature: Plugin integrated in default app
 
 Scenario: Single-module default app builds successfully
-    When I build "default_app" using the "standard" bugsnag config
+    When I build "default_app" using the "standard" bugsnag config for AGP 3
     Then I should receive 2 requests
 
     And the request 1 is valid for the Build API
