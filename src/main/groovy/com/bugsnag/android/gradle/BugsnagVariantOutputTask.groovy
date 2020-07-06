@@ -46,7 +46,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
             getBundleManifest = true
         }
 
-        ManifestProcessorTask processManifest = BugsnagPlugin.resolveProcessManifest(variantOutput)
+        ManifestProcessorTask processManifest = variantOutput.processManifestProvider.getOrNull()
 
         if (processManifest == null) {
             return manifestPaths
@@ -54,18 +54,10 @@ class BugsnagVariantOutputTask extends DefaultTask {
 
         if (getMergedManifest) {
             Object outputDir = processManifest.manifestOutputDirectory
+            Directory dir = outputDir.getOrNull()
 
-            if (outputDir instanceof File) {
-                directoryMerged = outputDir
-            } else {
-                // gradle 4.7 introduced a provider API for lazy evaluation of properties,
-                // AGP subsequently changed the API from File to Provider<File>
-                // see https://docs.gradle.org/4.7/userguide/lazy_configuration.html
-                Directory dir = outputDir.getOrNull()
-
-                if (dir != null) {
-                    directoryMerged = dir.asFile
-                }
+            if (dir != null) {
+                directoryMerged = dir.asFile
             }
 
             if (directoryMerged != null) {
@@ -111,7 +103,7 @@ class BugsnagVariantOutputTask extends DefaultTask {
             project.logger.debug("Reading manifest at: ${manifestPath}")
 
             Node xml = new XmlParser().parse(manifestPath)
-            def metaDataTags = xml.application['meta-data']
+            def metaDataTags = xml.application["meta-data"]
 
             // If the current manifest does not contain the build ID then try the next manifest in the list (if any)
             if (!(manifestPath == paths.last()) && !hasBuildUuid(metaDataTags, ns)) {

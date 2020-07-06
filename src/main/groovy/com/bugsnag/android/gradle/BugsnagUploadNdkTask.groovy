@@ -82,19 +82,15 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
     }
 
     private Collection<ExternalNativeBuildTask> resolveExternalNativeBuildTasks() {
-        try {
-            return variant.externalNativeBuildProviders
-                .stream()
-                .map({ it.getOrNull() })
-                .filter({ it != null })
-                .collect()
-        } catch (Throwable ignored) {
-            return variant.externalNativeBuildTasks
-        }
+        return variant.externalNativeBuildProviders
+            .stream()
+            .map({ it.getOrNull() })
+            .filter({ it != null })
+            .collect()
     }
 
     private static File findSymbolPath(BaseVariantOutput variantOutput) {
-        ProcessAndroidResources resources = resolveProcessAndroidResources(variantOutput)
+        ProcessAndroidResources resources = variantOutput.processResourcesProvider.getOrNull()
 
         if (resources == null) {
             return null
@@ -108,14 +104,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
         symbolPath
     }
 
-    private static ProcessAndroidResources resolveProcessAndroidResources(BaseVariantOutput variantOutput) {
-        try {
-            return variantOutput.processResourcesProvider.getOrNull()
-        } catch (Throwable ignored) {
-            return variantOutput.processResources
-        }
-    }
-    /**
+     /**
      * Searches the subdirectories of a given path and executes a block on
      * any shared object files
      * @param path The parent path to search. Each subdirectory should
