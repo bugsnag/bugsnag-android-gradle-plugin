@@ -1,5 +1,8 @@
 ## 5.0.0 (TBD)
 
+Use register() rather than create() for adding tasks
+[#221](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/221)
+
 Remove unused BugsnagProguardConfigTask
 [#209](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/209)
 

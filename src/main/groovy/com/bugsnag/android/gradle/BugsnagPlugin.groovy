@@ -70,12 +70,12 @@ class BugsnagPlugin implements Plugin<Project> {
             it.name.startsWith(NDK_PROJ_TASK) && !it.name.contains(CLEAN_TASK)
         }
 
-        BugsnagNdkSetupTask ndkSetupTask = project.tasks.create("bugsnagInstallJniLibsTask", BugsnagNdkSetupTask)
-
-        buildTasks.forEach {
-            ndkSetupTask.mustRunAfter(cleanTasks)
-            it.dependsOn ndkSetupTask
-            it.doFirst { ndkSetupTask }
+        project.tasks.register("bugsnagInstallJniLibsTask", BugsnagNdkSetupTask) { ndkSetupTask ->
+            buildTasks.forEach {
+                ndkSetupTask.mustRunAfter(cleanTasks)
+                it.dependsOn ndkSetupTask
+                it.doFirst { ndkSetupTask }
+            }
         }
     }
 
@@ -113,22 +113,24 @@ class BugsnagPlugin implements Plugin<Project> {
      */
     private static void setupMappingFileUpload(Project project, BugsnagTaskDeps deps) {
         String taskName = "uploadBugsnag${taskNameForOutput(deps.output)}Mapping"
-        BugsnagUploadProguardTask uploadTask = project.tasks.create(taskName, BugsnagUploadProguardTask)
-        uploadTask.partName = "proguard"
-        prepareUploadTask(uploadTask, deps, project)
+        project.tasks.register(taskName, BugsnagUploadProguardTask) { uploadTask ->
+            uploadTask.partName = "proguard"
+            prepareUploadTask(uploadTask, deps, project)
+        }
     }
 
     private static void setupNdkMappingFileUpload(Project project, BugsnagTaskDeps deps) {
         if (isNdkProject(project)) {
             // Create a Bugsnag task to upload NDK mapping file(s)
             String taskName = "uploadBugsnagNdk${taskNameForOutput(deps.output)}Mapping"
-            BugsnagUploadNdkTask uploadNdkTask = project.tasks.create(taskName, BugsnagUploadNdkTask)
-            prepareUploadTask(uploadNdkTask, deps, project)
+            project.tasks.register(taskName, BugsnagUploadNdkTask) { uploadNdkTask ->
+                prepareUploadTask(uploadNdkTask, deps, project)
 
-            uploadNdkTask.variantName = taskNameForVariant(deps.variant)
-            uploadNdkTask.projectDir = project.projectDir
-            uploadNdkTask.rootDir = project.rootDir
-            uploadNdkTask.sharedObjectPath = project.bugsnag.sharedObjectPath
+                uploadNdkTask.variantName = taskNameForVariant(deps.variant)
+                uploadNdkTask.projectDir = project.projectDir
+                uploadNdkTask.rootDir = project.rootDir
+                uploadNdkTask.sharedObjectPath = project.bugsnag.sharedObjectPath
+            }
         }
     }
 
@@ -228,24 +230,25 @@ class BugsnagPlugin implements Plugin<Project> {
 
     private static void setupManifestUuidTask(Project project, BugsnagTaskDeps deps) {
         String taskName = "processBugsnag${taskNameForOutput(deps.output)}Manifest"
-        BugsnagManifestTask manifestTask = project.tasks.create(taskName, BugsnagManifestTask)
-        setupBugsnagTask(manifestTask, deps)
-        ManifestProcessorTask processManifest = deps.output.processManifestProvider.getOrNull()
+        project.tasks.register(taskName, BugsnagManifestTask) { manifestTask ->
+            setupBugsnagTask(manifestTask, deps)
+            ManifestProcessorTask processManifest = deps.output.processManifestProvider.getOrNull()
 
-        if (processManifest == null) {
-            return
-        }
+            if (processManifest == null) {
+                return
+            }
 
-        processManifest.finalizedBy(manifestTask)
-        manifestTask.dependsOn(processManifest)
+            processManifest.finalizedBy(manifestTask)
+            manifestTask.dependsOn(processManifest)
 
-        Set<Task> resourceTasks = project.tasks.findAll {
-            String name = it.name.toLowerCase()
-            name.startsWith(BUNDLE_TASK) && name.endsWith("resources")
-        }
+            Set<Task> resourceTasks = project.tasks.findAll {
+                String name = it.name.toLowerCase()
+                name.startsWith(BUNDLE_TASK) && name.endsWith("resources")
+            }
 
-        resourceTasks.forEach {
-            it.dependsOn manifestTask
+            resourceTasks.forEach {
+                it.dependsOn manifestTask
+            }
         }
     }
 
