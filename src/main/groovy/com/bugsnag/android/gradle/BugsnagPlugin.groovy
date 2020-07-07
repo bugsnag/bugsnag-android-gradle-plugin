@@ -27,11 +27,11 @@ import org.gradle.api.Task
  */
 class BugsnagPlugin implements Plugin<Project> {
 
-    static final String API_KEY_TAG = 'com.bugsnag.android.API_KEY'
-    static final String BUILD_UUID_TAG = 'com.bugsnag.android.BUILD_UUID'
-    static final String VERSION_CODE_TAG = 'com.bugsnag.android.VERSION_CODE'
-    static final String APP_VERSION_TAG = 'com.bugsnag.android.APP_VERSION'
-    static final String GROUP_NAME = 'Bugsnag'
+    static final String API_KEY_TAG = "com.bugsnag.android.API_KEY"
+    static final String BUILD_UUID_TAG = "com.bugsnag.android.BUILD_UUID"
+    static final String VERSION_CODE_TAG = "com.bugsnag.android.VERSION_CODE"
+    static final String APP_VERSION_TAG = "com.bugsnag.android.APP_VERSION"
+    static final String GROUP_NAME = "Bugsnag"
 
     private static final String NDK_PROJ_TASK = "externalNative"
     private static final String CLEAN_TASK = "Clean"
@@ -53,7 +53,7 @@ class BugsnagPlugin implements Plugin<Project> {
                     applyBugsnagToVariant(variant, project)
                 }
             } else {
-                throw new IllegalStateException('Must apply \'com.android.application\' first!')
+                throw new IllegalStateException("Must apply \'com.android.application\' first!")
             }
 
             if (isNdkProject(project)) {
@@ -208,7 +208,7 @@ class BugsnagPlugin implements Plugin<Project> {
      */
     private static Set<String> findTaskNamesForPrefix(BaseVariant variant, BaseVariantOutput output, String prefix) {
         String variantName = output.name.split("-")[0].capitalize()
-        Task assembleTask = resolveAssembleTask(variant)
+        Task assembleTask = variant.assembleProvider.getOrNull()
 
         Set<String> taskNames = new HashSet<>()
         taskNames.add(prefix)
@@ -226,19 +226,11 @@ class BugsnagPlugin implements Plugin<Project> {
         taskNames
     }
 
-    private static Task resolveAssembleTask(BaseVariant variant) {
-        try {
-            return variant.assembleProvider.getOrNull()
-        } catch (Throwable ignored) {
-            return variant.assemble
-        }
-    }
-
     private static void setupManifestUuidTask(Project project, BugsnagTaskDeps deps) {
         String taskName = "processBugsnag${taskNameForOutput(deps.output)}Manifest"
         BugsnagManifestTask manifestTask = project.tasks.create(taskName, BugsnagManifestTask)
         setupBugsnagTask(manifestTask, deps)
-        ManifestProcessorTask processManifest = resolveProcessManifest(deps.output)
+        ManifestProcessorTask processManifest = deps.output.processManifestProvider.getOrNull()
 
         if (processManifest == null) {
             return
@@ -257,29 +249,14 @@ class BugsnagPlugin implements Plugin<Project> {
         }
     }
 
-    static ManifestProcessorTask resolveProcessManifest(BaseVariantOutput output) {
-        try {
-            return output.processManifestProvider.getOrNull()
-        } catch (Throwable ignored) {
-            return output.processManifest
-        }
-    }
-
     static File resolveBundleManifestOutputDirectory(ManifestProcessorTask processManifest) {
-        if (processManifest.hasProperty("bundleManifestOutputDirectory")) {
+        // For AGP versions >= 3.3.0 the bundle manifest is output to its own directory
+        def directory = processManifest.bundleManifestOutputDirectory
 
-            // For AGP versions >= 3.3.0 the bundle manifest is output to its own directory
-            def directory = processManifest.bundleManifestOutputDirectory
-
-            if (directory instanceof File) { // 3.3.X - 3.5.X returns a File
-                return directory
-            } else { // 3.6.+ returns a DirectoryProperty
-                return directory.asFile.getOrNull()
-            }
-
-        } else {
-            // For AGP versions < 3.3.0 the bundle manifest is the merged manifest
-            return processManifest.manifestOutputDirectory
+        if (directory instanceof File) { // 3.3.X - 3.5.X returns a File
+            return directory
+        } else { // 3.6.+ returns a DirectoryProperty
+            return directory.asFile.getOrNull()
         }
     }
 
