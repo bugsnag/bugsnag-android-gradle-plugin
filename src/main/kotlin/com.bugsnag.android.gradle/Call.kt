@@ -2,8 +2,7 @@ package com.bugsnag.android.gradle
 
 import org.gradle.api.Project
 
-internal abstract class Call protected constructor(// 60 seconds
-    private val project: Project) {
+internal abstract class Call protected constructor(private val project: Project) {
 
     /**
      * Attempts to upload to the server, using automatic retries if unsuccessful
