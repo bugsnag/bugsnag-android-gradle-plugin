@@ -1,10 +1,6 @@
-package com.bugsnag.android.gradle
+package com.bugsnag.android.gradle;
 
-import groovy.transform.CompileStatic
-
-@SuppressWarnings('DuplicateStringLiteral')
-@CompileStatic
-enum Abi {
+public enum Abi {
 
     ARMEABI(
         "armeabi",
@@ -30,24 +26,24 @@ enum Abi {
         "x86_64",
         "x86_64",
         "x86_64-linux-android"
-    )
+    );
 
-    final String abiName
-    final String toolchainPrefix
-    final String objdumpPrefix
+    final String abiName;
+    final String toolchainPrefix;
+    final String objdumpPrefix;
 
     Abi(String abiName, String toolchainPrefix, String objdumpPrefix) {
-        this.abiName = abiName
-        this.toolchainPrefix = toolchainPrefix
-        this.objdumpPrefix = objdumpPrefix
+        this.abiName = abiName;
+        this.toolchainPrefix = toolchainPrefix;
+        this.objdumpPrefix = objdumpPrefix;
     }
 
     static Abi findByName(String abiName) {
         for (Abi value : values()) {
-            if (value.abiName == abiName) {
-                return value
+            if (value.abiName.equals(abiName)) {
+                return value;
             }
         }
-        null
+        return null;
     }
 }
