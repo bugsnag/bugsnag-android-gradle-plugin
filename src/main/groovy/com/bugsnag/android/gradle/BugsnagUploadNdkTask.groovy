@@ -261,7 +261,7 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
     }
 
     static File findObjDump(Project project, String arch) {
-        Abi abi = Abi.findByName(arch)
+        Abi abi = Abi.@Companion.findByName(arch)
         String ndkDir = project.android.ndkDirectory
         String osName = calculateOsName()
 
