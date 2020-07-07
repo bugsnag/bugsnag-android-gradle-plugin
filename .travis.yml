@@ -5,7 +5,6 @@ sudo: false
 env:
   global:
   - ANDROID_HOME=/usr/local/android-sdk
-  - NDK_VERSION=r16b
 
 android:
   components:
@@ -17,12 +16,12 @@ android:
 before_install:
   - echo y | sdkmanager "platform-tools" >/dev/null
   - echo y | sdkmanager "tools" >/dev/null
-  - echo y | sdkmanager 'cmake;3.6.4111459'
+  - echo y | sdkmanager 'cmake;3.6.4111459' >/dev/null
+  - echo y | sdkmanager 'ndk;16.1.4479499' >/dev/null
   - gem install bundler
   - gem update --system 3.0.6
   - bundle install
   - ls $ANDROID_HOME
-  - ./install_ndk.sh
 
 install:
   - curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
@@ -49,4 +48,12 @@ jobs:
 
     # AGP 3.4.0 E2E tests
     - name: AGP 3.4.0 E2E tests
-      script: bundle exec maze-runner -c --verbose
+      env:
+        - APP_FIXTURE_DIR=features/fixtures/app_agp340
+        - RN_FIXTURE_DIR=features/fixtures/rnapp_agp340/android
+        - NDK_FIXTURE_DIR=features/fixtures/ndkapp_agp340
+      script: bundle exec maze-runner features/agp3-features features/agp-features -c --verbose
+
+    # AGP 4.0.0 E2E tests
+    - name: AGP 4.0.0 E2E tests
+      script: bundle exec maze-runner features/agp4-features features/agp-features -c --verbose
