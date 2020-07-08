@@ -27,11 +27,11 @@ import org.gradle.api.Task
  */
 class BugsnagPlugin implements Plugin<Project> {
 
-    static final String API_KEY_TAG = "com.bugsnag.android.API_KEY"
-    static final String BUILD_UUID_TAG = "com.bugsnag.android.BUILD_UUID"
-    static final String VERSION_CODE_TAG = "com.bugsnag.android.VERSION_CODE"
-    static final String APP_VERSION_TAG = "com.bugsnag.android.APP_VERSION"
-    static final String GROUP_NAME = "Bugsnag"
+    public static final String API_KEY_TAG = "com.bugsnag.android.API_KEY"
+    public static final String BUILD_UUID_TAG = "com.bugsnag.android.BUILD_UUID"
+    public static final String VERSION_CODE_TAG = "com.bugsnag.android.VERSION_CODE"
+    public static final String APP_VERSION_TAG = "com.bugsnag.android.APP_VERSION"
+    public static final String GROUP_NAME = "Bugsnag"
 
     private static final String NDK_PROJ_TASK = "externalNative"
     private static final String CLEAN_TASK = "Clean"
