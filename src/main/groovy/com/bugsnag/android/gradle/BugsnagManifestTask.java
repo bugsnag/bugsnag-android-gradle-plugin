@@ -33,7 +33,7 @@ public class BugsnagManifestTask extends BugsnagVariantOutputTask {
                 continue;
             }
             getProject().getLogger().debug("Updating manifest with build UUID: " + manifestPath);
-            new AndroidManifestParser().writeBuildUuid(manifestPath, buildUUID, getLogger());
+            new AndroidManifestParser().writeBuildUuid(manifestPath, buildUUID);
 
         }
     }
