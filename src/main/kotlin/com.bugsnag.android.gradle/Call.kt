@@ -1,6 +1,7 @@
 package com.bugsnag.android.gradle
 
 import org.gradle.api.Project
+import java.io.IOException
 
 internal abstract class Call protected constructor(private val project: Project) {
 
@@ -25,6 +26,7 @@ internal abstract class Call protected constructor(private val project: Project)
      *
      * @return true if successful, otherwise false.
      */
+    @Throws(IOException::class)
     abstract fun makeApiCall(): Boolean
 
     /**
