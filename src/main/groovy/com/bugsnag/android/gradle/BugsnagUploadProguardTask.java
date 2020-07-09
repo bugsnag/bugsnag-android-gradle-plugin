@@ -1,12 +1,16 @@
 package com.bugsnag.android.gradle;
 
+import com.android.build.gradle.api.BaseVariant;
+import com.android.build.gradle.api.BaseVariantOutput;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskAction;
 import org.xml.sax.SAXException;
 
@@ -29,9 +33,12 @@ import java.nio.file.Paths;
  it is usually safe to have this be the absolute last task executed during
  a build.
  */
-public class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
+public class BugsnagUploadProguardTask extends DefaultTask {
 
     String partName;
+    String applicationId;
+    BaseVariantOutput variantOutput;
+    BaseVariant variant;
 
     @TaskAction
     void upload() throws IOException, SAXException, ParserConfigurationException {
@@ -65,7 +72,11 @@ public class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
         mpEntity.addPart(partName, new FileBody(mappingFile));
 
         // Send the request
-        super.uploadMultipartEntity(mpEntity);
+        BugsnagMultiPartUploadRequest request = new BugsnagMultiPartUploadRequest();
+        request.applicationId = applicationId;
+        request.variant = variant;
+        request.variantOutput = variantOutput;
+        request.uploadMultipartEntity(mpEntity, getProject());
     }
 
     private File findMappingFile(Project project) {
@@ -82,18 +93,17 @@ public class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
 
         // Use AGP supplied value, preferring the new "getMappingFileProvider" API but falling back
         // to the old "mappingFile" API if necessary
-        if (variant.getMappingFileProvider() != null) {
+        try {
             FileCollection mappingFileProvider = variant.getMappingFileProvider().getOrNull();
 
             // We will warn about not finding a mapping file later, so there's no need to warn here
             if (mappingFileProvider == null || mappingFileProvider.isEmpty()) {
                 return null;
             }
-
             return mappingFileProvider.getSingleFile();
+        } catch (Throwable exc) {
+            return variant.getMappingFile();
         }
-
-        return variant.getMappingFile();
     }
 
     /**

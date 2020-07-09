@@ -139,7 +139,7 @@ public class BugsnagReleasesTask extends DefaultTask {
     }
 
     private JSONObject generateVcsJson(BugsnagPluginExtension bugsnag) {
-        SourceControl sourceControl = bugsnag.getSourceControl();
+        SourceControl sourceControl = AgpCompat.getSourceControl(getProject());
         String vcsUrl = null;
         String commitHash = null;
         String vcsProvider = null;

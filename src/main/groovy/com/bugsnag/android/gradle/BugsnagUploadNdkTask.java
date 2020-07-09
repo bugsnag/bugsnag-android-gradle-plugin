@@ -1,6 +1,7 @@
 package com.bugsnag.android.gradle;
 
 import com.android.build.gradle.AppExtension;
+import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -10,6 +11,7 @@ import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.tools.ant.taskdefs.condition.Os;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.TaskAction;
@@ -24,7 +26,12 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -40,7 +47,7 @@ import java.util.zip.GZIPOutputStream;
  it is usually safe to have this be the absolute last task executed during
  a build.
  */
-public class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
+public class BugsnagUploadNdkTask extends DefaultTask {
 
     private static final int VALID_SO_FILE_THRESHOLD = 1024;
 
@@ -49,6 +56,10 @@ public class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
     File projectDir;
     File rootDir;
     String sharedObjectPath;
+
+    String applicationId;
+    BaseVariantOutput variantOutput;
+    BaseVariant variant;
 
     @TaskAction
     void upload() throws ParserConfigurationException, SAXException, IOException {
@@ -60,18 +71,29 @@ public class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
 
         Logger logger = getProject().getLogger();
         logger.lifecycle("Symbolpath: " + symbolPath);
+        Set<Pair<File, String>> soFiles = new HashSet();
 
         for (ExternalNativeBuildTask task : resolveExternalNativeBuildTasks()) {
             File objFolder = task.getObjFolder();
             File soFolder = task.getSoFolder();
-            processFiles(findSharedObjectFiles(objFolder));
-            processFiles(findSharedObjectFiles(soFolder));
+            soFiles.addAll(findSharedObjectFiles(objFolder));
+            soFiles.addAll(findSharedObjectFiles(soFolder));
         }
 
         if (sharedObjectPath != null) {
             File file = new File(projectDir.getPath(), sharedObjectPath);
-            processFiles(findSharedObjectFiles(file));
+            soFiles.addAll(findSharedObjectFiles(file));
         }
+
+        // sort SO files alphabetically by architecture for consistent request order
+        List<Pair<File, String>> files = new ArrayList(soFiles);
+        Collections.sort(files, new Comparator<Pair<File, String>>() {
+            @Override
+            public int compare(Pair<File, String> lhs, Pair<File, String> rhs) {
+                return lhs.getSecond().compareTo(rhs.getSecond());
+            }
+        });
+        processFiles(files);
     }
 
     private void processFiles(Collection<Pair<File, String>> files) throws IOException, ParserConfigurationException, SAXException {
@@ -249,7 +271,11 @@ public class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
         }
         mpEntity.addPart("projectRoot", new StringBody(projectRoot));
 
-        super.uploadMultipartEntity(mpEntity);
+        BugsnagMultiPartUploadRequest request = new BugsnagMultiPartUploadRequest();
+        request.applicationId = applicationId;
+        request.variant = variant;
+        request.variantOutput = variantOutput;
+        request.uploadMultipartEntity(mpEntity, getProject());
     }
 
     /**

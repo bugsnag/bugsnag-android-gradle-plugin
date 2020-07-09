@@ -15,6 +15,7 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
+import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
 import org.xml.sax.SAXException;
 
@@ -35,7 +36,7 @@ import java.io.UnsupportedEncodingException;
  it is usually safe to have this be the absolute last task executed during
  a build.
  */
-public class BugsnagMultiPartUploadTask extends DefaultTask {
+public class BugsnagMultiPartUploadRequest {
 
     static final int MAX_RETRY_COUNT = 5;
 
@@ -43,10 +44,10 @@ public class BugsnagMultiPartUploadTask extends DefaultTask {
     BaseVariantOutput variantOutput;
     BaseVariant variant;
 
-    void uploadMultipartEntity(MultipartEntity mpEntity) throws IOException, SAXException, ParserConfigurationException {
-        AndroidManifestInfo manifestInfo = BugsnagVariantOutputUtils.readManifestFile(getProject(), variant, variantOutput);
-        Logger logger = getProject().getLogger();
-        BugsnagPluginExtension bugsnag = (BugsnagPluginExtension) getProject().getExtensions().getByName("bugsnag");
+    void uploadMultipartEntity(MultipartEntity mpEntity, Project project) throws IOException, SAXException, ParserConfigurationException {
+        AndroidManifestInfo manifestInfo = BugsnagVariantOutputUtils.readManifestFile(project, variant, variantOutput);
+        Logger logger = project.getLogger();
+        BugsnagPluginExtension bugsnag = (BugsnagPluginExtension) project.getExtensions().getByName("bugsnag");
 
         if (manifestInfo.getApiKey() == null || manifestInfo.getApiKey().equals("")) {
             logger.warn("Skipping upload due to invalid parameters");
@@ -57,16 +58,16 @@ public class BugsnagMultiPartUploadTask extends DefaultTask {
             }
         }
 
-        addPropertiesToMultipartEntity(mpEntity, manifestInfo, bugsnag);
+        addPropertiesToMultipartEntity(mpEntity, manifestInfo, bugsnag, project);
 
-        boolean uploadSuccessful = uploadToServer(mpEntity, bugsnag);
+        boolean uploadSuccessful = uploadToServer(mpEntity, bugsnag, project);
 
         int maxRetryCount = getRetryCount(bugsnag);
         int retryCount = maxRetryCount;
         while (!uploadSuccessful && retryCount > 0) {
             logger.warn(String.format("Retrying Bugsnag upload (%d/%d) ...",
                 maxRetryCount - retryCount + 1, maxRetryCount));
-            uploadSuccessful = uploadToServer(mpEntity, bugsnag);
+            uploadSuccessful = uploadToServer(mpEntity, bugsnag, project);
             retryCount--;
         }
 
@@ -75,7 +76,7 @@ public class BugsnagMultiPartUploadTask extends DefaultTask {
         }
     }
 
-    void addPropertiesToMultipartEntity(MultipartEntity mpEntity, AndroidManifestInfo manifestInfo, BugsnagPluginExtension bugsnag) throws UnsupportedEncodingException {
+    void addPropertiesToMultipartEntity(MultipartEntity mpEntity, AndroidManifestInfo manifestInfo, BugsnagPluginExtension bugsnag, Project project) throws UnsupportedEncodingException {
         mpEntity.addPart("apiKey", new StringBody(manifestInfo.getApiKey()));
         mpEntity.addPart("appId", new StringBody(applicationId));
         mpEntity.addPart("versionCode", new StringBody(manifestInfo.getVersionCode()));
@@ -92,7 +93,7 @@ public class BugsnagMultiPartUploadTask extends DefaultTask {
             mpEntity.addPart("overwrite", new StringBody("true"));
         }
 
-        Logger logger = getProject().getLogger();
+        Logger logger = project.getLogger();
         logger.debug("apiKey: ${manifestInfo.apiKey}");
         logger.debug("appId: ${applicationId}");
         logger.debug("versionCode: ${manifestInfo.versionCode}");
@@ -101,8 +102,8 @@ public class BugsnagMultiPartUploadTask extends DefaultTask {
         logger.debug("overwrite: ${project.bugsnag.overwrite}");
     }
 
-    boolean uploadToServer(MultipartEntity mpEntity, BugsnagPluginExtension bugsnag) {
-        Logger logger = getProject().getLogger();
+    boolean uploadToServer(MultipartEntity mpEntity, BugsnagPluginExtension bugsnag, Project project) {
+        Logger logger = project.getLogger();
         logger.lifecycle("Attempting upload of mapping file to Bugsnag");
 
         // Make the request
