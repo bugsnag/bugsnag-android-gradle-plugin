@@ -29,7 +29,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
     void fetchReleaseInfo() {
         super.readManifestFile()
 
-        if (!isValidPayload(apiKey, versionName)) {
+        if (!isValidPayload(manifestInfo.apiKey, manifestInfo.versionName)) {
             project.logger.warn("Must supply api key and version name for release task")
             return
         }
@@ -57,7 +57,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
             conn.with {
                 setRequestMethod("POST")
                 setRequestProperty("Content-Type", "application/json")
-                setRequestProperty("Bugsnag-Api-Key", apiKey)
+                setRequestProperty("Bugsnag-Api-Key", manifestInfo.apiKey)
                 setReadTimeout(project.bugsnag.requestTimeoutMs)
                 setConnectTimeout(project.bugsnag.requestTimeoutMs)
                 setDoOutput(true)
@@ -103,9 +103,9 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         JSONObject root = new JSONObject()
 
         root.put("buildTool", "gradle-android")
-        root.put("apiKey", apiKey)
-        root.put("appVersion", versionName)
-        root.put("appVersionCode", versionCode)
+        root.put("apiKey", manifestInfo.apiKey)
+        root.put("appVersion", manifestInfo.versionName)
+        root.put("appVersionCode", manifestInfo.versionCode)
 
         String user
         if (project.bugsnag.builderName != null) {

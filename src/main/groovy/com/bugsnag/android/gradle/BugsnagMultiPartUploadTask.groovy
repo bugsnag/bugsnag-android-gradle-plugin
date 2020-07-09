@@ -33,7 +33,7 @@ class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
     String applicationId
 
     void uploadMultipartEntity(MultipartEntity mpEntity) {
-        if (apiKey == null || apiKey == "") {
+        if (manifestInfo.apiKey == null || manifestInfo.apiKey == "") {
             project.logger.warn("Skipping upload due to invalid parameters")
             if (project.bugsnag.failOnUploadError) {
                 throw new GradleException("Aborting upload due to invalid parameters")
@@ -61,27 +61,27 @@ class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
     }
 
     void addPropertiesToMultipartEntity(MultipartEntity mpEntity) {
-        mpEntity.addPart("apiKey", new StringBody(apiKey))
+        mpEntity.addPart("apiKey", new StringBody(manifestInfo.apiKey))
         mpEntity.addPart("appId", new StringBody(applicationId))
-        mpEntity.addPart("versionCode", new StringBody(versionCode))
+        mpEntity.addPart("versionCode", new StringBody(manifestInfo.versionCode))
 
-        if (buildUUID != null) {
-            mpEntity.addPart("buildUUID", new StringBody(buildUUID))
+        if (manifestInfo.buildUUID != null) {
+            mpEntity.addPart("buildUUID", new StringBody(manifestInfo.buildUUID))
         }
 
-        if (versionName != null) {
-            mpEntity.addPart("versionName", new StringBody(versionName))
+        if (manifestInfo.versionName != null) {
+            mpEntity.addPart("versionName", new StringBody(manifestInfo.versionName))
         }
 
         if (project.bugsnag.overwrite || System.properties['bugsnag.overwrite']) {
             mpEntity.addPart("overwrite", new StringBody("true"))
         }
 
-        project.logger.debug("apiKey: ${apiKey}")
+        project.logger.debug("apiKey: ${manifestInfo.apiKey}")
         project.logger.debug("appId: ${applicationId}")
-        project.logger.debug("versionCode: ${versionCode}")
-        project.logger.debug("buildUUID: ${buildUUID}")
-        project.logger.debug("versionName: ${versionName}")
+        project.logger.debug("versionCode: ${manifestInfo.versionCode}")
+        project.logger.debug("buildUUID: ${manifestInfo.buildUUID}")
+        project.logger.debug("versionName: ${manifestInfo.versionName}")
         project.logger.debug("overwrite: ${project.bugsnag.overwrite}")
     }
 

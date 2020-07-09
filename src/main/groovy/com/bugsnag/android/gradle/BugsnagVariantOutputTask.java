@@ -19,12 +19,7 @@ public class BugsnagVariantOutputTask extends DefaultTask {
 
     BaseVariantOutput variantOutput;
     BaseVariant variant;
-
-    // Read from the manifest file
-    String apiKey;
-    String versionCode;
-    String buildUUID;
-    String versionName;
+    AndroidManifestInfo manifestInfo;
 
     /**
      * Gets the manifest for a given Variant Output, accounting for any APK splits.
@@ -103,11 +98,7 @@ public class BugsnagVariantOutputTask extends DefaultTask {
             if (!manifestPath.exists()) {
                 continue;
             }
-            AndroidManifestInfo manifestInfo = new AndroidManifestParser().readManifest(manifestPath, getLogger());
-            apiKey = manifestInfo.getApiKey();
-            buildUUID = manifestInfo.getBuildUUID();
-            versionCode = manifestInfo.getVersionCode();
-            versionName = manifestInfo.getVersionName();
+            manifestInfo = new AndroidManifestParser().readManifest(manifestPath, getLogger());
         }
     }
 }
