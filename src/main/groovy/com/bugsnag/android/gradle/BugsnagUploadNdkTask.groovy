@@ -45,7 +45,6 @@ class BugsnagUploadNdkTask extends BugsnagMultiPartUploadTask {
 
     @TaskAction
     void upload() {
-        super.readManifestFile()
         symbolPath = findSymbolPath(variantOutput)
 
         if (symbolPath == null) {

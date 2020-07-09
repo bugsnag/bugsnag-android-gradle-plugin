@@ -1,5 +1,8 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.gradle.api.BaseVariant
+import com.android.build.gradle.api.BaseVariantOutput
+import org.gradle.api.DefaultTask
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.internal.ExecException
@@ -7,7 +10,7 @@ import org.json.simple.JSONObject
 
 import java.nio.charset.Charset
 
-class BugsnagReleasesTask extends BugsnagVariantOutputTask {
+class BugsnagReleasesTask extends DefaultTask {
 
     private static final Collection<String> VALID_VCS_PROVIDERS =
         Arrays.asList("github-enterprise", "bitbucket-server", "gitlab-onpremise", "bitbucket",
@@ -20,6 +23,9 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
     private static final String VCS_COMMAND = "git"
     private static final String CHARSET_UTF8 = "UTF-8"
 
+    BaseVariantOutput variantOutput;
+    BaseVariant variant;
+
     BugsnagReleasesTask() {
         super()
         this.description = "Assembles information about the build that will be sent to the releases API"
@@ -27,14 +33,14 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
 
     @TaskAction
     void fetchReleaseInfo() {
-        super.readManifestFile()
+        AndroidManifestInfo manifestInfo = BugsnagVariantOutputUtils.readManifestFile(project, variant, variantOutput)
 
         if (!isValidPayload(manifestInfo.apiKey, manifestInfo.versionName)) {
             project.logger.warn("Must supply api key and version name for release task")
             return
         }
 
-        JSONObject payload = generateJsonPayload()
+        JSONObject payload = generateJsonPayload(manifestInfo)
         String json = payload.toString()
 
         project.logger.debug("Releases Payload:\n${json}")
@@ -42,12 +48,12 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         new Call(project) {
             @Override
             boolean makeApiCall() {
-                deliverPayload(payload)
+                deliverPayload(payload, manifestInfo)
             }
         }.execute()
     }
 
-    private boolean deliverPayload(JSONObject payload) {
+    private boolean deliverPayload(JSONObject payload, AndroidManifestInfo manifestInfo) {
         OutputStream os = null
 
         try {
@@ -99,7 +105,7 @@ class BugsnagReleasesTask extends BugsnagVariantOutputTask {
         }
     }
 
-    private JSONObject generateJsonPayload() {
+    private JSONObject generateJsonPayload(AndroidManifestInfo manifestInfo) {
         JSONObject root = new JSONObject()
 
         root.put("buildTool", "gradle-android")

@@ -155,7 +155,7 @@ class BugsnagPlugin implements Plugin<Project> {
         }
     }
 
-    private static void setupBugsnagTask(BugsnagVariantOutputTask task, BugsnagTaskDeps deps) {
+    private static void setupBugsnagTask(def task, BugsnagTaskDeps deps) {
         task.group = GROUP_NAME
         task.variantOutput = deps.output
         task.variant = deps.variant

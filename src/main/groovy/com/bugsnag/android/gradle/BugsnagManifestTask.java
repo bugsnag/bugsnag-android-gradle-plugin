@@ -1,5 +1,8 @@
 package com.bugsnag.android.gradle;
 
+import com.android.build.gradle.api.BaseVariant;
+import com.android.build.gradle.api.BaseVariantOutput;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
 import org.xml.sax.SAXException;
 
@@ -19,11 +22,14 @@ import java.util.UUID;
  * This task must be called after "process${variantName}Manifest", since it
  * requires that an AndroidManifest.xml exists in `build/intermediates`.
  */
-public class BugsnagManifestTask extends BugsnagVariantOutputTask {
+public class BugsnagManifestTask extends DefaultTask {
+
+    BaseVariantOutput variantOutput;
+    BaseVariant variant;
 
     @TaskAction
     void updateManifest() throws ParserConfigurationException, SAXException, IOException {
-        List<File> paths = getManifestPaths();
+        List<File> paths = BugsnagVariantOutputUtils.getManifestPaths(getProject(), variant, variantOutput);
 
         // Uniquely identify the build so that we can identify the proguard file.
         String buildUUID = UUID.randomUUID().toString();
@@ -34,7 +40,6 @@ public class BugsnagManifestTask extends BugsnagVariantOutputTask {
             }
             getProject().getLogger().debug("Updating manifest with build UUID: " + manifestPath);
             new AndroidManifestParser().writeBuildUuid(manifestPath, buildUUID);
-
         }
     }
 }

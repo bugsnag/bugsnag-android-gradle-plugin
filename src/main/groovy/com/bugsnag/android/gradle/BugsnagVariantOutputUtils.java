@@ -3,8 +3,9 @@ package com.bugsnag.android.gradle;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
-import org.gradle.api.DefaultTask;
+import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
+import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Provider;
 import org.xml.sax.SAXException;
 
@@ -15,11 +16,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BugsnagVariantOutputTask extends DefaultTask {
-
-    BaseVariantOutput variantOutput;
-    BaseVariant variant;
-    AndroidManifestInfo manifestInfo;
+public class BugsnagVariantOutputUtils {
 
     /**
      * Gets the manifest for a given Variant Output, accounting for any APK splits.
@@ -27,18 +24,21 @@ public class BugsnagVariantOutputTask extends DefaultTask {
      * Currently supported split types include Density, and ABI. There is also a Language split,
      * but it appears to be broken (see issuetracker)
      *
+     * @param project the current project
+     * @param variant the variant
+     * @param variantOutput the variantOutput
      * @return the manifest path
      *
      * See: https://developer.android.com/studio/build/configure-apk-splits.html#build-apks-filename
      * https://issuetracker.google.com/issues/37085185
      */
-    List<File> getManifestPaths() {
+    static List<File> getManifestPaths(Project project, BaseVariant variant, BaseVariantOutput variantOutput) {
         File directoryMerged = null;
         File directoryBundle;
         List<File> manifestPaths = new ArrayList();
 
-        boolean getMergedManifest = BugsnagPlugin.isRunningAssembleTask(variant, variantOutput, getProject());
-        boolean getBundleManifest = BugsnagPlugin.isRunningBundleTask(variant, variantOutput, getProject());
+        boolean getMergedManifest = BugsnagPlugin.isRunningAssembleTask(variant, variantOutput, project);
+        boolean getBundleManifest = BugsnagPlugin.isRunningBundleTask(variant, variantOutput, project);
 
         // If the manifest location could not be reliably determined, attempt to get both
         if (!getMergedManifest && !getBundleManifest) {
@@ -53,15 +53,10 @@ public class BugsnagVariantOutputTask extends DefaultTask {
         }
 
         if (getMergedManifest) {
-            Provider<Directory> outputDir = processManifest.getManifestOutputDirectory();
-            Directory dir = outputDir.getOrNull();
-
-            if (dir != null) {
-                directoryMerged = dir.getAsFile();
-            }
+            directoryMerged = AgpCompat.getManifestOutputDir(processManifest);
 
             if (directoryMerged != null) {
-                addManifestPath(manifestPaths, directoryMerged);
+                addManifestPath(manifestPaths, directoryMerged, project.getLogger(), variantOutput);
             }
         }
 
@@ -70,35 +65,35 @@ public class BugsnagVariantOutputTask extends DefaultTask {
             directoryBundle = BugsnagPlugin.resolveBundleManifestOutputDirectory(processManifest);
 
             if (directoryBundle != null) {
-                addManifestPath(manifestPaths, directoryBundle);
+                addManifestPath(manifestPaths, directoryBundle, project.getLogger(), variantOutput);
             }
         }
 
         return manifestPaths;
     }
 
-    void addManifestPath(List<File> manifestPaths, File directory) {
+    static void addManifestPath(List<File> manifestPaths, File directory, Logger logger, BaseVariantOutput variantOutput) {
         File manifestFile = Paths.get(directory.toString(), variantOutput.getDirName(),
             "AndroidManifest.xml").toFile();
 
         if (manifestFile.exists()) {
-            getProject().getLogger().info("Found manifest at ${manifestFile}");
+            logger.info("Found manifest at ${manifestFile}");
             manifestPaths.add(manifestFile);
         } else {
-            getProject().getLogger().error("Failed to find manifest at ${manifestFile}");
+            logger.error("Failed to find manifest at ${manifestFile}");
         }
     }
 
     // Read the API key and Build ID etc..
-    void readManifestFile() throws ParserConfigurationException, SAXException, IOException {
+    static AndroidManifestInfo readManifestFile(Project project, BaseVariant variant, BaseVariantOutput variantOutput) throws ParserConfigurationException, SAXException, IOException {
         // Parse the AndroidManifest.xml
-        List<File> paths = getManifestPaths();
+        List<File> paths = getManifestPaths(project, variant, variantOutput);
 
         for (File manifestPath : paths) {
-            if (!manifestPath.exists()) {
-                continue;
+            if (manifestPath.exists()) {
+                return new AndroidManifestParser().readManifest(manifestPath, project.getLogger());
             }
-            manifestInfo = new AndroidManifestParser().readManifest(manifestPath, getLogger());
         }
+        return null;
     }
 }
