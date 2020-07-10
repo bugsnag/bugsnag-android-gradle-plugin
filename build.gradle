@@ -40,10 +40,10 @@ repositories {
     google()
 }
 
-// Target Java 1.6 when compiling groovy code
+// Target Java 1.7 when compiling groovy code
 compileGroovy {
-    sourceCompatibility = "1.6"
-    targetCompatibility = "1.6"
+    sourceCompatibility = "1.7"
+    targetCompatibility = "1.7"
 }
 
 // Build dependencies

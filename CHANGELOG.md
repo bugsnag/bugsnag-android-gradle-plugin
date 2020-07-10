@@ -1,5 +1,8 @@
 ## 5.0.0 (TBD)
 
+Bump supported JDK version to 7
+[#224](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/224)
+
 Use register() rather than create() for adding tasks
 [#221](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/221)
 
