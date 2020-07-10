@@ -53,7 +53,7 @@ class BugsnagUploadProguardTask extends BugsnagMultiPartUploadTask {
         }
 
         // Read the API key and Build ID etc..
-        super.readManifestFile()
+        BugsnagVariantOutputUtils.readManifestFile(project, variant, variantOutput)
         project.logger.info("Attempting to upload mapping file: ${mappingFile}")
 
         // Construct a basic request

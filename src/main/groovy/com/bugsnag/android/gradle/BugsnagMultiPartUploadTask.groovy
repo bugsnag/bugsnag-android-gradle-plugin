@@ -1,5 +1,7 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.gradle.api.BaseVariant
+import com.android.build.gradle.api.BaseVariantOutput
 import org.apache.http.HttpEntity
 import org.apache.http.HttpResponse
 import org.apache.http.ParseException
@@ -11,6 +13,7 @@ import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.params.HttpConnectionParams
 import org.apache.http.params.HttpParams
 import org.apache.http.util.EntityUtils
+import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 
 /**
@@ -26,14 +29,18 @@ import org.gradle.api.GradleException
  it is usually safe to have this be the absolute last task executed during
  a build.
  */
-class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
+class BugsnagMultiPartUploadTask extends DefaultTask {
 
     static final int MAX_RETRY_COUNT = 5
 
     String applicationId
+    BaseVariantOutput variantOutput;
+    BaseVariant variant;
 
     void uploadMultipartEntity(MultipartEntity mpEntity) {
-        if (apiKey == null || apiKey == "") {
+        AndroidManifestInfo manifestInfo = BugsnagVariantOutputUtils.readManifestFile(project, variant, variantOutput)
+
+        if (manifestInfo.apiKey == null || manifestInfo.apiKey == "") {
             project.logger.warn("Skipping upload due to invalid parameters")
             if (project.bugsnag.failOnUploadError) {
                 throw new GradleException("Aborting upload due to invalid parameters")
@@ -42,7 +49,7 @@ class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
             }
         }
 
-        addPropertiesToMultipartEntity(mpEntity)
+        addPropertiesToMultipartEntity(mpEntity, manifestInfo)
 
         boolean uploadSuccessful = uploadToServer(mpEntity)
 
@@ -60,28 +67,28 @@ class BugsnagMultiPartUploadTask extends BugsnagVariantOutputTask {
         }
     }
 
-    void addPropertiesToMultipartEntity(MultipartEntity mpEntity) {
-        mpEntity.addPart("apiKey", new StringBody(apiKey))
+    void addPropertiesToMultipartEntity(MultipartEntity mpEntity, AndroidManifestInfo manifestInfo) {
+        mpEntity.addPart("apiKey", new StringBody(manifestInfo.apiKey))
         mpEntity.addPart("appId", new StringBody(applicationId))
-        mpEntity.addPart("versionCode", new StringBody(versionCode))
+        mpEntity.addPart("versionCode", new StringBody(manifestInfo.versionCode))
 
-        if (buildUUID != null) {
-            mpEntity.addPart("buildUUID", new StringBody(buildUUID))
+        if (manifestInfo.buildUUID != null) {
+            mpEntity.addPart("buildUUID", new StringBody(manifestInfo.buildUUID))
         }
 
-        if (versionName != null) {
-            mpEntity.addPart("versionName", new StringBody(versionName))
+        if (manifestInfo.versionName != null) {
+            mpEntity.addPart("versionName", new StringBody(manifestInfo.versionName))
         }
 
         if (project.bugsnag.overwrite || System.properties['bugsnag.overwrite']) {
             mpEntity.addPart("overwrite", new StringBody("true"))
         }
 
-        project.logger.debug("apiKey: ${apiKey}")
+        project.logger.debug("apiKey: ${manifestInfo.apiKey}")
         project.logger.debug("appId: ${applicationId}")
-        project.logger.debug("versionCode: ${versionCode}")
-        project.logger.debug("buildUUID: ${buildUUID}")
-        project.logger.debug("versionName: ${versionName}")
+        project.logger.debug("versionCode: ${manifestInfo.versionCode}")
+        project.logger.debug("buildUUID: ${manifestInfo.buildUUID}")
+        project.logger.debug("versionName: ${manifestInfo.versionName}")
         project.logger.debug("overwrite: ${project.bugsnag.overwrite}")
     }
 
