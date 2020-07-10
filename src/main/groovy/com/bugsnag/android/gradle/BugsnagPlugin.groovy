@@ -35,7 +35,6 @@ class BugsnagPlugin implements Plugin<Project> {
 
     void apply(Project project) {
         project.extensions.create("bugsnag", BugsnagPluginExtension)
-        project.bugsnag.extensions.create("sourceControl", SourceControl)
 
         project.afterEvaluate {
             // Make sure the android plugin has been applied first

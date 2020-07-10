@@ -53,7 +53,7 @@ public class BugsnagVariantOutputUtils {
         }
 
         if (getMergedManifest) {
-            directoryMerged = AgpCompat.getManifestOutputDir(processManifest);
+            directoryMerged = getManifestOutputDir(processManifest);
 
             if (directoryMerged != null) {
                 addManifestPath(manifestPaths, directoryMerged, project.getLogger(), variantOutput);
@@ -70,6 +70,27 @@ public class BugsnagVariantOutputUtils {
         }
 
         return manifestPaths;
+    }
+
+    static File getManifestOutputDir(ManifestProcessorTask processManifest) {
+        try {
+            Object outputDir = processManifest.getClass().getMethod("getManifestOutputDirectory").invoke(processManifest);
+
+            if (outputDir instanceof File) {
+                return (File) outputDir;
+            } else {
+                // gradle 4.7 introduced a provider API for lazy evaluation of properties,
+                // AGP subsequently changed the API from File to Provider<File>
+                // see https://docs.gradle.org/4.7/userguide/lazy_configuration.html
+                Directory dir = ((Provider<Directory>)outputDir).getOrNull();
+
+                if (dir != null) {
+                    return dir.getAsFile();
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
     }
 
     static void addManifestPath(List<File> manifestPaths, File directory, Logger logger, BaseVariantOutput variantOutput) {
