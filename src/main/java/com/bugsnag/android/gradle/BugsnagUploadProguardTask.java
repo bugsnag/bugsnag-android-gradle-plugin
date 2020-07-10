@@ -1,5 +1,6 @@
 package com.bugsnag.android.gradle;
 
+import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import org.apache.http.entity.mime.HttpMultipartMode;
@@ -80,7 +81,9 @@ public class BugsnagUploadProguardTask extends DefaultTask {
     }
 
     private File findMappingFile(Project project) {
-        if (BugsnagPlugin.hasDexguardPlugin(project) && BugsnagPlugin.hasMultipleOutputs(project)) {
+        BugsnagPlugin plugin = project.getPlugins().getPlugin(BugsnagPlugin.class);
+        AppExtension android = project.getExtensions().getByType(AppExtension.class);
+        if (plugin.hasDexguardPlugin(project) && plugin.hasMultipleOutputs(android)) {
             File mappingFile = findDexguardMappingFile(project);
 
             if (mappingFile != null && mappingFile.exists()) {

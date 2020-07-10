@@ -29,13 +29,15 @@ class PluginTest {
 
     @Test
     void testVariantName() throws Exception {
-        String name = BugsnagPlugin.taskNameForVariant(new FakeVariantImpl("javaExample"))
+        BugsnagPlugin plugin = proj.plugins.getPlugin("com.bugsnag.android.gradle") as BugsnagPlugin
+        String name = plugin.taskNameForVariant(new FakeVariantImpl("javaExample"))
         assertEquals("JavaExample", name)
     }
 
     @Test
     void testOutputName() throws Exception {
-        String name = BugsnagPlugin.taskNameForOutput(new FakeVariantOutputImpl("javaExample-hdpi"))
+        BugsnagPlugin plugin = proj.plugins.getPlugin("com.bugsnag.android.gradle") as BugsnagPlugin
+        String name = plugin.taskNameForOutput(new FakeVariantOutputImpl("javaExample-hdpi"))
         assertEquals("JavaExample-hdpi", name)
     }
 

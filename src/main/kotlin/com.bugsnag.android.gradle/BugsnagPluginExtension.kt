@@ -11,6 +11,7 @@ open class BugsnagPluginExtension {
 
     val sourceControl: SourceControl = SourceControl()
 
+    var isEnabled = true
     var endpoint = "https://upload.bugsnag.com"
     var releasesEndpoint = "https://build.bugsnag.com"
     var isAutoUpload = true

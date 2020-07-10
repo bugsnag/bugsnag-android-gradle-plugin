@@ -37,8 +37,9 @@ public class BugsnagVariantOutputUtils {
         File directoryBundle;
         List<File> manifestPaths = new ArrayList();
 
-        boolean getMergedManifest = BugsnagPlugin.isRunningAssembleTask(variant, variantOutput, project);
-        boolean getBundleManifest = BugsnagPlugin.isRunningBundleTask(variant, variantOutput, project);
+        BugsnagPlugin plugin = project.getPlugins().getPlugin(BugsnagPlugin.class);
+        boolean getMergedManifest = plugin.isRunningAssembleTask(variant, variantOutput, project);
+        boolean getBundleManifest = plugin.isRunningBundleTask(variant, variantOutput, project);
 
         // If the manifest location could not be reliably determined, attempt to get both
         if (!getMergedManifest && !getBundleManifest) {
@@ -53,7 +54,7 @@ public class BugsnagVariantOutputUtils {
         }
 
         if (getMergedManifest) {
-            directoryMerged = getManifestOutputDir(processManifest);
+            directoryMerged = getManifestOutputDir(processManifest, project);
 
             if (directoryMerged != null) {
                 addManifestPath(manifestPaths, directoryMerged, project.getLogger(), variantOutput);
@@ -62,7 +63,7 @@ public class BugsnagVariantOutputUtils {
 
         // Attempt to get the bundle manifest directory if required
         if (getBundleManifest) {
-            directoryBundle = BugsnagPlugin.resolveBundleManifestOutputDirectory(processManifest);
+            directoryBundle = plugin.resolveBundleManifestOutputDirectory(processManifest);
 
             if (directoryBundle != null) {
                 addManifestPath(manifestPaths, directoryBundle, project.getLogger(), variantOutput);
@@ -72,7 +73,7 @@ public class BugsnagVariantOutputUtils {
         return manifestPaths;
     }
 
-    static File getManifestOutputDir(ManifestProcessorTask processManifest) {
+    static File getManifestOutputDir(ManifestProcessorTask processManifest, Project project) {
         try {
             Object outputDir = processManifest.getClass().getMethod("getManifestOutputDirectory").invoke(processManifest);
 
@@ -88,7 +89,8 @@ public class BugsnagVariantOutputUtils {
                     return dir.getAsFile();
                 }
             }
-        } catch (Throwable ignored) {
+        } catch (Throwable exc) {
+            project.getLogger().warn("Bugsnag failed to find output dir", exc);
         }
         return null;
     }
