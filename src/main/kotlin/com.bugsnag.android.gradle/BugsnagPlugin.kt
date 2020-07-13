@@ -94,7 +94,7 @@ class BugsnagPlugin : Plugin<Project> {
             }
 
             setupNdkMappingFileUpload(project, deps, bugsnag)
-            setupReleasesTask(project, deps, bugsnag, android)
+            setupReleasesTask(project, deps, bugsnag)
         }
     }
 
@@ -139,7 +139,7 @@ class BugsnagPlugin : Plugin<Project> {
         }
     }
 
-    private fun setupReleasesTask(project: Project, deps: BugsnagTaskDeps, bugsnag: BugsnagPluginExtension, android: AppExtension) {
+    private fun setupReleasesTask(project: Project, deps: BugsnagTaskDeps, bugsnag: BugsnagPluginExtension) {
         val taskName = "bugsnagRelease${taskNameForOutput(deps.output)}Task"
         val releasesTask = project.tasks.create(taskName, BugsnagReleasesTask::class.java)
         setupBugsnagTask(releasesTask, deps)
