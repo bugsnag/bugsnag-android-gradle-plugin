@@ -19,6 +19,7 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import org.gradle.api.resources.TextResource
 import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.TaskProvider
@@ -352,5 +353,10 @@ class FakeVariantImpl implements BaseVariant {
     @Override
     void register(Task task) {
 
+    }
+
+    @Override
+    Provider<FileCollection> getMappingFileProvider() {
+        return null
     }
 }
