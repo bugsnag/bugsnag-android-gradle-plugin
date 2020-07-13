@@ -5,6 +5,7 @@ Bump supported JDK version to 7
 
 Use register() rather than create() for adding tasks
 [#221](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/221)
+[#227](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/227)
 
 Remove unused BugsnagProguardConfigTask
 [#209](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/209)

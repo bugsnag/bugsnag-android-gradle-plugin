@@ -1,7 +1,7 @@
 package com.bugsnag.android.gradle;
 
-import com.android.build.gradle.api.BaseVariant;
-import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.api.ApkVariant;
+import com.android.build.gradle.api.ApkVariantOutput;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
 import org.xml.sax.SAXException;
@@ -24,8 +24,14 @@ import java.util.UUID;
  */
 public class BugsnagManifestTask extends DefaultTask {
 
-    BaseVariantOutput variantOutput;
-    BaseVariant variant;
+    ApkVariantOutput variantOutput;
+    ApkVariant variant;
+
+    public BugsnagManifestTask() {
+        super();
+        setGroup(BugsnagPlugin.GROUP_NAME);
+        setDescription("Adds a unique build UUID to AndroidManifest to link proguard mappings to crash reports");
+    }
 
     @TaskAction
     void updateManifest() throws ParserConfigurationException, SAXException, IOException {

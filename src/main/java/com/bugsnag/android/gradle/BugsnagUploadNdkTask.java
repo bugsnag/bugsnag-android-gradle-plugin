@@ -1,10 +1,10 @@
 package com.bugsnag.android.gradle;
 
 import com.android.build.gradle.AppExtension;
-import com.android.build.gradle.api.BaseVariant;
+import com.android.build.gradle.api.ApkVariant;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 
-import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.api.ApkVariantOutput;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import kotlin.Pair;
 import org.apache.http.entity.mime.MultipartEntity;
@@ -57,9 +57,14 @@ public class BugsnagUploadNdkTask extends DefaultTask {
     File rootDir;
     String sharedObjectPath;
 
-    String applicationId;
-    BaseVariantOutput variantOutput;
-    BaseVariant variant;
+    ApkVariantOutput variantOutput;
+    ApkVariant variant;
+
+    public BugsnagUploadNdkTask() {
+        super();
+        setGroup(BugsnagPlugin.GROUP_NAME);
+        setDescription("Generates and uploads the NDK mapping file(s) to Bugsnag");
+    }
 
     @TaskAction
     void upload() throws ParserConfigurationException, SAXException, IOException {
@@ -124,7 +129,7 @@ public class BugsnagUploadNdkTask extends DefaultTask {
         return tasks;
     }
 
-    private static File findSymbolPath(BaseVariantOutput variantOutput) {
+    private static File findSymbolPath(ApkVariantOutput variantOutput) {
         ProcessAndroidResources resources = variantOutput.getProcessResourcesProvider().getOrNull();
 
         if (resources == null) {
@@ -272,7 +277,6 @@ public class BugsnagUploadNdkTask extends DefaultTask {
         mpEntity.addPart("projectRoot", new StringBody(projectRoot));
 
         BugsnagMultiPartUploadRequest request = new BugsnagMultiPartUploadRequest();
-        request.applicationId = applicationId;
         request.variant = variant;
         request.variantOutput = variantOutput;
         request.uploadMultipartEntity(mpEntity, getProject());

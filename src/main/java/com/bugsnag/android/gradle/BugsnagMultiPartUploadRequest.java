@@ -1,7 +1,7 @@
 package com.bugsnag.android.gradle;
 
-import com.android.build.gradle.api.BaseVariant;
-import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.api.ApkVariant;
+import com.android.build.gradle.api.ApkVariantOutput;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
@@ -40,9 +40,8 @@ public class BugsnagMultiPartUploadRequest {
 
     static final int MAX_RETRY_COUNT = 5;
 
-    String applicationId;
-    BaseVariantOutput variantOutput;
-    BaseVariant variant;
+    ApkVariantOutput variantOutput;
+    ApkVariant variant;
 
     void uploadMultipartEntity(MultipartEntity mpEntity, Project project) throws IOException, SAXException, ParserConfigurationException {
         AndroidManifestInfo manifestInfo = BugsnagVariantOutputUtils.readManifestFile(project, variant, variantOutput);
@@ -78,7 +77,7 @@ public class BugsnagMultiPartUploadRequest {
 
     void addPropertiesToMultipartEntity(MultipartEntity mpEntity, AndroidManifestInfo manifestInfo, BugsnagPluginExtension bugsnag, Project project) throws UnsupportedEncodingException {
         mpEntity.addPart("apiKey", new StringBody(manifestInfo.getApiKey()));
-        mpEntity.addPart("appId", new StringBody(applicationId));
+        mpEntity.addPart("appId", new StringBody(variant.getApplicationId()));
         mpEntity.addPart("versionCode", new StringBody(manifestInfo.getVersionCode()));
 
         if (manifestInfo.getBuildUUID() != null) {

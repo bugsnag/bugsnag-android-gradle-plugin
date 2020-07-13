@@ -1,7 +1,8 @@
 package com.bugsnag.android.gradle;
 
-import com.android.build.gradle.api.BaseVariant;
-import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.api.ApkVariant;
+import com.android.build.gradle.api.ApkVariant;
+import com.android.build.gradle.api.ApkVariantOutput;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
@@ -40,8 +41,14 @@ public class BugsnagReleasesTask extends DefaultTask {
     private static final String VCS_COMMAND = "git";
     private static final String CHARSET_UTF8 = "UTF-8";
 
-    BaseVariantOutput variantOutput;
-    BaseVariant variant;
+    ApkVariantOutput variantOutput;
+    ApkVariant variant;
+
+    public BugsnagReleasesTask() {
+        super();
+        setGroup(BugsnagPlugin.GROUP_NAME);
+        setDescription("Assembles information about the build that will be sent to the releases API");
+    }
 
     @TaskAction
     void fetchReleaseInfo() throws IOException, SAXException, ParserConfigurationException {

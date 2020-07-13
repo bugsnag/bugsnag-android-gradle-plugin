@@ -2,8 +2,8 @@
 <SmellBaseline>
   <Blacklist></Blacklist>
   <Whitelist>
+    <ID>LongParameterList:BugsnagPlugin.kt$BugsnagPlugin$(task: Task, variant: ApkVariant, output: ApkVariantOutput, project: Project, bugsnag: BugsnagPluginExtension, autoUpload: Boolean)</ID>
     <ID>MagicNumber:BugsnagPluginExtension.kt$BugsnagPluginExtension$60000</ID>
-    <ID>MaxLineLength:BugsnagPlugin.kt$BugsnagPlugin$private</ID>
     <ID>TooManyFunctions:BugsnagPlugin.kt$BugsnagPlugin$BugsnagPlugin</ID>
   </Whitelist>
 </SmellBaseline>
