@@ -10,42 +10,42 @@ Scenario: NDK apps send requests
     And the request 1 is valid for the Android NDK Mapping API
     And the payload field "apiKey" equals "your-api-key-here" for request 1
     And the payload field "projectRoot" is not null for request 1
-    And the payload field "arch" equals "armeabi-v7a" for request 1
+    And the payload field "arch" equals "arm64-v8a" for request 1
 
     And the request 2 is valid for the Android NDK Mapping API
     And the payload field "apiKey" equals "your-api-key-here" for request 2
     And the payload field "projectRoot" is not null for request 2
-    And the payload field "arch" equals "armeabi-v7a" for request 2
+    And the payload field "arch" equals "arm64-v8a" for request 2
 
     And the request 3 is valid for the Android NDK Mapping API
     And the payload field "apiKey" equals "your-api-key-here" for request 3
     And the payload field "projectRoot" is not null for request 3
-    And the payload field "arch" equals "x86_64" for request 3
+    And the payload field "arch" equals "armeabi-v7a" for request 3
 
     And the request 4 is valid for the Android NDK Mapping API
     And the payload field "apiKey" equals "your-api-key-here" for request 4
     And the payload field "projectRoot" is not null for request 4
-    And the payload field "arch" equals "x86_64" for request 4
+    And the payload field "arch" equals "armeabi-v7a" for request 4
 
     And the request 5 is valid for the Android NDK Mapping API
     And the payload field "apiKey" equals "your-api-key-here" for request 5
     And the payload field "projectRoot" is not null for request 5
-    And the payload field "arch" equals "arm64-v8a" for request 5
+    And the payload field "arch" equals "x86" for request 5
 
     And the request 6 is valid for the Android NDK Mapping API
     And the payload field "apiKey" equals "your-api-key-here" for request 6
     And the payload field "projectRoot" is not null for request 6
-    And the payload field "arch" equals "arm64-v8a" for request 6
+    And the payload field "arch" equals "x86" for request 6
 
     And the request 7 is valid for the Android NDK Mapping API
     And the payload field "apiKey" equals "your-api-key-here" for request 7
     And the payload field "projectRoot" is not null for request 7
-    And the payload field "arch" equals "x86" for request 7
+    And the payload field "arch" equals "x86_64" for request 7
 
     And the request 8 is valid for the Android NDK Mapping API
     And the payload field "apiKey" equals "your-api-key-here" for request 8
     And the payload field "projectRoot" is not null for request 8
-    And the payload field "arch" equals "x86" for request 8
+    And the payload field "arch" equals "x86_64" for request 8
 
     And the request 9 is valid for the Build API
     And the payload field "appVersion" equals "1.0" for request 9

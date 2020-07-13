@@ -21,5 +21,4 @@ open class BugsnagPluginExtension {
     var builderName: String? = null
     var metadata: Map<String, String>? = null
     var objdumpPaths: Map<String, String>? = null
-
 }

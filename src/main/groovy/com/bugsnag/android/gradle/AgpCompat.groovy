@@ -1,6 +1,7 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.tasks.ManifestProcessorTask
+import org.gradle.api.Project
 import org.gradle.api.file.Directory
 
 class AgpCompat {
@@ -20,5 +21,9 @@ class AgpCompat {
             }
         }
         return null
+    }
+
+    static SourceControl getSourceControl(Project project) {
+        return project.bugsnag.sourceControl
     }
 }
