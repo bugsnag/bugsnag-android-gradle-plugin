@@ -5,12 +5,14 @@ import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.ApplicationVariant
+import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.android.build.gradle.tasks.ManifestProcessorTask
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
@@ -32,7 +34,6 @@ class BugsnagPlugin : Plugin<Project> {
 
     companion object {
         const val GROUP_NAME = "Bugsnag"
-        private const val NDK_PROJ_TASK = "externalNative"
         private const val CLEAN_TASK = "Clean"
         private const val ASSEMBLE_TASK = "assemble"
         private const val BUNDLE_TASK = "bundle"
@@ -62,17 +63,14 @@ class BugsnagPlugin : Plugin<Project> {
     }
 
     private fun registerNdkLibInstallTask(project: Project) {
-        val tasks = project.tasks
-        val cleanTasks: Set<Task> = tasks.filter {
-            it.name.startsWith(NDK_PROJ_TASK) && it.name.contains(CLEAN_TASK)
-        }.toSet()
-        val buildTasks: Set<Task> = tasks.filter {
-            it.name.startsWith(NDK_PROJ_TASK) && !it.name.contains(CLEAN_TASK)
-        }.toSet()
+        val ndkTasks = project.tasks.withType(ExternalNativeBuildTask::class.java)
+        val cleanTasks = ndkTasks.filter { it.name.contains(CLEAN_TASK) }.toSet()
+        val buildTasks = ndkTasks.filter { !it.name.contains(CLEAN_TASK) }.toSet()
 
-        tasks.register("bugsnagInstallJniLibsTask", BugsnagInstallJniLibsTask::class.java) { ndkSetupTask ->
+        if (buildTasks.isNotEmpty()) {
+            val ndkSetupTask = project.tasks.create("bugsnagInstallJniLibsTask", BugsnagInstallJniLibsTask::class.java)
+            ndkSetupTask.mustRunAfter(cleanTasks)
             buildTasks.forEach {
-                ndkSetupTask.mustRunAfter(cleanTasks)
                 it.dependsOn(ndkSetupTask)
                 it.doFirst { ndkSetupTask }
             }
