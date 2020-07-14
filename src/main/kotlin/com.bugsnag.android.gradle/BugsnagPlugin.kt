@@ -2,15 +2,16 @@ package com.bugsnag.android.gradle
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.AppPlugin
+import com.android.build.gradle.api.ApkVariant
+import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.ApplicationVariant
-import com.android.build.gradle.api.BaseVariant
-import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.tasks.ManifestProcessorTask
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
 /**
@@ -30,7 +31,7 @@ import java.io.File
 class BugsnagPlugin : Plugin<Project> {
 
     companion object {
-        private const val GROUP_NAME = "Bugsnag"
+        const val GROUP_NAME = "Bugsnag"
         private const val NDK_PROJ_TASK = "externalNative"
         private const val CLEAN_TASK = "Clean"
         private const val ASSEMBLE_TASK = "assemble"
@@ -42,31 +43,34 @@ class BugsnagPlugin : Plugin<Project> {
 
         project.afterEvaluate {
             // Make sure the android plugin has been applied first
-            if (project.plugins.hasPlugin(AppPlugin::class.java)) {
-                val android = project.extensions.getByType(AppExtension::class.java)
-                android.applicationVariants.all { variant ->
-                    applyBugsnagToVariant(variant, project, bugsnag, android)
-                }
-            } else {
+            if (!project.plugins.hasPlugin(AppPlugin::class.java)) {
                 throw IllegalStateException("Must apply \'com.android.application\' first!")
             }
+            if (!bugsnag.isEnabled) {
+                return@afterEvaluate
+            }
 
-            if (isNdkProject(bugsnag, project.extensions.getByType(AppExtension::class.java))) {
-                setupNdkProject(project)
+            val android = project.extensions.getByType(AppExtension::class.java)
+            android.applicationVariants.all { variant ->
+                registerBugsnagTasksForVariant(project, variant, bugsnag)
+            }
+
+            if (isNdkProject(bugsnag, android)) {
+                registerNdkLibInstallTask(project)
             }
         }
     }
 
-    private fun setupNdkProject(project: Project) {
+    private fun registerNdkLibInstallTask(project: Project) {
         val tasks = project.tasks
         val cleanTasks: Set<Task> = tasks.filter {
             it.name.startsWith(NDK_PROJ_TASK) && it.name.contains(CLEAN_TASK)
         }.toSet()
-        val buildTasks: Set<Task>  = tasks.filter {
+        val buildTasks: Set<Task> = tasks.filter {
             it.name.startsWith(NDK_PROJ_TASK) && !it.name.contains(CLEAN_TASK)
         }.toSet()
 
-        tasks.register("bugsnagInstallJniLibsTask", BugsnagNdkSetupTask::class.java) { ndkSetupTask ->
+        tasks.register("bugsnagInstallJniLibsTask", BugsnagInstallJniLibsTask::class.java) { ndkSetupTask ->
             buildTasks.forEach {
                 ndkSetupTask.mustRunAfter(cleanTasks)
                 it.dependsOn(ndkSetupTask)
@@ -76,59 +80,126 @@ class BugsnagPlugin : Plugin<Project> {
     }
 
     /**
-     * Create tasks for each Build Variant
+     * Register manifest UUID writing + upload tasks for each Build Variant.
+     *
      * See https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide#TOC-Build-Variants
      */
-    private fun applyBugsnagToVariant(variant: BaseVariant, project: Project,
-                                      bugsnag: BugsnagPluginExtension, android: AppExtension) {
-        if (!bugsnag.isEnabled) {
-            return
-        }
+    private fun registerBugsnagTasksForVariant(project: Project,
+                                               variant: ApkVariant,
+                                               bugsnag: BugsnagPluginExtension) {
+        variant.outputs.configureEach {
+            val output = it as ApkVariantOutput
+            val jvmMinificationEnabled = variant.buildType.isMinifyEnabled || hasDexguardPlugin(project)
+            val ndkEnabled = isNdkProject(bugsnag, project.extensions.getByType(AppExtension::class.java))
 
-        variant.outputs.forEach { output ->
-            val deps = BugsnagTaskDeps(variant, output)
-            setupManifestUuidTask(project, deps)
-
-            if (variant.buildType.isMinifyEnabled || hasDexguardPlugin(project)) {
-                setupMappingFileUpload(project, deps, bugsnag)
+            // register bugsnag tasks
+            val manifestUuidTask = registerManifestUuidTask(project, variant, output)
+            val proguardTask = when {
+                jvmMinificationEnabled -> registerProguardUploadTask(project, variant, output, bugsnag)
+                else -> null
             }
+            val symbolFileTask = when {
+                ndkEnabled -> registerSharedObjectUploadTask(project, variant, output, bugsnag)
+                else -> null
+            }
+            val releasesTask = registerReleasesUploadTask(project, variant, output, bugsnag)
 
-            setupNdkMappingFileUpload(project, deps, bugsnag)
-            setupReleasesTask(project, deps, bugsnag)
+            // calls get() to ensure that the registered tasks are executed
+            // if the packageApplication task will run. This uses the configuration avoidance API,
+            // see https://docs.gradle.org/current/userguide/task_configuration_avoidance.html
+            findAssembleBundleTasks(project, variant, output).forEach {
+                manifestUuidTask.get()
+                proguardTask?.get()
+                symbolFileTask?.get()
+                releasesTask.get()
+            }
         }
     }
 
-    private fun shouldUploadDebugMappings(output: BaseVariantOutput, bugsnag: BugsnagPluginExtension): Boolean {
-        return !output.name.toLowerCase().endsWith("debug") || bugsnag.isUploadDebugBuildMappings
+    private fun registerManifestUuidTask(project: Project,
+                                         variant: ApkVariant,
+                                         output: ApkVariantOutput): TaskProvider<BugsnagManifestTask> {
+        val taskName = "processBugsnag${taskNameForOutput(output)}Manifest"
+        return project.tasks.register(taskName, BugsnagManifestTask::class.java) {
+            it.variantOutput = output
+            it.variant = variant
+            val processManifest = output.processManifestProvider.getOrNull()
+
+            if (processManifest != null) {
+                processManifest.finalizedBy(it)
+                it.dependsOn(processManifest)
+            }
+        }
     }
 
     /**
      * Creates a bugsnag task to upload proguard mapping file
      */
-    private fun setupMappingFileUpload(project: Project, deps: BugsnagTaskDeps, bugsnag: BugsnagPluginExtension) {
-        val taskName = "uploadBugsnag${taskNameForOutput(deps.output)}Mapping"
-        project.tasks.register(taskName, BugsnagUploadProguardTask::class.java) { uploadTask ->
-            uploadTask.partName = "proguard"
-            prepareUploadTask(uploadTask, deps, project, bugsnag)
+    private fun registerProguardUploadTask(project: Project,
+                                           variant: ApkVariant,
+                                           output: ApkVariantOutput,
+                                           bugsnag: BugsnagPluginExtension): TaskProvider<BugsnagUploadProguardTask> {
+        val taskName = "uploadBugsnag${taskNameForOutput(output)}Mapping"
+        return project.tasks.register(taskName, BugsnagUploadProguardTask::class.java) {
+            it.variantOutput = output
+            it.variant = variant
+            addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.isAutoUpload)
         }
     }
 
-    private fun setupNdkMappingFileUpload(project: Project, deps: BugsnagTaskDeps, bugsnag: BugsnagPluginExtension) {
-        if (isNdkProject(bugsnag, project.extensions.getByType(AppExtension::class.java))) {
-            // Create a Bugsnag task to upload NDK mapping file(s)
-            val taskName = "uploadBugsnagNdk${taskNameForOutput(deps.output)}Mapping"
-            project.tasks.register(taskName, BugsnagUploadNdkTask::class.java) { uploadNdkTask ->
-                prepareUploadTask(uploadNdkTask, deps, project, bugsnag)
+    private fun registerSharedObjectUploadTask(project: Project,
+                                               variant: ApkVariant,
+                                               output: ApkVariantOutput,
+                                               bugsnag: BugsnagPluginExtension): TaskProvider<BugsnagUploadNdkTask> {
+        // Create a Bugsnag task to upload NDK mapping file(s)
+        val taskName = "uploadBugsnagNdk${taskNameForOutput(output)}Mapping"
+        return project.tasks.register(taskName, BugsnagUploadNdkTask::class.java) {
+            it.variantOutput = output
+            it.variant = variant
+            it.variantName = taskNameForVariant(variant)
+            it.projectDir = project.projectDir
+            it.rootDir = project.rootDir
+            it.sharedObjectPath = bugsnag.sharedObjectPath
+            addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.isAutoUpload)
+        }
+    }
 
-                uploadNdkTask.variantName = taskNameForVariant(deps.variant)
-                uploadNdkTask.projectDir = project.projectDir
-                uploadNdkTask.rootDir = project.rootDir
-                uploadNdkTask.sharedObjectPath = bugsnag.sharedObjectPath
+    private fun registerReleasesUploadTask(project: Project,
+                                           variant: ApkVariant,
+                                           output: ApkVariantOutput,
+                                           bugsnag: BugsnagPluginExtension): TaskProvider<BugsnagReleasesTask> {
+        val taskName = "bugsnagRelease${taskNameForOutput(output)}Task"
+        return project.tasks.register(taskName, BugsnagReleasesTask::class.java) {
+            it.variantOutput = output
+            it.variant = variant
+            addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.isAutoReportBuilds)
+        }
+    }
+
+    private fun addTaskToExecutionGraph(task: Task,
+                                        variant: ApkVariant,
+                                        output: ApkVariantOutput,
+                                        project: Project,
+                                        bugsnag: BugsnagPluginExtension,
+                                        autoUpload: Boolean) {
+        if (shouldUploadDebugMappings(output, bugsnag)) {
+            findAssembleBundleTasks(project, variant, output).forEach {
+                task.mustRunAfter(it)
+
+                if (autoUpload) {
+                    it.finalizedBy(task)
+                }
             }
         }
     }
 
-    private fun isNdkProject(bugsnag: BugsnagPluginExtension, android: AppExtension): Boolean {
+    private fun shouldUploadDebugMappings(output: ApkVariantOutput,
+                                          bugsnag: BugsnagPluginExtension): Boolean {
+        return !output.name.toLowerCase().endsWith("debug") || bugsnag.isUploadDebugBuildMappings
+    }
+
+    private fun isNdkProject(bugsnag: BugsnagPluginExtension,
+                             android: AppExtension): Boolean {
         val ndk = bugsnag.ndk
         return if (ndk != null) { // always respect user override
             ndk
@@ -136,43 +207,6 @@ class BugsnagPlugin : Plugin<Project> {
             val usesCmake = android.externalNativeBuild.cmake.path != null
             val usesNdkBuild = android.externalNativeBuild.ndkBuild.path != null
             usesCmake || usesNdkBuild
-        }
-    }
-
-    private fun setupReleasesTask(project: Project, deps: BugsnagTaskDeps, bugsnag: BugsnagPluginExtension) {
-        val taskName = "bugsnagRelease${taskNameForOutput(deps.output)}Task"
-        val releasesTask = project.tasks.create(taskName, BugsnagReleasesTask::class.java)
-        setupBugsnagTask(releasesTask, deps)
-
-        if (shouldUploadDebugMappings(deps.output, bugsnag)) {
-            findAssembleBundleTasks(deps.variant, deps.output, project).forEach {
-                releasesTask.mustRunAfter(it)
-
-                if (bugsnag.isAutoReportBuilds) {
-                    it.finalizedBy(releasesTask)
-                }
-            }
-        }
-    }
-
-    private fun setupBugsnagTask(task: Task, deps: BugsnagTaskDeps) {
-        task.group = GROUP_NAME
-        task.setProperty("variantOutput", deps.output)
-        task.setProperty("variant", deps.variant)
-    }
-
-    private fun prepareUploadTask(uploadTask: Task, deps: BugsnagTaskDeps, project: Project, bugsnag: BugsnagPluginExtension) {
-        setupBugsnagTask(uploadTask, deps)
-        uploadTask.setProperty("applicationId", deps.variant.applicationId)
-
-        if (shouldUploadDebugMappings(deps.output, bugsnag)) {
-            findAssembleBundleTasks(deps.variant, deps.output, project).forEach {
-                uploadTask.mustRunAfter(it)
-
-                    if (bugsnag.isAutoUpload) {
-                        it.finalizedBy(uploadTask)
-                    }
-            }
         }
     }
 
@@ -186,7 +220,9 @@ class BugsnagPlugin : Plugin<Project> {
      * @param project the current project
      * @return the assemble + bundle tasks
      */
-    private fun findAssembleBundleTasks(variant: BaseVariant, output: BaseVariantOutput, project: Project): Set<Task> {
+    private fun findAssembleBundleTasks(project: Project,
+                                        variant: ApkVariant,
+                                        output: ApkVariantOutput): Set<Task> {
         val taskNames = HashSet<String>()
         taskNames.addAll(findTaskNamesForPrefix(variant, output, ASSEMBLE_TASK))
         taskNames.addAll(findTaskNamesForPrefix(variant, output, BUNDLE_TASK))
@@ -202,7 +238,9 @@ class BugsnagPlugin : Plugin<Project> {
      *
      * E.g. [bundle, bundleRelease, bundleFooRelease]
      */
-    private fun findTaskNamesForPrefix(variant: BaseVariant, output: BaseVariantOutput, prefix: String): Set<String> {
+    private fun findTaskNamesForPrefix(variant: ApkVariant,
+                                       output: ApkVariantOutput,
+                                       prefix: String): Set<String> {
         val variantName = output.name.split("-")[0].capitalize()
         val assembleTask = variant.assembleProvider.getOrNull()
 
@@ -222,28 +260,6 @@ class BugsnagPlugin : Plugin<Project> {
         return taskNames
     }
 
-    private fun setupManifestUuidTask(project: Project, deps: BugsnagTaskDeps) {
-        val taskName = "processBugsnag${taskNameForOutput(deps.output)}Manifest"
-        project.tasks.register(taskName, BugsnagManifestTask::class.java) { manifestTask ->
-            setupBugsnagTask(manifestTask, deps)
-            val processManifest = deps.output.processManifestProvider.getOrNull()
-
-            if (processManifest != null) {
-                processManifest.finalizedBy(manifestTask)
-                manifestTask.dependsOn(processManifest)
-
-                val resourceTasks: Set<Task> = project.tasks.filter {
-                    val name = it.name.toLowerCase()
-                    name.startsWith(BUNDLE_TASK) && name.endsWith("resources")
-                }.toSet()
-
-                resourceTasks.forEach {
-                    it.dependsOn(manifestTask)
-                }
-            }
-        }
-    }
-
     fun resolveBundleManifestOutputDirectory(processManifest: ManifestProcessorTask): File {
         // For AGP versions >= 3.3.0 the bundle manifest is output to its own directory
         val method = processManifest.javaClass.getDeclaredMethod("getBundleManifestOutputDirectory")
@@ -254,11 +270,11 @@ class BugsnagPlugin : Plugin<Project> {
         }
     }
 
-    fun taskNameForVariant(variant: BaseVariant): String {
+    fun taskNameForVariant(variant: ApkVariant): String {
         return variant.name.capitalize()
     }
 
-    fun taskNameForOutput(output: BaseVariantOutput): String {
+    fun taskNameForOutput(output: ApkVariantOutput): String {
         return output.name.capitalize()
     }
 
@@ -289,23 +305,29 @@ class BugsnagPlugin : Plugin<Project> {
     /**
      * Whether or not an assemble task is going to be run for this variant
      */
-    fun isRunningAssembleTask(variant: BaseVariant, output: BaseVariantOutput, project: Project): Boolean {
-        return isRunningTaskWithPrefix(variant, output, project, ASSEMBLE_TASK)
+    fun isRunningAssembleTask(project: Project,
+                              variant: ApkVariant,
+                              output: ApkVariantOutput): Boolean {
+        return isRunningTaskWithPrefix(project, variant, output, ASSEMBLE_TASK)
     }
 
     /**
      * Whether or not a bundle task is going to be run for this variant
      */
-    fun isRunningBundleTask(variant: BaseVariant, output: BaseVariantOutput, project: Project): Boolean {
-        return isRunningTaskWithPrefix(variant, output, project, BUNDLE_TASK)
+    fun isRunningBundleTask(project: Project,
+                            variant: ApkVariant,
+                            output: ApkVariantOutput): Boolean {
+        return isRunningTaskWithPrefix(project, variant, output, BUNDLE_TASK)
     }
 
     /**
      * Whether or any of a list of the task names for a prefix are going to be run by checking the list
      * against all of the tasks in the task graph
      */
-    private fun isRunningTaskWithPrefix(variant: BaseVariant, output: BaseVariantOutput,
-                                        project: Project, prefix: String): Boolean {
+    private fun isRunningTaskWithPrefix(project: Project,
+                                        variant: ApkVariant,
+                                        output: ApkVariantOutput,
+                                        prefix: String): Boolean {
         val taskNames = HashSet<String>()
         taskNames.addAll(findTaskNamesForPrefix(variant, output, prefix))
 
@@ -315,6 +337,4 @@ class BugsnagPlugin : Plugin<Project> {
             }
         }
     }
-
-    class BugsnagTaskDeps(val variant: BaseVariant, val output: BaseVariantOutput)
 }

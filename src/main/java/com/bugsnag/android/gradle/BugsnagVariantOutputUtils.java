@@ -1,7 +1,7 @@
 package com.bugsnag.android.gradle;
 
-import com.android.build.gradle.api.BaseVariant;
-import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.api.ApkVariant;
+import com.android.build.gradle.api.ApkVariantOutput;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
@@ -32,14 +32,14 @@ public class BugsnagVariantOutputUtils {
      * See: https://developer.android.com/studio/build/configure-apk-splits.html#build-apks-filename
      * https://issuetracker.google.com/issues/37085185
      */
-    static List<File> getManifestPaths(Project project, BaseVariant variant, BaseVariantOutput variantOutput) {
+    static List<File> getManifestPaths(Project project, ApkVariant variant, ApkVariantOutput variantOutput) {
         File directoryMerged = null;
         File directoryBundle;
         List<File> manifestPaths = new ArrayList();
 
         BugsnagPlugin plugin = project.getPlugins().getPlugin(BugsnagPlugin.class);
-        boolean getMergedManifest = plugin.isRunningAssembleTask(variant, variantOutput, project);
-        boolean getBundleManifest = plugin.isRunningBundleTask(variant, variantOutput, project);
+        boolean getMergedManifest = plugin.isRunningAssembleTask(project, variant, variantOutput);
+        boolean getBundleManifest = plugin.isRunningBundleTask(project, variant, variantOutput);
 
         // If the manifest location could not be reliably determined, attempt to get both
         if (!getMergedManifest && !getBundleManifest) {
@@ -95,7 +95,7 @@ public class BugsnagVariantOutputUtils {
         return null;
     }
 
-    static void addManifestPath(List<File> manifestPaths, File directory, Logger logger, BaseVariantOutput variantOutput) {
+    static void addManifestPath(List<File> manifestPaths, File directory, Logger logger, ApkVariantOutput variantOutput) {
         File manifestFile = Paths.get(directory.toString(), variantOutput.getDirName(),
             "AndroidManifest.xml").toFile();
 
@@ -108,7 +108,7 @@ public class BugsnagVariantOutputUtils {
     }
 
     // Read the API key and Build ID etc..
-    static AndroidManifestInfo readManifestFile(Project project, BaseVariant variant, BaseVariantOutput variantOutput) throws ParserConfigurationException, SAXException, IOException {
+    static AndroidManifestInfo readManifestFile(Project project, ApkVariant variant, ApkVariantOutput variantOutput) throws ParserConfigurationException, SAXException, IOException {
         // Parse the AndroidManifest.xml
         List<File> paths = getManifestPaths(project, variant, variantOutput);
 

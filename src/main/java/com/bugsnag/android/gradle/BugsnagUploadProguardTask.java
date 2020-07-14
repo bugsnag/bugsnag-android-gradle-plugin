@@ -1,8 +1,8 @@
 package com.bugsnag.android.gradle;
 
 import com.android.build.gradle.AppExtension;
-import com.android.build.gradle.api.BaseVariant;
-import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.api.ApkVariant;
+import com.android.build.gradle.api.ApkVariantOutput;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
@@ -11,7 +11,6 @@ import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskAction;
 import org.xml.sax.SAXException;
 
@@ -36,10 +35,14 @@ import java.nio.file.Paths;
  */
 public class BugsnagUploadProguardTask extends DefaultTask {
 
-    String partName;
-    String applicationId;
-    BaseVariantOutput variantOutput;
-    BaseVariant variant;
+    ApkVariantOutput variantOutput;
+    ApkVariant variant;
+
+    public BugsnagUploadProguardTask() {
+        super();
+        setGroup(BugsnagPlugin.GROUP_NAME);
+        setDescription("Uploads the mapping file to Bugsnag");
+    }
 
     @TaskAction
     void upload() throws IOException, SAXException, ParserConfigurationException {
@@ -70,11 +73,10 @@ public class BugsnagUploadProguardTask extends DefaultTask {
         // Construct a basic request
         Charset charset = Charset.forName("UTF-8");
         MultipartEntity mpEntity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE, null, charset);
-        mpEntity.addPart(partName, new FileBody(mappingFile));
+        mpEntity.addPart("proguard", new FileBody(mappingFile));
 
         // Send the request
         BugsnagMultiPartUploadRequest request = new BugsnagMultiPartUploadRequest();
-        request.applicationId = applicationId;
         request.variant = variant;
         request.variantOutput = variantOutput;
         request.uploadMultipartEntity(mpEntity, getProject());

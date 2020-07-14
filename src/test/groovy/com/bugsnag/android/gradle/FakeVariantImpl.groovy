@@ -1,6 +1,6 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.gradle.api.BaseVariant
+import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.api.SourceKind
@@ -9,10 +9,13 @@ import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.android.build.gradle.tasks.GenerateBuildConfig
 import com.android.build.gradle.tasks.MergeResources
 import com.android.build.gradle.tasks.MergeSourceSetFolders
+import com.android.build.gradle.tasks.PackageAndroidArtifact
 import com.android.build.gradle.tasks.RenderscriptCompile
 import com.android.builder.model.BuildType
 import com.android.builder.model.ProductFlavor
+import com.android.builder.model.SigningConfig
 import com.android.builder.model.SourceProvider
+import org.gradle.api.DefaultTask
 import org.gradle.api.DomainObjectCollection
 import org.gradle.api.Task
 import org.gradle.api.artifacts.ArtifactCollection
@@ -27,7 +30,7 @@ import org.gradle.api.tasks.compile.JavaCompile
 
 @SuppressWarnings(["GetterMethodCouldBeProperty", "UnnecessaryReturnKeyword",
     "ReturnsNullInsteadOfEmptyCollection", "MethodCount", "BuilderMethodWithSideEffects",])
-class FakeVariantImpl implements BaseVariant {
+class FakeVariantImpl implements ApkVariant {
 
     private final String name
 
@@ -357,6 +360,66 @@ class FakeVariantImpl implements BaseVariant {
 
     @Override
     Provider<FileCollection> getMappingFileProvider() {
+        return null
+    }
+
+    @Override
+    Object getDex() {
+        return null
+    }
+
+    @Override
+    PackageAndroidArtifact getPackageApplication() {
+        return null
+    }
+
+    @Override
+    TaskProvider<PackageAndroidArtifact> getPackageApplicationProvider() {
+        return null
+    }
+
+    @Override
+    SigningConfig getSigningConfig() {
+        return null
+    }
+
+    @Override
+    boolean isSigningReady() {
+        return false
+    }
+
+    @Override
+    Set<String> getCompatibleScreens() {
+        return null
+    }
+
+    @Override
+    DefaultTask getInstall() {
+        return null
+    }
+
+    @Override
+    TaskProvider<Task> getInstallProvider() {
+        return null
+    }
+
+    @Override
+    DefaultTask getUninstall() {
+        return null
+    }
+
+    @Override
+    TaskProvider<Task> getUninstallProvider() {
+        return null
+    }
+
+    @Override
+    int getVersionCode() {
+        return 0
+    }
+
+    @Override
+    String getVersionName() {
         return null
     }
 }

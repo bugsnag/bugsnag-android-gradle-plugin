@@ -8,10 +8,11 @@ import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.util.stream.Collectors
 
-class BugsnagNdkSetupTask : DefaultTask() {
+class BugsnagInstallJniLibsTask : DefaultTask() {
 
     init {
         description = "Copies shared object files from the bugsnag-android AAR to the required build directory"
+        group = BugsnagPlugin.GROUP_NAME
     }
 
     @TaskAction
