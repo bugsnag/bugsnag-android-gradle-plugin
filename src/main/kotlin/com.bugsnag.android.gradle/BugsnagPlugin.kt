@@ -6,6 +6,7 @@ import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.tasks.ManifestProcessorTask
+import com.android.build.gradle.tasks.PackageApplication
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -128,6 +129,7 @@ class BugsnagPlugin : Plugin<Project> {
             if (processManifest != null) {
                 processManifest.finalizedBy(it)
                 it.dependsOn(processManifest)
+                it.mustRunAfter(processManifest)
             }
         }
     }
@@ -184,6 +186,7 @@ class BugsnagPlugin : Plugin<Project> {
                                         autoUpload: Boolean) {
         if (shouldUploadDebugMappings(output, bugsnag)) {
             findAssembleBundleTasks(project, variant, output).forEach {
+                task.dependsOn(it)
                 task.mustRunAfter(it)
 
                 if (autoUpload) {
@@ -223,13 +226,10 @@ class BugsnagPlugin : Plugin<Project> {
     private fun findAssembleBundleTasks(project: Project,
                                         variant: ApkVariant,
                                         output: ApkVariantOutput): Set<Task> {
-        val taskNames = HashSet<String>()
-        taskNames.addAll(findTaskNamesForPrefix(variant, output, ASSEMBLE_TASK))
-        taskNames.addAll(findTaskNamesForPrefix(variant, output, BUNDLE_TASK))
-
-        return project.tasks.filter {
-            taskNames.contains(it.name)
-        }.toSet()
+        // assemble tasks can be depended on with the packageApplicationProvider
+        val tasks = HashSet<Task>()
+        tasks.add(variant.packageApplicationProvider.get())
+        return tasks
     }
 
     /**

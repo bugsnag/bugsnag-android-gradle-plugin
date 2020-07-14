@@ -9,8 +9,8 @@ Scenario: Enable debug mapping upload
     When I build "debug_proguard" using the "upload_debug_enabled" bugsnag config
     Then I should receive 4 requests
     And the request 0 is valid for the Android Mapping API
-    And the request 1 is valid for the Android Mapping API
-    And the request 2 is valid for the Build API
+    And the request 1 is valid for the Build API
+    And the request 2 is valid for the Android Mapping API
     And the request 3 is valid for the Build API
 
 Scenario: Enable overwrite
