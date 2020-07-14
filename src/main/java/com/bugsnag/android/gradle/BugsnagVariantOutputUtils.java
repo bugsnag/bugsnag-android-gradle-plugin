@@ -1,7 +1,6 @@
 package com.bugsnag.android.gradle;
 
 import com.android.build.gradle.api.ApkVariant;
-import com.android.build.gradle.api.ApkVariant;
 import com.android.build.gradle.api.ApkVariantOutput;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import org.gradle.api.Project;
