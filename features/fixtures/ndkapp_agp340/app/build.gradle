@@ -41,7 +41,7 @@ dependencies {
 apply plugin: 'com.bugsnag.android.gradle'
 
 bugsnag {
-    ndk true
+    uploadNdkMappings true
     endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
     releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
 

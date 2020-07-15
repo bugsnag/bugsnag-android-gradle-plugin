@@ -3,6 +3,9 @@
 Alter bugsnag tasks to support the Incremental Build API
 [#230](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/230)
 
+Rename properties on bugsnag extension that control request autoUpload
+[#231](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/231)
+
 Bump supported JDK version to 7
 [#224](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/224)
 

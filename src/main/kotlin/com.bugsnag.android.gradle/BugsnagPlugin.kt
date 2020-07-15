@@ -138,7 +138,7 @@ class BugsnagPlugin : Plugin<Project> {
         return project.tasks.register(taskName, BugsnagUploadProguardTask::class.java) {
             it.variantOutput = output
             it.variant = variant
-            addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.isAutoUpload)
+            addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.isUploadJvmMappings)
         }
     }
 
@@ -155,7 +155,7 @@ class BugsnagPlugin : Plugin<Project> {
             it.projectDir = project.projectDir
             it.rootDir = project.rootDir
             it.sharedObjectPath = bugsnag.sharedObjectPath
-            addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.isAutoUpload)
+            addTaskToExecutionGraph(it, variant, output, project, bugsnag, true)
         }
     }
 
@@ -167,7 +167,7 @@ class BugsnagPlugin : Plugin<Project> {
         return project.tasks.register(taskName, BugsnagReleasesTask::class.java) {
             it.variantOutput = output
             it.variant = variant
-            addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.isAutoReportBuilds)
+            addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.isReportBuilds)
         }
     }
 
@@ -195,7 +195,7 @@ class BugsnagPlugin : Plugin<Project> {
 
     private fun isNdkProject(bugsnag: BugsnagPluginExtension,
                              android: AppExtension): Boolean {
-        val ndk = bugsnag.ndk
+        val ndk = bugsnag.isUploadNdkMappings
         return if (ndk != null) { // always respect user override
             ndk
         } else { // infer whether native build or not
