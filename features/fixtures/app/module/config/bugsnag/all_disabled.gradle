@@ -1,6 +1,6 @@
 project.afterEvaluate {
     project.bugsnag.endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
     project.bugsnag.releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
-    project.bugsnag.autoUpload = false
-    project.bugsnag.autoReportBuilds = false
+    project.bugsnag.uploadJvmMappings = false
+    project.bugsnag.reportBuilds = false
 }

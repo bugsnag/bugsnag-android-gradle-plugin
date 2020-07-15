@@ -24,12 +24,12 @@ class PluginExtensionTest {
     @Test
     void ensureExtensionDefaults() {
         assertEquals("https://upload.bugsnag.com", proj.bugsnag.endpoint)
-        assertTrue(proj.bugsnag.autoUpload)
-        assertTrue(proj.bugsnag.autoReportBuilds)
+        assertTrue(proj.bugsnag.uploadJvmMappings)
+        assertTrue(proj.bugsnag.reportBuilds)
         assertFalse(proj.bugsnag.uploadDebugBuildMappings)
         assertFalse(proj.bugsnag.overwrite)
         assertEquals(0, proj.bugsnag.retryCount)
-        assertNull(proj.bugsnag.ndk)
+        assertNull(proj.bugsnag.uploadNdkMappings)
         assertNull(proj.bugsnag.sharedObjectPath)
         assertTrue(proj.bugsnag.failOnUploadError)
     }
