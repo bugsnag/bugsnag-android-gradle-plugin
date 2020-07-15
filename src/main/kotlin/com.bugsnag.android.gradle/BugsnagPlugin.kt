@@ -70,10 +70,7 @@ class BugsnagPlugin : Plugin<Project> {
         if (buildTasks.isNotEmpty()) {
             val ndkSetupTask = project.tasks.create("bugsnagInstallJniLibsTask", BugsnagInstallJniLibsTask::class.java)
             ndkSetupTask.mustRunAfter(cleanTasks)
-            buildTasks.forEach {
-                it.dependsOn(ndkSetupTask)
-                it.doFirst { ndkSetupTask }
-            }
+            buildTasks.forEach { it.dependsOn(ndkSetupTask) }
         }
     }
 

@@ -1,5 +1,8 @@
 ## 5.0.0 (TBD)
 
+Alter bugsnag tasks to support the Incremental Build API
+[#230](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/230)
+
 Bump supported JDK version to 7
 [#224](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/224)
 
