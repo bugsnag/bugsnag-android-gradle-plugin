@@ -1,12 +1,10 @@
 package com.bugsnag.android.gradle
 
 import org.gradle.api.DefaultTask
-import org.gradle.api.artifacts.ResolvedArtifact
-import org.gradle.api.artifacts.ResolvedConfiguration
-import org.gradle.api.artifacts.ResolvedDependency
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
-import java.util.stream.Collectors
 
 open class BugsnagInstallJniLibsTask : DefaultTask() {
 
@@ -15,53 +13,40 @@ open class BugsnagInstallJniLibsTask : DefaultTask() {
         group = BugsnagPlugin.GROUP_NAME
     }
 
-    @TaskAction
-    fun setupNdkProject() {
-        val artifacts = HashSet<ResolvedArtifact>()
+    private val sharedObjectAarIds = listOf("bugsnag-android", "bugsnag-android-ndk",
+        "bugsnag-plugin-android-anr", "bugsnag-plugin-android-ndk")
 
-        findCompileConfigurations().forEach { config ->
-            config.firstLevelModuleDependencies.stream()
-                .filter { (it.moduleGroup == "com.bugsnag") }
-                .forEach {
-                    artifacts.addAll(resolveArtifacts(it))
-                }
-        }
-        artifacts.forEach { copyArtifact(it) }
-    }
+    @get:OutputDirectory
+    var buildDirDestination = File(project.buildDir, "/intermediates/bugsnag-libs")
 
-    fun resolveArtifacts(dependency: ResolvedDependency): Set<ResolvedArtifact> {
-        return dependency.allModuleArtifacts.filter {
-            val identifier = it.id.componentIdentifier.toString()
-            val soArtefacts = listOf("bugsnag-android", "bugsnag-android-ndk",
-                "bugsnag-plugin-android-anr", "bugsnag-plugin-android-ndk")
-
-            val isBugsnagArtefact = soArtefacts.stream().anyMatch {
-                identifier.contains(it)
-            }
-            isBugsnagArtefact
-        }.toSet()
-    }
-
-    fun copyArtifact(artifact: ResolvedArtifact) {
-        val artifactFile = artifact.file
-        val buildDir = project.buildDir
-        val dst = File(buildDir, "/intermediates/bugsnag-libs")
-
-        project.copy {
-            it.from(project.zipTree(artifactFile))
-            it.into(project.file(dst))
-        }
-    }
+    @get:InputFiles
+    var bugsnagArtefacts = resolveBugsnagArtefacts()
 
     /**
-     * @return the ResolvedConfiguration for any gradle configurations which add compile-time dependencies.
-     * e.g. if 'bugsnag-android' is added as a dependency, it will be part of the 'api' configuration.
+     * Looks at all the dependencies and their dependencies and finds the `com.bugsnag` artifacts with SO files.
      */
-    private fun findCompileConfigurations(): Set<ResolvedConfiguration> {
+    @TaskAction
+    fun setupNdkProject() {
+        bugsnagArtefacts.forEach { file: File ->
+            project.copy {
+                it.from(project.zipTree(file))
+                it.into(project.file(buildDirDestination))
+            }
+        }
+    }
+
+    private fun resolveBugsnagArtefacts(): Set<File> {
         return project.configurations
             .filter { it.toString().contains("CompileClasspath") }
-            .stream()
             .map { it.resolvedConfiguration }
-            .collect(Collectors.toSet())
+            .flatMap { it.firstLevelModuleDependencies }
+            .filter { it.moduleGroup == "com.bugsnag" }
+            .flatMap { it.allModuleArtifacts }
+            .filter {
+                val identifier = it.id.componentIdentifier.toString()
+                sharedObjectAarIds.any { bugsnagId -> identifier.contains(bugsnagId) }
+            }
+            .map { it.file }
+            .toSet()
     }
 }
