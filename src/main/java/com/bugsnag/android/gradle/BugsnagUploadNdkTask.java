@@ -14,6 +14,7 @@ import org.apache.tools.ant.taskdefs.condition.Os;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.xml.sax.SAXException;
@@ -59,6 +60,7 @@ public class BugsnagUploadNdkTask extends DefaultTask {
 
     ApkVariantOutput variantOutput;
     ApkVariant variant;
+    Property<AndroidManifestInfo> manifestInfoProvider;
 
     public BugsnagUploadNdkTask() {
         super();
@@ -279,7 +281,7 @@ public class BugsnagUploadNdkTask extends DefaultTask {
         BugsnagMultiPartUploadRequest request = new BugsnagMultiPartUploadRequest();
         request.variant = variant;
         request.variantOutput = variantOutput;
-        request.uploadMultipartEntity(mpEntity, getProject());
+        request.uploadMultipartEntity(mpEntity, getProject(), manifestInfoProvider.get());
     }
 
     /**

@@ -1,20 +1,18 @@
 package com.bugsnag.android.gradle;
 
 import com.android.build.gradle.api.ApkVariant;
-import com.android.build.gradle.api.ApkVariant;
 import com.android.build.gradle.api.ApkVariantOutput;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.process.ExecSpec;
 import org.gradle.process.internal.ExecException;
 import org.json.simple.JSONObject;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -43,6 +41,7 @@ public class BugsnagReleasesTask extends DefaultTask {
 
     ApkVariantOutput variantOutput;
     ApkVariant variant;
+    Property<AndroidManifestInfo> manifestInfoProvider;
 
     public BugsnagReleasesTask() {
         super();
@@ -51,15 +50,11 @@ public class BugsnagReleasesTask extends DefaultTask {
     }
 
     @TaskAction
-    void fetchReleaseInfo() throws IOException, SAXException, ParserConfigurationException {
+    void fetchReleaseInfo() {
         Project project = getProject();
-        final AndroidManifestInfo manifestInfo = BugsnagVariantOutputUtils.readManifestFile(project, variant, variantOutput);
+        final AndroidManifestInfo manifestInfo = manifestInfoProvider.get();
         Logger logger = project.getLogger();
 
-        if (!isValidPayload(manifestInfo.getApiKey(), manifestInfo.getVersionName())) {
-            logger.warn("Must supply api key and version name for release task");
-            return;
-        }
         final BugsnagPluginExtension bugsnag = project.getExtensions().getByType(BugsnagPluginExtension.class);
         final JSONObject payload = generateJsonPayload(manifestInfo, bugsnag);
         String json = payload.toString();
