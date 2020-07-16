@@ -1,6 +1,5 @@
 package com.bugsnag.android.gradle
 
-import static com.bugsnag.android.gradle.BugsnagReleasesTask.isValidPayload
 import static com.bugsnag.android.gradle.BugsnagReleasesTask.isValidVcsProvider
 import static com.bugsnag.android.gradle.BugsnagReleasesTask.parseProviderUrl
 import static org.junit.Assert.assertEquals
@@ -29,16 +28,6 @@ class BugsnagReleasesTest {
     @Test
     void ensureInvalidProviderException() throws Exception {
         assertFalse(isValidVcsProvider("foo"))
-    }
-
-    @Test
-    void ensureValidPayload() throws Exception {
-        assertTrue(isValidPayload("foo", "bar"))
-    }
-
-    @Test
-    void ensureInvalidPayload() throws Exception {
-        assertFalse(isValidPayload(null, null))
     }
 
     @Test

@@ -4,11 +4,25 @@
   <Whitelist>
     <ID>ComplexCondition:AndroidManifestParser.kt$AndroidManifestParser$apiKey == null || versionCode == null || buildUUID == null || versionName == null</ID>
     <ID>LongParameterList:BugsnagPlugin.kt$BugsnagPlugin$(task: Task, variant: ApkVariant, output: ApkVariantOutput, project: Project, bugsnag: BugsnagPluginExtension, autoUpload: Boolean)</ID>
+    <ID>MagicNumber:BugsnagMultiPartUploadRequest.kt$BugsnagMultiPartUploadRequest$200</ID>
     <ID>MagicNumber:BugsnagPluginExtension.kt$BugsnagPluginExtension$60000</ID>
+    <ID>MagicNumber:BugsnagReleasesTask.kt$BugsnagReleasesTask$200</ID>
+    <ID>MagicNumber:BugsnagUploadNdkTask.kt$BugsnagUploadNdkTask.Companion$8192</ID>
     <ID>MaxLineLength:AndroidManifestParser.kt$AndroidManifestParser$throw IllegalStateException("Missing apiKey/versionCode/buildUuid/versionName, required to upload to bugsnag.")</ID>
     <ID>MaxLineLength:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$private</ID>
+    <ID>MaxLineLength:BugsnagReleasesTask.kt$BugsnagReleasesTask$private</ID>
+    <ID>MaxLineLength:BugsnagUploadNdkTask.kt$BugsnagUploadNdkTask$check(!(!objDumpFile.exists() || !objDumpFile.canExecute())) { "Failed to find executable objdump at $objDumpFile" }</ID>
+    <ID>MaxLineLength:BugsnagUploadNdkTask.kt$BugsnagUploadNdkTask.Companion$return File("$ndkDir/toolchains/${abi.toolchainPrefix}-4.9/prebuilt/$osName/bin/${abi.objdumpPrefix}-$executable")</ID>
+    <ID>NestedBlockDepth:BugsnagReleasesTask.kt$BugsnagReleasesTask$deliverPayload</ID>
+    <ID>NestedBlockDepth:BugsnagUploadNdkTask.kt$BugsnagUploadNdkTask$findSharedObjectFiles</ID>
     <ID>ReturnCount:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$private fun getManifestOutputDir(processManifest: ManifestProcessorTask, project: Project): File?</ID>
+    <ID>ReturnCount:BugsnagMultiPartUploadRequest.kt$BugsnagMultiPartUploadRequest$private fun uploadToServer(project: Project, mpEntity: MultipartEntity?, bugsnag: BugsnagPluginExtension): Boolean</ID>
+    <ID>ReturnCount:BugsnagReleasesTask.kt$BugsnagReleasesTask$private fun deliverPayload(payload: JSONObject, manifestInfo: AndroidManifestInfo, bugsnag: BugsnagPluginExtension): Boolean</ID>
+    <ID>SpreadOperator:BugsnagReleasesTask.kt$BugsnagReleasesTask$(*cmd)</ID>
     <ID>TooGenericExceptionCaught:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$exc: Throwable</ID>
+    <ID>TooGenericExceptionCaught:BugsnagUploadNdkTask.kt$BugsnagUploadNdkTask$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:BugsnagUploadNdkTask.kt$BugsnagUploadNdkTask$ex: Throwable</ID>
+    <ID>TooGenericExceptionCaught:BugsnagUploadProguardTask.kt$BugsnagUploadProguardTask$exc: Throwable</ID>
     <ID>TooManyFunctions:BugsnagPlugin.kt$BugsnagPlugin$BugsnagPlugin</ID>
   </Whitelist>
 </SmellBaseline>
