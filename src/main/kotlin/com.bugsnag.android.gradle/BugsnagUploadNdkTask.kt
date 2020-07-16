@@ -200,7 +200,7 @@ open class BugsnagUploadNdkTask : DefaultTask() {
             val override = getObjDumpOverride(arch)
             val objDumpFile: File
             objDumpFile = override?.let { File(it) } ?: findObjDump(project, arch)
-            check(!(!objDumpFile.exists() || !objDumpFile.canExecute())) { "Failed to find executable objdump at $objDumpFile" }
+            check((objDumpFile.exists() && objDumpFile.canExecute())) { "Failed to find executable objdump at $objDumpFile" }
             return objDumpFile
         } catch (ex: Throwable) {
             project.logger.error("Error attempting to calculate objdump location: " + ex.message)

@@ -30,7 +30,6 @@ open class BugsnagReleasesTask : DefaultTask() {
 
     @TaskAction
     fun fetchReleaseInfo() {
-        val project = project
         val manifestInfo = manifestInfoProvider.get()
         val logger = project.logger
         val bugsnag = project.extensions.getByType(BugsnagPluginExtension::class.java)
