@@ -18,7 +18,7 @@ class AndroidManifestParser {
     private val namespace = Namespace("http://schemas.android.com/apk/res/android", "android")
 
     @Throws(ParserConfigurationException::class, SAXException::class, IOException::class)
-    fun readManifest(manifestPath: File?, logger: Logger): AndroidManifestInfo {
+    fun readManifest(manifestPath: File, logger: Logger): AndroidManifestInfo {
         logger.debug("Reading manifest at: \${manifestPath}")
         val root = XmlParser().parse(manifestPath)
         val application = (root[TAG_APPLICATION] as NodeList)[0] as Node
@@ -48,6 +48,9 @@ class AndroidManifestParser {
         val versionName = getVersionName(metadataTags, root)
         if (versionName == null) {
             logger.warn("Could not find 'android:versionName' value in your AndroidManifest.xml")
+        }
+        if (apiKey == null || versionCode == null || buildUUID == null || versionName == null) {
+            throw IllegalStateException("Missing apiKey/versionCode/buildUuid/versionName, required to upload to bugsnag.")
         }
         return AndroidManifestInfo(apiKey, versionCode, buildUUID, versionName)
     }

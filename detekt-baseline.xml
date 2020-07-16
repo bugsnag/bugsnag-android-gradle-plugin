@@ -2,8 +2,13 @@
 <SmellBaseline>
   <Blacklist></Blacklist>
   <Whitelist>
+    <ID>ComplexCondition:AndroidManifestParser.kt$AndroidManifestParser$apiKey == null || versionCode == null || buildUUID == null || versionName == null</ID>
     <ID>LongParameterList:BugsnagPlugin.kt$BugsnagPlugin$(task: Task, variant: ApkVariant, output: ApkVariantOutput, project: Project, bugsnag: BugsnagPluginExtension, autoUpload: Boolean)</ID>
     <ID>MagicNumber:BugsnagPluginExtension.kt$BugsnagPluginExtension$60000</ID>
+    <ID>MaxLineLength:AndroidManifestParser.kt$AndroidManifestParser$throw IllegalStateException("Missing apiKey/versionCode/buildUuid/versionName, required to upload to bugsnag.")</ID>
+    <ID>MaxLineLength:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$private</ID>
+    <ID>ReturnCount:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$private fun getManifestOutputDir(processManifest: ManifestProcessorTask, project: Project): File?</ID>
+    <ID>TooGenericExceptionCaught:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$exc: Throwable</ID>
     <ID>TooManyFunctions:BugsnagPlugin.kt$BugsnagPlugin$BugsnagPlugin</ID>
   </Whitelist>
 </SmellBaseline>

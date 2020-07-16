@@ -13,13 +13,10 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
@@ -43,12 +40,11 @@ public class BugsnagMultiPartUploadRequest {
     ApkVariantOutput variantOutput;
     ApkVariant variant;
 
-    void uploadMultipartEntity(MultipartEntity mpEntity, Project project) throws IOException, SAXException, ParserConfigurationException {
-        AndroidManifestInfo manifestInfo = BugsnagVariantOutputUtils.readManifestFile(project, variant, variantOutput);
+    void uploadMultipartEntity(MultipartEntity mpEntity, Project project, AndroidManifestInfo manifestInfo) throws IOException {
         Logger logger = project.getLogger();
         BugsnagPluginExtension bugsnag = (BugsnagPluginExtension) project.getExtensions().getByName("bugsnag");
 
-        if (manifestInfo.getApiKey() == null || manifestInfo.getApiKey().equals("")) {
+        if (manifestInfo.getApiKey().equals("")) {
             logger.warn("Skipping upload due to invalid parameters");
             if (bugsnag.isFailOnUploadError()) {
                 throw new GradleException("Aborting upload due to invalid parameters");
@@ -79,14 +75,8 @@ public class BugsnagMultiPartUploadRequest {
         mpEntity.addPart("apiKey", new StringBody(manifestInfo.getApiKey()));
         mpEntity.addPart("appId", new StringBody(variant.getApplicationId()));
         mpEntity.addPart("versionCode", new StringBody(manifestInfo.getVersionCode()));
-
-        if (manifestInfo.getBuildUUID() != null) {
-            mpEntity.addPart("buildUUID", new StringBody(manifestInfo.getBuildUUID()));
-        }
-
-        if (manifestInfo.getVersionName() != null) {
-            mpEntity.addPart("versionName", new StringBody(manifestInfo.getVersionName()));
-        }
+        mpEntity.addPart("buildUUID", new StringBody(manifestInfo.getBuildUUID()));
+        mpEntity.addPart("versionName", new StringBody(manifestInfo.getVersionName()));
 
         if (bugsnag.isOverwrite()) {
             mpEntity.addPart("overwrite", new StringBody("true"));

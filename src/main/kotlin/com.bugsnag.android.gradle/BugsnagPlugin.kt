@@ -6,15 +6,11 @@ import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
-import com.android.build.gradle.tasks.ManifestProcessorTask
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
 
 /**
  * Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.
@@ -35,8 +31,8 @@ class BugsnagPlugin : Plugin<Project> {
     companion object {
         const val GROUP_NAME = "Bugsnag"
         private const val CLEAN_TASK = "Clean"
-        private const val ASSEMBLE_TASK = "assemble"
-        private const val BUNDLE_TASK = "bundle"
+        const val ASSEMBLE_TASK = "assemble"
+        const val BUNDLE_TASK = "bundle"
     }
 
     override fun apply(project: Project) {
@@ -103,19 +99,21 @@ class BugsnagPlugin : Plugin<Project> {
             // if the packageApplication task will run. This uses the configuration avoidance API,
             // see https://docs.gradle.org/current/userguide/task_configuration_avoidance.html
             findAssembleBundleTasks(project, variant, output).forEach {
-                manifestUuidTask.get()
-                proguardTask?.get()
-                symbolFileTask?.get()
-                releasesTask.get()
+                // give all tasks a manifest info provider to prevent reading
+                // the manifest more than once
+                val manifestInfoProvider = manifestUuidTask.get().manifestInfoProvider
+                proguardTask?.get()?.manifestInfoProvider = manifestInfoProvider
+                symbolFileTask?.get()?.manifestInfoProvider = manifestInfoProvider
+                releasesTask.get().manifestInfoProvider = manifestInfoProvider
             }
         }
     }
 
     private fun registerManifestUuidTask(project: Project,
                                          variant: ApkVariant,
-                                         output: ApkVariantOutput): TaskProvider<BugsnagManifestTask> {
+                                         output: ApkVariantOutput): TaskProvider<BugsnagManifestUuidTask> {
         val taskName = "processBugsnag${taskNameForOutput(output)}Manifest"
-        return project.tasks.register(taskName, BugsnagManifestTask::class.java) {
+        return project.tasks.register(taskName, BugsnagManifestUuidTask::class.java) {
             it.variantOutput = output
             it.variant = variant
             val processManifest = output.processManifestProvider.getOrNull()
@@ -233,7 +231,7 @@ class BugsnagPlugin : Plugin<Project> {
      *
      * E.g. [bundle, bundleRelease, bundleFooRelease]
      */
-    private fun findTaskNamesForPrefix(variant: ApkVariant,
+    internal fun findTaskNamesForPrefix(variant: ApkVariant,
                                        output: ApkVariantOutput,
                                        prefix: String): Set<String> {
         val variantName = output.name.split("-")[0].capitalize()
@@ -253,16 +251,6 @@ class BugsnagPlugin : Plugin<Project> {
             taskNames.add(variantTaskName.replace(ASSEMBLE_TASK, prefix))
         }
         return taskNames
-    }
-
-    fun resolveBundleManifestOutputDirectory(processManifest: ManifestProcessorTask): File {
-        // For AGP versions >= 3.3.0 the bundle manifest is output to its own directory
-        val method = processManifest.javaClass.getDeclaredMethod("getBundleManifestOutputDirectory")
-        return when (val directory = method.invoke(processManifest)) {
-            is File -> directory // 3.3.X - 3.5.X returns a File
-            is DirectoryProperty -> directory.asFile.get() // 3.6.+ returns a DirectoryProperty
-            else -> throw IllegalStateException()
-        }
     }
 
     fun taskNameForVariant(variant: ApkVariant): String {
@@ -295,41 +283,5 @@ class BugsnagPlugin : Plugin<Project> {
             outputSize += variant.outputs.count()
         }
         return outputSize > variantSize
-    }
-
-    /**
-     * Whether or not an assemble task is going to be run for this variant
-     */
-    fun isRunningAssembleTask(project: Project,
-                              variant: ApkVariant,
-                              output: ApkVariantOutput): Boolean {
-        return isRunningTaskWithPrefix(project, variant, output, ASSEMBLE_TASK)
-    }
-
-    /**
-     * Whether or not a bundle task is going to be run for this variant
-     */
-    fun isRunningBundleTask(project: Project,
-                            variant: ApkVariant,
-                            output: ApkVariantOutput): Boolean {
-        return isRunningTaskWithPrefix(project, variant, output, BUNDLE_TASK)
-    }
-
-    /**
-     * Whether or any of a list of the task names for a prefix are going to be run by checking the list
-     * against all of the tasks in the task graph
-     */
-    private fun isRunningTaskWithPrefix(project: Project,
-                                        variant: ApkVariant,
-                                        output: ApkVariantOutput,
-                                        prefix: String): Boolean {
-        val taskNames = HashSet<String>()
-        taskNames.addAll(findTaskNamesForPrefix(variant, output, prefix))
-
-        return project.gradle.taskGraph.allTasks.any { task ->
-            taskNames.any {
-                task.name.endsWith(it)
-            }
-        }
     }
 }

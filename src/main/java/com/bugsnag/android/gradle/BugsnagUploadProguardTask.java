@@ -11,6 +11,7 @@ import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.TaskAction;
 import org.xml.sax.SAXException;
 
@@ -37,6 +38,7 @@ public class BugsnagUploadProguardTask extends DefaultTask {
 
     ApkVariantOutput variantOutput;
     ApkVariant variant;
+    Property<AndroidManifestInfo> manifestInfoProvider;
 
     public BugsnagUploadProguardTask() {
         super();
@@ -67,7 +69,6 @@ public class BugsnagUploadProguardTask extends DefaultTask {
         }
 
         // Read the API key and Build ID etc..
-        BugsnagVariantOutputUtils.readManifestFile(project, variant, variantOutput);
         logger.info("Attempting to upload mapping file: ${mappingFile}");
 
         // Construct a basic request
@@ -79,7 +80,7 @@ public class BugsnagUploadProguardTask extends DefaultTask {
         BugsnagMultiPartUploadRequest request = new BugsnagMultiPartUploadRequest();
         request.variant = variant;
         request.variantOutput = variantOutput;
-        request.uploadMultipartEntity(mpEntity, getProject());
+        request.uploadMultipartEntity(mpEntity, getProject(), manifestInfoProvider.get());
     }
 
     private File findMappingFile(Project project) {
