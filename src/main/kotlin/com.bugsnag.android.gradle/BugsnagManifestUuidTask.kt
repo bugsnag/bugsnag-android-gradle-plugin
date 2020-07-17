@@ -15,6 +15,16 @@ import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.nio.file.Paths
 
+abstract class BaseBugsnagManifestUuidTask : DefaultTask() {
+    init {
+        group = BugsnagPlugin.GROUP_NAME
+        description = "Adds a unique build UUID to AndroidManifest to link proguard mappings to crash reports"
+    }
+
+    @get:Internal
+    val manifestInfoProvider: Property<AndroidManifestInfo> = project.objects.property(AndroidManifestInfo::class.java)
+}
+
 /**
  * Task to add a unique build UUID to AndroidManifest.xml during the build
  * process. This is used by Bugsnag to identify which proguard mapping file
@@ -25,18 +35,10 @@ import java.nio.file.Paths
  * This task must be called after "process${variantName}Manifest", since it
  * requires that an AndroidManifest.xml exists in `build/intermediates`.
  */
-abstract class BugsnagManifestUuidTask : DefaultTask() {
-
-    init {
-        group = BugsnagPlugin.GROUP_NAME
-        description = "Adds a unique build UUID to AndroidManifest to link proguard mappings to crash reports"
-    }
+abstract class BugsnagManifestUuidTask : BaseBugsnagManifestUuidTask() {
 
     lateinit var variantOutput: ApkVariantOutput
     lateinit var variant: ApkVariant
-
-    @get:Internal
-    val manifestInfoProvider: Property<AndroidManifestInfo> = project.objects.property(AndroidManifestInfo::class.java)
 
     @TaskAction
     fun updateManifest() {
