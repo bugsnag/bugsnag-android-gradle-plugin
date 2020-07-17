@@ -1,9 +1,6 @@
 package com.bugsnag.android.gradle
 
-import org.gradle.api.internal.classpath.ManifestUtil
-
 import com.android.Version
-import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
@@ -13,9 +10,9 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.util.VersionNumber
 
 /**
-An AGP 4.1-compatible version of {@link BugsnagManifestTask}.
+ * An AGP-4-compatible implementation of [BugsnagManifestUuidTask].
  */
-abstract class BugsnagManifestuuidTaskV2 : DefaultTask() {
+abstract class BugsnagManifestUuidTaskV2 : BaseBugsnagManifestUuidTask() {
 
     internal companion object {
         val MIN_AGP_VERSION: VersionNumber = VersionNumber.parse("4.1.0-alpha04")
@@ -46,6 +43,8 @@ abstract class BugsnagManifestuuidTaskV2 : DefaultTask() {
     @TaskAction
     fun updateManifest() {
         val manifestParser = AndroidManifestParser()
+        val output = updatedManifest.asFile.get()
         manifestParser.writeBuildUuid(mergedManifest.asFile.get(), updatedManifest.asFile.get())
+        manifestInfoProvider.set(manifestParser.readManifest(output, logger))
     }
 }
