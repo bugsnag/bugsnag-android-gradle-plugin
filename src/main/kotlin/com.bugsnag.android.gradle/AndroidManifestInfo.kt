@@ -29,6 +29,7 @@ data class AndroidManifestInfo(
             "versionName"
         )
 
+        @Suppress("MagicNumber") // They are indices into the OPTIONS field above
         private val ADAPTER = object : JsonAdapter<AndroidManifestInfo>() {
             override fun fromJson(reader: JsonReader): AndroidManifestInfo? {
                 if (reader.peek() == NULL) {
