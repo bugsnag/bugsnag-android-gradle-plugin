@@ -30,10 +30,10 @@ abstract class BugsnagManifestUuidTaskV2 : BaseBugsnagManifestUuidTask() {
     // NONE because we only care about its contents, not location.
     @get:PathSensitive(PathSensitivity.NONE)
     @get:InputFile
-    abstract val mergedManifest: RegularFileProperty
+    abstract val inputManifest: RegularFileProperty
 
     @get:OutputFile
-    abstract val updatedManifest: RegularFileProperty
+    abstract val outputManifest: RegularFileProperty
 
     init {
         group = BugsnagPlugin.GROUP_NAME
@@ -43,10 +43,10 @@ abstract class BugsnagManifestUuidTaskV2 : BaseBugsnagManifestUuidTask() {
     @TaskAction
     fun updateManifest() {
         val manifestParser = AndroidManifestParser()
-        val output = updatedManifest.asFile.get()
+        val output = outputManifest.asFile.get()
         manifestParser.writeBuildUuid(
-            mergedManifest.asFile.get(),
-            updatedManifest.asFile.get(),
+            inputManifest.asFile.get(),
+            outputManifest.asFile.get(),
             buildUuid = buildUuid.get()
         )
         writeManifestInfo(manifestParser.readManifest(output, logger))
