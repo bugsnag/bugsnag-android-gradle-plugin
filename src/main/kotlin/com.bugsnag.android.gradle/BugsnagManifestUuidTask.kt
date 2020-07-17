@@ -10,6 +10,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.nio.file.Paths
@@ -25,7 +26,7 @@ import java.util.UUID
  * This task must be called after "process${variantName}Manifest", since it
  * requires that an AndroidManifest.xml exists in `build/intermediates`.
  */
-open class BugsnagManifestUuidTask : DefaultTask() {
+abstract class BugsnagManifestUuidTask : DefaultTask() {
 
     init {
         group = BugsnagPlugin.GROUP_NAME
@@ -34,6 +35,8 @@ open class BugsnagManifestUuidTask : DefaultTask() {
 
     lateinit var variantOutput: ApkVariantOutput
     lateinit var variant: ApkVariant
+
+    @get:Internal
     val manifestInfoProvider: Property<AndroidManifestInfo> = project.objects.property(AndroidManifestInfo::class.java)
 
     @TaskAction
@@ -43,13 +46,11 @@ open class BugsnagManifestUuidTask : DefaultTask() {
             project.logger.warn("Failed to find manifest at $manifestPath for $variantOutput")
         }
 
-        // Uniquely identify the build so that we can identify the proguard file.
-        val buildUUID = UUID.randomUUID().toString()
         project.logger.lifecycle("Updating manifest with build UUID: $manifestPath")
 
         // read the manifest information and store it for subsequent tasks
         val manifestParser = AndroidManifestParser()
-        manifestParser.writeBuildUuid(manifestPath!!, buildUUID)
+        manifestParser.writeBuildUuid(manifestPath!!)
         manifestInfoProvider.set(manifestParser.readManifest(manifestPath, logger))
     }
 

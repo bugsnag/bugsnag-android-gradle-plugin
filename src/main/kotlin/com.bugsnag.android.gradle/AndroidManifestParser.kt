@@ -11,6 +11,7 @@ import java.io.File
 import java.io.FileWriter
 import java.io.IOException
 import java.io.PrintWriter
+import java.util.UUID
 import javax.xml.parsers.ParserConfigurationException
 
 class AndroidManifestParser {
@@ -56,7 +57,12 @@ class AndroidManifestParser {
     }
 
     @Throws(ParserConfigurationException::class, SAXException::class, IOException::class)
-    fun writeBuildUuid(manifestPath: File, buildUuid: String) {
+    fun writeBuildUuid(
+        manifestPath: File,
+        outputPath: File = manifestPath,
+        // Uniquely identify the build so that we can identify the proguard file.
+        buildUuid: String = UUID.randomUUID().toString()
+    ) {
         val root = XmlParser().parse(manifestPath)
         val application = (root[TAG_APPLICATION] as NodeList)[0] as Node
         val metadataTags = findMetadataTags(application)
@@ -70,7 +76,7 @@ class AndroidManifestParser {
             ))
 
             // Write the manifest file
-            FileWriter(manifestPath).use {
+            FileWriter(outputPath).use {
                 val printer = XmlNodePrinter(PrintWriter(it))
                 printer.isPreserveWhitespace = true
                 printer.print(root)
