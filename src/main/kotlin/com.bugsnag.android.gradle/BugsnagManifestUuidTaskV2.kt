@@ -15,7 +15,7 @@ import org.gradle.util.VersionNumber
 abstract class BugsnagManifestUuidTaskV2 : BaseBugsnagManifestUuidTask() {
 
     internal companion object {
-        val MIN_AGP_VERSION: VersionNumber = VersionNumber.parse("4.1.0-alpha04")
+        private val MIN_AGP_VERSION: VersionNumber = VersionNumber.parse("4.1.0-alpha04")
 
         fun isApplicable(): Boolean {
             return try {
@@ -45,6 +45,6 @@ abstract class BugsnagManifestUuidTaskV2 : BaseBugsnagManifestUuidTask() {
         val manifestParser = AndroidManifestParser()
         val output = updatedManifest.asFile.get()
         manifestParser.writeBuildUuid(mergedManifest.asFile.get(), updatedManifest.asFile.get())
-        manifestInfoProvider.set(manifestParser.readManifest(output, logger))
+        writeManifestInfo(manifestParser.readManifest(output, logger))
     }
 }

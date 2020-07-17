@@ -12,6 +12,8 @@ import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 
 /**
@@ -86,7 +88,7 @@ class BugsnagPlugin : Plugin<Project> {
             val ndkEnabled = isNdkProject(bugsnag, project.extensions.getByType(AppExtension::class.java))
 
             // register bugsnag tasks
-            val manifestUuidTask = registerManifestUuidTask(project, variant, output)
+            val manifestInfoFile = registerManifestUuidTask(project, variant, output)
             val proguardTask = when {
                 jvmMinificationEnabled -> registerProguardUploadTask(project, variant, output, bugsnag)
                 else -> null
@@ -103,10 +105,9 @@ class BugsnagPlugin : Plugin<Project> {
             findAssembleBundleTasks(project, variant, output).forEach {
                 // give all tasks a manifest info provider to prevent reading
                 // the manifest more than once
-                val manifestInfoProvider = manifestUuidTask.get().manifestInfoProvider
-                proguardTask?.get()?.manifestInfoProvider = manifestInfoProvider
-                symbolFileTask?.get()?.manifestInfoProvider = manifestInfoProvider
-                releasesTask.get().manifestInfoProvider = manifestInfoProvider
+                proguardTask?.get()?.manifestInfoFile?.set(manifestInfoFile)
+                symbolFileTask?.get()?.manifestInfoFile?.set(manifestInfoFile)
+                releasesTask.get().manifestInfoFile.set(manifestInfoFile)
             }
         }
     }
@@ -115,7 +116,7 @@ class BugsnagPlugin : Plugin<Project> {
         project: Project,
         variant: ApkVariant,
         output: ApkVariantOutput
-    ): TaskProvider<out BaseBugsnagManifestUuidTask> {
+    ): Provider<RegularFile> {
         val taskName = "processBugsnag${taskNameForOutput(output)}Manifest"
         return if (BugsnagManifestUuidTaskV2.isApplicable()) {
             val manifestUpdater = project.tasks.register(taskName, BugsnagManifestUuidTaskV2::class.java)
@@ -131,7 +132,7 @@ class BugsnagPlugin : Plugin<Project> {
                         .toTransform(ArtifactType.MERGED_MANIFEST)
                 }
             }
-            return manifestUpdater
+            return manifestUpdater.flatMap(BaseBugsnagManifestUuidTask::manifestInfoProvider)
         } else {
             project.tasks.register(taskName, BugsnagManifestUuidTask::class.java) {
                 it.variantOutput = output
@@ -142,7 +143,7 @@ class BugsnagPlugin : Plugin<Project> {
                     processManifest.finalizedBy(it)
                     it.dependsOn(processManifest)
                 }
-            }
+            }.flatMap(BaseBugsnagManifestUuidTask::manifestInfoProvider)
         }
     }
 

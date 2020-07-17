@@ -11,11 +11,9 @@ import org.apache.http.entity.mime.content.StringBody
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
 import java.io.InputStream
 import java.io.Reader
 import java.util.zip.GZIPOutputStream
@@ -33,7 +31,7 @@ import java.util.zip.GZIPOutputStream
  * it is usually safe to have this be the absolute last task executed during
  * a build.
  */
-open class BugsnagUploadNdkTask : DefaultTask() {
+abstract class BugsnagUploadNdkTask : DefaultTask(), AndroidManifestInfoReceiver {
 
     init {
         group = BugsnagPlugin.GROUP_NAME
@@ -47,7 +45,6 @@ open class BugsnagUploadNdkTask : DefaultTask() {
     var sharedObjectPath: String? = null
     lateinit var variantOutput: ApkVariantOutput
     lateinit var variant: ApkVariant
-    lateinit var manifestInfoProvider: Property<AndroidManifestInfo>
 
     @TaskAction
     fun upload() {
@@ -187,7 +184,7 @@ open class BugsnagUploadNdkTask : DefaultTask() {
         val request = BugsnagMultiPartUploadRequest()
         request.variant = variant
         request.variantOutput = variantOutput
-        request.uploadMultipartEntity(project, mpEntity, manifestInfoProvider.get())
+        request.uploadMultipartEntity(project, mpEntity, parseManifestInfo())
     }
 
     /**
