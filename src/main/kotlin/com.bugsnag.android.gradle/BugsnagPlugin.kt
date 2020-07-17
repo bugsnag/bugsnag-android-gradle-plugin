@@ -1,10 +1,12 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.ApplicationVariant
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
@@ -109,18 +111,37 @@ class BugsnagPlugin : Plugin<Project> {
         }
     }
 
-    private fun registerManifestUuidTask(project: Project,
-                                         variant: ApkVariant,
-                                         output: ApkVariantOutput): TaskProvider<BugsnagManifestUuidTask> {
+    private fun registerManifestUuidTask(
+        project: Project,
+        variant: ApkVariant,
+        output: ApkVariantOutput
+    ): TaskProvider<out BaseBugsnagManifestUuidTask> {
         val taskName = "processBugsnag${taskNameForOutput(output)}Manifest"
-        return project.tasks.register(taskName, BugsnagManifestUuidTask::class.java) {
-            it.variantOutput = output
-            it.variant = variant
-            val processManifest = output.processManifestProvider.getOrNull()
+        return if (BugsnagManifestUuidTaskV2.isApplicable()) {
+            val manifestUpdater = project.tasks.register(taskName, BugsnagManifestUuidTaskV2::class.java)
+            val android = project.extensions.getByType(BaseAppModuleExtension::class.java)
+            android.onVariants.withName(variant.name) {
+                onProperties {
+                    artifacts
+                        .use(manifestUpdater)
+                        .wiredWithFiles(
+                            BugsnagManifestUuidTaskV2::mergedManifest,
+                            BugsnagManifestUuidTaskV2::updatedManifest
+                        )
+                        .toTransform(ArtifactType.MERGED_MANIFEST)
+                }
+            }
+            return manifestUpdater
+        } else {
+            project.tasks.register(taskName, BugsnagManifestUuidTask::class.java) {
+                it.variantOutput = output
+                it.variant = variant
+                val processManifest = output.processManifestProvider.orNull
 
-            if (processManifest != null) {
-                processManifest.finalizedBy(it)
-                it.dependsOn(processManifest)
+                if (processManifest != null) {
+                    processManifest.finalizedBy(it)
+                    it.dependsOn(processManifest)
+                }
             }
         }
     }
