@@ -61,7 +61,7 @@ class AndroidManifestParser {
         manifestPath: File,
         outputPath: File = manifestPath,
         // Uniquely identify the build so that we can identify the proguard file.
-        buildUuid: String = UUID.randomUUID().toString()
+        buildUuid: String
     ) {
         val root = XmlParser().parse(manifestPath)
         val application = (root[TAG_APPLICATION] as NodeList)[0] as Node

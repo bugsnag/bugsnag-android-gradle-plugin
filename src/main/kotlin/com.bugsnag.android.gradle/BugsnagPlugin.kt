@@ -15,6 +15,7 @@ import org.gradle.api.Task
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import java.util.UUID
 
 /**
  * Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.
@@ -118,8 +119,11 @@ class BugsnagPlugin : Plugin<Project> {
         output: ApkVariantOutput
     ): Provider<RegularFile> {
         val taskName = "processBugsnag${taskNameForOutput(output)}Manifest"
+        val buildUuidProvider = project.provider { UUID.randomUUID().toString() }
         return if (BugsnagManifestUuidTaskV2.isApplicable()) {
-            val manifestUpdater = project.tasks.register(taskName, BugsnagManifestUuidTaskV2::class.java)
+            val manifestUpdater = project.tasks.register(taskName, BugsnagManifestUuidTaskV2::class.java) {
+                it.buildUuid.set(buildUuidProvider)
+            }
             val android = project.extensions.getByType(BaseAppModuleExtension::class.java)
             android.onVariants.withName(variant.name) {
                 onProperties {
@@ -135,6 +139,7 @@ class BugsnagPlugin : Plugin<Project> {
             return manifestUpdater.flatMap(BaseBugsnagManifestUuidTask::manifestInfoProvider)
         } else {
             project.tasks.register(taskName, BugsnagManifestUuidTask::class.java) {
+                it.buildUuid.set(buildUuidProvider)
                 it.variantOutput = output
                 it.variant = variant
                 val processManifest = output.processManifestProvider.orNull

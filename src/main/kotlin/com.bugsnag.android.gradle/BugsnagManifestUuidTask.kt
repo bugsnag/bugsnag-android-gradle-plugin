@@ -9,7 +9,9 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File
@@ -20,6 +22,9 @@ abstract class BaseBugsnagManifestUuidTask : DefaultTask() {
         group = BugsnagPlugin.GROUP_NAME
         description = "Adds a unique build UUID to AndroidManifest to link proguard mappings to crash reports"
     }
+
+    @get:Input
+    abstract val buildUuid: Property<String>
 
     @get:OutputFile
     abstract val manifestInfoProvider: RegularFileProperty
@@ -55,7 +60,7 @@ abstract class BugsnagManifestUuidTask : BaseBugsnagManifestUuidTask() {
 
         // read the manifest information and store it for subsequent tasks
         val manifestParser = AndroidManifestParser()
-        manifestParser.writeBuildUuid(manifestPath!!)
+        manifestParser.writeBuildUuid(manifestPath!!, buildUuid = buildUuid.get())
         writeManifestInfo(manifestParser.readManifest(manifestPath, logger))
     }
 

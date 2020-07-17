@@ -44,7 +44,11 @@ abstract class BugsnagManifestUuidTaskV2 : BaseBugsnagManifestUuidTask() {
     fun updateManifest() {
         val manifestParser = AndroidManifestParser()
         val output = updatedManifest.asFile.get()
-        manifestParser.writeBuildUuid(mergedManifest.asFile.get(), updatedManifest.asFile.get())
+        manifestParser.writeBuildUuid(
+            mergedManifest.asFile.get(),
+            updatedManifest.asFile.get(),
+            buildUuid = buildUuid.get()
+        )
         writeManifestInfo(manifestParser.readManifest(output, logger))
     }
 }
