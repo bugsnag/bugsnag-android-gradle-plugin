@@ -14,7 +14,6 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.nio.file.Paths
-import java.util.UUID
 
 /**
  * Task to add a unique build UUID to AndroidManifest.xml during the build
