@@ -13,6 +13,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File
@@ -48,7 +49,10 @@ abstract class BaseBugsnagManifestUuidTask(objects: ObjectFactory) : DefaultTask
  */
 open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) : BaseBugsnagManifestUuidTask(objects) {
 
+    @Internal
     lateinit var variantOutput: ApkVariantOutput
+
+    @Internal
     lateinit var variant: ApkVariant
 
     @TaskAction

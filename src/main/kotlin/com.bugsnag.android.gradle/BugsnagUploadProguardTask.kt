@@ -12,6 +12,7 @@ import org.gradle.api.Project
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
@@ -42,7 +43,10 @@ open class BugsnagUploadProguardTask @Inject constructor(
         description = "Uploads the mapping file to Bugsnag"
     }
 
+    @Internal
     lateinit var variantOutput: ApkVariantOutput
+
+    @Internal
     lateinit var variant: ApkVariant
 
     @get:PathSensitive(NONE)

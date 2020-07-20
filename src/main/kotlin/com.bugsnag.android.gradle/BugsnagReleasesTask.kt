@@ -7,6 +7,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
@@ -31,7 +32,10 @@ open class BugsnagReleasesTask @Inject constructor(
         description = "Assembles information about the build that will be sent to the releases API"
     }
 
+    @Internal
     lateinit var variantOutput: ApkVariantOutput
+
+    @Internal
     lateinit var variant: ApkVariant
 
     @get:PathSensitive(NONE)
@@ -41,11 +45,10 @@ open class BugsnagReleasesTask @Inject constructor(
     @TaskAction
     fun fetchReleaseInfo() {
         val manifestInfo = parseManifestInfo()
-        val logger = project.logger
         val bugsnag = project.extensions.getByType(BugsnagPluginExtension::class.java)
         val payload = generateJsonPayload(manifestInfo, bugsnag)
         val json = payload.toString()
-        logger.debug("Releases Payload:\n$json")
+        project.logger.debug("Releases Payload:\n$json")
 
         object : Call(project) {
             @Throws(IOException::class)
@@ -87,10 +90,8 @@ open class BugsnagReleasesTask @Inject constructor(
                 }
                 return false
             }
-        } catch (e: IOException) {
-            logger.error(bugsnag.releasesEndpoint)
-            logger.error("Failed to POST request", e)
-            return false
+        } catch (exc: IOException) {
+            throw IllegalStateException("Request to Bugsnag Releases API failed, aborting build.", exc)
         } finally {
             os?.close()
         }

@@ -30,7 +30,7 @@ class PluginExtensionTest {
         assertFalse(proj.bugsnag.overwrite)
         assertEquals(0, proj.bugsnag.retryCount)
         assertNull(proj.bugsnag.uploadNdkMappings)
-        assertNull(proj.bugsnag.sharedObjectPath)
+        assertEquals("", proj.bugsnag.sharedObjectPath)
         assertTrue(proj.bugsnag.failOnUploadError)
     }
 
