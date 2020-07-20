@@ -1,16 +1,21 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.ApplicationVariant
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import java.util.UUID
 
 /**
  * Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.
@@ -84,7 +89,7 @@ class BugsnagPlugin : Plugin<Project> {
             val ndkEnabled = isNdkProject(bugsnag, project.extensions.getByType(AppExtension::class.java))
 
             // register bugsnag tasks
-            val manifestUuidTask = registerManifestUuidTask(project, variant, output)
+            val manifestInfoFile = registerManifestUuidTask(project, variant, output)
             val proguardTask = when {
                 jvmMinificationEnabled -> registerProguardUploadTask(project, variant, output, bugsnag)
                 else -> null
@@ -101,27 +106,53 @@ class BugsnagPlugin : Plugin<Project> {
             findAssembleBundleTasks(project, variant, output).forEach {
                 // give all tasks a manifest info provider to prevent reading
                 // the manifest more than once
-                val manifestInfoProvider = manifestUuidTask.get().manifestInfoProvider
-                proguardTask?.get()?.manifestInfoProvider = manifestInfoProvider
-                symbolFileTask?.get()?.manifestInfoProvider = manifestInfoProvider
-                releasesTask.get().manifestInfoProvider = manifestInfoProvider
+                proguardTask?.get()?.manifestInfoFile?.set(manifestInfoFile)
+                symbolFileTask?.get()?.manifestInfoFile?.set(manifestInfoFile)
+                releasesTask.get().manifestInfoFile.set(manifestInfoFile)
             }
         }
     }
 
-    private fun registerManifestUuidTask(project: Project,
-                                         variant: ApkVariant,
-                                         output: ApkVariantOutput): TaskProvider<BugsnagManifestUuidTask> {
+    private fun registerManifestUuidTask(
+        project: Project,
+        variant: ApkVariant,
+        output: ApkVariantOutput
+    ): Provider<RegularFile> {
         val taskName = "processBugsnag${taskNameForOutput(output)}Manifest"
-        return project.tasks.register(taskName, BugsnagManifestUuidTask::class.java) {
-            it.variantOutput = output
-            it.variant = variant
-            val processManifest = output.processManifestProvider.getOrNull()
-
-            if (processManifest != null) {
-                processManifest.finalizedBy(it)
-                it.dependsOn(processManifest)
+        val buildUuidProvider = project.provider { UUID.randomUUID().toString() }
+        val path = "intermediates/bugsnag/manifestInfoFor${taskNameForOutput(output)}.json"
+        val manifestInfoOutputFile = project.layout.buildDirectory.file(path)
+        return if (BugsnagManifestUuidTaskV2.isApplicable()) {
+            val manifestUpdater = project.tasks.register(taskName, BugsnagManifestUuidTaskV2::class.java) {
+                it.buildUuid.set(buildUuidProvider)
+                it.manifestInfoProvider.set(manifestInfoOutputFile)
             }
+            val android = project.extensions.getByType(BaseAppModuleExtension::class.java)
+            android.onVariants.withName(variant.name) {
+                onProperties {
+                    artifacts
+                        .use(manifestUpdater)
+                        .wiredWithFiles(
+                            BugsnagManifestUuidTaskV2::inputManifest,
+                            BugsnagManifestUuidTaskV2::outputManifest
+                        )
+                        .toTransform(ArtifactType.MERGED_MANIFEST)
+                }
+            }
+            return manifestUpdater.flatMap(BaseBugsnagManifestUuidTask::manifestInfoProvider)
+        } else {
+            project.tasks.register(taskName, BugsnagManifestUuidTask::class.java) {
+                it.buildUuid.set(buildUuidProvider)
+                it.variantOutput = output
+                it.variant = variant
+                it.manifestInfoProvider.set(manifestInfoOutputFile)
+                val processManifest = output.processManifestProvider.orNull
+
+                if (processManifest != null) {
+                    processManifest.finalizedBy(it)
+                    it.dependsOn(processManifest)
+                }
+            }.flatMap(BaseBugsnagManifestUuidTask::manifestInfoProvider)
         }
     }
 

@@ -7,13 +7,34 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.nio.file.Paths
-import java.util.UUID
+import javax.inject.Inject
+
+abstract class BaseBugsnagManifestUuidTask(objects: ObjectFactory) : DefaultTask() {
+    init {
+        group = BugsnagPlugin.GROUP_NAME
+        description = "Adds a unique build UUID to AndroidManifest to link proguard mappings to crash reports"
+    }
+
+    @get:Input
+    val buildUuid: Property<String> = objects.property(String::class.java)
+
+    @get:OutputFile
+    val manifestInfoProvider: RegularFileProperty = objects.fileProperty()
+
+    fun writeManifestInfo(info: AndroidManifestInfo) {
+        info.write(manifestInfoProvider.get().asFile)
+    }
+}
 
 /**
  * Task to add a unique build UUID to AndroidManifest.xml during the build
@@ -25,16 +46,10 @@ import java.util.UUID
  * This task must be called after "process${variantName}Manifest", since it
  * requires that an AndroidManifest.xml exists in `build/intermediates`.
  */
-open class BugsnagManifestUuidTask : DefaultTask() {
-
-    init {
-        group = BugsnagPlugin.GROUP_NAME
-        description = "Adds a unique build UUID to AndroidManifest to link proguard mappings to crash reports"
-    }
+open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) : BaseBugsnagManifestUuidTask(objects) {
 
     lateinit var variantOutput: ApkVariantOutput
     lateinit var variant: ApkVariant
-    val manifestInfoProvider: Property<AndroidManifestInfo> = project.objects.property(AndroidManifestInfo::class.java)
 
     @TaskAction
     fun updateManifest() {
@@ -43,14 +58,12 @@ open class BugsnagManifestUuidTask : DefaultTask() {
             project.logger.warn("Failed to find manifest at $manifestPath for $variantOutput")
         }
 
-        // Uniquely identify the build so that we can identify the proguard file.
-        val buildUUID = UUID.randomUUID().toString()
         project.logger.lifecycle("Updating manifest with build UUID: $manifestPath")
 
         // read the manifest information and store it for subsequent tasks
         val manifestParser = AndroidManifestParser()
-        manifestParser.writeBuildUuid(manifestPath!!, buildUUID)
-        manifestInfoProvider.set(manifestParser.readManifest(manifestPath, logger))
+        manifestParser.writeBuildUuid(manifestPath!!, buildUuid = buildUuid.get())
+        writeManifestInfo(manifestParser.readManifest(manifestPath, logger))
     }
 
     /**

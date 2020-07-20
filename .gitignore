@@ -12,3 +12,5 @@ local.properties
 maze_output/
 package-lock.json
 .cxx
+
+*.iml

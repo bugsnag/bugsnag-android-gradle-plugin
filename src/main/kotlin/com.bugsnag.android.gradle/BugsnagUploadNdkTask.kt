@@ -11,14 +11,18 @@ import org.apache.http.entity.mime.content.StringBody
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
-import org.gradle.api.provider.Property
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
 import java.io.InputStream
 import java.io.Reader
 import java.util.zip.GZIPOutputStream
+import javax.inject.Inject
 
 /**
  * Task to upload shared object mapping files to Bugsnag.
@@ -33,7 +37,9 @@ import java.util.zip.GZIPOutputStream
  * it is usually safe to have this be the absolute last task executed during
  * a build.
  */
-open class BugsnagUploadNdkTask : DefaultTask() {
+open class BugsnagUploadNdkTask @Inject constructor(
+    objects: ObjectFactory
+) : DefaultTask(), AndroidManifestInfoReceiver {
 
     init {
         group = BugsnagPlugin.GROUP_NAME
@@ -47,7 +53,10 @@ open class BugsnagUploadNdkTask : DefaultTask() {
     var sharedObjectPath: String? = null
     lateinit var variantOutput: ApkVariantOutput
     lateinit var variant: ApkVariant
-    lateinit var manifestInfoProvider: Property<AndroidManifestInfo>
+
+    @get:PathSensitive(NONE)
+    @get:InputFile
+    override val manifestInfoFile: RegularFileProperty = objects.fileProperty()
 
     @TaskAction
     fun upload() {
@@ -187,7 +196,7 @@ open class BugsnagUploadNdkTask : DefaultTask() {
         val request = BugsnagMultiPartUploadRequest()
         request.variant = variant
         request.variantOutput = variantOutput
-        request.uploadMultipartEntity(project, mpEntity, manifestInfoProvider.get())
+        request.uploadMultipartEntity(project, mpEntity, parseManifestInfo())
     }
 
     /**
@@ -200,7 +209,9 @@ open class BugsnagUploadNdkTask : DefaultTask() {
             val override = getObjDumpOverride(arch)
             val objDumpFile: File
             objDumpFile = override?.let { File(it) } ?: findObjDump(project, arch)
-            check((objDumpFile.exists() && objDumpFile.canExecute())) { "Failed to find executable objdump at $objDumpFile" }
+            check((objDumpFile.exists() && objDumpFile.canExecute())) {
+                "Failed to find executable objdump at $objDumpFile"
+            }
             return objDumpFile
         } catch (ex: Throwable) {
             project.logger.error("Error attempting to calculate objdump location: " + ex.message)

@@ -3,8 +3,12 @@ package com.bugsnag.android.gradle
 import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.LogLevel
-import org.gradle.api.provider.Property
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.internal.ExecException
 import org.json.simple.JSONObject
@@ -16,8 +20,11 @@ import java.io.OutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.Charset
+import javax.inject.Inject
 
-open class BugsnagReleasesTask : DefaultTask() {
+open class BugsnagReleasesTask @Inject constructor(
+    objects: ObjectFactory
+) : DefaultTask(), AndroidManifestInfoReceiver {
 
     init {
         group = BugsnagPlugin.GROUP_NAME
@@ -26,11 +33,14 @@ open class BugsnagReleasesTask : DefaultTask() {
 
     lateinit var variantOutput: ApkVariantOutput
     lateinit var variant: ApkVariant
-    lateinit var manifestInfoProvider: Property<AndroidManifestInfo>
+
+    @get:PathSensitive(NONE)
+    @get:InputFile
+    override val manifestInfoFile: RegularFileProperty = objects.fileProperty()
 
     @TaskAction
     fun fetchReleaseInfo() {
-        val manifestInfo = manifestInfoProvider.get()
+        val manifestInfo = parseManifestInfo()
         val logger = project.logger
         val bugsnag = project.extensions.getByType(BugsnagPluginExtension::class.java)
         val payload = generateJsonPayload(manifestInfo, bugsnag)

@@ -1,5 +1,8 @@
 ## 5.0.0 (TBD)
 
+Support for manifest processing in AGP 4.1.0-alpha04 and above
+[#234](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/234)
+
 Alter bugsnag tasks to support the Incremental Build API
 [#230](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/230)
 
