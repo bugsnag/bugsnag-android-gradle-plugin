@@ -180,7 +180,6 @@ class BugsnagPlugin : Plugin<Project> {
         return project.tasks.register(taskName, BugsnagUploadNdkTask::class.java) {
             it.variantOutput = output
             it.variant = variant
-            it.variantName = taskNameForVariant(variant)
             it.projectDir = project.projectDir
             it.rootDir = project.rootDir
             it.sharedObjectPath = bugsnag.sharedObjectPath

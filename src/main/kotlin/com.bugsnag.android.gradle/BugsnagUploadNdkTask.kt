@@ -13,7 +13,9 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
@@ -46,17 +48,26 @@ open class BugsnagUploadNdkTask @Inject constructor(
         description = "Generates and uploads the NDK mapping file(s) to Bugsnag"
     }
 
-    private var symbolPath: File? = null
-    lateinit var variantName: String
+    @Internal
     lateinit var projectDir: File
+
+    @Internal
     lateinit var rootDir: File
-    var sharedObjectPath: String? = null
-    lateinit var variantOutput: ApkVariantOutput
-    lateinit var variant: ApkVariant
+
+    @Input
+    lateinit var sharedObjectPath: String
 
     @get:PathSensitive(NONE)
     @get:InputFile
     override val manifestInfoFile: RegularFileProperty = objects.fileProperty()
+
+    @Internal
+    lateinit var variantOutput: ApkVariantOutput
+
+    @Internal
+    lateinit var variant: ApkVariant
+
+    private var symbolPath: File? = null
 
     @TaskAction
     fun upload() {
@@ -73,8 +84,8 @@ open class BugsnagUploadNdkTask @Inject constructor(
             soFiles.addAll(findSharedObjectFiles(objFolder))
             soFiles.addAll(findSharedObjectFiles(soFolder))
         }
-        if (sharedObjectPath != null) {
-            val file = File(projectDir.path, sharedObjectPath!!)
+        if (sharedObjectPath != "") {
+            val file = File(projectDir.path, sharedObjectPath)
             soFiles.addAll(findSharedObjectFiles(file))
         }
 

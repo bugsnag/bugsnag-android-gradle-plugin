@@ -20,7 +20,7 @@ open class BugsnagPluginExtension {
     var releasesEndpoint = "https://build.bugsnag.com"
     var isOverwrite = false
     var retryCount = 0
-    var sharedObjectPath: String? = null
+    var sharedObjectPath: String = ""
     var projectRoot: String? = null
     var isFailOnUploadError = true
     var requestTimeoutMs = 60000
