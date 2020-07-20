@@ -120,9 +120,11 @@ class BugsnagPlugin : Plugin<Project> {
     ): Provider<RegularFile> {
         val taskName = "processBugsnag${taskNameForOutput(output)}Manifest"
         val buildUuidProvider = project.provider { UUID.randomUUID().toString() }
+        val manifestInfoOutputFile = project.layout.buildDirectory.file("intermediates/bugsnag/manifestInfoFor${taskNameForOutput(output)}.json")
         return if (BugsnagManifestUuidTaskV2.isApplicable()) {
             val manifestUpdater = project.tasks.register(taskName, BugsnagManifestUuidTaskV2::class.java) {
                 it.buildUuid.set(buildUuidProvider)
+                it.manifestInfoProvider.set(manifestInfoOutputFile)
             }
             val android = project.extensions.getByType(BaseAppModuleExtension::class.java)
             android.onVariants.withName(variant.name) {
@@ -142,6 +144,7 @@ class BugsnagPlugin : Plugin<Project> {
                 it.buildUuid.set(buildUuidProvider)
                 it.variantOutput = output
                 it.variant = variant
+                it.manifestInfoProvider.set(manifestInfoOutputFile)
                 val processManifest = output.processManifestProvider.orNull
 
                 if (processManifest != null) {
