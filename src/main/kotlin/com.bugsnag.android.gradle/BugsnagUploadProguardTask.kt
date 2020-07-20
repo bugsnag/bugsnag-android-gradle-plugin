@@ -9,10 +9,16 @@ import org.apache.http.entity.mime.content.FileBody
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.nio.charset.Charset
 import java.nio.file.Paths
+import javax.inject.Inject
 
 /**
  * Task to upload ProGuard mapping files to Bugsnag.
@@ -27,7 +33,9 @@ import java.nio.file.Paths
  * it is usually safe to have this be the absolute last task executed during
  * a build.
  */
-abstract class BugsnagUploadProguardTask : DefaultTask(), AndroidManifestInfoReceiver {
+open class BugsnagUploadProguardTask @Inject constructor(
+    objects: ObjectFactory
+) : DefaultTask(), AndroidManifestInfoReceiver {
 
     init {
         group = BugsnagPlugin.GROUP_NAME
@@ -36,6 +44,10 @@ abstract class BugsnagUploadProguardTask : DefaultTask(), AndroidManifestInfoRec
 
     lateinit var variantOutput: ApkVariantOutput
     lateinit var variant: ApkVariant
+
+    @get:PathSensitive(NONE)
+    @get:InputFile
+    override val manifestInfoFile: RegularFileProperty = objects.fileProperty()
 
     @TaskAction
     fun upload() {

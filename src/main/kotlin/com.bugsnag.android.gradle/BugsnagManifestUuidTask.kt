@@ -9,6 +9,7 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
@@ -16,18 +17,19 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.nio.file.Paths
+import javax.inject.Inject
 
-abstract class BaseBugsnagManifestUuidTask : DefaultTask() {
+abstract class BaseBugsnagManifestUuidTask(objects: ObjectFactory) : DefaultTask() {
     init {
         group = BugsnagPlugin.GROUP_NAME
         description = "Adds a unique build UUID to AndroidManifest to link proguard mappings to crash reports"
     }
 
     @get:Input
-    abstract val buildUuid: Property<String>
+    val buildUuid: Property<String> = objects.property(String::class.java)
 
     @get:OutputFile
-    abstract val manifestInfoProvider: RegularFileProperty
+    val manifestInfoProvider: RegularFileProperty = objects.fileProperty()
 
     fun writeManifestInfo(info: AndroidManifestInfo) {
         info.write(manifestInfoProvider.get().asFile)
@@ -44,7 +46,7 @@ abstract class BaseBugsnagManifestUuidTask : DefaultTask() {
  * This task must be called after "process${variantName}Manifest", since it
  * requires that an AndroidManifest.xml exists in `build/intermediates`.
  */
-abstract class BugsnagManifestUuidTask : BaseBugsnagManifestUuidTask() {
+open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) : BaseBugsnagManifestUuidTask(objects) {
 
     lateinit var variantOutput: ApkVariantOutput
     lateinit var variant: ApkVariant
