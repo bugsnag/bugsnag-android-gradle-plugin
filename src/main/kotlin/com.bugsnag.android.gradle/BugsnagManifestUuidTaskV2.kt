@@ -14,7 +14,9 @@ import javax.inject.Inject
 /**
  * An AGP-4-compatible implementation of [BugsnagManifestUuidTask].
  */
-open class BugsnagManifestUuidTaskV2 @Inject constructor(objects: ObjectFactory) : BaseBugsnagManifestUuidTask(objects) {
+open class BugsnagManifestUuidTaskV2 @Inject constructor(
+    objects: ObjectFactory
+) : BaseBugsnagManifestUuidTask(objects) {
 
     internal companion object {
         private val MIN_AGP_VERSION: VersionNumber = VersionNumber.parse("4.1.0-alpha04")
