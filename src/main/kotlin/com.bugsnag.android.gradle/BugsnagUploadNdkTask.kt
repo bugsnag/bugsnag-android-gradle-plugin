@@ -15,6 +15,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
@@ -54,8 +55,8 @@ open class BugsnagUploadNdkTask @Inject constructor(
     @Internal
     lateinit var rootDir: File
 
-    @Input
-    lateinit var sharedObjectPath: String
+    @InputFiles
+    lateinit var sharedObjectPaths: List<File>
 
     @get:PathSensitive(NONE)
     @get:InputFile
@@ -75,8 +76,7 @@ open class BugsnagUploadNdkTask @Inject constructor(
         if (symbolPath == null) {
             return
         }
-        val logger = project.logger
-        logger.lifecycle("Symbolpath: $symbolPath")
+        project.logger.lifecycle("Symbolpath: $symbolPath")
         val soFiles = mutableSetOf<Pair<File, String>>()
         resolveExternalNativeBuildTasks().forEach { task ->
             val objFolder = task.objFolder
@@ -84,9 +84,8 @@ open class BugsnagUploadNdkTask @Inject constructor(
             soFiles.addAll(findSharedObjectFiles(objFolder))
             soFiles.addAll(findSharedObjectFiles(soFolder))
         }
-        if (sharedObjectPath != "") {
-            val file = File(projectDir.path, sharedObjectPath)
-            soFiles.addAll(findSharedObjectFiles(file))
+        sharedObjectPaths.forEach { path ->
+            soFiles.addAll(findSharedObjectFiles(path))
         }
 
         // sort SO files alphabetically by architecture for consistent request order
@@ -121,13 +120,18 @@ open class BugsnagUploadNdkTask @Inject constructor(
     private fun findSharedObjectFiles(dir: File): Collection<Pair<File, String>> {
         project.logger.lifecycle("Checking dir: $dir")
         val sharedObjectFiles = mutableSetOf<Pair<File, String>>()
-        if (dir.exists()) {
+        if (dir.exists() && dir.isDirectory) {
             for (arch in dir.listFiles()) {
-                for (file in arch.listFiles()) {
-                    if (file.name.endsWith(".so")) {
-                        sharedObjectFiles.add(Pair(file, arch.name))
+
+                // find SO files for single architecture
+                if (arch.exists() && arch.isDirectory) {
+                    for (file in arch.listFiles()) {
+                        if (file.name.endsWith(".so")) {
+                            sharedObjectFiles.add(Pair(file, arch.name))
+                        }
                     }
                 }
+
             }
         }
         return sharedObjectFiles

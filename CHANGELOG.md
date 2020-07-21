@@ -1,5 +1,8 @@
 ## 5.0.0 (TBD)
 
+Alter bugsnag extension to allow multiple shared object paths
+[#237](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/237)
+
 Support for manifest processing in AGP 4.1.0-alpha04 and above
 [#234](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/234)
 

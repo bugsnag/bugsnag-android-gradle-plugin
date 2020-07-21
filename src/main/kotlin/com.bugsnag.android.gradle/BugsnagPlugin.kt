@@ -182,7 +182,7 @@ class BugsnagPlugin : Plugin<Project> {
             it.variant = variant
             it.projectDir = project.projectDir
             it.rootDir = project.rootDir
-            it.sharedObjectPath = bugsnag.sharedObjectPath
+            it.sharedObjectPaths = bugsnag.sharedObjectPaths
             addTaskToExecutionGraph(it, variant, output, project, bugsnag, true)
         }
     }

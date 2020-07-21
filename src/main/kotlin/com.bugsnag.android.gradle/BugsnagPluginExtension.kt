@@ -3,6 +3,7 @@ package com.bugsnag.android.gradle
 import groovy.lang.Closure
 import org.gradle.api.Action
 import org.gradle.util.ConfigureUtil
+import java.io.File
 
 /**
  * Defines configuration options (Gradle plugin extensions) for the BugsnagPlugin
@@ -20,7 +21,7 @@ open class BugsnagPluginExtension {
     var releasesEndpoint = "https://build.bugsnag.com"
     var isOverwrite = false
     var retryCount = 0
-    var sharedObjectPath: String = ""
+    var sharedObjectPaths: List<File> = emptyList()
     var projectRoot: String? = null
     var isFailOnUploadError = true
     var requestTimeoutMs = 60000
