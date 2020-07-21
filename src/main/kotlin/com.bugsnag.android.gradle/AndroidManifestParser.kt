@@ -20,7 +20,7 @@ class AndroidManifestParser {
 
     @Throws(ParserConfigurationException::class, SAXException::class, IOException::class)
     fun readManifest(manifestPath: File, logger: Logger): AndroidManifestInfo {
-        logger.debug("Reading manifest at: \${manifestPath}")
+        logger.debug("Reading manifest at: ${manifestPath}")
         val root = XmlParser().parse(manifestPath)
         val application = (root[TAG_APPLICATION] as NodeList)[0] as Node
         val metadataTags = findMetadataTags(application)

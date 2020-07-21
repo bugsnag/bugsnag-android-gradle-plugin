@@ -73,12 +73,11 @@ class BugsnagMultiPartUploadRequest {
             mpEntity.addPart("overwrite", StringBody("true"))
         }
         val logger = project.logger
-        logger.debug("apiKey: \${manifestInfo.apiKey}")
-        logger.debug("appId: \${applicationId}")
-        logger.debug("versionCode: \${manifestInfo.versionCode}")
-        logger.debug("buildUUID: \${manifestInfo.buildUUID}")
-        logger.debug("versionName: \${manifestInfo.versionName}")
-        logger.debug("overwrite: \${project.bugsnag.overwrite}")
+        logger.debug("apiKey: ${manifestInfo.apiKey}")
+        logger.debug("appId: ${variant.applicationId}")
+        logger.debug("versionCode: ${manifestInfo.versionCode}")
+        logger.debug("buildUUID: ${manifestInfo.buildUUID}")
+        logger.debug("versionName: ${manifestInfo.versionName}")
     }
 
     private fun uploadToServer(project: Project,
