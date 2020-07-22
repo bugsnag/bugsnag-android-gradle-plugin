@@ -1,5 +1,8 @@
 ## 5.0.0 (TBD)
 
+Make upload tasks support up-to-date checks
+[#239](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/239)
+
 Avoid unnecessary SO mapping file uploads for ABI splits
 [#238](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/238)
 

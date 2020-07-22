@@ -13,7 +13,8 @@ data class AndroidManifestInfo(
     var apiKey: String,
     var versionCode: String,
     var buildUUID: String,
-    var versionName: String
+    var versionName: String,
+    var applicationId: String
 ) {
     internal fun write(file: File) {
         file.sink().buffer().use {
@@ -26,7 +27,8 @@ data class AndroidManifestInfo(
             "apiKey",
             "versionCode",
             "buildUUID",
-            "versionName"
+            "versionName",
+            "applicationId"
         )
 
         @Suppress("MagicNumber") // They are indices into the OPTIONS field above
@@ -39,6 +41,7 @@ data class AndroidManifestInfo(
                 lateinit var versionCode: String
                 lateinit var buildUUID: String
                 lateinit var versionName: String
+                lateinit var applicationId: String
                 reader.beginObject()
                 while (reader.hasNext()) {
                     when (reader.selectName(OPTIONS)) {
@@ -46,11 +49,12 @@ data class AndroidManifestInfo(
                         1 -> versionCode = reader.nextString()
                         2 -> buildUUID = reader.nextString()
                         3 -> versionName = reader.nextString()
+                        4 -> applicationId = reader.nextString()
                         -1 -> reader.skipValue()
                     }
                 }
                 reader.endObject()
-                return AndroidManifestInfo(apiKey, versionCode, buildUUID, versionName)
+                return AndroidManifestInfo(apiKey, versionCode, buildUUID, versionName, applicationId)
             }
 
             override fun toJson(writer: JsonWriter, value: AndroidManifestInfo?) {
@@ -67,6 +71,8 @@ data class AndroidManifestInfo(
                     .value(value.buildUUID)
                     .name("versionName")
                     .value(value.versionName)
+                    .name("applicationId")
+                    .value(value.applicationId)
                     .endObject()
             }
 

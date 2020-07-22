@@ -11,7 +11,6 @@ import java.io.File
 import java.io.FileWriter
 import java.io.IOException
 import java.io.PrintWriter
-import java.util.UUID
 import javax.xml.parsers.ParserConfigurationException
 
 class AndroidManifestParser {
@@ -50,10 +49,19 @@ class AndroidManifestParser {
         if (versionName == null) {
             logger.warn("Could not find 'android:versionName' value in your AndroidManifest.xml")
         }
-        if (apiKey == null || versionCode == null || buildUUID == null || versionName == null) {
-            throw IllegalStateException("Missing apiKey/versionCode/buildUuid/versionName, required to upload to bugsnag.")
+
+        // Get the application ID
+        val applicationId = getApplicationId(root)
+        if (applicationId == null) {
+            logger.warn("Could not find 'package' value in your AndroidManifest.xml")
         }
-        return AndroidManifestInfo(apiKey, versionCode, buildUUID, versionName)
+
+        if (apiKey == null || "" == apiKey || versionCode == null ||
+            buildUUID == null || versionName == null || applicationId == null) {
+            throw IllegalStateException("Missing apiKey/versionCode/buildUuid/versionName/package," +
+                " required to upload to bugsnag.")
+        }
+        return AndroidManifestInfo(apiKey, versionCode, buildUUID, versionName, applicationId)
     }
 
     @Throws(ParserConfigurationException::class, SAXException::class, IOException::class)
@@ -114,6 +122,10 @@ class AndroidManifestParser {
         return versionCode ?: xml.attribute(namespace.get(ATTR_VERSION_CODE)) as String?
     }
 
+    private fun getApplicationId(xml: Node): String? {
+        return xml.attribute(ATTR_APPLICATION_ID) as String?
+    }
+
     companion object {
         private const val TAG_APPLICATION = "application"
         private const val TAG_META_DATA = "meta-data"
@@ -123,6 +135,7 @@ class AndroidManifestParser {
         private const val TAG_APP_VERSION = "com.bugsnag.android.APP_VERSION"
         private const val ATTR_NAME = "name"
         private const val ATTR_VALUE = "value"
+        private const val ATTR_APPLICATION_ID = "package"
         private const val ATTR_VERSION_CODE = "versionCode"
         private const val ATTR_VERSION_NAME = "versionName"
     }
