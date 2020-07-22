@@ -57,16 +57,16 @@ open class BugsnagUploadProguardTask @Inject constructor(
     fun upload() {
         val mappingFile = findMappingFile(project)
         val logger = project.logger
-        logger.info("Using mapping file: \$mappingFile")
+        logger.info("Using mapping file: $mappingFile")
 
         // If we haven't enabled proguard for this variant, or the proguard
         // configuration includes -dontobfuscate, the mapping file
         // will not exist (but we also won't need it).
         if (mappingFile == null || !mappingFile.exists()) {
-            logger.warn("Mapping file not found: \${mappingFile}")
+            logger.warn("Mapping file not found: ${mappingFile}")
             val bugsnag = project.extensions.findByType(BugsnagPluginExtension::class.java)!!
             if (bugsnag.isFailOnUploadError) {
-                throw GradleException("Mapping file not found: \${mappingFile}")
+                throw GradleException("Mapping file not found: ${mappingFile}")
             } else {
                 return
             }
@@ -75,7 +75,7 @@ open class BugsnagUploadProguardTask @Inject constructor(
         }
 
         // Read the API key and Build ID etc..
-        logger.info("Attempting to upload mapping file: \${mappingFile}")
+        logger.info("Attempting to upload mapping file: ${mappingFile}")
 
         // Construct a basic request
         val charset = Charset.forName("UTF-8")
@@ -87,6 +87,7 @@ open class BugsnagUploadProguardTask @Inject constructor(
         request.variant = variant
         request.variantOutput = variantOutput
         request.uploadMultipartEntity(project, mpEntity, parseManifestInfo())
+        project.logger.lifecycle("Bugsnag uploaded proguard file") // TODO remove me
     }
 
     private fun findMappingFile(project: Project): File? {
@@ -97,7 +98,7 @@ open class BugsnagUploadProguardTask @Inject constructor(
             if (mappingFile.exists()) {
                 return mappingFile
             } else {
-                project.logger.warn("Could not find DexGuard mapping file at: \$mappingFile -" +
+                project.logger.warn("Could not find DexGuard mapping file at: $mappingFile -" +
                     " falling back to AGP mapping file value")
             }
         }

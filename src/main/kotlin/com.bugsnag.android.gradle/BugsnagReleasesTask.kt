@@ -74,7 +74,7 @@ open class BugsnagReleasesTask @Inject constructor(
             os.write(payload.toString().toByteArray(charset(CHARSET_UTF8)))
             val statusCode = conn.responseCode
             if (statusCode == 200) {
-                logger.info("Uploaded release info to Bugsnag")
+                logger.lifecycle("Bugsnag uploaded release info")
                 return true
             } else {
                 var reader: BufferedReader? = null

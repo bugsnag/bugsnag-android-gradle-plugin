@@ -116,10 +116,10 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
     private fun addManifestPath(manifestPaths: MutableList<File?>, directory: File, logger: Logger, variantOutput: ApkVariantOutput) {
         val manifestFile = Paths.get(directory.toString(), variantOutput.dirName, "AndroidManifest.xml").toFile()
         if (manifestFile.exists()) {
-            logger.info("Found manifest at \${manifestFile}")
+            logger.info("Found manifest at ${manifestFile}")
             manifestPaths.add(manifestFile)
         } else {
-            logger.error("Failed to find manifest at \${manifestFile}")
+            logger.error("Failed to find manifest at ${manifestFile}")
         }
     }
 

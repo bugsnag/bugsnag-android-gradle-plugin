@@ -28,14 +28,7 @@ enum class Abi(val abiName: String, val toolchainPrefix: String, val objdumpPref
     );
 
     companion object {
-        fun findByName(abiName: String): Abi? {
-            for (value in values()) {
-                if (value.abiName == abiName) {
-                    return value
-                }
-            }
-            return null
-        }
+        fun findByName(abiName: String) = values().firstOrNull { it.abiName == abiName }
     }
 
 }

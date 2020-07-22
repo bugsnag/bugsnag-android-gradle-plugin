@@ -1,5 +1,6 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.VariantOutput
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
@@ -13,7 +14,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -77,15 +77,17 @@ open class BugsnagUploadNdkTask @Inject constructor(
             return
         }
         project.logger.lifecycle("Symbolpath: $symbolPath")
+        val splitArch = variantOutput.getFilter(VariantOutput.FilterType.ABI)
         val soFiles = mutableSetOf<Pair<File, String>>()
+
         resolveExternalNativeBuildTasks().forEach { task ->
             val objFolder = task.objFolder
             val soFolder = task.soFolder
-            soFiles.addAll(findSharedObjectFiles(objFolder))
-            soFiles.addAll(findSharedObjectFiles(soFolder))
+            soFiles.addAll(findSharedObjectFiles(objFolder, splitArch))
+            soFiles.addAll(findSharedObjectFiles(soFolder, splitArch))
         }
         sharedObjectPaths.forEach { path ->
-            soFiles.addAll(findSharedObjectFiles(path))
+            soFiles.addAll(findSharedObjectFiles(path, splitArch))
         }
 
         // sort SO files alphabetically by architecture for consistent request order
@@ -93,14 +95,15 @@ open class BugsnagUploadNdkTask @Inject constructor(
         processFiles(files)
     }
 
-    private fun processFiles(files: Collection<Pair<File, String>?>) {
-        for (pair in files) {
-            processFile(pair!!.second, pair.first)
+    private fun processFiles(files: Collection<Pair<File, String>>) {
+        project.logger.lifecycle("Found shared object files: $files")
+
+        files.forEach { pair ->
+            processFile(pair.second, pair.first)
         }
     }
 
     private fun processFile(arch: String, sharedObject: File) {
-        project.logger.lifecycle("Found shared object file $arch $sharedObject")
         val outputFile = generateSymbolsForSharedObject(sharedObject, arch)
         if (outputFile != null) {
             uploadSymbols(outputFile, arch, sharedObject.name)
@@ -112,29 +115,34 @@ open class BugsnagUploadNdkTask @Inject constructor(
     }
 
     /**
-     * Searches the subdirectories of a given path and executes a block on
-     * any shared object files
-     * @param dir The parent path to search. Each subdirectory should
+     * Searches the subdirectories of a given path for SO files. These are added to a
+     * collection and returned if they should be uploaded by the current task.
+     *
+     * If the variantOutput is an APK split the splitArch parameter should be non-null,
+     * as this allows the avoidance of unnecessary uploads of all architectures for each split.
+     *
+     * @param searchDirectory The parent path to search. Each subdirectory should
      * represent an architecture
+     * @param abiArchitecture The architecture of the ABI split, or null if this is not an APK split.
      */
-    private fun findSharedObjectFiles(dir: File): Collection<Pair<File, String>> {
-        project.logger.lifecycle("Checking dir: $dir")
+    private fun findSharedObjectFiles(searchDirectory: File, abiArchitecture: String?): Collection<Pair<File, String>> {
         val sharedObjectFiles = mutableSetOf<Pair<File, String>>()
-        if (dir.exists() && dir.isDirectory) {
-            for (arch in dir.listFiles()) {
-
-                // find SO files for single architecture
-                if (arch.exists() && arch.isDirectory) {
-                    for (file in arch.listFiles()) {
-                        if (file.name.endsWith(".so")) {
-                            sharedObjectFiles.add(Pair(file, arch.name))
-                        }
-                    }
+        if (searchDirectory.exists() && searchDirectory.isDirectory) {
+            searchDirectory.listFiles()
+                .filter { archDir -> archDir.exists() && archDir.isDirectory }
+                .filter { archDir -> abiArchitecture == null || archDir.name == abiArchitecture }
+                .forEach {
+                    val archFiles = findSharedObjectFilesForArch(it)
+                    sharedObjectFiles.addAll(archFiles)
                 }
-
-            }
         }
         return sharedObjectFiles
+    }
+
+    private fun findSharedObjectFilesForArch(arch: File): List<Pair<File, String>> {
+        return arch.listFiles()
+            .filter { it.name.endsWith(".so") }
+            .map { Pair(it, arch.name) }
     }
 
     /**
@@ -156,7 +164,7 @@ open class BugsnagUploadNdkTask @Inject constructor(
                 }
                 val outputFile = File(outputDir, "$arch.gz")
                 val errorOutputFile = File(outputDir, "$arch.error.txt")
-                logger.lifecycle("Creating symbol file at \${outputFile}")
+                logger.lifecycle("Creating symbol file at ${outputFile}")
 
                 // Call objdump, redirecting output to the output file
                 val builder = ProcessBuilder(objDumpPath.toString(),
