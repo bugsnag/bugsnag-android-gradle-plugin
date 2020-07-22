@@ -56,22 +56,23 @@ class BugsnagPlugin : Plugin<Project> {
             android.applicationVariants.all { variant ->
                 registerBugsnagTasksForVariant(project, variant, bugsnag)
             }
-
-            if (isNdkProject(bugsnag, android)) {
-                registerNdkLibInstallTask(project)
-            }
+            registerNdkLibInstallTask(project, bugsnag, android)
         }
     }
 
-    private fun registerNdkLibInstallTask(project: Project) {
+    private fun registerNdkLibInstallTask(project: Project,
+                                          bugsnag: BugsnagPluginExtension,
+                                          android: AppExtension) {
         val ndkTasks = project.tasks.withType(ExternalNativeBuildTask::class.java)
         val cleanTasks = ndkTasks.filter { it.name.contains(CLEAN_TASK) }.toSet()
         val buildTasks = ndkTasks.filter { !it.name.contains(CLEAN_TASK) }.toSet()
 
         if (buildTasks.isNotEmpty()) {
             val ndkSetupTask = project.tasks.create("bugsnagInstallJniLibsTask", BugsnagInstallJniLibsTask::class.java)
-            ndkSetupTask.mustRunAfter(cleanTasks)
-            buildTasks.forEach { it.dependsOn(ndkSetupTask) }
+            if (isNdkUploadEnabled(bugsnag, android)) {
+                ndkSetupTask.mustRunAfter(cleanTasks)
+                buildTasks.forEach { it.dependsOn(ndkSetupTask) }
+            }
         }
     }
 
@@ -86,7 +87,7 @@ class BugsnagPlugin : Plugin<Project> {
         variant.outputs.configureEach {
             val output = it as ApkVariantOutput
             val jvmMinificationEnabled = variant.buildType.isMinifyEnabled || hasDexguardPlugin(project)
-            val ndkEnabled = isNdkProject(bugsnag, project.extensions.getByType(AppExtension::class.java))
+            val ndkEnabled = isNdkUploadEnabled(bugsnag, project.extensions.getByType(AppExtension::class.java))
 
             // register bugsnag tasks
             val manifestInfoFile = registerManifestUuidTask(project, variant, output)
@@ -106,7 +107,11 @@ class BugsnagPlugin : Plugin<Project> {
             findAssembleBundleTasks(project, variant, output).forEach {
                 // give all tasks a manifest info provider to prevent reading
                 // the manifest more than once
-                proguardTask?.get()?.manifestInfoFile?.set(manifestInfoFile)
+                proguardTask?.get()?.let { task ->
+                    task.manifestInfoFile.set(manifestInfoFile)
+                    task.mappingFileProperty.set(createMappingFileProvider(project, variant, output))
+                }
+
                 symbolFileTask?.get()?.manifestInfoFile?.set(manifestInfoFile)
                 releasesTask.get().manifestInfoFile.set(manifestInfoFile)
             }
@@ -163,10 +168,12 @@ class BugsnagPlugin : Plugin<Project> {
                                            variant: ApkVariant,
                                            output: ApkVariantOutput,
                                            bugsnag: BugsnagPluginExtension): TaskProvider<BugsnagUploadProguardTask> {
-        val taskName = "uploadBugsnag${taskNameForOutput(output)}Mapping"
+        val outputName = taskNameForOutput(output)
+        val taskName = "uploadBugsnag${outputName}Mapping"
+        val path = "intermediates/bugsnag/requests/proguardFor${outputName}.json"
+        val requestOutputFile = project.layout.buildDirectory.file(path)
         return project.tasks.register(taskName, BugsnagUploadProguardTask::class.java) {
-            it.variantOutput = output
-            it.variant = variant
+            it.requestOutputFile.set(requestOutputFile)
             addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.isUploadJvmMappings)
         }
     }
@@ -176,8 +183,12 @@ class BugsnagPlugin : Plugin<Project> {
                                                output: ApkVariantOutput,
                                                bugsnag: BugsnagPluginExtension): TaskProvider<BugsnagUploadNdkTask> {
         // Create a Bugsnag task to upload NDK mapping file(s)
-        val taskName = "uploadBugsnagNdk${taskNameForOutput(output)}Mapping"
+        val outputName = taskNameForOutput(output)
+        val taskName = "uploadBugsnagNdk${outputName}Mapping"
+        val path = "intermediates/bugsnag/requests/ndkFor${outputName}.json"
+        val requestOutputFile = project.layout.buildDirectory.file(path)
         return project.tasks.register(taskName, BugsnagUploadNdkTask::class.java) {
+            it.requestOutputFile.set(requestOutputFile)
             it.variantOutput = output
             it.variant = variant
             it.projectDir = project.projectDir
@@ -191,10 +202,12 @@ class BugsnagPlugin : Plugin<Project> {
                                            variant: ApkVariant,
                                            output: ApkVariantOutput,
                                            bugsnag: BugsnagPluginExtension): TaskProvider<BugsnagReleasesTask> {
-        val taskName = "bugsnagRelease${taskNameForOutput(output)}Task"
+        val outputName = taskNameForOutput(output)
+        val taskName = "bugsnagRelease${outputName}Task"
+        val path = "intermediates/bugsnag/requests/releasesFor${outputName}.json"
+        val requestOutputFile = project.layout.buildDirectory.file(path)
         return project.tasks.register(taskName, BugsnagReleasesTask::class.java) {
-            it.variantOutput = output
-            it.variant = variant
+            it.requestOutputFile.set(requestOutputFile)
             addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.isReportBuilds)
         }
     }
@@ -221,8 +234,8 @@ class BugsnagPlugin : Plugin<Project> {
         return !output.name.toLowerCase().endsWith("debug") || bugsnag.isUploadDebugBuildMappings
     }
 
-    private fun isNdkProject(bugsnag: BugsnagPluginExtension,
-                             android: AppExtension): Boolean {
+    private fun isNdkUploadEnabled(bugsnag: BugsnagPluginExtension,
+                                   android: AppExtension): Boolean {
         val ndk = bugsnag.isUploadNdkMappings
         return if (ndk != null) { // always respect user override
             ndk

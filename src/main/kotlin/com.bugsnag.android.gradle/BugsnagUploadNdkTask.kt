@@ -17,6 +17,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
@@ -62,6 +63,9 @@ open class BugsnagUploadNdkTask @Inject constructor(
     @get:InputFile
     override val manifestInfoFile: RegularFileProperty = objects.fileProperty()
 
+    @get:OutputFile
+    val requestOutputFile: RegularFileProperty = objects.fileProperty()
+
     @Internal
     lateinit var variantOutput: ApkVariantOutput
 
@@ -93,6 +97,7 @@ open class BugsnagUploadNdkTask @Inject constructor(
         // sort SO files alphabetically by architecture for consistent request order
         val files = soFiles.toList().sortedBy { it.second }
         processFiles(files)
+        requestOutputFile.asFile.get().writeText("OK")
     }
 
     private fun processFiles(files: Collection<Pair<File, String>>) {
@@ -217,8 +222,6 @@ open class BugsnagUploadNdkTask @Inject constructor(
         }
         mpEntity.addPart("projectRoot", StringBody(projectRoot))
         val request = BugsnagMultiPartUploadRequest()
-        request.variant = variant
-        request.variantOutput = variantOutput
         request.uploadMultipartEntity(project, mpEntity, parseManifestInfo())
     }
 
