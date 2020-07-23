@@ -135,8 +135,8 @@ class BugsnagPlugin : Plugin<Project> {
                     artifacts
                         .use(manifestUpdater)
                         .wiredWithFiles(
-                            BugsnagManifestUuidTaskV2::inputManifest,
-                            BugsnagManifestUuidTaskV2::outputManifest
+                            taskInput = BugsnagManifestUuidTaskV2::inputManifest,
+                            taskOutput = BugsnagManifestUuidTaskV2::outputManifest
                         )
                         .toTransform(ArtifactType.MERGED_MANIFEST)
                 }
