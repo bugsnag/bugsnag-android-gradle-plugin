@@ -1,12 +1,12 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.ApplicationVariant
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
@@ -123,13 +123,11 @@ class BugsnagPlugin : Plugin<Project> {
         val path = "intermediates/bugsnag/manifestInfoFor${taskNameForOutput(output)}.json"
         val manifestInfoOutputFile = project.layout.buildDirectory.file(path)
         return if (BugsnagManifestUuidTaskV2.isApplicable()) {
-            val processedManifestOutput = project.layout.buildDirectory.file("intermediates/bugsnag/processed${taskNameForOutput(output)}Manifest.xml")
             val manifestUpdater = project.tasks.register(taskName, BugsnagManifestUuidTaskV2::class.java) {
                 it.buildUuid.set(buildUuidProvider)
                 it.manifestInfoProvider.set(manifestInfoOutputFile)
-                it.outputManifest.set(processedManifestOutput)
             }
-            val android = project.extensions.getByType(BaseAppModuleExtension::class.java)
+            val android = project.extensions.getByType(CommonExtension::class.java)
             android.onVariants.withName(variant.name) {
                 onProperties {
                     artifacts
