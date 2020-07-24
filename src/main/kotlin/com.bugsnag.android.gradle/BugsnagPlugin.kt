@@ -89,6 +89,11 @@ class BugsnagPlugin : Plugin<Project> {
             val jvmMinificationEnabled = variant.buildType.isMinifyEnabled || hasDexguardPlugin(project)
             val ndkEnabled = isNdkUploadEnabled(bugsnag, project.extensions.getByType(AppExtension::class.java))
 
+            // skip tasks for variant if JVM/NDK minification not enabled
+            if (!jvmMinificationEnabled && !ndkEnabled) {
+                return@configureEach
+            }
+
             // register bugsnag tasks
             val manifestInfoFile = registerManifestUuidTask(project, variant, output)
             val proguardTask = when {

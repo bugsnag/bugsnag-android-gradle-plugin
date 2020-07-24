@@ -7,8 +7,7 @@ Scenario: Upload successfully with API key, mapping file, and correct endpoint
 
 Scenario: No uploads or build failures when obfuscation is disabled
     When I build "disabled_obfuscation" using the "standard" bugsnag config
-    Then I should receive 1 request
-    And the request 0 is valid for the Build API
+    Then I should receive 0 requests
     And the exit code equals 0
 
 Scenario: Upload failure due to empty API key
