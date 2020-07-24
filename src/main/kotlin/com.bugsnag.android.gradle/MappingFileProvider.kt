@@ -20,7 +20,7 @@ fun createMappingFileProvider(project: Project,
     val fileProvider: Provider<File> = project.provider {
         val mappingFile = findMappingFile(project, variant, variantOutput)
         val logger = project.logger
-        logger.info("Using mapping file: $mappingFile")
+        logger.info("Bugsnag: Using mapping file: $mappingFile")
 
         // If we haven't enabled proguard for this variant, or the proguard
         // configuration includes -dontobfuscate, the mapping file
@@ -43,7 +43,7 @@ private fun findMappingFile(project: Project,
         if (mappingFile.exists()) {
             return mappingFile
         } else {
-            project.logger.warn("Could not find DexGuard mapping file at: $mappingFile -" +
+            project.logger.warn("Bugsnag: Could not find DexGuard mapping file at: $mappingFile -" +
                 " falling back to AGP mapping file value")
         }
     }

@@ -19,7 +19,7 @@ class AndroidManifestParser {
 
     @Throws(ParserConfigurationException::class, SAXException::class, IOException::class)
     fun readManifest(manifestPath: File, logger: Logger): AndroidManifestInfo {
-        logger.debug("Reading manifest at: ${manifestPath}")
+        logger.debug("Bugsnag: Reading manifest at: ${manifestPath}")
         val root = XmlParser().parse(manifestPath)
         val application = (root[TAG_APPLICATION] as NodeList)[0] as Node
         val metadataTags = findMetadataTags(application)
@@ -27,38 +27,38 @@ class AndroidManifestParser {
         // Get the Bugsnag API key
         val apiKey = getManifestMetaData(metadataTags, TAG_API_KEY)
         if (apiKey == null) {
-            logger.warn("Could not find apiKey in '$TAG_API_KEY' " +
+            logger.warn("Bugsnag: Could not find apiKey in '$TAG_API_KEY' " +
                 "<meta-data> tag in your AndroidManifest.xml")
         }
 
         // Get the build version
         val versionCode = getVersionCode(metadataTags, root)
         if (versionCode == null) {
-            logger.warn("Could not find 'android:versionCode' value in your AndroidManifest.xml")
+            logger.warn("Bugsnag: Could not find 'android:versionCode' value in your AndroidManifest.xml")
         }
 
         // Uniquely identify the build so that we can identify the proguard file.
         val buildUUID = getManifestMetaData(metadataTags, TAG_BUILD_UUID)
         if (buildUUID == null) {
-            logger.warn("Could not find '$TAG_BUILD_UUID'" +
+            logger.warn("Bugsnag: Could not find '$TAG_BUILD_UUID'" +
                 " <meta-data> tag in your AndroidManifest.xml")
         }
 
         // Get the version name
         val versionName = getVersionName(metadataTags, root)
         if (versionName == null) {
-            logger.warn("Could not find 'android:versionName' value in your AndroidManifest.xml")
+            logger.warn("Bugsnag: Could not find 'android:versionName' value in your AndroidManifest.xml")
         }
 
         // Get the application ID
         val applicationId = getApplicationId(root)
         if (applicationId == null) {
-            logger.warn("Could not find 'package' value in your AndroidManifest.xml")
+            logger.warn("Bugsnag: Could not find 'package' value in your AndroidManifest.xml")
         }
 
         if (apiKey == null || "" == apiKey || versionCode == null ||
             buildUUID == null || versionName == null || applicationId == null) {
-            throw IllegalStateException("Missing apiKey/versionCode/buildUuid/versionName/package," +
+            throw IllegalStateException("Bugsnag: Missing apiKey/versionCode/buildUuid/versionName/package," +
                 " required to upload to bugsnag.")
         }
         return AndroidManifestInfo(apiKey, versionCode, buildUUID, versionName, applicationId)

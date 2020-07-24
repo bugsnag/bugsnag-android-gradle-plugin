@@ -13,7 +13,7 @@ internal abstract class Call protected constructor(private val project: Project)
         val maxRetryCount = retryCount
         var retryCount = maxRetryCount
         while (!uploadSuccessful && retryCount > 0) {
-            project.logger.warn(String.format("Retrying Bugsnag upload (%d/%d) ...",
+            project.logger.warn(String.format("Bugsnag: Retrying upload (%d/%d) ...",
                 maxRetryCount - retryCount + 1, maxRetryCount))
             uploadSuccessful = makeApiCall()
             retryCount--

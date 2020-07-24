@@ -42,13 +42,14 @@ open class BugsnagReleasesTask @Inject constructor(
         val bugsnag = project.extensions.getByType(BugsnagPluginExtension::class.java)
         val payload = generateJsonPayload(manifestInfo, bugsnag)
         val json = payload.toString()
-        project.logger.debug("Releases Payload:\n$json")
+        project.logger.lifecycle("Bugsnag: Attempting upload to Releases API")
 
         object : Call(project) {
             @Throws(IOException::class)
             override fun makeApiCall(): Boolean {
                 val response = deliverPayload(payload, manifestInfo, bugsnag)
                 requestOutputFile.asFile.get().writeText(response)
+                project.logger.lifecycle("Bugsnag: Upload succeeded")
                 return true
             }
         }.execute()
