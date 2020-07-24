@@ -114,10 +114,16 @@ class BugsnagPlugin : Plugin<Project> {
                 // the manifest more than once
                 proguardTask?.get()?.let { task ->
                     task.manifestInfoFile.set(manifestInfoFile)
-                    task.mappingFileProperty.set(createMappingFileProvider(project, variant, output))
+                    val mappingFileProvider = createMappingFileProvider(project, variant, output)
+                    task.mappingFileProperty.set(mappingFileProvider)
+                    releasesTask.get().jvmMappingFileProperty.set(mappingFileProvider)
                 }
 
-                symbolFileTask?.get()?.manifestInfoFile?.set(manifestInfoFile)
+                symbolFileTask?.get()?.let { task ->
+                    task.manifestInfoFile.set(manifestInfoFile)
+                    val ndkSearchDirs = symbolFileTask.get().searchDirectories
+                    releasesTask.get().ndkMappingFileProperty.set(ndkSearchDirs)
+                }
                 releasesTask.get().manifestInfoFile.set(manifestInfoFile)
             }
         }
@@ -194,11 +200,9 @@ class BugsnagPlugin : Plugin<Project> {
         val requestOutputFile = project.layout.buildDirectory.file(path)
         return project.tasks.register(taskName, BugsnagUploadNdkTask::class.java) {
             it.requestOutputFile.set(requestOutputFile)
-            it.variantOutput = output
-            it.variant = variant
             it.projectDir = project.projectDir
-            it.rootDir = project.rootDir
-            it.sharedObjectPaths = bugsnag.sharedObjectPaths
+            it.searchDirectories.set(getSearchDirectories(project, variant))
+            it.variantOutput = output
             addTaskToExecutionGraph(it, variant, output, project, bugsnag, true)
         }
     }

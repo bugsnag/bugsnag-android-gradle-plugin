@@ -1,10 +1,7 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.VariantOutput
 import com.android.build.gradle.AppExtension
-import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
-import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.bugsnag.android.gradle.Abi.Companion.findByName
 import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.FileBody
@@ -12,8 +9,10 @@ import org.apache.http.entity.mime.content.StringBody
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -53,101 +52,43 @@ open class BugsnagUploadNdkTask @Inject constructor(
     @Internal
     lateinit var projectDir: File
 
-    @Internal
-    lateinit var rootDir: File
-
-    @InputFiles
-    lateinit var sharedObjectPaths: List<File>
+    @get:InputFiles
+    val searchDirectories: Property<FileCollection> = objects.property(FileCollection::class.java)
 
     @get:PathSensitive(NONE)
     @get:InputFile
     override val manifestInfoFile: RegularFileProperty = objects.fileProperty()
 
+    @get:Internal
+    lateinit var variantOutput: ApkVariantOutput
+
     @get:OutputFile
     val requestOutputFile: RegularFileProperty = objects.fileProperty()
 
-    @Internal
-    lateinit var variantOutput: ApkVariantOutput
-
-    @Internal
-    lateinit var variant: ApkVariant
-
-    private var symbolPath: File? = null
-
     @TaskAction
     fun upload() {
-        symbolPath = findSymbolPath(variantOutput)
-        if (symbolPath == null) {
-            return
-        }
-        project.logger.info("Bugsnag: using symbolPath $symbolPath")
-        val splitArch = variantOutput.getFilter(VariantOutput.FilterType.ABI)
-        val soFiles = mutableSetOf<Pair<File, String>>()
-
-        resolveExternalNativeBuildTasks().forEach { task ->
-            val objFolder = task.objFolder
-            val soFolder = task.soFolder
-            soFiles.addAll(findSharedObjectFiles(objFolder, splitArch))
-            soFiles.addAll(findSharedObjectFiles(soFolder, splitArch))
-        }
-        sharedObjectPaths.forEach { path ->
-            soFiles.addAll(findSharedObjectFiles(path, splitArch))
-        }
-
-        // sort SO files alphabetically by architecture for consistent request order
-        val files = soFiles.toList().sortedBy { it.second }
+        project.logger.lifecycle("Starting ndk upload")
+        val searchDirs = searchDirectories.get().files.toList()
+        val files = findSharedObjectMappingFiles(project, variantOutput, searchDirs)
+        project.logger.lifecycle("Processing shared object files")
         processFiles(files)
         requestOutputFile.asFile.get().writeText("OK")
     }
 
-    private fun processFiles(files: Collection<Pair<File, String>>) {
+    private fun processFiles(files: Collection<File>) {
         project.logger.info("Bugsnag: Found shared object files for upload: $files")
 
-        files.forEach { pair ->
-            processFile(pair.second, pair.first)
+        files.forEach { file ->
+            processFile(file)
         }
     }
 
-    private fun processFile(arch: String, sharedObject: File) {
+    private fun processFile(sharedObject: File) {
+        val arch = sharedObject.parentFile.name
         val outputFile = generateSymbolsForSharedObject(sharedObject, arch)
         if (outputFile != null) {
             uploadSymbols(outputFile, arch, sharedObject.name)
         }
-    }
-
-    private fun resolveExternalNativeBuildTasks(): Collection<ExternalNativeBuildTask> {
-        return variant.externalNativeBuildProviders.mapNotNull { it.orNull }
-    }
-
-    /**
-     * Searches the subdirectories of a given path for SO files. These are added to a
-     * collection and returned if they should be uploaded by the current task.
-     *
-     * If the variantOutput is an APK split the splitArch parameter should be non-null,
-     * as this allows the avoidance of unnecessary uploads of all architectures for each split.
-     *
-     * @param searchDirectory The parent path to search. Each subdirectory should
-     * represent an architecture
-     * @param abiArchitecture The architecture of the ABI split, or null if this is not an APK split.
-     */
-    private fun findSharedObjectFiles(searchDirectory: File, abiArchitecture: String?): Collection<Pair<File, String>> {
-        val sharedObjectFiles = mutableSetOf<Pair<File, String>>()
-        if (searchDirectory.exists() && searchDirectory.isDirectory) {
-            searchDirectory.listFiles()
-                .filter { archDir -> archDir.exists() && archDir.isDirectory }
-                .filter { archDir -> abiArchitecture == null || archDir.name == abiArchitecture }
-                .forEach {
-                    val archFiles = findSharedObjectFilesForArch(it)
-                    sharedObjectFiles.addAll(archFiles)
-                }
-        }
-        return sharedObjectFiles
-    }
-
-    private fun findSharedObjectFilesForArch(arch: File): List<Pair<File, String>> {
-        return arch.listFiles()
-            .filter { it.name.endsWith(".so") }
-            .map { Pair(it, arch.name) }
     }
 
     /**
@@ -222,7 +163,8 @@ open class BugsnagUploadNdkTask @Inject constructor(
         }
         mpEntity.addPart("projectRoot", StringBody(projectRoot))
         val request = BugsnagMultiPartUploadRequest()
-        project.logger.lifecycle("Bugsnag: Attempting to upload shared object mapping file: $mappingFile")
+        project.logger.lifecycle("Bugsnag: Attempting to upload shared object mapping " +
+            "file for $sharedObjectName-$arch from $mappingFile")
         request.uploadMultipartEntity(project, mpEntity, parseManifestInfo())
     }
 
@@ -254,11 +196,6 @@ open class BugsnagUploadNdkTask @Inject constructor(
 
     companion object {
         private const val VALID_SO_FILE_THRESHOLD = 1024
-        private fun findSymbolPath(variantOutput: ApkVariantOutput?): File? {
-            val resources = variantOutput!!.processResourcesProvider.orNull ?: return null
-            return resources.property("textSymbolOutputFile") as File
-                ?: throw IllegalStateException("Could not find symbol path")
-        }
 
         /**
          * Outputs the contents of stdout into the gzip file output file

@@ -1,10 +1,13 @@
 package com.bugsnag.android.gradle
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
@@ -36,12 +39,24 @@ open class BugsnagReleasesTask @Inject constructor(
     @get:OutputFile
     val requestOutputFile: RegularFileProperty = objects.fileProperty()
 
+    // should take the JVM + NDK mapping files as inputs because the manifestInfo will
+    // not necessarily vary between different builds. it is not guaranteed that
+    // either of these properties will be set so they are marked as optional.
+    @get:PathSensitive(NONE)
+    @get:InputFile
+    @get:Optional
+    val jvmMappingFileProperty: RegularFileProperty = objects.fileProperty()
+
+    @get:PathSensitive(NONE)
+    @get:InputFiles
+    @get:Optional
+    val ndkMappingFileProperty: Property<FileCollection> = objects.property(FileCollection::class.java)
+
     @TaskAction
     fun fetchReleaseInfo() {
         val manifestInfo = parseManifestInfo()
         val bugsnag = project.extensions.getByType(BugsnagPluginExtension::class.java)
         val payload = generateJsonPayload(manifestInfo, bugsnag)
-        val json = payload.toString()
         project.logger.lifecycle("Bugsnag: Attempting upload to Releases API")
 
         object : Call(project) {
