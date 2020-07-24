@@ -80,7 +80,7 @@ open class BugsnagUploadNdkTask @Inject constructor(
         if (symbolPath == null) {
             return
         }
-        project.logger.lifecycle("Symbolpath: $symbolPath")
+        project.logger.info("Bugsnag: using symbolPath $symbolPath")
         val splitArch = variantOutput.getFilter(VariantOutput.FilterType.ABI)
         val soFiles = mutableSetOf<Pair<File, String>>()
 
@@ -101,7 +101,7 @@ open class BugsnagUploadNdkTask @Inject constructor(
     }
 
     private fun processFiles(files: Collection<Pair<File, String>>) {
-        project.logger.lifecycle("Found shared object files: $files")
+        project.logger.info("Bugsnag: Found shared object files for upload: $files")
 
         files.forEach { pair ->
             processFile(pair.second, pair.first)
@@ -169,7 +169,7 @@ open class BugsnagUploadNdkTask @Inject constructor(
                 }
                 val outputFile = File(outputDir, "$arch.gz")
                 val errorOutputFile = File(outputDir, "$arch.error.txt")
-                logger.lifecycle("Creating symbol file at ${outputFile}")
+                logger.info("Bugsnag: Creating symbol file  for $arch at ${outputFile}")
 
                 // Call objdump, redirecting output to the output file
                 val builder = ProcessBuilder(objDumpPath.toString(),
@@ -183,17 +183,17 @@ open class BugsnagUploadNdkTask @Inject constructor(
                 return if (process.waitFor() == 0) {
                     outputFile
                 } else {
-                    logger.error("failed to generate symbols for " + arch + " see "
+                    logger.error("Bugsnag: failed to generate symbols for " + arch + " see "
                         + errorOutputFile.toString() + " for more details")
                     null
                 }
             } catch (e: Exception) {
-                logger.error("failed to generate symbols for " + arch + " " + e.message, e)
+                logger.error("Bugsnag: failed to generate symbols for " + arch + " " + e.message, e)
             } finally {
                 outReader?.close()
             }
         } else {
-            logger.error("Unable to upload NDK symbols: Could not find objdump location for $arch")
+            logger.error("Bugsnag: Unable to upload NDK symbols: Could not find objdump location for $arch")
         }
         return null
     }
@@ -208,7 +208,7 @@ open class BugsnagUploadNdkTask @Inject constructor(
         // a SO file may not contain debug info. if that's the case then the mapping file should be very small,
         // so we try and reject it here as otherwise the event-worker will reject it with a 400 status code.
         if (!mappingFile.exists() || mappingFile.length() < VALID_SO_FILE_THRESHOLD) {
-            project.logger.warn("Skipping upload of empty/invalid mapping file: $mappingFile")
+            project.logger.warn("Bugsnag: Skipping upload of empty/invalid mapping file: $mappingFile")
             return
         }
         val mpEntity = MultipartEntity()
@@ -222,6 +222,7 @@ open class BugsnagUploadNdkTask @Inject constructor(
         }
         mpEntity.addPart("projectRoot", StringBody(projectRoot))
         val request = BugsnagMultiPartUploadRequest()
+        project.logger.lifecycle("Bugsnag: Attempting to upload shared object mapping file: $mappingFile")
         request.uploadMultipartEntity(project, mpEntity, parseManifestInfo())
     }
 
@@ -240,7 +241,7 @@ open class BugsnagUploadNdkTask @Inject constructor(
             }
             return objDumpFile
         } catch (ex: Throwable) {
-            project.logger.error("Error attempting to calculate objdump location: " + ex.message)
+            project.logger.error("Bugsnag: Error attempting to calculate objdump location: " + ex.message)
         }
         return null
     }

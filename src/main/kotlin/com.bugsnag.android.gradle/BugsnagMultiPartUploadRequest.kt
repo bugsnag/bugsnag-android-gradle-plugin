@@ -37,7 +37,7 @@ class BugsnagMultiPartUploadRequest {
         val maxRetryCount = getRetryCount(bugsnag)
         var retryCount = maxRetryCount
         while (!uploadSuccessful && retryCount > 0) {
-            logger.warn(String.format("Retrying Bugsnag upload (%d/%d) ...",
+            logger.warn(String.format("Bugsnag: Retrying upload (%d/%d) ...",
                 maxRetryCount - retryCount + 1, maxRetryCount))
             response = uploadToServer(project, mpEntity, bugsnag)
             uploadSuccessful = response != null
@@ -63,18 +63,13 @@ class BugsnagMultiPartUploadRequest {
             mpEntity.addPart("overwrite", StringBody("true"))
         }
         val logger = project.logger
-        logger.debug("apiKey: ${manifestInfo.apiKey}")
-        logger.debug("appId: ${manifestInfo.applicationId}")
-        logger.debug("versionCode: ${manifestInfo.versionCode}")
-        logger.debug("buildUUID: ${manifestInfo.buildUUID}")
-        logger.debug("versionName: ${manifestInfo.versionName}")
+        logger.debug("Bugsnag: payload information=$manifestInfo")
     }
 
     private fun uploadToServer(project: Project,
                                mpEntity: MultipartEntity?,
                                bugsnag: BugsnagPluginExtension): String? {
         val logger = project.logger
-        logger.lifecycle("Attempting upload of mapping file to Bugsnag")
 
         // Make the request
         val httpPost = HttpPost(bugsnag.endpoint)
@@ -92,11 +87,11 @@ class BugsnagMultiPartUploadRequest {
             if (statusCode != 200) {
                 throw IllegalStateException("Bugsnag upload failed with code $statusCode $responseEntity")
             } else {
-                logger.lifecycle("Bugsnag upload successful")
+                logger.lifecycle("Bugsnag: Upload succeeded")
                 return responseEntity
             }
         } catch (exc: Throwable) {
-            throw IllegalStateException("Bugsnag upload failed", exc)
+            throw IllegalStateException("Bugsnag Upload failed", exc)
         }
     }
 

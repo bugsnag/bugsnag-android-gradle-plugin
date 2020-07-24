@@ -51,11 +51,11 @@ open class BugsnagUploadProguardTask @Inject constructor(
     fun upload() {
         val mappingFile = mappingFileProperty.asFile.get()
         if (mappingFile.length() == 0L) { // proguard's -dontobfuscate generates an empty mapping file
-            project.logger.warn("Ignoring empty proguard file")
+            project.logger.warn("Bugsnag: Ignoring empty proguard file")
             return
         }
         if (!mappingFile.exists()) {
-            logger.warn("Mapping file not found: $mappingFile")
+            logger.warn("Bugsnag: Mapping file not found: $mappingFile")
             val bugsnag = project.extensions.findByType(BugsnagPluginExtension::class.java)!!
             if (bugsnag.isFailOnUploadError) {
                 throw IllegalStateException("Mapping file not found: $mappingFile")
@@ -63,7 +63,7 @@ open class BugsnagUploadProguardTask @Inject constructor(
         }
 
         // Read the API key and Build ID etc..
-        logger.info("Attempting to upload mapping file: $mappingFile")
+        logger.lifecycle("Bugsnag: Attempting to upload mapping file: $mappingFile")
 
         // Construct a basic request
         val charset = Charset.forName("UTF-8")
@@ -74,7 +74,6 @@ open class BugsnagUploadProguardTask @Inject constructor(
         val request = BugsnagMultiPartUploadRequest()
         val response = request.uploadMultipartEntity(project, mpEntity, parseManifestInfo())
         requestOutputFile.asFile.get().writeText(response)
-        project.logger.lifecycle("Bugsnag uploaded proguard file")
     }
 
 }
