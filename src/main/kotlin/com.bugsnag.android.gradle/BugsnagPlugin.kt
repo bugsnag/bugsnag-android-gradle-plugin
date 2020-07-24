@@ -128,10 +128,12 @@ class BugsnagPlugin : Plugin<Project> {
                 it.manifestInfoProvider.set(manifestInfoOutputFile)
             }
             val android = project.extensions.getByType(CommonExtension::class.java)
-            android.onVariants.withName(variant.name) {
+            println("Variant name is ${variant.name}")
+            android.onVariants {
                 println("Looking at variant $name")
                 onProperties {
                     println("Looking at variant properties in $name")
+                    return@onProperties
                     artifacts
                         .use(manifestUpdater)
                         .wiredWithFiles(
