@@ -53,6 +53,28 @@ class BugsnagPlugin : Plugin<Project> {
             }
 
             val android = project.extensions.getByType(AppExtension::class.java)
+            if (BugsnagManifestUuidTaskV2.isApplicable()) {
+                check(android is CommonExtension<*, *, *, *, *, *, *, *>)
+                android.onVariants {
+                    val variantName = name
+                    val taskName = computeManifestTaskNameFor(variantName)
+                    val manifestInfoOutputFile = project.computeManifestInfoOutputFor(variantName)
+                    val buildUuidProvider = project.newUuidProvider()
+                    val manifestUpdater = project.tasks.register(taskName, BugsnagManifestUuidTaskV2::class.java) {
+                        it.buildUuid.set(buildUuidProvider)
+                        it.manifestInfoProvider.set(manifestInfoOutputFile)
+                    }
+                    onProperties {
+                        artifacts
+                            .use(manifestUpdater)
+                            .wiredWithFiles(
+                                taskInput = BugsnagManifestUuidTaskV2::inputManifest,
+                                taskOutput = BugsnagManifestUuidTaskV2::outputManifest
+                            )
+                            .toTransform(ArtifactType.MERGED_MANIFEST)
+                    }
+                }
+            }
             android.applicationVariants.all { variant ->
                 registerBugsnagTasksForVariant(project, variant, bugsnag)
             }
@@ -80,9 +102,11 @@ class BugsnagPlugin : Plugin<Project> {
      *
      * See https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide#TOC-Build-Variants
      */
-    private fun registerBugsnagTasksForVariant(project: Project,
-                                               variant: ApkVariant,
-                                               bugsnag: BugsnagPluginExtension) {
+    private fun registerBugsnagTasksForVariant(
+        project: Project,
+        variant: ApkVariant,
+        bugsnag: BugsnagPluginExtension
+    ) {
         variant.outputs.configureEach {
             val output = it as ApkVariantOutput
             val jvmMinificationEnabled = variant.buildType.isMinifyEnabled || hasDexguardPlugin(project)
@@ -118,33 +142,16 @@ class BugsnagPlugin : Plugin<Project> {
         variant: ApkVariant,
         output: ApkVariantOutput
     ): Provider<RegularFile> {
-        val taskName = "processBugsnag${taskNameForOutput(output)}Manifest"
-        val buildUuidProvider = project.provider { UUID.randomUUID().toString() }
-        val path = "intermediates/bugsnag/manifestInfoFor${taskNameForOutput(output)}.json"
-        val manifestInfoOutputFile = project.layout.buildDirectory.file(path)
+        val taskName = computeManifestTaskNameFor(variant.name)
         return if (BugsnagManifestUuidTaskV2.isApplicable()) {
-            val manifestUpdater = project.tasks.register(taskName, BugsnagManifestUuidTaskV2::class.java) {
-                it.buildUuid.set(buildUuidProvider)
-                it.manifestInfoProvider.set(manifestInfoOutputFile)
-            }
-            val android = project.extensions.getByType(CommonExtension::class.java)
-            println("Variant name is ${variant.name}")
-            android.onVariants {
-                println("Looking at variant $name")
-                onProperties {
-                    println("Looking at variant properties in $name")
-                    return@onProperties
-                    artifacts
-                        .use(manifestUpdater)
-                        .wiredWithFiles(
-                            taskInput = BugsnagManifestUuidTaskV2::inputManifest,
-                            taskOutput = BugsnagManifestUuidTaskV2::outputManifest
-                        )
-                        .toTransform(ArtifactType.MERGED_MANIFEST)
-                }
-            }
+            // This task will have already been created!
+            val manifestUpdater = project.tasks
+                .withType(BugsnagManifestUuidTaskV2::class.java)
+                .named(taskName)
             return manifestUpdater.flatMap(BaseBugsnagManifestUuidTask::manifestInfoProvider)
         } else {
+            val manifestInfoOutputFile = project.computeManifestInfoOutputFor(variant.name)
+            val buildUuidProvider = project.newUuidProvider()
             project.tasks.register(taskName, BugsnagManifestUuidTask::class.java) {
                 it.buildUuid.set(buildUuidProvider)
                 it.variantOutput = output
@@ -294,6 +301,19 @@ class BugsnagPlugin : Plugin<Project> {
 
     fun taskNameForOutput(output: ApkVariantOutput): String {
         return output.name.capitalize()
+    }
+
+    private fun computeManifestTaskNameFor(variant: String): String {
+        return "processBugsnag${variant.capitalize()}Manifest"
+    }
+
+    private fun Project.computeManifestInfoOutputFor(variant: String): Provider<RegularFile> {
+        val path = "intermediates/bugsnag/manifestInfoFor${variant.capitalize()}.json"
+        return layout.buildDirectory.file(path)
+    }
+
+    private fun Project.newUuidProvider(): Provider<String> {
+        return provider { UUID.randomUUID().toString() }
     }
 
     /**
