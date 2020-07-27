@@ -7,6 +7,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
@@ -34,6 +35,9 @@ open class BugsnagUploadProguardTask @Inject constructor(
         group = BugsnagPlugin.GROUP_NAME
         description = "Uploads the mapping file to Bugsnag"
     }
+
+    @get:Internal
+    val uploadRequestClient: Property<UploadRequestClient> = objects.property(UploadRequestClient::class.java)
 
     @get:PathSensitive(NONE)
     @get:InputFile
@@ -77,7 +81,6 @@ open class BugsnagUploadProguardTask @Inject constructor(
         }
 
         // Read the API key and Build ID etc..
-        logger.lifecycle("Bugsnag: Attempting to upload mapping file: $mappingFile")
 
         // Construct a basic request
         val parts = mutableMapOf<String, RequestBody>()
@@ -85,8 +88,14 @@ open class BugsnagUploadProguardTask @Inject constructor(
 
         // Send the request
         val request = BugsnagMultiPartUploadRequest.from(this)
-        val response = request.uploadMultipartEntity(parts, parseManifestInfo())
+        val manifestInfo = parseManifestInfo()
+        val mappingFileContents = mappingFile.readText()
+        val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileContents) {
+            logger.lifecycle("Bugsnag: Attempting to upload JVM mapping file: $mappingFile")
+            request.uploadMultipartEntity(parts, manifestInfo)
+        }
         requestOutputFile.asFile.get().writeText(response)
+        logger.lifecycle("Bugsnag: JVM mapping file complete for $mappingFile")
     }
 
 }

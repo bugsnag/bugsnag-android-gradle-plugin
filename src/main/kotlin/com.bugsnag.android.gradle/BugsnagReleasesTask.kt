@@ -12,6 +12,7 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
@@ -43,6 +44,9 @@ open class BugsnagReleasesTask @Inject constructor(
         group = BugsnagPlugin.GROUP_NAME
         description = "Assembles information about the build that will be sent to the releases API"
     }
+
+    @get:Internal
+    val uploadRequestClient: Property<UploadRequestClient> = objects.property(UploadRequestClient::class.java)
 
     @get:PathSensitive(NONE)
     @get:InputFile
@@ -121,16 +125,22 @@ open class BugsnagReleasesTask @Inject constructor(
     fun fetchReleaseInfo() {
         val manifestInfo = parseManifestInfo()
         val payload = generateJsonPayload(manifestInfo)
-        logger.lifecycle("Bugsnag: Attempting upload to Releases API")
 
-        object : Call(retryCount, logger) {
-            override fun makeApiCall(): Boolean {
-                val response = deliverPayload(payload, manifestInfo)
-                requestOutputFile.asFile.get().writeText(response)
-                logger.lifecycle("Bugsnag: Upload succeeded")
-                return true
-            }
-        }.execute()
+        val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, payload.toString()) {
+            project.logger.lifecycle("Bugsnag: Attempting upload to Releases API")
+            lateinit var response: String
+            object : Call(retryCount, logger) {
+                override fun makeApiCall(): Boolean {
+                    response = deliverPayload(payload, manifestInfo)
+                    requestOutputFile.asFile.get().writeText(response)
+                    logger.lifecycle("Bugsnag: Upload succeeded")
+                    return true
+                }
+            }.execute()
+            response
+        }
+        requestOutputFile.asFile.get().writeText(response)
+        project.logger.lifecycle("Bugsnag: Releases request complete")
     }
 
     private fun deliverPayload(

@@ -39,6 +39,10 @@ class BugsnagPlugin : Plugin<Project> {
         const val BUNDLE_TASK = "bundle"
     }
 
+    private val releasesUploadClient = UploadRequestClient()
+    private val proguardUploadClient = UploadRequestClient()
+    private val ndkUploadClient = UploadRequestClient()
+
     override fun apply(project: Project) {
         // After Gradle 5.2, this can use service injection for injecting ObjectFactory
         val bugsnag = project.extensions.create(
@@ -139,12 +143,15 @@ class BugsnagPlugin : Plugin<Project> {
                 val mappingFileProvider = createMappingFileProvider(project, variant, output)
                 task.mappingFileProperty.set(mappingFileProvider)
                 releasesTask.get().jvmMappingFileProperty.set(mappingFileProvider)
+                task.uploadRequestClient.set(proguardUploadClient)
             }
 
             symbolFileTask?.get()?.let { task ->
                 val ndkSearchDirs = symbolFileTask.get().searchDirectories
                 releasesTask.get().ndkMappingFileProperty.set(ndkSearchDirs)
+                task.uploadRequestClient.set(ndkUploadClient)
             }
+            releasesTask.get().uploadRequestClient.set(releasesUploadClient)
             releasesTask.get().manifestInfoFile.set(manifestInfoFile)
             symbolFileTask?.get()?.manifestInfoFile?.set(manifestInfoFile)
             releasesTask.get().manifestInfoFile.set(manifestInfoFile)
