@@ -292,7 +292,7 @@ open class BugsnagUploadNdkTask @Inject constructor(
         }
 
         @JvmStatic
-        private fun calculateObjDumpLocation(ndkDir: String?, abi: Abi, osName: String): File {
+        fun calculateObjDumpLocation(ndkDir: String?, abi: Abi, osName: String): File {
             val executable = if (osName.startsWith("windows")) "objdump.exe" else "objdump"
             return File("$ndkDir/toolchains/${abi.toolchainPrefix}-4.9/prebuilt/$osName/bin/${abi.objdumpPrefix}-$executable")
         }
