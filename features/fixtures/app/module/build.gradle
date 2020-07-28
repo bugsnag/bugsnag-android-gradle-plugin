@@ -1,19 +1,13 @@
-buildscript {
-    repositories {
-        jcenter()
-        google()
-        mavenLocal()
-    }
-    dependencies {
-        classpath "com.bugsnag:bugsnag-android-gradle-plugin:${project.plugin_version}"
-    }
-}
+def moduleConfig = System.env.MODULE_CONFIG ?: "default_app"
+def bugsnagConfig = System.env.BUGSNAG_CONFIG ?: "standard"
 
 // apply android module configuration (e.g. APK splits enabled)
-apply from: "../../config/android/${System.env.MODULE_CONFIG}.gradle"
+apply from: "../../config/android/${moduleConfig}.gradle"
 
-// apply config first (not overwritten by applying bugsnag plugin)
-apply from: "../../config/bugsnag/${System.env.BUGSNAG_CONFIG}.gradle"
+if (!System.env.UPDATING_GRADLEW) {
+    // apply config first (not overwritten by applying bugsnag plugin)
+    apply from: "../../config/bugsnag/${bugsnagConfig}.gradle"
 
-// apply bugsnag plugin configuration (e.g. custom sourceControl info)
-apply plugin: 'com.bugsnag.android.gradle'
+    // apply bugsnag plugin configuration (e.g. custom sourceControl info)
+    apply plugin: 'com.bugsnag.android.gradle'
+}
