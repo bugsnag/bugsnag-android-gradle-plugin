@@ -1,5 +1,8 @@
 ## 5.0.0 (TBD)
 
+Specify shared object files as input for ndk task
+[#243](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/243)
+
 Make upload tasks support up-to-date checks
 [#239](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/239)
 
