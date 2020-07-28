@@ -1,21 +1,19 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.gradle.api.ApkVariant
-import com.android.build.gradle.api.ApkVariantOutput
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.internal.ExecException
 import org.json.simple.JSONObject
-import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
 import java.io.IOException
-import java.io.InputStreamReader
 import java.io.OutputStream
 import java.net.HttpURLConnection
 import java.net.URL
@@ -31,33 +29,36 @@ open class BugsnagReleasesTask @Inject constructor(
         description = "Assembles information about the build that will be sent to the releases API"
     }
 
-    lateinit var variantOutput: ApkVariantOutput
-    lateinit var variant: ApkVariant
-
     @get:PathSensitive(NONE)
     @get:InputFile
     override val manifestInfoFile: RegularFileProperty = objects.fileProperty()
 
+    @get:OutputFile
+    val requestOutputFile: RegularFileProperty = objects.fileProperty()
+
     @TaskAction
     fun fetchReleaseInfo() {
         val manifestInfo = parseManifestInfo()
-        val logger = project.logger
         val bugsnag = project.extensions.getByType(BugsnagPluginExtension::class.java)
         val payload = generateJsonPayload(manifestInfo, bugsnag)
         val json = payload.toString()
-        logger.debug("Releases Payload:\n$json")
+        project.logger.lifecycle("Bugsnag: Attempting upload to Releases API")
 
         object : Call(project) {
             @Throws(IOException::class)
             override fun makeApiCall(): Boolean {
-                return deliverPayload(payload, manifestInfo, bugsnag)
+                val response = deliverPayload(payload, manifestInfo, bugsnag)
+                requestOutputFile.asFile.get().writeText(response)
+                project.logger.lifecycle("Bugsnag: Upload succeeded")
+                return true
             }
         }.execute()
     }
 
-    private fun deliverPayload(payload: JSONObject, manifestInfo: AndroidManifestInfo, bugsnag: BugsnagPluginExtension): Boolean {
+    private fun deliverPayload(payload: JSONObject,
+                               manifestInfo: AndroidManifestInfo,
+                               bugsnag: BugsnagPluginExtension): String {
         var os: OutputStream? = null
-        val logger = project.logger
         try {
             val url = URL(bugsnag.releasesEndpoint)
             val conn = url.openConnection() as HttpURLConnection
@@ -69,30 +70,27 @@ open class BugsnagReleasesTask @Inject constructor(
             conn.doOutput = true
             os = conn.outputStream
             os.write(payload.toString().toByteArray(charset(CHARSET_UTF8)))
-            val statusCode = conn.responseCode
-            if (statusCode == 200) {
-                logger.info("Uploaded release info to Bugsnag")
-                return true
-            } else {
-                var reader: BufferedReader? = null
-                var line: String?
-                try {
-                    reader = BufferedReader(InputStreamReader(conn.errorStream))
-                    while ((reader.readLine().also { line = it }) != null) {
-                        logger.error(line)
-                    }
-                    logger.warn("Release Request failed with statusCode $statusCode")
-                } finally {
-                    reader?.close()
-                }
-                return false
-            }
-        } catch (e: IOException) {
-            logger.error(bugsnag.releasesEndpoint)
-            logger.error("Failed to POST request", e)
-            return false
+            return readRequestResponse(conn)
+        } catch (exc: IOException) {
+            throw IllegalStateException("Request to Bugsnag Releases API failed, aborting build.", exc)
         } finally {
             os?.close()
+        }
+    }
+
+    private fun readRequestResponse(conn: HttpURLConnection): String {
+        val statusCode = conn.responseCode
+        val success = statusCode == 200
+        val responseBody = when {
+            success -> conn.inputStream.bufferedReader().readText()
+            else -> conn.errorStream.bufferedReader().readText()
+        }
+        return when {
+            success -> responseBody
+            else -> {
+                project.logger.error(responseBody)
+                throw IllegalStateException("Request to Bugsnag Releases API failed, aborting build.")
+            }
         }
     }
 

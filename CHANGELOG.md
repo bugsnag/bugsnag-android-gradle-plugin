@@ -1,5 +1,14 @@
 ## 5.0.0 (TBD)
 
+Make upload tasks support up-to-date checks
+[#239](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/239)
+
+Avoid unnecessary SO mapping file uploads for ABI splits
+[#238](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/238)
+
+Alter bugsnag extension to allow multiple shared object paths
+[#237](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/237)
+
 Support for manifest processing in AGP 4.1.0-alpha04 and above
 [#234](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/234)
 
