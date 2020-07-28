@@ -48,13 +48,10 @@ class BugsnagPlugin : Plugin<Project> {
 
             val android = project.extensions.getByType(AppExtension::class.java)
             if (BugsnagManifestUuidTaskV2.isApplicable()) {
-                println("Setting up V2")
                 check(android is CommonExtension<*, *, *, *, *, *, *, *>)
                 android.onVariants {
                     val variantName = name
-                    println("Variant name is $variantName")
                     val taskName = computeManifestTaskNameFor(variantName)
-                    println("Registering $taskName")
                     val manifestInfoOutputFile = project.computeManifestInfoOutputFor(variantName)
                     val buildUuidProvider = project.newUuidProvider()
                     val manifestUpdater = project.tasks.register(taskName, BugsnagManifestUuidTaskV2::class.java) {
@@ -143,7 +140,6 @@ class BugsnagPlugin : Plugin<Project> {
         output: ApkVariantOutput
     ): Provider<RegularFile> {
         val taskName = computeManifestTaskNameFor(variant.name)
-        println("Registering legacy tasks with $taskName")
         return if (BugsnagManifestUuidTaskV2.isApplicable()) {
             // This task will have already been created!
             val manifestUpdater = project.tasks
