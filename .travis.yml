@@ -54,6 +54,6 @@ jobs:
         - NDK_FIXTURE_DIR=features/fixtures/ndkapp_agp340
       script: bundle exec maze-runner features/agp3-features features/agp-features -c --verbose
 
-    # AGP 4.0.0 E2E tests
-    - name: AGP 4.0.0 E2E tests
+    # AGP 4.1.0 E2E tests
+    - name: AGP 4.1.0 E2E tests
       script: bundle exec maze-runner features/agp4-features features/agp-features -c --verbose
