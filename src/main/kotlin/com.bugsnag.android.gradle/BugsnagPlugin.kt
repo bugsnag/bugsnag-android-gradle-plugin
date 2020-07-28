@@ -78,7 +78,7 @@ class BugsnagPlugin : Plugin<Project> {
                     }
                 }
             }
-            android.applicationVariants.all { variant ->
+            android.applicationVariants.configureEach { variant ->
                 registerBugsnagTasksForVariant(project, variant, bugsnag)
             }
 
