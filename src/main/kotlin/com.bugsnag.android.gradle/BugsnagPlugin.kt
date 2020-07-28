@@ -146,6 +146,7 @@ class BugsnagPlugin : Plugin<Project> {
         output: ApkVariantOutput
     ): Provider<RegularFile> {
         val taskName = computeManifestTaskNameFor(variant.name)
+        println("Registering legacy tasks with $taskName")
         return if (BugsnagManifestUuidTaskV2.isApplicable()) {
             // This task will have already been created!
             val manifestUpdater = project.tasks
