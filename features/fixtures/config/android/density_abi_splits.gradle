@@ -1,5 +1,5 @@
 apply plugin: 'com.android.application'
-apply from: 'config/android/common.gradle'
+apply from: "../../config/android/common.gradle"
 
 ext.abiCodes = ['arm64-v8a': 2, armeabi: 3, x86: 4, 'x86_64': 5]
 ext.densityCodes = [xhdpi: 2, xxxhdpi: 3]

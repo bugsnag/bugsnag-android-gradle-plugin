@@ -10,10 +10,10 @@ buildscript {
 }
 
 // apply android module configuration (e.g. APK splits enabled)
-apply from: "config/android/${System.env.MODULE_CONFIG}.gradle"
+apply from: "../../config/android/${System.env.MODULE_CONFIG}.gradle"
 
 // apply config first (not overwritten by applying bugsnag plugin)
-apply from: "config/bugsnag/${System.env.BUGSNAG_CONFIG}.gradle"
+apply from: "../../config/bugsnag/${System.env.BUGSNAG_CONFIG}.gradle"
 
 // apply bugsnag plugin configuration (e.g. custom sourceControl info)
 apply plugin: 'com.bugsnag.android.gradle'

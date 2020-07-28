@@ -1,5 +1,5 @@
 apply plugin: 'com.android.application'
-apply from: 'config/android/common.gradle'
+apply from: "../../config/android/common.gradle"
 
 ext.densityCodes = [ldpi:2, mdpi:3, hdpi:4, xhdpi:5, xxhdpi:6, xxxhdpi:7]
 

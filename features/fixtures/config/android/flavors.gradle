@@ -1,5 +1,5 @@
 apply plugin: 'com.android.application'
-apply from: 'config/android/common.gradle'
+apply from: "../../config/android/common.gradle"
 
 android {
     flavorDimensions "regular"

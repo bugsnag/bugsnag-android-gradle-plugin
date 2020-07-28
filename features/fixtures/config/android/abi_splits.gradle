@@ -1,5 +1,5 @@
 apply plugin: 'com.android.application'
-apply from: 'config/android/common.gradle'
+apply from: "../../config/android/common.gradle"
 
 ext.abiCodes = ['arm64-v8a':2, 'armeabi':3, 'armeabi-v7a':4, 'mips':5, 'mips64':6, 'x86':7, 'x86_64':8]
 
