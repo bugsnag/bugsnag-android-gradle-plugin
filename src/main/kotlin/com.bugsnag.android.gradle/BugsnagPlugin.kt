@@ -3,7 +3,6 @@ package com.bugsnag.android.gradle
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.gradle.AppExtension
-import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.ApplicationVariant
@@ -42,14 +41,9 @@ class BugsnagPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         val bugsnag = project.extensions.create("bugsnag", BugsnagPluginExtension::class.java)
-
-        project.afterEvaluate {
-            // Make sure the android plugin has been applied first
-            if (!project.plugins.hasPlugin(AppPlugin::class.java)) {
-                throw IllegalStateException("Must apply \'com.android.application\' first!")
-            }
+        project.pluginManager.withPlugin("com.android.application") {
             if (!bugsnag.isEnabled) {
-                return@afterEvaluate
+                return@withPlugin
             }
 
             val android = project.extensions.getByType(AppExtension::class.java)
@@ -78,12 +72,15 @@ class BugsnagPlugin : Plugin<Project> {
                     }
                 }
             }
-            android.applicationVariants.configureEach { variant ->
-                registerBugsnagTasksForVariant(project, variant, bugsnag)
-            }
 
-            if (isNdkProject(bugsnag, android)) {
-                registerNdkLibInstallTask(project)
+            project.afterEvaluate {
+                android.applicationVariants.configureEach { variant ->
+                    registerBugsnagTasksForVariant(project, variant, bugsnag)
+                }
+
+                if (isNdkProject(bugsnag, android)) {
+                    registerNdkLibInstallTask(project)
+                }
             }
         }
     }
