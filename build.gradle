@@ -40,6 +40,12 @@ repositories {
     google()
 }
 
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
 // Build dependencies
 dependencies {
     compileOnly "com.android.tools.build:gradle:4.1.0-beta04"
