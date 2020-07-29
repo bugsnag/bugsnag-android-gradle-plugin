@@ -4,6 +4,10 @@ import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApkVariantOutput
 import com.bugsnag.android.gradle.Abi.Companion.findByName
 import okhttp3.RequestBody
+import okio.buffer
+import okio.gzip
+import okio.sink
+import okio.source
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
@@ -20,10 +24,8 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
 import java.io.File
-import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.Reader
-import java.util.zip.GZIPOutputStream
 import javax.inject.Inject
 
 /**
@@ -222,17 +224,8 @@ open class BugsnagUploadNdkTask @Inject constructor(
          * @param outputFile The output file
          */
         private fun outputZipFile(stdout: InputStream, outputFile: File) {
-            var zipStream: GZIPOutputStream? = null
-            try {
-                zipStream = GZIPOutputStream(FileOutputStream(outputFile))
-                val buffer = ByteArray(8192)
-                var len: Int
-                while (stdout.read(buffer).also { len = it } != -1) {
-                    zipStream.write(buffer, 0, len)
-                }
-            } finally {
-                zipStream?.close()
-                stdout.close()
+            outputFile.sink().buffer().gzip().use { gzipSink ->
+                stdout.source().buffer().readAll(gzipSink)
             }
         }
 
