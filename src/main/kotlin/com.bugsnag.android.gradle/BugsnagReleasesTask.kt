@@ -1,5 +1,7 @@
 package com.bugsnag.android.gradle
 
+import com.squareup.moshi.JsonClass
+import okhttp3.OkHttpClient
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -16,13 +18,18 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.internal.ExecException
-import org.json.simple.JSONObject
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.moshi.MoshiConverterFactory
+import retrofit2.create
+import retrofit2.http.Body
+import retrofit2.http.Header
+import retrofit2.http.POST
+import retrofit2.http.Url
 import java.io.ByteArrayOutputStream
 import java.io.IOException
-import java.io.OutputStream
-import java.net.HttpURLConnection
-import java.net.URL
 import java.nio.charset.Charset
+import java.time.Duration
 import javax.inject.Inject
 
 open class BugsnagReleasesTask @Inject constructor(
@@ -100,63 +107,66 @@ open class BugsnagReleasesTask @Inject constructor(
     }
 
     private fun deliverPayload(
-        payload: JSONObject,
+        payload: ReleasePayload,
         manifestInfo: AndroidManifestInfo
     ): String {
-        var os: OutputStream? = null
-        try {
-            val url = URL(releasesEndpoint.get())
-            val conn = url.openConnection() as HttpURLConnection
-            conn.requestMethod = "POST"
-            conn.setRequestProperty("Content-Type", "application/json")
-            conn.setRequestProperty("Bugsnag-Api-Key", manifestInfo.apiKey)
-            val timeoutMs = timeoutMillis.get()
-            conn.readTimeout = timeoutMs.toInt()
-            conn.connectTimeout = timeoutMs.toInt()
-            conn.doOutput = true
-            os = conn.outputStream
-            os.write(payload.toString().toByteArray(charset(CHARSET_UTF8)))
-            return readRequestResponse(conn)
-        } catch (exc: IOException) {
-            throw IllegalStateException("Request to Bugsnag Releases API failed, aborting build.", exc)
-        } finally {
-            os?.close()
+        val timeoutDuration = Duration.ofMillis(timeoutMillis.get())
+        val bugsnagService = Retrofit.Builder()
+            .callFactory(
+                OkHttpClient.Builder()
+                    .connectTimeout(timeoutDuration)
+                    .callTimeout(timeoutDuration)
+                    .build()
+            )
+            .addConverterFactory(MoshiConverterFactory.create())
+            .build()
+            .create<BugsnagReleasesService>()
+
+        val response = try {
+            bugsnagService.upload(
+                releasesEndpoint.get(),
+                apiKey = manifestInfo.apiKey,
+                body = payload
+            )
+        } catch (e: IOException) {
+            throw IllegalStateException("Request to Bugsnag Releases API failed, aborting build.", e)
         }
+        return readRequestResponse(response)
     }
 
-    private fun readRequestResponse(conn: HttpURLConnection): String {
-        val statusCode = conn.responseCode
+    private fun readRequestResponse(response: Response<String>): String {
+        val statusCode = response.code()
         val success = statusCode == 200
-        val responseBody = when {
-            success -> conn.inputStream.bufferedReader().readText()
-            else -> conn.errorStream.bufferedReader().readText()
+        val responseData = when {
+            success -> response.body().orEmpty()
+            else -> response.errorBody()?.string().orEmpty()
         }
         return when {
-            success -> responseBody
+            success -> responseData
             else -> {
-                project.logger.error(responseBody)
+                logger.error(responseData)
                 throw IllegalStateException("Request to Bugsnag Releases API failed, aborting build.")
             }
         }
     }
 
-    private fun generateJsonPayload(manifestInfo: AndroidManifestInfo): JSONObject {
-        val root = JSONObject()
-        root["buildTool"] = "gradle-android"
-        root["apiKey"] = manifestInfo.apiKey
-        root["appVersion"] = manifestInfo.versionName
-        root["appVersionCode"] = manifestInfo.versionCode
-        root["metadata"] = generateMetadataJson()
-        root["sourceControl"] = generateVcsJson()
-        root["builderName"] = if (builderName.isPresent) {
-            builderName.get()
-        } else {
-            runCmd("whoami")
-        }
-        return root
+    private fun generateJsonPayload(manifestInfo: AndroidManifestInfo): ReleasePayload {
+        return ReleasePayload(
+            buildTool = "gradle-android",
+            apiKey = manifestInfo.apiKey,
+            appVersion = manifestInfo.versionName,
+            appVersionCode = manifestInfo.versionCode,
+            metadata = generateMetadataJson(),
+            sourceControl = generateVcsJson(),
+            builderName = if (builderName.isPresent) {
+                builderName.get()
+            } else {
+                runCmd("whoami")
+            }
+        )
     }
 
-    private fun generateVcsJson(): JSONObject {
+    private fun generateVcsJson(): Map<String, String?> {
         var vcsUrl = sourceControlRepository.orNull
         var commitHash = sourceControlRevision.orNull
         var vcsProvider = sourceControlProvider.orNull
@@ -169,7 +179,7 @@ open class BugsnagReleasesTask @Inject constructor(
         if (vcsProvider == null) {
             vcsProvider = parseProviderUrl(vcsUrl)
         }
-        val sourceControlObj = JSONObject()
+        val sourceControlObj = mutableMapOf<String, String?>()
         sourceControlObj["repository"] = vcsUrl
         sourceControlObj["revision"] = commitHash
         if (isValidVcsProvider(vcsProvider)) {
@@ -178,13 +188,13 @@ open class BugsnagReleasesTask @Inject constructor(
         return sourceControlObj
     }
 
-    private fun generateMetadataJson(): JSONObject {
+    private fun generateMetadataJson(): Map<String, String?> {
         val defaultMetaData = collectDefaultMetaData()
         metadata.orNull?.entries?.forEach { entry: Map.Entry<String, String> ->
             defaultMetaData[entry.key] = entry.value
         }
-        val additionalInfo = JSONObject()
-        defaultMetaData.entries.forEach { entry: Map.Entry<String?, String?> ->
+        val additionalInfo = mutableMapOf<String, String?>()
+        defaultMetaData.entries.forEach { entry: Map.Entry<String, String?> ->
             additionalInfo[entry.key] = entry.value
         }
         return additionalInfo
@@ -249,4 +259,24 @@ open class BugsnagReleasesTask @Inject constructor(
             return null
         }
     }
+}
+
+@JsonClass(generateAdapter = true)
+internal data class ReleasePayload(
+    val buildTool: String,
+    val apiKey: String,
+    val appVersion: String,
+    val appVersionCode: String,
+    val metadata: Map<String, String?>,
+    val sourceControl: Map<String, String?>,
+    val builderName: String?
+)
+
+internal interface BugsnagReleasesService {
+    @POST
+    fun upload(
+        @Url endpoint: String,
+        @Header("Bugsnag-Api-Key") apiKey: String,
+        @Body body: ReleasePayload
+    ): Response<String>
 }
