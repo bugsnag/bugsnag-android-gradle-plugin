@@ -1,0 +1,22 @@
+apply plugin: 'com.android.application'
+apply from: "../../config/android/common.gradle"
+
+ext.densityCodes = [ldpi:2, mdpi:3, hdpi:4, xhdpi:5, xxhdpi:6, xxxhdpi:7]
+
+android {
+    splits {
+        density {
+            enable true
+        }
+    }
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def densityVersionCode =
+                project.ext.densityCodes.get(output.getFilter("DENSITY"))
+
+            if (densityVersionCode != null) {
+                output.versionCodeOverride = densityVersionCode
+            }
+        }
+    }
+}

@@ -153,9 +153,11 @@ task copyDownloadableDepsToLibs(type: Copy) {
     into 'libs'
 }
 
-apply plugin: 'com.bugsnag.android.gradle'
+if (!System.env.UPDATING_GRADLEW) {
+    apply plugin: 'com.bugsnag.android.gradle'
 
-bugsnag {
-    endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
-    releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+    bugsnag {
+        endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+        releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+    }
 }
