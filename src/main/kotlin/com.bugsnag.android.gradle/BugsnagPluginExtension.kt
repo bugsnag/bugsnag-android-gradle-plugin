@@ -15,7 +15,8 @@ private val NULL_STRING: String? = null
 /**
  * Defines configuration options (Gradle plugin extensions) for the BugsnagPlugin
  */
-open class BugsnagPluginExtension @Inject constructor(objects: ObjectFactory) {
+// After Gradle 5.2, this can use service injection for injecting ObjectFactory
+open class BugsnagPluginExtension(objects: ObjectFactory) {
 
     val sourceControl: SourceControl = objects.newInstance(SourceControl::class.java)
 

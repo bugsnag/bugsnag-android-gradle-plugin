@@ -40,7 +40,12 @@ class BugsnagPlugin : Plugin<Project> {
     }
 
     override fun apply(project: Project) {
-        val bugsnag = project.extensions.create("bugsnag", BugsnagPluginExtension::class.java)
+        // After Gradle 5.2, this can use service injection for injecting ObjectFactory
+        val bugsnag = project.extensions.create(
+            "bugsnag",
+            BugsnagPluginExtension::class.java,
+            project.objects
+        )
         project.pluginManager.withPlugin("com.android.application") {
             if (!bugsnag.isEnabled) {
                 return@withPlugin
