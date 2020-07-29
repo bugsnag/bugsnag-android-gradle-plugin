@@ -60,6 +60,8 @@ class BugsnagMultiPartUploadRequest(
 
         var response = uploadToServer(finalParts)
         var uploadSuccessful = response != null
+
+        // Note - this should eventually be moved to a native OkHttp interceptor
         val maxRetryCount = getRetryCount()
         var retryCount = maxRetryCount
         while (!uploadSuccessful && retryCount > 0) {
