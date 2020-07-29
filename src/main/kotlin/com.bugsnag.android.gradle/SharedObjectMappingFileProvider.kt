@@ -6,8 +6,6 @@ import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.FileCollection
-import org.gradle.api.provider.Provider
 import java.io.File
 
 fun getSearchDirectories(project: Project,
