@@ -41,6 +41,7 @@ class BugsnagMultiPartUploadRequest(
 ) {
 
     private val bugsnagService = Retrofit.Builder()
+        .baseUrl("https://example.com") // Not actually used
         .callFactory(
             OkHttpClient.Builder()
                 .connectTimeout(timeoutDuration)
