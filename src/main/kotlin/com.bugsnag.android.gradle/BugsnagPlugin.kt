@@ -1,12 +1,11 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.gradle.AppExtension
-import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.ApplicationVariant
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
@@ -42,21 +41,41 @@ class BugsnagPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         val bugsnag = project.extensions.create("bugsnag", BugsnagPluginExtension::class.java)
-
-        project.afterEvaluate {
-            // Make sure the android plugin has been applied first
-            if (!project.plugins.hasPlugin(AppPlugin::class.java)) {
-                throw IllegalStateException("Must apply \'com.android.application\' first!")
-            }
+        project.pluginManager.withPlugin("com.android.application") {
             if (!bugsnag.isEnabled) {
-                return@afterEvaluate
+                return@withPlugin
             }
 
             val android = project.extensions.getByType(AppExtension::class.java)
-            android.applicationVariants.all { variant ->
-                registerBugsnagTasksForVariant(project, variant, bugsnag)
+            if (BugsnagManifestUuidTaskV2.isApplicable()) {
+                check(android is CommonExtension<*, *, *, *, *, *, *, *>)
+                android.onVariants {
+                    val variantName = name
+                    val taskName = computeManifestTaskNameFor(variantName)
+                    val manifestInfoOutputFile = project.computeManifestInfoOutputV2(variantName)
+                    val buildUuidProvider = project.newUuidProvider()
+                    val manifestUpdater = project.tasks.register(taskName, BugsnagManifestUuidTaskV2::class.java) {
+                        it.buildUuid.set(buildUuidProvider)
+                        it.manifestInfoProvider.set(manifestInfoOutputFile)
+                    }
+                    onProperties {
+                        artifacts
+                            .use(manifestUpdater)
+                            .wiredWithFiles(
+                                taskInput = BugsnagManifestUuidTaskV2::inputManifest,
+                                taskOutput = BugsnagManifestUuidTaskV2::outputManifest
+                            )
+                            .toTransform(ArtifactType.MERGED_MANIFEST)
+                    }
+                }
             }
-            registerNdkLibInstallTask(project, bugsnag, android)
+
+            project.afterEvaluate {
+                android.applicationVariants.configureEach { variant ->
+                    registerBugsnagTasksForVariant(project, variant, bugsnag)
+                }
+                registerNdkLibInstallTask(project, bugsnag, android)
+            }
         }
     }
 
@@ -81,9 +100,11 @@ class BugsnagPlugin : Plugin<Project> {
      *
      * See https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide#TOC-Build-Variants
      */
-    private fun registerBugsnagTasksForVariant(project: Project,
-                                               variant: ApkVariant,
-                                               bugsnag: BugsnagPluginExtension) {
+    private fun registerBugsnagTasksForVariant(
+        project: Project,
+        variant: ApkVariant,
+        bugsnag: BugsnagPluginExtension
+    ) {
         variant.outputs.configureEach {
             val output = it as ApkVariantOutput
             val jvmMinificationEnabled = variant.buildType.isMinifyEnabled || hasDexguardPlugin(project)
@@ -106,26 +127,22 @@ class BugsnagPlugin : Plugin<Project> {
             }
             val releasesTask = registerReleasesUploadTask(project, variant, output, bugsnag)
 
-            // calls get() to ensure that the registered tasks are executed
-            // if the packageApplication task will run. This uses the configuration avoidance API,
-            // see https://docs.gradle.org/current/userguide/task_configuration_avoidance.html
-            findAssembleBundleTasks(project, variant, output).forEach {
-                // give all tasks a manifest info provider to prevent reading
-                // the manifest more than once
-                proguardTask?.get()?.let { task ->
-                    task.manifestInfoFile.set(manifestInfoFile)
-                    val mappingFileProvider = createMappingFileProvider(project, variant, output)
-                    task.mappingFileProperty.set(mappingFileProvider)
-                    releasesTask.get().jvmMappingFileProperty.set(mappingFileProvider)
-                }
-
-                symbolFileTask?.get()?.let { task ->
-                    task.manifestInfoFile.set(manifestInfoFile)
-                    val ndkSearchDirs = symbolFileTask.get().searchDirectories
-                    releasesTask.get().ndkMappingFileProperty.set(ndkSearchDirs)
-                }
-                releasesTask.get().manifestInfoFile.set(manifestInfoFile)
+            // Set the manifest info provider to prevent reading
+            // the manifest more than once
+            proguardTask?.get()?.let { task ->
+                task.manifestInfoFile.set(manifestInfoFile)
+                val mappingFileProvider = createMappingFileProvider(project, variant, output)
+                task.mappingFileProperty.set(mappingFileProvider)
+                releasesTask.get().jvmMappingFileProperty.set(mappingFileProvider)
             }
+
+            symbolFileTask?.get()?.let { task ->
+                val ndkSearchDirs = symbolFileTask.get().searchDirectories
+                releasesTask.get().ndkMappingFileProperty.set(ndkSearchDirs)
+            }
+            releasesTask.get().manifestInfoFile.set(manifestInfoFile)
+            symbolFileTask?.get()?.manifestInfoFile?.set(manifestInfoFile)
+            releasesTask.get().manifestInfoFile.set(manifestInfoFile)
         }
     }
 
@@ -134,29 +151,17 @@ class BugsnagPlugin : Plugin<Project> {
         variant: ApkVariant,
         output: ApkVariantOutput
     ): Provider<RegularFile> {
-        val taskName = "processBugsnag${taskNameForOutput(output)}Manifest"
-        val buildUuidProvider = project.provider { UUID.randomUUID().toString() }
-        val path = "intermediates/bugsnag/manifestInfoFor${taskNameForOutput(output)}.json"
-        val manifestInfoOutputFile = project.layout.buildDirectory.file(path)
         return if (BugsnagManifestUuidTaskV2.isApplicable()) {
-            val manifestUpdater = project.tasks.register(taskName, BugsnagManifestUuidTaskV2::class.java) {
-                it.buildUuid.set(buildUuidProvider)
-                it.manifestInfoProvider.set(manifestInfoOutputFile)
-            }
-            val android = project.extensions.getByType(BaseAppModuleExtension::class.java)
-            android.onVariants.withName(variant.name) {
-                onProperties {
-                    artifacts
-                        .use(manifestUpdater)
-                        .wiredWithFiles(
-                            BugsnagManifestUuidTaskV2::inputManifest,
-                            BugsnagManifestUuidTaskV2::outputManifest
-                        )
-                        .toTransform(ArtifactType.MERGED_MANIFEST)
-                }
-            }
+            val taskName = computeManifestTaskNameFor(variant.name)
+            // This task will have already been created!
+            val manifestUpdater = project.tasks
+                .withType(BugsnagManifestUuidTaskV2::class.java)
+                .named(taskName)
             return manifestUpdater.flatMap(BaseBugsnagManifestUuidTask::manifestInfoProvider)
         } else {
+            val taskName = computeManifestTaskNameFor(output.name)
+            val manifestInfoOutputFile = project.computeManifestInfoOutputV1(output)
+            val buildUuidProvider = project.newUuidProvider()
             project.tasks.register(taskName, BugsnagManifestUuidTask::class.java) {
                 it.buildUuid.set(buildUuidProvider)
                 it.variantOutput = output
@@ -311,6 +316,26 @@ class BugsnagPlugin : Plugin<Project> {
 
     fun taskNameForOutput(output: ApkVariantOutput): String {
         return output.name.capitalize()
+    }
+
+    private fun computeManifestTaskNameFor(variant: String): String {
+        return "processBugsnag${variant.capitalize()}Manifest"
+    }
+
+    private fun Project.computeManifestInfoOutputV2(variant: String): Provider<RegularFile> {
+        val path = "intermediates/bugsnag/manifestInfoFor${variant.capitalize()}.json"
+        return layout.buildDirectory.file(path)
+    }
+
+    private fun Project.computeManifestInfoOutputV1(output: ApkVariantOutput): Provider<RegularFile> {
+        val path = "intermediates/bugsnag/manifestInfoFor${taskNameForOutput(output)}.json"
+        return layout.buildDirectory.file(path)
+    }
+
+
+
+    private fun Project.newUuidProvider(): Provider<String> {
+        return provider { UUID.randomUUID().toString() }
     }
 
     /**
