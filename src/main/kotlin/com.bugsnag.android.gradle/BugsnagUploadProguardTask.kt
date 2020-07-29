@@ -1,17 +1,16 @@
 package com.bugsnag.android.gradle
 
-import org.apache.http.entity.mime.HttpMultipartMode
-import org.apache.http.entity.mime.MultipartEntity
-import org.apache.http.entity.mime.content.FileBody
+import okhttp3.RequestBody
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
-import java.nio.charset.Charset
 import javax.inject.Inject
 
 /**
@@ -29,7 +28,7 @@ import javax.inject.Inject
  */
 open class BugsnagUploadProguardTask @Inject constructor(
     objects: ObjectFactory
-) : DefaultTask(), AndroidManifestInfoReceiver {
+) : DefaultTask(), AndroidManifestInfoReceiver, BugsnagFileUploadTask {
 
     init {
         group = BugsnagPlugin.GROUP_NAME
@@ -47,6 +46,21 @@ open class BugsnagUploadProguardTask @Inject constructor(
     @get:OutputFile
     val requestOutputFile: RegularFileProperty = objects.fileProperty()
 
+    @get:Input
+    override val failOnUploadError: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+
+    @get:Input
+    override val overwrite: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+
+    @get:Input
+    override val endpoint: Property<String> = objects.property(String::class.javaObjectType)
+
+    @get:Input
+    override val retryCount: Property<Int> = objects.property(Int::class.javaObjectType)
+
+    @get:Input
+    override val timeoutMillis: Property<Long> = objects.property(Long::class.javaObjectType)
+
     @TaskAction
     fun upload() {
         val mappingFile = mappingFileProperty.asFile.get()
@@ -57,7 +71,7 @@ open class BugsnagUploadProguardTask @Inject constructor(
         if (!mappingFile.exists()) {
             logger.warn("Bugsnag: Mapping file not found: $mappingFile")
             val bugsnag = project.extensions.findByType(BugsnagPluginExtension::class.java)!!
-            if (bugsnag.isFailOnUploadError) {
+            if (bugsnag.failOnUploadError.get()) {
                 throw IllegalStateException("Mapping file not found: $mappingFile")
             }
         }
@@ -66,13 +80,12 @@ open class BugsnagUploadProguardTask @Inject constructor(
         logger.lifecycle("Bugsnag: Attempting to upload mapping file: $mappingFile")
 
         // Construct a basic request
-        val charset = Charset.forName("UTF-8")
-        val mpEntity = MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE, null, charset)
-        mpEntity.addPart("proguard", FileBody(mappingFile))
+        val parts = mutableMapOf<String, RequestBody>()
+        parts["proguard"] = mappingFile.toOctetRequestBody()
 
         // Send the request
-        val request = BugsnagMultiPartUploadRequest()
-        val response = request.uploadMultipartEntity(project, mpEntity, parseManifestInfo())
+        val request = BugsnagMultiPartUploadRequest.from(this)
+        val response = request.uploadMultipartEntity(parts, parseManifestInfo())
         requestOutputFile.asFile.get().writeText(response)
     }
 

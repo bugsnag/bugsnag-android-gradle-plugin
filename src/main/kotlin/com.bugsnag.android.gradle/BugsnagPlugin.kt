@@ -191,6 +191,7 @@ class BugsnagPlugin : Plugin<Project> {
         return project.tasks.register(taskName, BugsnagUploadProguardTask::class.java) {
             it.requestOutputFile.set(requestOutputFile)
             addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.isUploadJvmMappings)
+            it.configureWith(bugsnag)
         }
     }
 
@@ -209,6 +210,7 @@ class BugsnagPlugin : Plugin<Project> {
             it.searchDirectories.set(getSearchDirectories(project, variant))
             it.variantOutput = output
             addTaskToExecutionGraph(it, variant, output, project, bugsnag, true)
+            it.configureWith(bugsnag)
         }
     }
 

@@ -2,13 +2,16 @@ package com.bugsnag.android.gradle
 
 import groovy.lang.Closure
 import org.gradle.api.Action
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.util.ConfigureUtil
 import java.io.File
+import javax.inject.Inject
 
 /**
  * Defines configuration options (Gradle plugin extensions) for the BugsnagPlugin
  */
-open class BugsnagPluginExtension {
+open class BugsnagPluginExtension @Inject constructor(objects: ObjectFactory) {
 
     val sourceControl: SourceControl = SourceControl()
 
@@ -17,14 +20,19 @@ open class BugsnagPluginExtension {
     var isUploadNdkMappings: Boolean? = null
     var isReportBuilds = true
     var isUploadDebugBuildMappings = false
-    var endpoint = "https://upload.bugsnag.com"
+    val endpoint: Property<String> = objects.property(String::class.javaObjectType)
+        .convention("https://upload.bugsnag.com")
     var releasesEndpoint = "https://build.bugsnag.com"
-    var isOverwrite = false
-    var retryCount = 0
+    val overwrite: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+        .convention(false)
+    val retryCount: Property<Int> = objects.property(Int::class.javaObjectType)
+        .convention(0)
     var sharedObjectPaths: List<File> = emptyList()
     var projectRoot: String? = null
-    var isFailOnUploadError = true
-    var requestTimeoutMs = 60000
+    val failOnUploadError: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+        .convention(true)
+    val requestTimeoutMs: Property<Long> = objects.property(Long::class.javaObjectType)
+        .convention(60000)
 
     // release API values
     var builderName: String? = null

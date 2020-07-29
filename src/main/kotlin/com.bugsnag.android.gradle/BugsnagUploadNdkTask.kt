@@ -3,9 +3,7 @@ package com.bugsnag.android.gradle
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApkVariantOutput
 import com.bugsnag.android.gradle.Abi.Companion.findByName
-import org.apache.http.entity.mime.MultipartEntity
-import org.apache.http.entity.mime.content.FileBody
-import org.apache.http.entity.mime.content.StringBody
+import okhttp3.RequestBody
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
@@ -13,6 +11,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -42,7 +41,7 @@ import javax.inject.Inject
  */
 open class BugsnagUploadNdkTask @Inject constructor(
     objects: ObjectFactory
-) : DefaultTask(), AndroidManifestInfoReceiver {
+) : DefaultTask(), AndroidManifestInfoReceiver, BugsnagFileUploadTask {
 
     init {
         group = BugsnagPlugin.GROUP_NAME
@@ -64,6 +63,21 @@ open class BugsnagUploadNdkTask @Inject constructor(
 
     @get:OutputFile
     val requestOutputFile: RegularFileProperty = objects.fileProperty()
+
+    @get:Input
+    override val failOnUploadError: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+
+    @get:Input
+    override val overwrite: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+
+    @get:Input
+    override val endpoint: Property<String> = objects.property(String::class.javaObjectType)
+
+    @get:Input
+    override val retryCount: Property<Int> = objects.property(Int::class.javaObjectType)
+
+    @get:Input
+    override val timeoutMillis: Property<Long> = objects.property(Long::class.javaObjectType)
 
     @TaskAction
     fun upload() {
@@ -152,20 +166,24 @@ open class BugsnagUploadNdkTask @Inject constructor(
             project.logger.warn("Bugsnag: Skipping upload of empty/invalid mapping file: $mappingFile")
             return
         }
-        val mpEntity = MultipartEntity()
-        mpEntity.addPart("soSymbolFile", FileBody(mappingFile))
-        mpEntity.addPart("arch", StringBody(arch))
-        mpEntity.addPart("sharedObjectName", StringBody(sharedObjectName))
+        val parts = mutableMapOf<String, RequestBody>()
+        parts["soSymbolFile"] = mappingFile.toOctetRequestBody()
+        arch?.let {
+            parts["arch"] = it.toTextRequestBody()
+        }
+        sharedObjectName?.let {
+            parts["sharedObjectName"] = it.toTextRequestBody()
+        }
         val bugsnag = project.extensions.getByType(BugsnagPluginExtension::class.java)
         var projectRoot = bugsnag.projectRoot
         if (projectRoot == null) {
             projectRoot = projectDir.toString()
         }
-        mpEntity.addPart("projectRoot", StringBody(projectRoot))
-        val request = BugsnagMultiPartUploadRequest()
+        parts["projectRoot"] = projectRoot.toTextRequestBody()
+        val request = BugsnagMultiPartUploadRequest.from(this)
         project.logger.lifecycle("Bugsnag: Attempting to upload shared object mapping " +
             "file for $sharedObjectName-$arch from $mappingFile")
-        request.uploadMultipartEntity(project, mpEntity, parseManifestInfo())
+        request.uploadMultipartEntity(parts, parseManifestInfo())
     }
 
     /**
@@ -203,7 +221,7 @@ open class BugsnagUploadNdkTask @Inject constructor(
          * @param stdout The input stream
          * @param outputFile The output file
          */
-        private fun outputZipFile(stdout: InputStream, outputFile: File?) {
+        private fun outputZipFile(stdout: InputStream, outputFile: File) {
             var zipStream: GZIPOutputStream? = null
             try {
                 zipStream = GZIPOutputStream(FileOutputStream(outputFile))
