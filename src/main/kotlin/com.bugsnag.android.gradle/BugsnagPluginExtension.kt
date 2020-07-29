@@ -3,17 +3,21 @@ package com.bugsnag.android.gradle
 import groovy.lang.Closure
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.util.ConfigureUtil
 import java.io.File
 import javax.inject.Inject
+
+// To make kotlin happy with gradle's nullability
+private val NULL_STRING: String? = null
 
 /**
  * Defines configuration options (Gradle plugin extensions) for the BugsnagPlugin
  */
 open class BugsnagPluginExtension @Inject constructor(objects: ObjectFactory) {
 
-    val sourceControl: SourceControl = SourceControl()
+    val sourceControl: SourceControl = objects.newInstance(SourceControl::class.java)
 
     var isEnabled = true
     var isUploadJvmMappings = true
@@ -35,8 +39,9 @@ open class BugsnagPluginExtension @Inject constructor(objects: ObjectFactory) {
         .convention(60000)
 
     // release API values
-    var builderName: String? = null
-    var metadata: Map<String, String>? = null
+    var builderName: Property<String> = objects.property(String::class.java).convention(NULL_STRING)
+    var metadata: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java)
+        .convention(emptyMap())
     var objdumpPaths: Map<String, String>? = null
 
     // exposes sourceControl as a nested object on the extension,

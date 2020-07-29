@@ -5,7 +5,9 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
@@ -52,36 +54,65 @@ open class BugsnagReleasesTask @Inject constructor(
     @get:Optional
     val ndkMappingFileProperty: Property<FileCollection> = objects.property(FileCollection::class.java)
 
+    @get:Input
+    val retryCount: Property<Int> = objects.property(Int::class.javaObjectType)
+
+    @get:Input
+    val timeoutMillis: Property<Long> = objects.property(Long::class.javaObjectType)
+
+    @get:Input
+    val releasesEndpoint: Property<String> = objects.property(String::class.java)
+
+    @get:Optional
+    @get:Input
+    val builderName: Property<String> = objects.property(String::class.java)
+
+    @get:Optional
+    @get:Input
+    val metadata: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java)
+
+    @get:Optional
+    @get:Input
+    val sourceControlProvider: Property<String> = objects.property(String::class.java)
+
+    @get:Optional
+    @get:Input
+    val sourceControlRepository: Property<String> = objects.property(String::class.java)
+
+    @get:Optional
+    @get:Input
+    val sourceControlRevision: Property<String> = objects.property(String::class.java)
+
     @TaskAction
     fun fetchReleaseInfo() {
         val manifestInfo = parseManifestInfo()
-        val bugsnag = project.extensions.getByType(BugsnagPluginExtension::class.java)
-        val payload = generateJsonPayload(manifestInfo, bugsnag)
-        project.logger.lifecycle("Bugsnag: Attempting upload to Releases API")
+        val payload = generateJsonPayload(manifestInfo)
+        logger.lifecycle("Bugsnag: Attempting upload to Releases API")
 
-        object : Call(project) {
-            @Throws(IOException::class)
+        object : Call(retryCount, logger) {
             override fun makeApiCall(): Boolean {
-                val response = deliverPayload(payload, manifestInfo, bugsnag)
+                val response = deliverPayload(payload, manifestInfo)
                 requestOutputFile.asFile.get().writeText(response)
-                project.logger.lifecycle("Bugsnag: Upload succeeded")
+                logger.lifecycle("Bugsnag: Upload succeeded")
                 return true
             }
         }.execute()
     }
 
-    private fun deliverPayload(payload: JSONObject,
-                               manifestInfo: AndroidManifestInfo,
-                               bugsnag: BugsnagPluginExtension): String {
+    private fun deliverPayload(
+        payload: JSONObject,
+        manifestInfo: AndroidManifestInfo
+    ): String {
         var os: OutputStream? = null
         try {
-            val url = URL(bugsnag.releasesEndpoint)
+            val url = URL(releasesEndpoint.get())
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
             conn.setRequestProperty("Content-Type", "application/json")
             conn.setRequestProperty("Bugsnag-Api-Key", manifestInfo.apiKey)
-            conn.readTimeout = bugsnag.requestTimeoutMs
-            conn.connectTimeout = bugsnag.requestTimeoutMs
+            val timeoutMs = timeoutMillis.get()
+            conn.readTimeout = timeoutMs.toInt()
+            conn.connectTimeout = timeoutMs.toInt()
             conn.doOutput = true
             os = conn.outputStream
             os.write(payload.toString().toByteArray(charset(CHARSET_UTF8)))
@@ -109,27 +140,26 @@ open class BugsnagReleasesTask @Inject constructor(
         }
     }
 
-    private fun generateJsonPayload(manifestInfo: AndroidManifestInfo, bugsnag: BugsnagPluginExtension): JSONObject {
+    private fun generateJsonPayload(manifestInfo: AndroidManifestInfo): JSONObject {
         val root = JSONObject()
         root["buildTool"] = "gradle-android"
         root["apiKey"] = manifestInfo.apiKey
         root["appVersion"] = manifestInfo.versionName
         root["appVersionCode"] = manifestInfo.versionCode
-        root["metadata"] = generateMetadataJson(bugsnag)
-        root["sourceControl"] = generateVcsJson(bugsnag)
-        root["builderName"] = if (bugsnag.builderName != null) {
-            bugsnag.builderName
+        root["metadata"] = generateMetadataJson()
+        root["sourceControl"] = generateVcsJson()
+        root["builderName"] = if (builderName.isPresent) {
+            builderName.get()
         } else {
             runCmd("whoami")
         }
         return root
     }
 
-    private fun generateVcsJson(bugsnag: BugsnagPluginExtension): JSONObject {
-        val sourceControl = bugsnag.sourceControl
-        var vcsUrl = sourceControl.repository
-        var commitHash = sourceControl.revision
-        var vcsProvider = sourceControl.provider
+    private fun generateVcsJson(): JSONObject {
+        var vcsUrl = sourceControlRepository.orNull
+        var commitHash = sourceControlRevision.orNull
+        var vcsProvider = sourceControlProvider.orNull
         if (vcsUrl == null) {
             vcsUrl = runCmd(VCS_COMMAND, "config", "--get", "remote.origin.url")
         }
@@ -148,13 +178,13 @@ open class BugsnagReleasesTask @Inject constructor(
         return sourceControlObj
     }
 
-    private fun generateMetadataJson(bugsnag: BugsnagPluginExtension): JSONObject {
-        val metadata = collectDefaultMetaData()
-        bugsnag.metadata?.entries?.forEach { entry: Map.Entry<String, String> ->
-            metadata[entry.key] = entry.value
+    private fun generateMetadataJson(): JSONObject {
+        val defaultMetaData = collectDefaultMetaData()
+        metadata.orNull?.entries?.forEach { entry: Map.Entry<String, String> ->
+            defaultMetaData[entry.key] = entry.value
         }
         val additionalInfo = JSONObject()
-        metadata.entries.forEach { entry: Map.Entry<String?, String?> ->
+        defaultMetaData.entries.forEach { entry: Map.Entry<String?, String?> ->
             additionalInfo[entry.key] = entry.value
         }
         return additionalInfo
@@ -162,6 +192,7 @@ open class BugsnagReleasesTask @Inject constructor(
 
     private fun collectDefaultMetaData(): MutableMap<String, String?> {
         val gradleVersion = project.gradle.gradleVersion
+        // TODO these should eventually use Gradle's newer env gradle property APIs
         return hashMapOf(
             "os_arch" to System.getProperty(MK_OS_ARCH),
             "os_name" to System.getProperty(MK_OS_NAME),

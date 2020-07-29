@@ -224,6 +224,13 @@ class BugsnagPlugin : Plugin<Project> {
         val requestOutputFile = project.layout.buildDirectory.file(path)
         return project.tasks.register(taskName, BugsnagReleasesTask::class.java) {
             it.requestOutputFile.set(requestOutputFile)
+            it.retryCount.set(bugsnag.retryCount)
+            it.timeoutMillis.set(bugsnag.requestTimeoutMs)
+            it.sourceControlProvider.set(bugsnag.sourceControl.provider)
+            it.sourceControlRepository.set(bugsnag.sourceControl.repository)
+            it.sourceControlRevision.set(bugsnag.sourceControl.revision)
+            it.metadata.set(bugsnag.metadata)
+            it.builderName.set(bugsnag.builderName)
             addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.isReportBuilds)
         }
     }

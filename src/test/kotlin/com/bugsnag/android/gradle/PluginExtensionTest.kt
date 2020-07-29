@@ -25,14 +25,14 @@ class PluginExtensionTest {
     @Test
     fun ensureExtensionDefaults() {
         val bugsnag = proj.extensions.getByType(BugsnagPluginExtension::class.java)
-        assertEquals("https://upload.bugsnag.com", bugsnag.endpoint)
+        assertEquals("https://upload.bugsnag.com", bugsnag.endpoint.get())
         assertTrue(bugsnag.isUploadJvmMappings)
         assertTrue(bugsnag.isReportBuilds)
         assertFalse(bugsnag.isUploadDebugBuildMappings)
-        assertFalse(bugsnag.isOverwrite)
-        assertEquals(0, bugsnag.retryCount)
+        assertFalse(bugsnag.overwrite.get())
+        assertEquals(0, bugsnag.retryCount.get())
         assertNull(bugsnag.isUploadNdkMappings)
         assertEquals(ArrayList<File>(), bugsnag.sharedObjectPaths)
-        assertTrue(bugsnag.isFailOnUploadError)
+        assertTrue(bugsnag.failOnUploadError.get())
     }
 }

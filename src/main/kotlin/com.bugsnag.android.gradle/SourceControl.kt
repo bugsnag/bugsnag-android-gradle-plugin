@@ -1,7 +1,11 @@
 package com.bugsnag.android.gradle
 
-open class SourceControl {
-    var provider: String? = null
-    var repository: String? = null
-    var revision: String? = null
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
+import javax.inject.Inject
+
+open class SourceControl @Inject constructor(objects: ObjectFactory) {
+    val provider: Property<String> = objects.property(String::class.java)
+    val repository: Property<String> = objects.property(String::class.java)
+    val revision: Property<String> = objects.property(String::class.java)
 }
