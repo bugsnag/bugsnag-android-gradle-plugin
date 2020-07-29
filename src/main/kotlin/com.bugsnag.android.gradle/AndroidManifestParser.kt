@@ -19,7 +19,7 @@ class AndroidManifestParser {
 
     @Throws(ParserConfigurationException::class, SAXException::class, IOException::class)
     fun readManifest(manifestPath: File, logger: Logger): AndroidManifestInfo {
-        logger.debug("Bugsnag: Reading manifest at: ${manifestPath}")
+        logger.debug("Bugsnag: Reading manifest at: $manifestPath")
         val root = XmlParser().parse(manifestPath)
         val application = (root[TAG_APPLICATION] as NodeList)[0] as Node
         val metadataTags = findMetadataTags(application)
@@ -117,7 +117,7 @@ class AndroidManifestParser {
         return versionName ?: xml.attribute(namespace.get(ATTR_VERSION_NAME)) as String?
     }
 
-    fun getVersionCode(metaDataTags: List<Node>, xml: Node): String? {
+    private fun getVersionCode(metaDataTags: List<Node>, xml: Node): String? {
         val versionCode = getManifestMetaData(metaDataTags, TAG_VERSION_CODE)
         return versionCode ?: xml.attribute(namespace.get(ATTR_VERSION_CODE)) as String?
     }
