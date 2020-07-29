@@ -53,6 +53,20 @@ jobs:
         - GRADLE_WRAPPER_VERSION=5.1.1
       script: bundle exec maze-runner -c --verbose
 
+      # AGP 3.5.0 E2E tests
+    - name: AGP 3.5.0 E2E tests
+      env:
+        - AGP_VERSION=3.5.0
+        - GRADLE_WRAPPER_VERSION=5.4.1
+      script: bundle exec maze-runner -c --verbose
+
+      # AGP 3.6.0 E2E tests
+    - name: AGP 3.6.0 E2E tests
+      env:
+        - AGP_VERSION=3.6.0
+        - GRADLE_WRAPPER_VERSION=5.6.4
+      script: bundle exec maze-runner -c --verbose
+
       # AGP 4.0.0 E2E tests
     - name: AGP 4.0.0 E2E tests
       env:
