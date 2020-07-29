@@ -61,9 +61,9 @@ dependencies {
     // For multiple I/O use cases
     implementation "com.squareup.okio:okio:2.7.0"
 
-    testCompile "com.android.tools.build:gradle:4.0.0"
-    testCompile "junit:junit:4.12"
-    testCompile "org.mockito:mockito-core:2.28.2"
+    testImplementation "com.android.tools.build:gradle:4.0.0"
+    testImplementation "junit:junit:4.12"
+    testImplementation "org.mockito:mockito-core:2.28.2"
 }
 
 // Maven publishing settings (nexus-maven-plugins)
