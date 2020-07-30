@@ -7,12 +7,16 @@ import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
+import com.bugsnag.android.gradle.BugsnagReleasesTask.Companion
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskProvider
 import java.util.UUID
 
@@ -237,6 +241,7 @@ class BugsnagPlugin : Plugin<Project> {
             it.metadata.set(bugsnag.metadata)
             it.builderName.set(bugsnag.builderName)
             addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.isReportBuilds)
+            it.configureMetadata(project)
         }
     }
 

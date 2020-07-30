@@ -3,6 +3,7 @@ package com.bugsnag.android.gradle
 import com.squareup.moshi.JsonClass
 import okhttp3.OkHttpClient
 import org.gradle.api.DefaultTask
+import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.LogLevel
@@ -18,6 +19,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.internal.ExecException
+import org.gradle.util.VersionNumber
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -89,6 +91,30 @@ open class BugsnagReleasesTask @Inject constructor(
     @get:Optional
     @get:Input
     val sourceControlRevision: Property<String> = objects.property(String::class.java)
+
+    @get:Input
+    @get:Optional
+    val osArch: Property<String> = objects.property(String::class.java)
+
+    @get:Input
+    @get:Optional
+    val osName: Property<String> = objects.property(String::class.java)
+
+    @get:Input
+    @get:Optional
+    val osVersion: Property<String> = objects.property(String::class.java)
+
+    @get:Input
+    @get:Optional
+    val javaVersion: Property<String> = objects.property(String::class.java)
+
+    @get:Input
+    @get:Optional
+    val gradleVersion: Property<String> = objects.property(String::class.java)
+
+    @get:Input
+    @get:Optional
+    val gitVersion: Property<String> = objects.property(String::class.java)
 
     @TaskAction
     fun fetchReleaseInfo() {
@@ -198,13 +224,12 @@ open class BugsnagReleasesTask @Inject constructor(
     }
 
     private fun collectDefaultMetaData(map: MutableMap<String, String?>) {
-        // TODO these should eventually use Gradle's newer env gradle property APIs
-        map["os_arch"] = System.getProperty(MK_OS_ARCH)
-        map["os_name"] = System.getProperty(MK_OS_NAME)
-        map["os_version"] = System.getProperty(MK_OS_VERSION)
-        map["java_version"] = System.getProperty(MK_JAVA_VERSION)
-        map["gradle_version"] = project.gradle.gradleVersion
-        map["git_version"] = runCmd(VCS_COMMAND, "--version")
+        map["os_arch"] = osArch.orNull
+        map["os_name"] = osName.orNull
+        map["os_version"] = osVersion.orNull
+        map["java_version"] = javaVersion.orNull
+        map["gradle_version"] = gradleVersion.orNull
+        map["git_version"] = gitVersion.orNull
     }
 
     /**
@@ -226,6 +251,24 @@ open class BugsnagReleasesTask @Inject constructor(
         }
     }
 
+    internal fun configureMetadata(project: Project) {
+        val gradleVersionString = project.gradle.gradleVersion
+        val gradleVersionNumber = VersionNumber.parse(gradleVersionString)
+        gradleVersion.set(gradleVersionString)
+        gitVersion.set(project.provider { runCmd(VCS_COMMAND, "--version") } )
+        if (gradleVersionNumber >= SYS_PROPERTIES_VERSION)  {
+            osArch.set(project.provider { System.getProperty(MK_OS_ARCH) } )
+            osName.set(project.provider { System.getProperty(MK_OS_NAME) } )
+            osVersion.set(project.provider { System.getProperty(MK_OS_VERSION) } )
+            javaVersion.set(project.provider { System.getProperty(MK_JAVA_VERSION) })
+        } else {
+            osArch.set(project.providers.systemProperty(MK_OS_ARCH) )
+            osName.set(project.providers.systemProperty(MK_OS_NAME) )
+            osVersion.set(project.providers.systemProperty(MK_OS_VERSION) )
+            javaVersion.set(project.providers.systemProperty(MK_JAVA_VERSION))
+        }
+    }
+
     companion object {
         private val VALID_VCS_PROVIDERS: Collection<String> = listOf("github-enterprise",
             "bitbucket-server", "gitlab-onpremise", "bitbucket", "github", "gitlab")
@@ -235,6 +278,7 @@ open class BugsnagReleasesTask @Inject constructor(
         private const val MK_JAVA_VERSION = "java.version"
         private const val VCS_COMMAND = "git"
         private const val CHARSET_UTF8 = "UTF-8"
+        private val SYS_PROPERTIES_VERSION = VersionNumber.parse("6.1")
 
         @JvmStatic
         fun isValidVcsProvider(provider: String?): Boolean {
