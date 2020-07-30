@@ -157,7 +157,7 @@ open class BugsnagReleasesTask @Inject constructor(
                 releasesEndpoint.get(),
                 apiKey = manifestInfo.apiKey,
                 body = payload
-            )
+            ).execute()
         } catch (e: IOException) {
             throw IllegalStateException("Request to Bugsnag Releases API failed, aborting build.", e)
         }
@@ -318,5 +318,5 @@ internal interface BugsnagReleasesService {
         @Url endpoint: String,
         @Header("Bugsnag-Api-Key") apiKey: String,
         @Body body: ReleasePayload
-    ): Response<String>
+    ): retrofit2.Call<String>
 }

@@ -8,7 +8,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.logging.Logger
-import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.create
@@ -100,7 +99,7 @@ class BugsnagMultiPartUploadRequest(
     private fun uploadToServer(parts: Map<String, RequestBody>): String? {
         // Make the request
         try {
-            val response = bugsnagService.uploadFile(endpoint, parts)
+            val response = bugsnagService.uploadFile(endpoint, parts).execute()
             val statusCode = response.code()
             val responseEntity = response.body()
 
@@ -159,5 +158,5 @@ internal interface BugsnagService {
     fun uploadFile(
         @Url endpoint: String,
         @PartMap parts: Map<String, @JvmSuppressWildcards RequestBody>
-    ): Response<String>
+    ): retrofit2.Call<String>
 }
