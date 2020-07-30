@@ -155,6 +155,6 @@ internal interface BugsnagService {
     @POST
     fun uploadFile(
         @Url endpoint: String,
-        @PartMap parts: Map<String, RequestBody>
+        @PartMap parts: Map<String, @JvmSuppressWildcards RequestBody>
     ): Response<String>
 }
