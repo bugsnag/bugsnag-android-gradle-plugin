@@ -235,6 +235,7 @@ class BugsnagPlugin : Plugin<Project> {
             it.requestOutputFile.set(requestOutputFile)
             it.retryCount.set(bugsnag.retryCount)
             it.timeoutMillis.set(bugsnag.requestTimeoutMs)
+            it.releasesEndpoint.set(bugsnag.releasesEndpoint)
             it.sourceControlProvider.set(bugsnag.sourceControl.provider)
             it.sourceControlRepository.set(bugsnag.sourceControl.repository)
             it.sourceControlRevision.set(bugsnag.sourceControl.revision)

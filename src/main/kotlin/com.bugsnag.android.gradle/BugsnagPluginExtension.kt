@@ -27,7 +27,8 @@ open class BugsnagPluginExtension(objects: ObjectFactory) {
     var isUploadDebugBuildMappings = false
     val endpoint: Property<String> = objects.property(String::class.javaObjectType)
         .convention("https://upload.bugsnag.com")
-    var releasesEndpoint = "https://build.bugsnag.com"
+    val releasesEndpoint = objects.property(String::class.javaObjectType)
+        .convention("https://build.bugsnag.com")
     val overwrite: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
         .convention(false)
     val retryCount: Property<Int> = objects.property(Int::class.javaObjectType)
@@ -40,8 +41,8 @@ open class BugsnagPluginExtension(objects: ObjectFactory) {
         .convention(60000)
 
     // release API values
-    var builderName: Property<String> = objects.property(String::class.java).convention(NULL_STRING)
-    var metadata: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java)
+    val builderName: Property<String> = objects.property(String::class.java).convention(NULL_STRING)
+    val metadata: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java)
         .convention(emptyMap())
     var objdumpPaths: Map<String, String>? = null
 
