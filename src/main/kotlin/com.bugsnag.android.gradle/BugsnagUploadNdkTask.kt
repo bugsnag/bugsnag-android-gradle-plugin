@@ -224,8 +224,10 @@ open class BugsnagUploadNdkTask @Inject constructor(
          * @param outputFile The output file
          */
         private fun outputZipFile(stdout: InputStream, outputFile: File) {
-            outputFile.sink().buffer().gzip().use { gzipSink ->
-                stdout.source().buffer().readAll(gzipSink)
+            stdout.source().use { source ->
+                outputFile.sink().gzip().buffer().use { gzipSink ->
+                    gzipSink.writeAll(source)
+                }
             }
         }
 
