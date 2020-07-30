@@ -113,6 +113,7 @@ open class BugsnagReleasesTask @Inject constructor(
         val timeoutDuration = Duration.ofMillis(timeoutMillis.get())
         val bugsnagService = Retrofit.Builder()
             .baseUrl("https://example.com") // Not actually used
+            .validateEagerly(true)
             .callFactory(
                 OkHttpClient.Builder()
                     .connectTimeout(timeoutDuration)
