@@ -23,6 +23,7 @@ import org.gradle.util.VersionNumber
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.create
 import retrofit2.http.Body
 import retrofit2.http.Header
@@ -146,6 +147,7 @@ open class BugsnagReleasesTask @Inject constructor(
                     .callTimeout(timeoutDuration)
                     .build()
             )
+            .addConverterFactory(ScalarsConverterFactory.create())
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
             .create<BugsnagReleasesService>()

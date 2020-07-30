@@ -10,6 +10,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.logging.Logger
 import retrofit2.Response
 import retrofit2.Retrofit
+import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.create
 import retrofit2.http.Multipart
 import retrofit2.http.POST
@@ -49,6 +50,7 @@ class BugsnagMultiPartUploadRequest(
                 .callTimeout(timeoutDuration)
                 .build()
         )
+        .addConverterFactory(ScalarsConverterFactory.create())
         .build()
         .create<BugsnagService>()
 
