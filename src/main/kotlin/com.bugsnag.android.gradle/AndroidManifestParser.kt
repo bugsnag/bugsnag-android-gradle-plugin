@@ -58,8 +58,14 @@ class AndroidManifestParser {
 
         if (apiKey == null || "" == apiKey || versionCode == null ||
             buildUUID == null || versionName == null || applicationId == null) {
-            throw IllegalStateException("Bugsnag: Missing apiKey/versionCode/buildUuid/versionName/package," +
-                " required to upload to bugsnag.")
+            throw IllegalStateException(
+                """Bugsnag: Missing apiKey/versionCode/buildUuid/versionName/package, required to upload to bugsnag.
+                    |apiKey=$apiKey
+                    |versionCode=$versionCode
+                    |buildUUID=$buildUUID
+                    |versionName=$versionName
+                    |applicationId=$applicationId
+                """.trimMargin())
         }
         return AndroidManifestInfo(apiKey, versionCode, buildUUID, versionName, applicationId)
     }
