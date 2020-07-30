@@ -191,28 +191,20 @@ open class BugsnagReleasesTask @Inject constructor(
     }
 
     private fun generateMetadataJson(): Map<String, String?> {
-        val defaultMetaData = collectDefaultMetaData()
-        metadata.orNull?.entries?.forEach { entry: Map.Entry<String, String> ->
-            defaultMetaData[entry.key] = entry.value
-        }
-        val additionalInfo = mutableMapOf<String, String?>()
-        defaultMetaData.entries.forEach { entry: Map.Entry<String, String?> ->
-            additionalInfo[entry.key] = entry.value
-        }
-        return additionalInfo
+        val metadataMap = mutableMapOf<String, String?>()
+        collectDefaultMetaData(metadataMap)
+        metadataMap.putAll(metadata.orNull.orEmpty())
+        return metadataMap.toMap()
     }
 
-    private fun collectDefaultMetaData(): MutableMap<String, String?> {
-        val gradleVersion = project.gradle.gradleVersion
+    private fun collectDefaultMetaData(map: MutableMap<String, String?>) {
         // TODO these should eventually use Gradle's newer env gradle property APIs
-        return hashMapOf(
-            "os_arch" to System.getProperty(MK_OS_ARCH),
-            "os_name" to System.getProperty(MK_OS_NAME),
-            "os_version" to System.getProperty(MK_OS_VERSION),
-            "java_version" to System.getProperty(MK_JAVA_VERSION),
-            "gradle_version" to gradleVersion,
-            "git_version" to runCmd(VCS_COMMAND, "--version")
-        )
+        map["os_arch"] = System.getProperty(MK_OS_ARCH)
+        map["os_name"] = System.getProperty(MK_OS_NAME)
+        map["os_version"] = System.getProperty(MK_OS_VERSION)
+        map["java_version"] = System.getProperty(MK_JAVA_VERSION)
+        map["gradle_version"] = project.gradle.gradleVersion
+        map["git_version"] = runCmd(VCS_COMMAND, "--version")
     }
 
     /**
