@@ -138,25 +138,13 @@ open class BugsnagReleasesTask @Inject constructor(
         manifestInfo: AndroidManifestInfo
     ): String {
         val timeoutDuration = Duration.ofMillis(timeoutMillis.get())
-        val bugsnagService = Retrofit.Builder()
-            .baseUrl("https://example.com") // Not actually used
-            .validateEagerly(true)
-            .callFactory(
-                OkHttpClient.Builder()
-                    .connectTimeout(timeoutDuration)
-                    .callTimeout(timeoutDuration)
-                    .build()
-            )
-            .addConverterFactory(ScalarsConverterFactory.create())
-            .addConverterFactory(MoshiConverterFactory.create())
-            .build()
-            .create<BugsnagReleasesService>()
+        val bugsnagService = createService(timeoutDuration)
 
         val response = try {
             bugsnagService.upload(
                 releasesEndpoint.get(),
                 apiKey = manifestInfo.apiKey,
-                body = payload
+                payload = payload
             ).execute()
         } catch (e: IOException) {
             throw IllegalStateException("Request to Bugsnag Releases API failed, aborting build.", e)
@@ -298,6 +286,28 @@ open class BugsnagReleasesTask @Inject constructor(
             }
             return null
         }
+
+        private fun createService(
+            timeoutDuration: Duration
+        ): BugsnagReleasesService {
+            return createService(OkHttpClient.Builder()
+                .connectTimeout(timeoutDuration)
+                .callTimeout(timeoutDuration)
+                .build())
+        }
+
+        internal fun createService(
+            okHttpClient: OkHttpClient
+        ): BugsnagReleasesService {
+            return Retrofit.Builder()
+                .baseUrl("https://example.com") // Not actually used
+                .validateEagerly(true)
+                .callFactory(okHttpClient)
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .addConverterFactory(MoshiConverterFactory.create())
+                .build()
+                .create()
+        }
     }
 }
 
@@ -317,6 +327,6 @@ internal interface BugsnagReleasesService {
     fun upload(
         @Url endpoint: String,
         @Header("Bugsnag-Api-Key") apiKey: String,
-        @Body body: ReleasePayload
+        @Body payload: ReleasePayload
     ): retrofit2.Call<String>
 }
