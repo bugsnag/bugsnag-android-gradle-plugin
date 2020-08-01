@@ -65,7 +65,7 @@ class BugsnagServiceTest {
         check(response.code() == 200)
         check(response.body() == "Response!")
 
-        // Check our parts. We ignore the uuid lines since they change every request
+        // Check our parts. We ignore the boundaries since they change every request
         val recordedBody = server.takeRequest().body.readUtf8()
             .lineSequence()
             .filterNot { it.startsWith("--") }
