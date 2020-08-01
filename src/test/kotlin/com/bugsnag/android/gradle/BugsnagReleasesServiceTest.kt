@@ -20,9 +20,6 @@ class BugsnagReleasesServiceTest {
     fun setup() {
         val client = OkHttpClient.Builder()
             .addInterceptor(HttpLoggingInterceptor().apply { level = BODY })
-            .addInterceptor { chain ->
-                chain.proceed(chain.request())
-            }
             .build()
         service = BugsnagReleasesTask.createService(client)
     }
