@@ -40,18 +40,7 @@ class BugsnagMultiPartUploadRequest(
     timeoutDuration: Duration
 ) {
 
-    private val bugsnagService = Retrofit.Builder()
-        .baseUrl("https://example.com") // Not actually used
-        .validateEagerly(true)
-        .callFactory(
-            OkHttpClient.Builder()
-                .connectTimeout(timeoutDuration)
-                .callTimeout(timeoutDuration)
-                .build()
-        )
-        .addConverterFactory(ScalarsConverterFactory.create())
-        .build()
-        .create<BugsnagService>()
+    private val bugsnagService = createService(timeoutDuration)
 
     fun uploadMultipartEntity(
         parts: MutableMap<String, RequestBody>,
@@ -138,6 +127,23 @@ class BugsnagMultiPartUploadRequest(
                 retryCount = task.retryCount.get(),
                 timeoutDuration = Duration.ofMillis(task.timeoutMillis.get())
             )
+        }
+
+        private fun createService(timeoutDuration: Duration): BugsnagService {
+            return createService(OkHttpClient.Builder()
+                .connectTimeout(timeoutDuration)
+                .callTimeout(timeoutDuration)
+                .build())
+        }
+
+        internal fun createService(client: OkHttpClient): BugsnagService {
+            return Retrofit.Builder()
+                .baseUrl("https://example.com") // Not actually used
+                .validateEagerly(true)
+                .callFactory(client)
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .build()
+                .create()
         }
     }
 }
