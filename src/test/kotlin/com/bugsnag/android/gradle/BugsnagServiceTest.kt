@@ -1,5 +1,6 @@
 package com.bugsnag.android.gradle
 
+import com.google.common.truth.Truth.assertThat
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody
 import okhttp3.logging.HttpLoggingInterceptor
@@ -63,5 +64,50 @@ class BugsnagServiceTest {
         val response = call.execute()
         check(response.code() == 200)
         check(response.body() == "Response!")
+
+        // Check our parts. We ignore the uuid lines since they change every request
+        val recordedBody = server.takeRequest().body.readUtf8()
+            .lineSequence()
+            .filterNot { it.startsWith("--") }
+            .joinToString("\n")
+        assertThat(recordedBody).isEqualTo("""
+            Content-Disposition: form-data; name="apiKey"
+            Content-Transfer-Encoding: binary
+            Content-Type: text/plain; charset=utf-8
+            Content-Length: 7
+
+            api key
+            Content-Disposition: form-data; name="appId"
+            Content-Transfer-Encoding: binary
+            Content-Type: text/plain; charset=utf-8
+            Content-Length: 16
+
+            com.example.test
+            Content-Disposition: form-data; name="versionCode"
+            Content-Transfer-Encoding: binary
+            Content-Type: text/plain; charset=utf-8
+            Content-Length: 1
+
+            1
+            Content-Disposition: form-data; name="buildUUID"
+            Content-Transfer-Encoding: binary
+            Content-Type: text/plain; charset=utf-8
+            Content-Length: 20
+
+            lfkajsdflkajdskfhasd
+            Content-Disposition: form-data; name="versionName"
+            Content-Transfer-Encoding: binary
+            Content-Type: text/plain; charset=utf-8
+            Content-Length: 3
+
+            1.0
+            Content-Disposition: form-data; name="proguard"
+            Content-Transfer-Encoding: binary
+            Content-Type: application/octet-stream
+            Content-Length: 30
+
+            this is totally a mapping file
+
+        """.trimIndent())
     }
 }

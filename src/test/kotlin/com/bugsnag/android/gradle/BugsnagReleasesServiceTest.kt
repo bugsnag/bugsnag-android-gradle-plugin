@@ -1,5 +1,6 @@
 package com.bugsnag.android.gradle
 
+import com.google.common.truth.Truth.assertThat
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import okhttp3.logging.HttpLoggingInterceptor.Level.BODY
@@ -51,5 +52,12 @@ class BugsnagReleasesServiceTest {
         val response = call.execute()
         check(response.code() == 200)
         check(response.body() == "Response!")
+
+        val recordedBody = server.takeRequest().body.readUtf8()
+        assertThat(recordedBody)
+            //language=JSON
+            .isEqualTo("""
+                {"buildTool":"gradle","apiKey":"testKey","appVersion":"1.0","appVersionCode":"1","metadata":{"metaKey":"value"},"sourceControl":{"sourceControlKey":"value"},"builderName":"builder"}
+            """.trimIndent())
     }
 }
