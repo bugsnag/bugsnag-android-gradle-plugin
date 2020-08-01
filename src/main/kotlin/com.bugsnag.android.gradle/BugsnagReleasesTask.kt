@@ -259,15 +259,15 @@ open class BugsnagReleasesTask @Inject constructor(
         gradleVersion.set(gradleVersionString)
         gitVersion.set(project.provider { runCmd(VCS_COMMAND, "--version") } )
         if (gradleVersionNumber >= SYS_PROPERTIES_VERSION)  {
-            osArch.set(project.provider { System.getProperty(MK_OS_ARCH) } )
-            osName.set(project.provider { System.getProperty(MK_OS_NAME) } )
-            osVersion.set(project.provider { System.getProperty(MK_OS_VERSION) } )
-            javaVersion.set(project.provider { System.getProperty(MK_JAVA_VERSION) })
-        } else {
             osArch.set(project.providers.systemProperty(MK_OS_ARCH) )
             osName.set(project.providers.systemProperty(MK_OS_NAME) )
             osVersion.set(project.providers.systemProperty(MK_OS_VERSION) )
             javaVersion.set(project.providers.systemProperty(MK_JAVA_VERSION))
+        } else {
+            osArch.set(project.provider { System.getProperty(MK_OS_ARCH) } )
+            osName.set(project.provider { System.getProperty(MK_OS_NAME) } )
+            osVersion.set(project.provider { System.getProperty(MK_OS_VERSION) } )
+            javaVersion.set(project.provider { System.getProperty(MK_JAVA_VERSION) })
         }
     }
 
