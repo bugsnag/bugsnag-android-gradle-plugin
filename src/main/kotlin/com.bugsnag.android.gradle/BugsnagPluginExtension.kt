@@ -7,7 +7,6 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.util.ConfigureUtil
 import java.io.File
-import javax.inject.Inject
 
 // To make kotlin happy with gradle's nullability
 private val NULL_STRING: String? = null
@@ -25,6 +24,7 @@ open class BugsnagPluginExtension(objects: ObjectFactory) {
     var isUploadNdkMappings: Boolean? = null
     var isReportBuilds = true
     var isUploadDebugBuildMappings = false
+    var isAutoUpdateBuildUuid = true
     val endpoint: Property<String> = objects.property(String::class.javaObjectType)
         .convention("https://upload.bugsnag.com")
     val releasesEndpoint = objects.property(String::class.javaObjectType)

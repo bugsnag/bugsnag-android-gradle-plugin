@@ -2,12 +2,11 @@
 <SmellBaseline>
   <Blacklist></Blacklist>
   <Whitelist>
-    <ID>ComplexCondition:AndroidManifestParser.kt$AndroidManifestParser$apiKey == null || "" == apiKey || versionCode == null || buildUUID == null || versionName == null || applicationId == null</ID>
+    <ID>ComplexCondition:AndroidManifestParser.kt$AndroidManifestParser$apiKey == null || "" == apiKey || versionCode == null || versionName == null || applicationId == null</ID>
     <ID>LongParameterList:BugsnagPlugin.kt$BugsnagPlugin$(task: Task, variant: ApkVariant, output: ApkVariantOutput, project: Project, bugsnag: BugsnagPluginExtension, autoUpload: Boolean)</ID>
     <ID>MagicNumber:BugsnagMultiPartUploadRequest.kt$BugsnagMultiPartUploadRequest$200</ID>
     <ID>MagicNumber:BugsnagPluginExtension.kt$BugsnagPluginExtension$60000</ID>
     <ID>MagicNumber:BugsnagReleasesTask.kt$BugsnagReleasesTask$200</ID>
-    <ID>MagicNumber:BugsnagUploadNdkTask.kt$BugsnagUploadNdkTask.Companion$8192</ID>
     <ID>MaxLineLength:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$private</ID>
     <ID>MaxLineLength:BugsnagUploadNdkTask.kt$BugsnagUploadNdkTask.Companion$return File("$ndkDir/toolchains/${abi.toolchainPrefix}-4.9/prebuilt/$osName/bin/${abi.objdumpPrefix}-$executable")</ID>
     <ID>ReturnCount:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$private fun getManifestOutputDir(processManifest: ManifestProcessorTask, project: Project): File?</ID>

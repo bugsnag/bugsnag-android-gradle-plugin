@@ -11,7 +11,7 @@ import org.mockito.junit.MockitoJUnitRunner
 import java.io.File
 
 @RunWith(MockitoJUnitRunner::class)
-class AndroidManifestParseTest {
+class AndroidManifestParseUuidTest {
 
     private val info = AndroidManifestInfo(
         "api-key",
@@ -29,7 +29,7 @@ class AndroidManifestParseTest {
     @Before
     fun setUp() {
         manifestFile = File.createTempFile("AndroidManifest", ".xml")
-        val classLoader = AndroidManifestParseTest::class.java.classLoader
+        val classLoader = AndroidManifestParseUuidTest::class.java.classLoader
         val res = classLoader.getResource("AndroidManifest.xml")!!
         File(res.file).copyTo(manifestFile, true)
     }

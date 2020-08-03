@@ -11,7 +11,7 @@ import java.io.File
 data class AndroidManifestInfo(
     var apiKey: String,
     var versionCode: String,
-    var buildUUID: String,
+    var buildUUID: String?,
     var versionName: String,
     var applicationId: String
 ) {
