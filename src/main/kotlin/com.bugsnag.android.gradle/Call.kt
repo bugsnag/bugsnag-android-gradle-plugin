@@ -1,9 +1,13 @@
 package com.bugsnag.android.gradle
 
-import org.gradle.api.Project
+import org.gradle.api.logging.Logger
+import org.gradle.api.provider.Provider
 import java.io.IOException
 
-internal abstract class Call protected constructor(private val project: Project) {
+internal abstract class Call protected constructor(
+    private val retryCountConfig: Provider<Int>,
+    private val logger: Logger
+) {
 
     /**
      * Attempts to upload to the server, using automatic retries if unsuccessful
@@ -13,7 +17,7 @@ internal abstract class Call protected constructor(private val project: Project)
         val maxRetryCount = retryCount
         var retryCount = maxRetryCount
         while (!uploadSuccessful && retryCount > 0) {
-            project.logger.warn(String.format("Bugsnag: Retrying upload (%d/%d) ...",
+            logger.warn(String.format("Bugsnag: Retrying upload (%d/%d) ...",
                 maxRetryCount - retryCount + 1, maxRetryCount))
             uploadSuccessful = makeApiCall()
             retryCount--
@@ -37,8 +41,7 @@ internal abstract class Call protected constructor(private val project: Project)
      */
     val retryCount: Int
         get() {
-            val bugsnag = project.extensions.findByName("bugsnag") as BugsnagPluginExtension?
-            val retryCount = bugsnag!!.retryCount
+            val retryCount = retryCountConfig.get()
             return if (retryCount >= MAX_RETRY_COUNT) MAX_RETRY_COUNT else retryCount
         }
 

@@ -7,12 +7,16 @@ import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
+import com.bugsnag.android.gradle.BugsnagReleasesTask.Companion
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskProvider
 import java.util.UUID
 
@@ -40,7 +44,12 @@ class BugsnagPlugin : Plugin<Project> {
     }
 
     override fun apply(project: Project) {
-        val bugsnag = project.extensions.create("bugsnag", BugsnagPluginExtension::class.java)
+        // After Gradle 5.2, this can use service injection for injecting ObjectFactory
+        val bugsnag = project.extensions.create(
+            "bugsnag",
+            BugsnagPluginExtension::class.java,
+            project.objects
+        )
         project.pluginManager.withPlugin("com.android.application") {
             if (!bugsnag.isEnabled) {
                 return@withPlugin
@@ -191,6 +200,7 @@ class BugsnagPlugin : Plugin<Project> {
         return project.tasks.register(taskName, BugsnagUploadProguardTask::class.java) {
             it.requestOutputFile.set(requestOutputFile)
             addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.isUploadJvmMappings)
+            it.configureWith(bugsnag)
         }
     }
 
@@ -209,6 +219,7 @@ class BugsnagPlugin : Plugin<Project> {
             it.searchDirectories.set(getSearchDirectories(project, variant))
             it.variantOutput = output
             addTaskToExecutionGraph(it, variant, output, project, bugsnag, true)
+            it.configureWith(bugsnag)
         }
     }
 
@@ -222,7 +233,16 @@ class BugsnagPlugin : Plugin<Project> {
         val requestOutputFile = project.layout.buildDirectory.file(path)
         return project.tasks.register(taskName, BugsnagReleasesTask::class.java) {
             it.requestOutputFile.set(requestOutputFile)
+            it.retryCount.set(bugsnag.retryCount)
+            it.timeoutMillis.set(bugsnag.requestTimeoutMs)
+            it.releasesEndpoint.set(bugsnag.releasesEndpoint)
+            it.sourceControlProvider.set(bugsnag.sourceControl.provider)
+            it.sourceControlRepository.set(bugsnag.sourceControl.repository)
+            it.sourceControlRevision.set(bugsnag.sourceControl.revision)
+            it.metadata.set(bugsnag.metadata)
+            it.builderName.set(bugsnag.builderName)
             addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.isReportBuilds)
+            it.configureMetadata(project)
         }
     }
 

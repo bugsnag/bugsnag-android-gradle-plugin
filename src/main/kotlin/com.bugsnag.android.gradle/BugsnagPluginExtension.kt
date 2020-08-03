@@ -2,33 +2,48 @@ package com.bugsnag.android.gradle
 
 import groovy.lang.Closure
 import org.gradle.api.Action
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Property
 import org.gradle.util.ConfigureUtil
 import java.io.File
+import javax.inject.Inject
+
+// To make kotlin happy with gradle's nullability
+private val NULL_STRING: String? = null
 
 /**
  * Defines configuration options (Gradle plugin extensions) for the BugsnagPlugin
  */
-open class BugsnagPluginExtension {
+// After Gradle 5.2, this can use service injection for injecting ObjectFactory
+open class BugsnagPluginExtension(objects: ObjectFactory) {
 
-    val sourceControl: SourceControl = SourceControl()
+    val sourceControl: SourceControl = objects.newInstance(SourceControl::class.java)
 
     var isEnabled = true
     var isUploadJvmMappings = true
     var isUploadNdkMappings: Boolean? = null
     var isReportBuilds = true
     var isUploadDebugBuildMappings = false
-    var endpoint = "https://upload.bugsnag.com"
-    var releasesEndpoint = "https://build.bugsnag.com"
-    var isOverwrite = false
-    var retryCount = 0
+    val endpoint: Property<String> = objects.property(String::class.javaObjectType)
+        .convention("https://upload.bugsnag.com")
+    val releasesEndpoint = objects.property(String::class.javaObjectType)
+        .convention("https://build.bugsnag.com")
+    val overwrite: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+        .convention(false)
+    val retryCount: Property<Int> = objects.property(Int::class.javaObjectType)
+        .convention(0)
     var sharedObjectPaths: List<File> = emptyList()
     var projectRoot: String? = null
-    var isFailOnUploadError = true
-    var requestTimeoutMs = 60000
+    val failOnUploadError: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+        .convention(true)
+    val requestTimeoutMs: Property<Long> = objects.property(Long::class.javaObjectType)
+        .convention(60000)
 
     // release API values
-    var builderName: String? = null
-    var metadata: Map<String, String>? = null
+    val builderName: Property<String> = objects.property(String::class.java).convention(NULL_STRING)
+    val metadata: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java)
+        .convention(emptyMap())
     var objdumpPaths: Map<String, String>? = null
 
     // exposes sourceControl as a nested object on the extension,

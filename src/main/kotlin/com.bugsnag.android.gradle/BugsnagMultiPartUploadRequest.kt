@@ -1,14 +1,22 @@
 package com.bugsnag.android.gradle
 
-import org.apache.http.client.HttpClient
-import org.apache.http.client.methods.HttpPost
-import org.apache.http.entity.mime.MultipartEntity
-import org.apache.http.entity.mime.content.StringBody
-import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.params.HttpConnectionParams
-import org.apache.http.util.EntityUtils
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.Project
+import org.gradle.api.logging.Logger
+import retrofit2.Retrofit
+import retrofit2.converter.scalars.ScalarsConverterFactory
+import retrofit2.create
+import retrofit2.http.Multipart
+import retrofit2.http.POST
+import retrofit2.http.PartMap
+import retrofit2.http.Url
+import java.io.File
+import java.time.Duration
 
 /**
  * Task to upload ProGuard mapping files to Bugsnag.
@@ -23,66 +31,66 @@ import org.gradle.api.Project
  * it is usually safe to have this be the absolute last task executed during
  * a build.
  */
-class BugsnagMultiPartUploadRequest {
+class BugsnagMultiPartUploadRequest(
+    private val logger: Logger,
+    private val failOnUploadError: Boolean,
+    private val overwrite: Boolean,
+    private val endpoint: String,
+    private val retryCount: Int,
+    timeoutDuration: Duration
+) {
 
-    fun uploadMultipartEntity(project: Project,
-                              mpEntity: MultipartEntity,
-                              manifestInfo: AndroidManifestInfo): String {
-        val logger = project.logger
-        val bugsnag = project.extensions.getByType(BugsnagPluginExtension::class.java)
-        addPropertiesToMultipartEntity(project, mpEntity, manifestInfo, bugsnag)
+    private val bugsnagService = createService(timeoutDuration)
 
-        var response = uploadToServer(project, mpEntity, bugsnag)
+    fun uploadMultipartEntity(
+        parts: MutableMap<String, RequestBody>,
+        manifestInfo: AndroidManifestInfo
+    ): String {
+        addPropertiesToMultipartEntity(parts, manifestInfo)
+
+        val finalParts = parts.toMap()
+
+        var response = uploadToServer(finalParts)
         var uploadSuccessful = response != null
-        val maxRetryCount = getRetryCount(bugsnag)
+
+        // Note - this should eventually be moved to a native OkHttp interceptor
+        val maxRetryCount = getRetryCount()
         var retryCount = maxRetryCount
         while (!uploadSuccessful && retryCount > 0) {
             logger.warn(String.format("Bugsnag: Retrying upload (%d/%d) ...",
                 maxRetryCount - retryCount + 1, maxRetryCount))
-            response = uploadToServer(project, mpEntity, bugsnag)
+            response = uploadToServer(finalParts)
             uploadSuccessful = response != null
             retryCount--
         }
-        if (!uploadSuccessful && bugsnag.isFailOnUploadError) {
+        if (!uploadSuccessful && failOnUploadError) {
             throw GradleException("Upload did not succeed")
         } else {
             return response!!
         }
     }
 
-    private fun addPropertiesToMultipartEntity(project: Project,
-                                               mpEntity: MultipartEntity,
-                                               manifestInfo: AndroidManifestInfo,
-                                               bugsnag: BugsnagPluginExtension) {
-        mpEntity.addPart("apiKey", StringBody(manifestInfo.apiKey))
-        mpEntity.addPart("appId", StringBody(manifestInfo.applicationId))
-        mpEntity.addPart("versionCode", StringBody(manifestInfo.versionCode))
-        mpEntity.addPart("buildUUID", StringBody(manifestInfo.buildUUID))
-        mpEntity.addPart("versionName", StringBody(manifestInfo.versionName))
-        if (bugsnag.isOverwrite) {
-            mpEntity.addPart("overwrite", StringBody("true"))
+    private fun addPropertiesToMultipartEntity(
+        parts: MutableMap<String, RequestBody>,
+        manifestInfo: AndroidManifestInfo
+    ) {
+        parts["apiKey"] = manifestInfo.apiKey.toTextRequestBody()
+        parts["appId"] = manifestInfo.applicationId.toTextRequestBody()
+        parts["versionCode"] = manifestInfo.versionCode.toTextRequestBody()
+        parts["buildUUID"] = manifestInfo.buildUUID.toTextRequestBody()
+        parts["versionName"] = manifestInfo.versionName.toTextRequestBody()
+        if (overwrite) {
+            parts["overwrite"] = "true".toTextRequestBody()
         }
-        val logger = project.logger
         logger.debug("Bugsnag: payload information=$manifestInfo")
     }
 
-    private fun uploadToServer(project: Project,
-                               mpEntity: MultipartEntity?,
-                               bugsnag: BugsnagPluginExtension): String? {
-        val logger = project.logger
-
+    private fun uploadToServer(parts: Map<String, RequestBody>): String? {
         // Make the request
-        val httpPost = HttpPost(bugsnag.endpoint)
-        httpPost.entity = mpEntity
-        val httpClient: HttpClient = DefaultHttpClient()
-        val params = httpClient.params
-        HttpConnectionParams.setConnectionTimeout(params, bugsnag.requestTimeoutMs)
-        HttpConnectionParams.setSoTimeout(params, bugsnag.requestTimeoutMs)
         try {
-            val response = httpClient.execute(httpPost)
-            val statusCode = response.statusLine.statusCode
-            val entity = response.entity
-            val responseEntity = EntityUtils.toString(entity, "utf-8")
+            val response = bugsnagService.uploadFile(endpoint, parts).execute()
+            val statusCode = response.code()
+            val responseEntity = response.body()
 
             if (statusCode != 200) {
                 throw IllegalStateException("Bugsnag upload failed with code $statusCode $responseEntity")
@@ -101,11 +109,60 @@ class BugsnagMultiPartUploadRequest {
      *
      * @return the retry count
      */
-    private fun getRetryCount(bugsnag: BugsnagPluginExtension): Int {
-        return if (bugsnag.retryCount >= MAX_RETRY_COUNT) MAX_RETRY_COUNT else bugsnag.retryCount
+    private fun getRetryCount(): Int {
+        return if (retryCount >= MAX_RETRY_COUNT) MAX_RETRY_COUNT else retryCount
     }
 
     companion object {
         const val MAX_RETRY_COUNT = 5
+
+        internal fun <T> from(
+            task: T
+        ): BugsnagMultiPartUploadRequest where T : DefaultTask, T: BugsnagFileUploadTask {
+            return BugsnagMultiPartUploadRequest(
+                task.logger,
+                failOnUploadError = task.failOnUploadError.get(),
+                overwrite = task.overwrite.get(),
+                endpoint = task.endpoint.get(),
+                retryCount = task.retryCount.get(),
+                timeoutDuration = Duration.ofMillis(task.timeoutMillis.get())
+            )
+        }
+
+        private fun createService(timeoutDuration: Duration): BugsnagService {
+            return createService(OkHttpClient.Builder()
+                .connectTimeout(timeoutDuration)
+                .callTimeout(timeoutDuration)
+                .build())
+        }
+
+        internal fun createService(client: OkHttpClient): BugsnagService {
+            return Retrofit.Builder()
+                .baseUrl("https://upload.bugsnag.com") // Not actually used
+                .validateEagerly(true)
+                .callFactory(client)
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .build()
+                .create()
+        }
     }
+}
+private val TEXT_PLAIN = "text/plain".toMediaType()
+private val OCTET = "application/octet-stream".toMediaType()
+
+internal fun String.toTextRequestBody(): RequestBody {
+    return toRequestBody(TEXT_PLAIN)
+}
+
+internal fun File.toOctetRequestBody(): RequestBody {
+    return asRequestBody(OCTET)
+}
+
+internal interface BugsnagService {
+    @Multipart
+    @POST
+    fun uploadFile(
+        @Url endpoint: String,
+        @PartMap parts: Map<String, @JvmSuppressWildcards RequestBody>
+    ): retrofit2.Call<String>
 }
