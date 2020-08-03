@@ -138,7 +138,7 @@ class BugsnagMultiPartUploadRequest(
 
         internal fun createService(client: OkHttpClient): BugsnagService {
             return Retrofit.Builder()
-                .baseUrl("https://example.com") // Not actually used
+                .baseUrl("https://upload.bugsnag.com") // Not actually used
                 .validateEagerly(true)
                 .callFactory(client)
                 .addConverterFactory(ScalarsConverterFactory.create())

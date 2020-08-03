@@ -300,7 +300,7 @@ open class BugsnagReleasesTask @Inject constructor(
             okHttpClient: OkHttpClient
         ): BugsnagReleasesService {
             return Retrofit.Builder()
-                .baseUrl("https://example.com") // Not actually used
+                .baseUrl("https://upload.bugsnag.com") // Not actually used
                 .validateEagerly(true)
                 .callFactory(okHttpClient)
                 .addConverterFactory(ScalarsConverterFactory.create())
