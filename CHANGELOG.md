@@ -1,5 +1,8 @@
 ## 5.0.0 (TBD)
 
+Switch to OkHttp for networking
+[#247](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/247)
+
 Specify shared object files as input for ndk task
 [#243](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/243)
 
