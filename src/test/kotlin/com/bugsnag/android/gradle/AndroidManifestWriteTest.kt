@@ -6,9 +6,9 @@ import org.junit.Before
 import org.junit.Test
 import java.io.File
 
-class AndroidManifestWriteUuidTest {
+class AndroidManifestWriteTest {
 
-    private val classLoader = AndroidManifestWriteUuidTest::class.java.classLoader
+    private val classLoader = AndroidManifestWriteTest::class.java.classLoader
 
     private lateinit var manifestFile: File
     private lateinit var outputFile: File
@@ -32,6 +32,14 @@ class AndroidManifestWriteUuidTest {
         AndroidManifestParser().writeBuildUuid(manifestFile, outputFile, "build-uuid-123")
         val obs = outputFile.readText()
         val expected = classLoader.getResource("AndroidManifest.xml")!!.readText()
+        assertEquals(expected, obs)
+    }
+
+    @Test
+    fun writeNoBuildUuid() {
+        AndroidManifestParser().writeBuildUuid(manifestFile, outputFile, AndroidManifestParser.IGNORE_BUILD_UUID)
+        val obs = outputFile.readText()
+        val expected = classLoader.getResource("manifest_no_uuid.xml")!!.readText()
         assertEquals(expected, obs)
     }
 }

@@ -7,16 +7,12 @@ import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
-import com.bugsnag.android.gradle.BugsnagReleasesTask.Companion
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskProvider
 import java.util.UUID
 
@@ -352,10 +348,14 @@ class BugsnagPlugin : Plugin<Project> {
         return layout.buildDirectory.file(path)
     }
 
-
-
     private fun Project.newUuidProvider(): Provider<String> {
-        return provider { UUID.randomUUID().toString() }
+        val bugsnag = extensions.findByType(BugsnagPluginExtension::class.java)!!
+        return provider {
+            when {
+                bugsnag.autoUpdateBuildUuid.get() -> UUID.randomUUID().toString()
+                else -> AndroidManifestParser.IGNORE_BUILD_UUID
+            }
+        }
     }
 
     /**

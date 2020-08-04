@@ -77,7 +77,9 @@ class BugsnagMultiPartUploadRequest(
         parts["apiKey"] = manifestInfo.apiKey.toTextRequestBody()
         parts["appId"] = manifestInfo.applicationId.toTextRequestBody()
         parts["versionCode"] = manifestInfo.versionCode.toTextRequestBody()
-        parts["buildUUID"] = manifestInfo.buildUUID.toTextRequestBody()
+        if (manifestInfo.buildUUID != null) {
+            parts["buildUUID"] = manifestInfo.buildUUID!!.toTextRequestBody()
+        }
         parts["versionName"] = manifestInfo.versionName.toTextRequestBody()
         if (overwrite) {
             parts["overwrite"] = "true".toTextRequestBody()
