@@ -24,7 +24,8 @@ open class BugsnagPluginExtension(objects: ObjectFactory) {
     var isUploadNdkMappings: Boolean? = null
     var isReportBuilds = true
     var isUploadDebugBuildMappings = false
-    var isAutoUpdateBuildUuid = true
+    val autoUpdateBuildUuid: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+        .convention(true)
     val endpoint: Property<String> = objects.property(String::class.javaObjectType)
         .convention("https://upload.bugsnag.com")
     val releasesEndpoint = objects.property(String::class.javaObjectType)

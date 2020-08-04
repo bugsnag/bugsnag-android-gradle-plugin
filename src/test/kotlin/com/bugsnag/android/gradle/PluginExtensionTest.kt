@@ -26,7 +26,7 @@ class PluginExtensionTest {
     fun ensureExtensionDefaults() {
         val bugsnag = proj.extensions.getByType(BugsnagPluginExtension::class.java)
         assertEquals("https://upload.bugsnag.com", bugsnag.endpoint.get())
-        assertTrue(bugsnag.isAutoUpdateBuildUuid)
+        assertTrue(bugsnag.autoUpdateBuildUuid.get())
         assertTrue(bugsnag.isUploadJvmMappings)
         assertTrue(bugsnag.isReportBuilds)
         assertFalse(bugsnag.isUploadDebugBuildMappings)
