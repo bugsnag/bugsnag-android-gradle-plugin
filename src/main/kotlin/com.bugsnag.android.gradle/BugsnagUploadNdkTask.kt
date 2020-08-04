@@ -50,6 +50,9 @@ open class BugsnagUploadNdkTask @Inject constructor(
         description = "Generates and uploads the NDK mapping file(s) to Bugsnag"
     }
 
+    @get:Internal
+    val uploadRequestClient: Property<UploadRequestClient> = objects.property(UploadRequestClient::class.java)
+
     @Internal
     lateinit var projectDir: File
 
@@ -185,7 +188,16 @@ open class BugsnagUploadNdkTask @Inject constructor(
         val request = BugsnagMultiPartUploadRequest.from(this)
         project.logger.lifecycle("Bugsnag: Attempting to upload shared object mapping " +
             "file for $sharedObjectName-$arch from $mappingFile")
-        request.uploadMultipartEntity(parts, parseManifestInfo())
+
+        val manifestInfo = parseManifestInfo()
+        val mappingFileContents = mappingFile.readText()
+        val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileContents) {
+            project.logger.lifecycle("Bugsnag: Attempting to upload shared object mapping " +
+                "file for $sharedObjectName-$arch from $mappingFile")
+            request.uploadMultipartEntity(parts, parseManifestInfo())
+        }
+        requestOutputFile.asFile.get().writeText(response)
+        logger.lifecycle("Bugsnag: shared object mapping file complete for $mappingFile")
     }
 
     /**

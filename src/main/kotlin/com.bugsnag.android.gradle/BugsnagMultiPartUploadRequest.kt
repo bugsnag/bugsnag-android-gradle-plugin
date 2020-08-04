@@ -97,7 +97,6 @@ class BugsnagMultiPartUploadRequest(
             if (statusCode != 200) {
                 throw IllegalStateException("Bugsnag upload failed with code $statusCode $responseEntity")
             } else {
-                logger.lifecycle("Bugsnag: Upload succeeded")
                 return responseEntity
             }
         } catch (exc: Throwable) {
