@@ -11,6 +11,9 @@ See the [Upgrade Guide](./UPGRADING.md) for migration instructions.
 
 ### Changes
 
+Convert plugin extension to use property syntax
+[#251](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/251)
+
 Deduplicate unnecessary upload requests for APK splits
 [#248](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/248)
 

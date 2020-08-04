@@ -7,6 +7,7 @@ import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
+import com.bugsnag.android.gradle.BugsnagInstallJniLibsTask.Companion.resolveBugsnagArtefacts
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -14,6 +15,7 @@ import org.gradle.api.Task
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
 import java.util.UUID
 
 /**
@@ -51,7 +53,7 @@ class BugsnagPlugin : Plugin<Project> {
             project.objects
         )
         project.pluginManager.withPlugin("com.android.application") {
-            if (!bugsnag.isEnabled) {
+            if (!bugsnag.enabled.get()) {
                 return@withPlugin
             }
 
@@ -97,6 +99,10 @@ class BugsnagPlugin : Plugin<Project> {
 
         if (buildTasks.isNotEmpty()) {
             val ndkSetupTask = project.tasks.create("bugsnagInstallJniLibsTask", BugsnagInstallJniLibsTask::class.java)
+            ndkSetupTask.buildDirDestination.set(File(project.buildDir, "/intermediates/bugsnag-libs"))
+            val files = resolveBugsnagArtefacts(project)
+            ndkSetupTask.bugsnagArtefacts.set(files)
+
             if (isNdkUploadEnabled(bugsnag, android)) {
                 ndkSetupTask.mustRunAfter(cleanTasks)
                 buildTasks.forEach { it.dependsOn(ndkSetupTask) }
@@ -202,7 +208,7 @@ class BugsnagPlugin : Plugin<Project> {
         val requestOutputFile = project.layout.buildDirectory.file(path)
         return project.tasks.register(taskName, BugsnagUploadProguardTask::class.java) {
             it.requestOutputFile.set(requestOutputFile)
-            addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.isUploadJvmMappings)
+            addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.uploadJvmMappings.get())
             it.configureWith(bugsnag)
         }
     }
@@ -218,7 +224,7 @@ class BugsnagPlugin : Plugin<Project> {
         val requestOutputFile = project.layout.buildDirectory.file(path)
         return project.tasks.register(taskName, BugsnagUploadNdkTask::class.java) {
             it.requestOutputFile.set(requestOutputFile)
-            it.projectDir = project.projectDir
+            it.projectRoot.set(bugsnag.projectRoot.getOrElse(project.projectDir.toString()))
             it.searchDirectories.set(getSearchDirectories(project, variant))
             it.variantOutput = output
             addTaskToExecutionGraph(it, variant, output, project, bugsnag, true)
@@ -244,7 +250,7 @@ class BugsnagPlugin : Plugin<Project> {
             it.sourceControlRevision.set(bugsnag.sourceControl.revision)
             it.metadata.set(bugsnag.metadata)
             it.builderName.set(bugsnag.builderName)
-            addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.isReportBuilds)
+            addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.reportBuilds.get())
             it.configureMetadata(project)
         }
     }
@@ -268,19 +274,15 @@ class BugsnagPlugin : Plugin<Project> {
 
     private fun shouldUploadDebugMappings(output: ApkVariantOutput,
                                           bugsnag: BugsnagPluginExtension): Boolean {
-        return !output.name.toLowerCase().endsWith("debug") || bugsnag.isUploadDebugBuildMappings
+        return !output.name.toLowerCase().endsWith("debug") || bugsnag.uploadDebugBuildMappings.get()
     }
 
     private fun isNdkUploadEnabled(bugsnag: BugsnagPluginExtension,
                                    android: AppExtension): Boolean {
-        val ndk = bugsnag.isUploadNdkMappings
-        return if (ndk != null) { // always respect user override
-            ndk
-        } else { // infer whether native build or not
-            val usesCmake = android.externalNativeBuild.cmake.path != null
-            val usesNdkBuild = android.externalNativeBuild.ndkBuild.path != null
-            usesCmake || usesNdkBuild
-        }
+        val usesCmake = android.externalNativeBuild.cmake.path != null
+        val usesNdkBuild = android.externalNativeBuild.ndkBuild.path != null
+        val default = usesCmake || usesNdkBuild
+        return bugsnag.uploadNdkMappings.getOrElse(default)
     }
 
     /**

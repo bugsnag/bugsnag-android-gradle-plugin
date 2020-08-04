@@ -51,10 +51,10 @@ open class BugsnagUploadNdkTask @Inject constructor(
     }
 
     @get:Internal
-    val uploadRequestClient: Property<UploadRequestClient> = objects.property(UploadRequestClient::class.java)
+    internal val uploadRequestClient: Property<UploadRequestClient> = objects.property(UploadRequestClient::class.java)
 
-    @Internal
-    lateinit var projectDir: File
+    @Input
+    val projectRoot: Property<String> = objects.property(String::class.javaObjectType)
 
     @get:InputFiles
     val searchDirectories: Property<FileCollection> = objects.property(FileCollection::class.java)
@@ -64,7 +64,7 @@ open class BugsnagUploadNdkTask @Inject constructor(
     override val manifestInfoFile: RegularFileProperty = objects.fileProperty()
 
     @get:Internal
-    lateinit var variantOutput: ApkVariantOutput
+    internal lateinit var variantOutput: ApkVariantOutput
 
     @get:OutputFile
     val requestOutputFile: RegularFileProperty = objects.fileProperty()
@@ -129,7 +129,7 @@ open class BugsnagUploadNdkTask @Inject constructor(
                 }
                 val outputFile = File(outputDir, "$arch.gz")
                 val errorOutputFile = File(outputDir, "$arch.error.txt")
-                logger.info("Bugsnag: Creating symbol file  for $arch at ${outputFile}")
+                logger.info("Bugsnag: Creating symbol file  for $arch at $outputFile")
 
                 // Call objdump, redirecting output to the output file
                 val builder = ProcessBuilder(objDumpPath.toString(),
@@ -179,12 +179,7 @@ open class BugsnagUploadNdkTask @Inject constructor(
         sharedObjectName?.let {
             parts["sharedObjectName"] = it.toTextRequestBody()
         }
-        val bugsnag = project.extensions.getByType(BugsnagPluginExtension::class.java)
-        var projectRoot = bugsnag.projectRoot
-        if (projectRoot == null) {
-            projectRoot = projectDir.toString()
-        }
-        parts["projectRoot"] = projectRoot.toTextRequestBody()
+        parts["projectRoot"] = projectRoot.get().toTextRequestBody()
         val request = BugsnagMultiPartUploadRequest.from(this)
         project.logger.lifecycle("Bugsnag: Attempting to upload shared object mapping " +
             "file for $sharedObjectName-$arch from $mappingFile")
@@ -223,7 +218,7 @@ open class BugsnagUploadNdkTask @Inject constructor(
     private fun getObjDumpOverride(arch: String): String? {
         val bugsnag = project.extensions.getByType(BugsnagPluginExtension::class.java)
         val paths = bugsnag.objdumpPaths
-        return paths?.get(arch)
+        return paths.get()[arch]
     }
 
     companion object {

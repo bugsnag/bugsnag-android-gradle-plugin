@@ -11,7 +11,7 @@ import java.io.File
 fun getSearchDirectories(project: Project,
                          variant: ApkVariant): ConfigurableFileCollection {
     val bugsnag = project.extensions.getByType(BugsnagPluginExtension::class.java)
-    val searchDirectories = bugsnag.sharedObjectPaths.toMutableSet()
+    val searchDirectories = bugsnag.sharedObjectPaths.get().toMutableSet()
 
     resolveExternalNativeBuildTasks(variant).forEach { task ->
         searchDirectories.add(task.objFolder)

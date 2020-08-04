@@ -49,11 +49,11 @@ abstract class BaseBugsnagManifestUuidTask(objects: ObjectFactory) : DefaultTask
  */
 open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) : BaseBugsnagManifestUuidTask(objects) {
 
-    @Internal
-    lateinit var variantOutput: ApkVariantOutput
+    @get:Internal
+    internal lateinit var variantOutput: ApkVariantOutput
 
-    @Internal
-    lateinit var variant: ApkVariant
+    @get:Internal
+    internal lateinit var variant: ApkVariant
 
     @TaskAction
     fun updateManifest() {
