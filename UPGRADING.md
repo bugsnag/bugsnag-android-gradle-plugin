@@ -59,7 +59,7 @@ bugsnag {
 
 Previously the `bugsnag` plugin extension did not use Gradle's 
 [Property API](https://docs.gradle.org/current/javadoc/org/gradle/api/provider/Property.html),
-which meant the plugin could be configured like thus:
+which meant the plugin could be configured like this:
 
 ```groovy
 // old API
