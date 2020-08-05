@@ -67,7 +67,7 @@ if (!System.env.UPDATING_GRADLEW) {
     apply plugin: 'com.bugsnag.android.gradle'
 
     bugsnag {
-        uploadNdkMappings true
+        uploadNdkMappings = true
         endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
         releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
 

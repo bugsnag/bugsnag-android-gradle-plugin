@@ -55,6 +55,29 @@ bugsnag {
 }
 ```
 
+#### `bugsnag` plugin extension uses Property API
+
+Previously the `bugsnag` plugin extension did not use Gradle's 
+[Property API](https://docs.gradle.org/current/javadoc/org/gradle/api/provider/Property.html),
+which meant the plugin could be configured like this:
+
+```groovy
+// old API
+bugsnag {
+    enabled false
+}
+```
+
+All fields on the `bugsnag` plugin extension are now declared as properties. To migrate, you should
+make the following change on any affected fields:
+
+```groovy
+// new API
+bugsnag {
+    enabled = false
+}
+```
+
 #### Added `autoUpdateBuildUuid` flag to prevent manifest UUID generation
 
 A new flag has been added to disable the generation of UUIDs in the manifest. When this flag

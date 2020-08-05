@@ -37,7 +37,7 @@ open class BugsnagUploadProguardTask @Inject constructor(
     }
 
     @get:Internal
-    val uploadRequestClient: Property<UploadRequestClient> = objects.property(UploadRequestClient::class.java)
+    internal val uploadRequestClient: Property<UploadRequestClient> = objects.property(UploadRequestClient::class.java)
 
     @get:PathSensitive(NONE)
     @get:InputFile
