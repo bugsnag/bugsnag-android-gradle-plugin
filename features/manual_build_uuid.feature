@@ -1,7 +1,7 @@
 Feature: Auto update build UUID flag
 
 Scenario: Build UUID excluded from request when set to false
-    When I build "default_app" using the "auto_update_build_uuid" bugsnag config
+    When I build "manual_build_uuid" using the "standard" bugsnag config
     Then I should receive 2 requests
 
     And the request 0 is valid for the Android Mapping API
@@ -10,7 +10,7 @@ Scenario: Build UUID excluded from request when set to false
     And the field "versionName" for multipart request 0 equals "1.0"
     And the field "appId" for multipart request 0 equals "com.bugsnag.android.example"
     And the field "overwrite" for multipart request 0 is null
-    And the field "buildUuid" for multipart request 0 is null
+    And the field "buildUUID" for multipart request 0 equals "same-build-uuid"
 
     And the request 1 is valid for the Build API
     And the payload field "appVersion" equals "1.0" for request 1
@@ -18,7 +18,6 @@ Scenario: Build UUID excluded from request when set to false
     And the payload field "builderName" is not null for request 1
     And the payload field "buildTool" equals "gradle-android" for request 1
     And the payload field "appVersionCode" equals "1" for request 1
-    And the payload field "buildUuid" is null for request 1
 
     And the payload field "sourceControl.provider" equals "github" for request 1
     And the payload field "sourceControl.repository" equals "https://github.com/bugsnag/bugsnag-android-gradle-plugin.git" for request 1

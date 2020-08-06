@@ -80,7 +80,7 @@ class AndroidManifestParser {
         val metadataTags = findMetadataTags(application)
 
         // Add the new BUILD_UUID_TAG element
-        if (!hasBuildUuid(metadataTags) && IGNORE_BUILD_UUID != buildUuid) {
+        if (!hasBuildUuid(metadataTags)) {
             application.appendNode(TAG_META_DATA, hashMapOf(
                 namespace.get(ATTR_NAME) to TAG_BUILD_UUID,
                 namespace.get(ATTR_VALUE) to buildUuid
@@ -130,13 +130,6 @@ class AndroidManifestParser {
     }
 
     companion object {
-
-        /**
-         * Used as a predictable task input when autoUpdateBuildUuid is set to false,
-         * as the versionName/versionCode/package fields should be used instead.
-         */
-        const val IGNORE_BUILD_UUID = "IGNORE_BUILD_UUID"
-
         private const val TAG_APPLICATION = "application"
         private const val TAG_META_DATA = "meta-data"
         private const val TAG_API_KEY = "com.bugsnag.android.API_KEY"

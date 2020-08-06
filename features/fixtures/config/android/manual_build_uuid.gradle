@@ -2,15 +2,6 @@ apply plugin: 'com.android.application'
 apply from: "../../config/android/common.gradle"
 
 android {
-    splits {
-        density {
-            enable true
-        }
-        abi {
-            enable true
-            universalApk true
-        }
-    }
     sourceSets {
         main {
             manifest.srcFile "src/main/AndroidManifestBuildUuid.xml"
