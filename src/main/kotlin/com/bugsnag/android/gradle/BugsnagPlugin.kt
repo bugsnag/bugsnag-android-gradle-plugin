@@ -83,6 +83,10 @@ class BugsnagPlugin : Plugin<Project> {
             if (BugsnagManifestUuidTaskV2.isApplicable()) {
                 check(android is CommonExtension<*, *, *, *, *, *, *, *>)
                 android.onVariants {
+                    val variant = VariantFilterImpl(name)
+                    if (!isVariantEnabled(bugsnag, variant)) {
+                        return@onVariants
+                    }
                     val variantName = name
                     val taskName = computeManifestTaskNameFor(variantName)
                     val manifestInfoOutputFile = project.computeManifestInfoOutputV2(variantName)
@@ -105,6 +109,10 @@ class BugsnagPlugin : Plugin<Project> {
 
             project.afterEvaluate {
                 android.applicationVariants.configureEach { variant ->
+                    val filterImpl = VariantFilterImpl(variant.name)
+                    if (!isVariantEnabled(bugsnag, filterImpl)) {
+                        return@configureEach
+                    }
                     registerBugsnagTasksForVariant(
                         project,
                         variant,
@@ -118,6 +126,12 @@ class BugsnagPlugin : Plugin<Project> {
                 registerNdkLibInstallTask(project, bugsnag, android)
             }
         }
+    }
+
+    private fun isVariantEnabled(bugsnag: BugsnagPluginExtension,
+                                 variant: VariantFilterImpl): Boolean {
+        bugsnag.filter?.execute(variant)
+        return variant.variantEnabled ?: true
     }
 
     private fun registerNdkLibInstallTask(
