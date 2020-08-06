@@ -2,7 +2,7 @@
 <SmellBaseline>
   <Blacklist></Blacklist>
   <Whitelist>
-    <ID>ComplexCondition:AndroidManifestParser.kt$AndroidManifestParser$apiKey == null || "" == apiKey || versionCode == null || versionName == null || applicationId == null</ID>
+    <ID>ComplexCondition:AndroidManifestParser.kt$AndroidManifestParser$apiKey == null || "" == apiKey || versionCode == null || buildUUID == null || versionName == null || applicationId == null</ID>
     <ID>LongParameterList:BugsnagPlugin.kt$BugsnagPlugin$(task: Task, variant: ApkVariant, output: ApkVariantOutput, project: Project, bugsnag: BugsnagPluginExtension, autoUpload: Boolean)</ID>
     <ID>MagicNumber:BugsnagMultiPartUploadRequest.kt$BugsnagMultiPartUploadRequest$200</ID>
     <ID>MagicNumber:BugsnagPluginExtension.kt$BugsnagPluginExtension$60000</ID>

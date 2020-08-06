@@ -40,7 +40,7 @@ class AndroidManifestParser {
         // Uniquely identify the build so that we can identify the proguard file.
         val buildUUID = getManifestMetaData(metadataTags, TAG_BUILD_UUID)
         if (buildUUID == null) {
-            logger.info("Bugsnag: Could not find '$TAG_BUILD_UUID'" +
+            logger.warn("Bugsnag: Could not find '$TAG_BUILD_UUID'" +
                 " <meta-data> tag in your AndroidManifest.xml")
         }
 
@@ -56,11 +56,13 @@ class AndroidManifestParser {
             logger.warn("Bugsnag: Could not find 'package' value in your AndroidManifest.xml")
         }
 
-        if (apiKey == null || "" == apiKey || versionCode == null || versionName == null || applicationId == null) {
+        if (apiKey == null || "" == apiKey || versionCode == null ||
+            buildUUID == null || versionName == null || applicationId == null) {
             throw IllegalStateException(
                 """Bugsnag: Missing apiKey/versionCode/buildUuid/versionName/package, required to upload to bugsnag.
                     |apiKey=$apiKey
                     |versionCode=$versionCode
+                    |buildUUID=$buildUUID
                     |versionName=$versionName
                     |applicationId=$applicationId
                 """.trimMargin())
