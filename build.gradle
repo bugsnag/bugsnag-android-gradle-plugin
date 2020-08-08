@@ -99,10 +99,6 @@ pluginBundle {
     }
 }
 
-install {
-    version = project.hasProperty("localVersion") ? project.getProperty("localVersion") : project.version
-}
-
 // license checking
 license {
     header rootProject.file("LICENSE")
