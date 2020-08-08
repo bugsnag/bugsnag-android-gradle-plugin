@@ -64,7 +64,7 @@ abstract class BugsnagInstallJniLibsTask(objects: ObjectFactory) : DefaultTask()
     }
 }
 
-/** Legacy [BugsnagInstallJniLibsTask] task that requires using [Project]. */
+/** Legacy [BugsnagInstallJniLibsTask] task that requires using [getProject]. */
 internal open class BugsnagInstallJniLibsTaskLegacy @Inject constructor(
     objects: ObjectFactory
 ) : BugsnagInstallJniLibsTask(objects) {
