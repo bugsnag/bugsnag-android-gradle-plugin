@@ -7,7 +7,8 @@ import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
-import com.bugsnag.android.gradle.BugsnagInstallJniLibsTask.Companion.resolveBugsnagArtefacts
+import com.bugsnag.android.gradle.BugsnagInstallJniLibsTask.Companion.resolveBugsnagArtifacts
+import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -90,21 +91,31 @@ class BugsnagPlugin : Plugin<Project> {
         }
     }
 
-    private fun registerNdkLibInstallTask(project: Project,
-                                          bugsnag: BugsnagPluginExtension,
-                                          android: AppExtension) {
+    private fun registerNdkLibInstallTask(
+        project: Project,
+        bugsnag: BugsnagPluginExtension,
+        android: AppExtension
+    ) {
         val ndkTasks = project.tasks.withType(ExternalNativeBuildTask::class.java)
         val cleanTasks = ndkTasks.filter { it.name.contains(CLEAN_TASK) }.toSet()
         val buildTasks = ndkTasks.filter { !it.name.contains(CLEAN_TASK) }.toSet()
 
         if (buildTasks.isNotEmpty()) {
-            val ndkSetupTask = project.tasks.create("bugsnagInstallJniLibsTask", BugsnagInstallJniLibsTask::class.java)
-            ndkSetupTask.buildDirDestination.set(File(project.buildDir, "/intermediates/bugsnag-libs"))
-            val files = resolveBugsnagArtefacts(project)
-            ndkSetupTask.bugsnagArtefacts.set(files)
+            val configuration: Action<in BugsnagInstallJniLibsTask> = Action {
+                it.buildDirDestination.set(File(project.buildDir, "/intermediates/bugsnag-libs"))
+                val files = resolveBugsnagArtifacts(project)
+                it.bugsnagArtifacts.from(files)
+            }
+            val ndkSetupTask = if (project.gradle.gradleVersion.startsWith("6")) {
+                project.tasks.register("bugsnagInstallJniLibsTask", BugsnagInstallJniLibsTaskGradle6Plus::class.java, configuration)
+            } else {
+                project.tasks.register("bugsnagInstallJniLibsTask", BugsnagInstallJniLibsTaskLegacy::class.java, configuration)
+            }
 
             if (isNdkUploadEnabled(bugsnag, android)) {
-                ndkSetupTask.mustRunAfter(cleanTasks)
+                ndkSetupTask.configure {
+                    it.mustRunAfter(cleanTasks)
+                }
                 buildTasks.forEach { it.dependsOn(ndkSetupTask) }
             }
         }
