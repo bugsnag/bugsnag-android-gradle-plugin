@@ -10,6 +10,7 @@ import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
@@ -37,7 +38,8 @@ import java.time.Duration
 import javax.inject.Inject
 
 open class BugsnagReleasesTask @Inject constructor(
-    objects: ObjectFactory
+    objects: ObjectFactory,
+    private val providerFactory: ProviderFactory
 ) : DefaultTask(), AndroidManifestInfoReceiver {
 
     init {
@@ -127,7 +129,7 @@ open class BugsnagReleasesTask @Inject constructor(
         val payload = generateJsonPayload(manifestInfo)
 
         val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, payload.toString()) {
-            project.logger.lifecycle("Bugsnag: Attempting upload to Releases API")
+            logger.lifecycle("Bugsnag: Attempting upload to Releases API")
             lateinit var response: String
             object : Call(retryCount, logger) {
                 override fun makeApiCall(): Boolean {
@@ -140,7 +142,7 @@ open class BugsnagReleasesTask @Inject constructor(
             response
         }
         requestOutputFile.asFile.get().writeText(response)
-        project.logger.lifecycle("Bugsnag: Releases request complete")
+        logger.lifecycle("Bugsnag: Releases request complete")
     }
 
     private fun deliverPayload(
@@ -255,17 +257,17 @@ open class BugsnagReleasesTask @Inject constructor(
         val gradleVersionString = project.gradle.gradleVersion
         val gradleVersionNumber = VersionNumber.parse(gradleVersionString)
         gradleVersion.set(gradleVersionString)
-        gitVersion.set(project.provider { runCmd(VCS_COMMAND, "--version") } )
+        gitVersion.set(providerFactory.provider { runCmd(VCS_COMMAND, "--version") } )
         if (gradleVersionNumber >= SYS_PROPERTIES_VERSION)  {
-            osArch.set(project.providers.systemProperty(MK_OS_ARCH) )
-            osName.set(project.providers.systemProperty(MK_OS_NAME) )
-            osVersion.set(project.providers.systemProperty(MK_OS_VERSION) )
-            javaVersion.set(project.providers.systemProperty(MK_JAVA_VERSION))
+            osArch.set(providerFactory.systemProperty(MK_OS_ARCH) )
+            osName.set(providerFactory.systemProperty(MK_OS_NAME) )
+            osVersion.set(providerFactory.systemProperty(MK_OS_VERSION) )
+            javaVersion.set(providerFactory.systemProperty(MK_JAVA_VERSION))
         } else {
-            osArch.set(project.provider { System.getProperty(MK_OS_ARCH) } )
-            osName.set(project.provider { System.getProperty(MK_OS_NAME) } )
-            osVersion.set(project.provider { System.getProperty(MK_OS_VERSION) } )
-            javaVersion.set(project.provider { System.getProperty(MK_JAVA_VERSION) })
+            osArch.set(providerFactory.provider { System.getProperty(MK_OS_ARCH) } )
+            osName.set(providerFactory.provider { System.getProperty(MK_OS_NAME) } )
+            osVersion.set(providerFactory.provider { System.getProperty(MK_OS_VERSION) } )
+            javaVersion.set(providerFactory.provider { System.getProperty(MK_JAVA_VERSION) })
         }
     }
 
