@@ -20,6 +20,10 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
+import org.gradle.process.ExecOperations
+import org.gradle.process.ExecResult
+import org.gradle.process.ExecSpec
 import org.gradle.process.internal.ExecException
 import org.gradle.util.VersionNumber
 import retrofit2.Response
@@ -37,7 +41,7 @@ import java.nio.charset.Charset
 import java.time.Duration
 import javax.inject.Inject
 
-open class BugsnagReleasesTask @Inject constructor(
+abstract class BugsnagReleasesTask(
     objects: ObjectFactory,
     private val providerFactory: ProviderFactory
 ) : DefaultTask(), AndroidManifestInfoReceiver {
@@ -122,6 +126,8 @@ open class BugsnagReleasesTask @Inject constructor(
     @get:Input
     @get:Optional
     val gitVersion: Property<String> = objects.property(String::class.java)
+
+    abstract fun exec(action: (ExecSpec) -> Unit): ExecResult
 
     @TaskAction
     fun fetchReleaseInfo() {
@@ -242,7 +248,7 @@ open class BugsnagReleasesTask @Inject constructor(
     private fun runCmd(vararg cmd: String): String? {
         return try {
             val baos = ByteArrayOutputStream()
-            project.exec { execSpec ->
+            exec { execSpec ->
                 execSpec.commandLine(*cmd)
                 execSpec.standardOutput = baos
                 logging.captureStandardError(LogLevel.INFO)
@@ -321,6 +327,46 @@ open class BugsnagReleasesTask @Inject constructor(
                 .build()
                 .create()
         }
+
+        /**
+         * Registers the appropriate subtype to this [project] with the given [name] and
+         * [configurationAction]
+         */
+        internal fun register(
+            project: Project,
+            name: String,
+            configurationAction: BugsnagReleasesTask.() -> Unit
+        ): TaskProvider<out BugsnagReleasesTask> {
+            return if (project.gradle.gradleVersion.startsWith('6')) {
+                project.tasks.register(name, BugsnagReleasesTaskGradle6Plus::class.java, configurationAction)
+            } else  {
+                project.tasks.register(name, BugsnagReleasesTaskLegacy::class.java, configurationAction)
+            }
+        }
+    }
+}
+
+/** Legacy [BugsnagReleasesTask] task that requires using [getProject]. */
+internal open class BugsnagReleasesTaskLegacy @Inject constructor(
+    objects: ObjectFactory,
+    providerFactory: ProviderFactory
+) : BugsnagReleasesTask(objects, providerFactory) {
+    override fun exec(action: (ExecSpec) -> Unit): ExecResult {
+        return project.exec(action)
+    }
+}
+
+/**
+ * A Gradle 6.0+ compatible [BugsnagReleasesTask], which uses [ExecOperations]
+ * and supports configuration caching.
+ */
+internal open class BugsnagReleasesTaskGradle6Plus @Inject constructor(
+    objects: ObjectFactory,
+    providerFactory: ProviderFactory,
+    private val execOps: ExecOperations
+) : BugsnagReleasesTask(objects, providerFactory) {
+    override fun exec(action: (ExecSpec) -> Unit): ExecResult {
+        return execOps.exec(action)
     }
 }
 

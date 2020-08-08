@@ -243,26 +243,28 @@ class BugsnagPlugin : Plugin<Project> {
         }
     }
 
-    private fun registerReleasesUploadTask(project: Project,
-                                           variant: ApkVariant,
-                                           output: ApkVariantOutput,
-                                           bugsnag: BugsnagPluginExtension): TaskProvider<BugsnagReleasesTask> {
+    private fun registerReleasesUploadTask(
+        project: Project,
+        variant: ApkVariant,
+        output: ApkVariantOutput,
+        bugsnag: BugsnagPluginExtension
+    ): TaskProvider<out BugsnagReleasesTask> {
         val outputName = taskNameForOutput(output)
         val taskName = "bugsnagRelease${outputName}Task"
         val path = "intermediates/bugsnag/requests/releasesFor${outputName}.json"
         val requestOutputFile = project.layout.buildDirectory.file(path)
-        return project.tasks.register(taskName, BugsnagReleasesTask::class.java) {
-            it.requestOutputFile.set(requestOutputFile)
-            it.retryCount.set(bugsnag.retryCount)
-            it.timeoutMillis.set(bugsnag.requestTimeoutMs)
-            it.releasesEndpoint.set(bugsnag.releasesEndpoint)
-            it.sourceControlProvider.set(bugsnag.sourceControl.provider)
-            it.sourceControlRepository.set(bugsnag.sourceControl.repository)
-            it.sourceControlRevision.set(bugsnag.sourceControl.revision)
-            it.metadata.set(bugsnag.metadata)
-            it.builderName.set(bugsnag.builderName)
-            addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.reportBuilds.get())
-            it.configureMetadata(project)
+        return BugsnagReleasesTask.register(project, taskName) {
+            this.requestOutputFile.set(requestOutputFile)
+            retryCount.set(bugsnag.retryCount)
+            timeoutMillis.set(bugsnag.requestTimeoutMs)
+            releasesEndpoint.set(bugsnag.releasesEndpoint)
+            sourceControlProvider.set(bugsnag.sourceControl.provider)
+            sourceControlRepository.set(bugsnag.sourceControl.repository)
+            sourceControlRevision.set(bugsnag.sourceControl.revision)
+            metadata.set(bugsnag.metadata)
+            builderName.set(bugsnag.builderName)
+            addTaskToExecutionGraph(this, variant, output, project, bugsnag, bugsnag.reportBuilds.get())
+            configureMetadata()
         }
     }
 
