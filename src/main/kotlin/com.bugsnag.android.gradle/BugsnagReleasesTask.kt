@@ -253,12 +253,13 @@ open class BugsnagReleasesTask @Inject constructor(
         }
     }
 
-    internal fun configureMetadata(project: Project) {
-        val gradleVersionString = project.gradle.gradleVersion
-        val gradleVersionNumber = VersionNumber.parse(gradleVersionString)
-        gradleVersion.set(gradleVersionString)
+    internal fun configureMetadata() {
+        val gradleVersionNumber = gradleVersion.orNull?.let {
+            gradleVersion.set(it)
+            VersionNumber.parse(it)
+        }
         gitVersion.set(providerFactory.provider { runCmd(VCS_COMMAND, "--version") } )
-        if (gradleVersionNumber >= SYS_PROPERTIES_VERSION)  {
+        if (gradleVersionNumber != null && gradleVersionNumber >= SYS_PROPERTIES_VERSION)  {
             osArch.set(providerFactory.systemProperty(MK_OS_ARCH) )
             osName.set(providerFactory.systemProperty(MK_OS_NAME) )
             osVersion.set(providerFactory.systemProperty(MK_OS_VERSION) )
