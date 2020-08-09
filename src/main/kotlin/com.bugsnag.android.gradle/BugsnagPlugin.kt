@@ -230,6 +230,7 @@ class BugsnagPlugin : Plugin<Project> {
             it.projectRoot.set(bugsnag.projectRoot.getOrElse(project.projectDir.toString()))
             it.searchDirectories.set(getSearchDirectories(project, variant))
             it.variantOutput = output
+            it.objDumpPaths.set(bugsnag.objdumpPaths)
             addTaskToExecutionGraph(it, variant, output, project, bugsnag, true)
             it.configureWith(bugsnag)
         }

@@ -11,14 +11,18 @@ import okio.source
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
@@ -42,7 +46,8 @@ import javax.inject.Inject
  * a build.
  */
 open class BugsnagUploadNdkTask @Inject constructor(
-    objects: ObjectFactory
+    objects: ObjectFactory,
+    projectLayout: ProjectLayout
 ) : DefaultTask(), AndroidManifestInfoReceiver, BugsnagFileUploadTask {
 
     init {
@@ -69,6 +74,10 @@ open class BugsnagUploadNdkTask @Inject constructor(
     @get:OutputFile
     val requestOutputFile: RegularFileProperty = objects.fileProperty()
 
+    @get:OutputDirectory
+    val intermediateOutputDir: DirectoryProperty = objects.directoryProperty()
+        .convention(projectLayout.buildDirectory.dir("intermediates/bugsnag"))
+
     @get:Input
     override val failOnUploadError: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
 
@@ -84,18 +93,21 @@ open class BugsnagUploadNdkTask @Inject constructor(
     @get:Input
     override val timeoutMillis: Property<Long> = objects.property(Long::class.javaObjectType)
 
+    @get:Input
+    val objDumpPaths: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java)
+
     @TaskAction
     fun upload() {
-        project.logger.lifecycle("Starting ndk upload")
+        logger.lifecycle("Starting ndk upload")
         val searchDirs = searchDirectories.get().files.toList()
         val files = findSharedObjectMappingFiles(project, variantOutput, searchDirs)
-        project.logger.lifecycle("Processing shared object files")
+        logger.lifecycle("Processing shared object files")
         processFiles(files)
         requestOutputFile.asFile.get().writeText("OK")
     }
 
     private fun processFiles(files: Collection<File>) {
-        project.logger.info("Bugsnag: Found shared object files for upload: $files")
+        logger.info("Bugsnag: Found shared object files for upload: $files")
 
         files.forEach { file ->
             processFile(file)
@@ -119,14 +131,11 @@ open class BugsnagUploadNdkTask @Inject constructor(
     private fun generateSymbolsForSharedObject(sharedObject: File, arch: String): File? {
         // Get the path the version of objdump to use to get symbols
         val objDumpPath = getObjDumpExecutable(arch)
-        val logger = project.logger
+        val logger = logger
         if (objDumpPath != null) {
             val outReader: Reader? = null
             try {
-                val outputDir = File(project.buildDir, "bugsnag")
-                if (!outputDir.exists()) {
-                    outputDir.mkdir()
-                }
+                val outputDir = intermediateOutputDir.asFile.get()
                 val outputFile = File(outputDir, "$arch.gz")
                 val errorOutputFile = File(outputDir, "$arch.error.txt")
                 logger.info("Bugsnag: Creating symbol file  for $arch at $outputFile")
@@ -168,7 +177,7 @@ open class BugsnagUploadNdkTask @Inject constructor(
         // a SO file may not contain debug info. if that's the case then the mapping file should be very small,
         // so we try and reject it here as otherwise the event-worker will reject it with a 400 status code.
         if (!mappingFile.exists() || mappingFile.length() < VALID_SO_FILE_THRESHOLD) {
-            project.logger.warn("Bugsnag: Skipping upload of empty/invalid mapping file: $mappingFile")
+            logger.warn("Bugsnag: Skipping upload of empty/invalid mapping file: $mappingFile")
             return
         }
         val parts = mutableMapOf<String, RequestBody>()
@@ -181,13 +190,13 @@ open class BugsnagUploadNdkTask @Inject constructor(
         }
         parts["projectRoot"] = projectRoot.get().toTextRequestBody()
         val request = BugsnagMultiPartUploadRequest.from(this)
-        project.logger.lifecycle("Bugsnag: Attempting to upload shared object mapping " +
+        logger.lifecycle("Bugsnag: Attempting to upload shared object mapping " +
             "file for $sharedObjectName-$arch from $mappingFile")
 
         val manifestInfo = parseManifestInfo()
         val mappingFileContents = mappingFile.readText()
         val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileContents) {
-            project.logger.lifecycle("Bugsnag: Attempting to upload shared object mapping " +
+            logger.lifecycle("Bugsnag: Attempting to upload shared object mapping " +
                 "file for $sharedObjectName-$arch from $mappingFile")
             request.uploadMultipartEntity(parts, parseManifestInfo())
         }
@@ -210,15 +219,13 @@ open class BugsnagUploadNdkTask @Inject constructor(
             }
             return objDumpFile
         } catch (ex: Throwable) {
-            project.logger.error("Bugsnag: Error attempting to calculate objdump location: " + ex.message)
+            logger.error("Bugsnag: Error attempting to calculate objdump location: " + ex.message)
         }
         return null
     }
 
     private fun getObjDumpOverride(arch: String): String? {
-        val bugsnag = project.extensions.getByType(BugsnagPluginExtension::class.java)
-        val paths = bugsnag.objdumpPaths
-        return paths.get()[arch]
+        return objDumpPaths.get()[arch]
     }
 
     companion object {
