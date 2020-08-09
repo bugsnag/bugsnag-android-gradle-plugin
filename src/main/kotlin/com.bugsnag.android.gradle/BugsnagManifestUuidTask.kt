@@ -59,10 +59,10 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
     fun updateManifest() {
         val manifestPath = getManifestPaths(project, variant, variantOutput)
         if (manifestPath == null) {
-            project.logger.warn("Bugsnag: Failed to find manifest at $manifestPath for $variantOutput")
+            logger.warn("Bugsnag: Failed to find manifest at $manifestPath for $variantOutput")
         }
 
-        project.logger.info("Bugsnag: Updating manifest with build UUID: $manifestPath")
+        logger.info("Bugsnag: Updating manifest with build UUID: $manifestPath")
 
         // read the manifest information and store it for subsequent tasks
         val manifestParser = AndroidManifestParser()
@@ -98,16 +98,16 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
         }
         val processManifest = variantOutput.processManifestProvider.get()
         if (getMergedManifest) {
-            directoryMerged = getManifestOutputDir(processManifest, project)
+            directoryMerged = getManifestOutputDir(processManifest)
             if (directoryMerged != null) {
-                addManifestPath(manifestPaths, directoryMerged, project.logger, variantOutput)
+                addManifestPath(manifestPaths, directoryMerged, logger, variantOutput)
             }
         }
 
         // Attempt to get the bundle manifest directory if required
         if (getBundleManifest) {
             directoryBundle = resolveBundleManifestOutputDirectory(processManifest)
-            addManifestPath(manifestPaths, directoryBundle, project.logger, variantOutput)
+            addManifestPath(manifestPaths, directoryBundle, logger, variantOutput)
         }
         require(manifestPaths.size == 1) { "Unexpected number of manifest paths.$manifestPaths" }
         return manifestPaths[0]
@@ -116,14 +116,14 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
     private fun addManifestPath(manifestPaths: MutableList<File?>, directory: File, logger: Logger, variantOutput: ApkVariantOutput) {
         val manifestFile = Paths.get(directory.toString(), variantOutput.dirName, "AndroidManifest.xml").toFile()
         if (manifestFile.exists()) {
-            logger.info("Bugsnag: Found manifest at ${manifestFile}")
+            logger.info("Bugsnag: Found manifest at $manifestFile")
             manifestPaths.add(manifestFile)
         } else {
-            logger.info("Bugsnag: Failed to find manifest at ${manifestFile}")
+            logger.info("Bugsnag: Failed to find manifest at $manifestFile")
         }
     }
 
-    private fun getManifestOutputDir(processManifest: ManifestProcessorTask, project: Project): File? {
+    private fun getManifestOutputDir(processManifest: ManifestProcessorTask): File? {
         try {
             val outputDir = processManifest.javaClass.getMethod("getManifestOutputDirectory").invoke(processManifest)
             if (outputDir is File) {
@@ -138,7 +138,7 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
                 }
             }
         } catch (exc: Throwable) {
-            project.logger.warn("Bugsnag: failed to find manifestOutputDir", exc)
+            logger.warn("Bugsnag: failed to find manifestOutputDir", exc)
         }
         return null
     }
