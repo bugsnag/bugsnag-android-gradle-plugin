@@ -45,6 +45,7 @@ class BugsnagPlugin : Plugin<Project> {
         const val BUNDLE_TASK = "bundle"
     }
 
+    @Suppress("LongMethod")
     override fun apply(project: Project) {
         // After Gradle 5.2, this can use service injection for injecting ObjectFactory
         val bugsnag = project.extensions.create(
@@ -57,7 +58,8 @@ class BugsnagPlugin : Plugin<Project> {
                 return@withPlugin
             }
 
-            val httpClientHelperProvider: Provider<out BugsnagHttpClientHelper> = if (project.gradle.versionNumber() >= GradleVersions.VERSION_6_1) {
+            val canUseBuildService = project.gradle.versionNumber() >= GradleVersions.VERSION_6_1
+            val httpClientHelperProvider = if (canUseBuildService) {
                 project.gradle.sharedServices.registerIfAbsent("bugsnagHttpClientHelper",
                     BuildServiceBugsnagHttpClientHelper::class.java
                 ) { spec ->
@@ -142,6 +144,7 @@ class BugsnagPlugin : Plugin<Project> {
      *
      * See https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide#TOC-Build-Variants
      */
+    @Suppress("LongParameterList")
     private fun registerBugsnagTasksForVariant(
         project: Project,
         variant: ApkVariant,
