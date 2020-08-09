@@ -15,7 +15,6 @@ import org.gradle.api.Task
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
 import java.util.UUID
 
 /**
@@ -101,7 +100,6 @@ class BugsnagPlugin : Plugin<Project> {
 
         if (buildTasks.isNotEmpty()) {
             val ndkSetupTask = BugsnagInstallJniLibsTask.register(project, "bugsnagInstallJniLibsTask") {
-                buildDirDestination.set(File(project.buildDir, "/intermediates/bugsnag-libs"))
                 val files = resolveBugsnagArtifacts(project)
                 bugsnagArtifacts.from(files)
             }

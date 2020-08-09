@@ -4,9 +4,10 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.CopySpec
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemOperations
-import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
@@ -16,14 +17,18 @@ import org.gradle.api.tasks.WorkResult
 import java.io.File
 import javax.inject.Inject
 
-abstract class BugsnagInstallJniLibsTask(objects: ObjectFactory) : DefaultTask() {
+abstract class BugsnagInstallJniLibsTask(
+    objects: ObjectFactory,
+    projectLayout: ProjectLayout
+) : DefaultTask() {
     init {
         description = "Copies shared object files from the bugsnag-android AAR to the required build directory"
         group = BugsnagPlugin.GROUP_NAME
     }
 
     @get:OutputDirectory
-    val buildDirDestination: RegularFileProperty = objects.fileProperty()
+    val buildDirDestination: DirectoryProperty = objects.directoryProperty()
+        .convention(projectLayout.buildDirectory.dir("intermediates/bugsnag-libs"))
 
     @get:InputFiles
     val bugsnagArtifacts: ConfigurableFileCollection = objects.fileCollection()
@@ -83,8 +88,9 @@ abstract class BugsnagInstallJniLibsTask(objects: ObjectFactory) : DefaultTask()
 
 /** Legacy [BugsnagInstallJniLibsTask] task that requires using [getProject]. */
 internal open class BugsnagInstallJniLibsTaskLegacy @Inject constructor(
-    objects: ObjectFactory
-) : BugsnagInstallJniLibsTask(objects) {
+    objects: ObjectFactory,
+    projectLayout: ProjectLayout
+) : BugsnagInstallJniLibsTask(objects, projectLayout) {
     override fun copy(action: (CopySpec) -> Unit): WorkResult {
         return project.copy(action)
     }
@@ -96,7 +102,8 @@ internal open class BugsnagInstallJniLibsTaskLegacy @Inject constructor(
  */
 internal open class BugsnagInstallJniLibsTaskGradle6Plus @Inject constructor(
     objects: ObjectFactory,
+    projectLayout: ProjectLayout,
     private val fsOperations: FileSystemOperations
-) : BugsnagInstallJniLibsTask(objects) {
+) : BugsnagInstallJniLibsTask(objects, projectLayout) {
     override fun copy(action: (CopySpec) -> Unit): WorkResult = fsOperations.copy(action)
 }
