@@ -81,9 +81,9 @@ sealed class BugsnagInstallJniLibsTask(
             name: String,
             configurationAction: BugsnagInstallJniLibsTask.() -> Unit
         ): TaskProvider<out BugsnagInstallJniLibsTask> {
-            val gradleVersion = project.gradle.gradleVersion
-            return if (gradleVersion.startsWith('6')) {
-                if (gradleVersion.startsWith("6.6")) {
+            val gradleVersion = project.gradle.versionNumber()
+            return if (gradleVersion >= GradleVersions.VERSION_6) {
+                if (gradleVersion >= GradleVersions.VERSION_6_6) {
                     project.tasks.register(name, BugsnagInstallJniLibsTaskGradle66Plus::class.java, configurationAction)
                 } else {
                     project.tasks.register(name, BugsnagInstallJniLibsTaskGradle6Plus::class.java, configurationAction)

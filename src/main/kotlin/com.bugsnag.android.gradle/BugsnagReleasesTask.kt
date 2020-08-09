@@ -337,7 +337,7 @@ sealed class BugsnagReleasesTask(
             name: String,
             configurationAction: BugsnagReleasesTask.() -> Unit
         ): TaskProvider<out BugsnagReleasesTask> {
-            return if (project.gradle.gradleVersion.startsWith('6')) {
+            return if (project.gradle.versionNumber() >= GradleVersions.VERSION_6) {
                 project.tasks.register(name, BugsnagReleasesTaskGradle6Plus::class.java, configurationAction)
             } else  {
                 project.tasks.register(name, BugsnagReleasesTaskLegacy::class.java, configurationAction)
