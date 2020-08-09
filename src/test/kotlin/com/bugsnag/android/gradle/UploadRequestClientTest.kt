@@ -22,8 +22,8 @@ class UploadRequestClientTest {
             requestCount += 1
             ""
         }
-        client.makeRequestIfNeeded(info, "{}", request)
-        client.makeRequestIfNeeded(info.copy(apiKey = "40fadb0123094f"), "{}", request)
+        client.makeRequestIfNeeded(info, "{}".hashCode(), request)
+        client.makeRequestIfNeeded(info.copy(apiKey = "40fadb0123094f"), "{}".hashCode(), request)
         assertEquals(2, requestCount)
     }
 
@@ -35,8 +35,8 @@ class UploadRequestClientTest {
             requestCount += 1
             ""
         }
-        client.makeRequestIfNeeded(info, "{}", request)
-        client.makeRequestIfNeeded(info, "[]", request)
+        client.makeRequestIfNeeded(info, "{}".hashCode(), request)
+        client.makeRequestIfNeeded(info, "[]".hashCode(), request)
         assertEquals(2, requestCount)
     }
 
@@ -48,8 +48,8 @@ class UploadRequestClientTest {
             requestCount += 1
             ""
         }
-        client.makeRequestIfNeeded(info, "{}", request)
-        client.makeRequestIfNeeded(info, "{}", request)
+        client.makeRequestIfNeeded(info, "{}".hashCode(), request)
+        client.makeRequestIfNeeded(info, "{}".hashCode(), request)
         assertEquals(1, requestCount)
     }
 }
