@@ -363,10 +363,10 @@ internal open class BugsnagReleasesTaskLegacy @Inject constructor(
 internal open class BugsnagReleasesTaskGradle6Plus @Inject constructor(
     objects: ObjectFactory,
     providerFactory: ProviderFactory,
-    private val execOps: ExecOperations
+    private val execOperations: ExecOperations
 ) : BugsnagReleasesTask(objects, providerFactory) {
     override fun exec(action: (ExecSpec) -> Unit): ExecResult {
-        return execOps.exec(action)
+        return execOperations.exec(action)
     }
 }
 
