@@ -70,6 +70,8 @@ internal fun newUploadRequestClientProvider(project: Project, prefix: String): P
             // No parameters!
         }
     } else {
-        project.provider(::LegacyUploadRequestClient)
+        // Reuse this single instance every time it's provided
+        val provider = LegacyUploadRequestClient()
+        project.provider { provider }
     }
 }
