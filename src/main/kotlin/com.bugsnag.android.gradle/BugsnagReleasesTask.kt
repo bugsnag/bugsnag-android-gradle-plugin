@@ -4,7 +4,8 @@ import com.squareup.moshi.JsonClass
 import okhttp3.OkHttpClient
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
-import org.gradle.api.file.FileCollection
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
@@ -13,8 +14,8 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
@@ -72,7 +73,7 @@ sealed class BugsnagReleasesTask(
     @get:PathSensitive(NONE)
     @get:InputFiles
     @get:Optional
-    val ndkMappingFileProperty: Property<FileCollection> = objects.property()
+    abstract val ndkMappingFileProperty: ConfigurableFileCollection
 
     @get:Input
     val retryCount: Property<Int> = objects.property()
@@ -337,20 +338,50 @@ sealed class BugsnagReleasesTask(
             name: String,
             configurationAction: BugsnagReleasesTask.() -> Unit
         ): TaskProvider<out BugsnagReleasesTask> {
-            return if (project.gradle.versionNumber() >= GradleVersions.VERSION_6) {
-                project.tasks.register(name, BugsnagReleasesTaskGradle6Plus::class.java, configurationAction)
-            } else  {
-                project.tasks.register(name, BugsnagReleasesTaskLegacy::class.java, configurationAction)
+            return when {
+              project.gradle.versionNumber() >= GradleVersions.VERSION_6 -> {
+                  project.tasks.register<BugsnagReleasesTaskGradle6Plus>(name, configurationAction)
+              }
+              project.gradle.versionNumber() >= GradleVersions.VERSION_5_3 -> {
+                  project.tasks.register<BugsnagReleasesTaskGradle53Plus>(name, configurationAction)
+              }
+              else -> {
+                  project.tasks.register<BugsnagReleasesTaskLegacy>(name, configurationAction)
+              }
             }
         }
     }
 }
 
-/** Legacy [BugsnagReleasesTask] task that requires using [getProject]. */
+/**
+ * Legacy [BugsnagReleasesTask] task that requires using [getProject] and
+ * [ProjectLayout.configurableFiles].
+ */
 internal open class BugsnagReleasesTaskLegacy @Inject constructor(
+    objects: ObjectFactory,
+    providerFactory: ProviderFactory,
+    projectLayout: ProjectLayout
+) : BugsnagReleasesTask(objects, providerFactory) {
+
+    @Suppress("DEPRECATION") // Here for backward compat
+    @get:PathSensitive(NONE)
+    @get:InputFiles
+    @get:Optional
+    override val ndkMappingFileProperty: ConfigurableFileCollection = projectLayout.configurableFiles()
+
+    override fun exec(action: (ExecSpec) -> Unit): ExecResult = project.exec(action)
+}
+
+/** Legacy [BugsnagReleasesTask] task that requires using [getProject]. */
+internal open class BugsnagReleasesTaskGradle53Plus @Inject constructor(
     objects: ObjectFactory,
     providerFactory: ProviderFactory
 ) : BugsnagReleasesTask(objects, providerFactory) {
+    @get:PathSensitive(NONE)
+    @get:InputFiles
+    @get:Optional
+    override val ndkMappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
+
     override fun exec(action: (ExecSpec) -> Unit): ExecResult {
         return project.exec(action)
     }
@@ -365,6 +396,11 @@ internal open class BugsnagReleasesTaskGradle6Plus @Inject constructor(
     providerFactory: ProviderFactory,
     private val execOperations: ExecOperations
 ) : BugsnagReleasesTask(objects, providerFactory) {
+    @get:PathSensitive(NONE)
+    @get:InputFiles
+    @get:Optional
+    override val ndkMappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
+
     override fun exec(action: (ExecSpec) -> Unit): ExecResult {
         return execOperations.exec(action)
     }

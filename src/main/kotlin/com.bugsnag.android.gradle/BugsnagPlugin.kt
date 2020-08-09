@@ -157,7 +157,7 @@ class BugsnagPlugin : Plugin<Project> {
 
             symbolFileTask?.get()?.let { task ->
                 val ndkSearchDirs = symbolFileTask.get().searchDirectories
-                releasesTask.get().ndkMappingFileProperty.set(ndkSearchDirs)
+                releasesTask.get().ndkMappingFileProperty.from(ndkSearchDirs)
                 task.uploadRequestClient.set(ndkUploadClient)
             }
             releasesTask.get().uploadRequestClient.set(releasesUploadClient)
