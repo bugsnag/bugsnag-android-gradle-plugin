@@ -4,8 +4,16 @@ import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApkVariantOutput
 import com.bugsnag.android.gradle.Abi.Companion.findByName
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
+import com.bugsnag.android.gradle.internal.GradleVersions
 import com.bugsnag.android.gradle.internal.UploadRequestClient
+import com.bugsnag.android.gradle.internal.mapProperty
+import com.bugsnag.android.gradle.internal.md5HashCode
+import com.bugsnag.android.gradle.internal.property
+import com.bugsnag.android.gradle.internal.register
+import com.bugsnag.android.gradle.internal.versionNumber
 import okhttp3.RequestBody
+import okio.HashingSource
+import okio.blackholeSink
 import okio.buffer
 import okio.gzip
 import okio.sink
@@ -200,8 +208,8 @@ sealed class BugsnagUploadNdkTask(
             "file for $sharedObjectName-$arch from $mappingFile")
 
         val manifestInfo = parseManifestInfo()
-        val mappingFileContents = mappingFile.readText()
-        val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileContents) {
+        val mappingFileHash = mappingFile.md5HashCode()
+        val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileHash) {
             logger.lifecycle("Bugsnag: Attempting to upload shared object mapping " +
                 "file for $sharedObjectName-$arch from $mappingFile")
             request.uploadMultipartEntity(parts, parseManifestInfo())

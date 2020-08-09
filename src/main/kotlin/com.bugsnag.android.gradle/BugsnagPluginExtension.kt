@@ -1,5 +1,9 @@
 package com.bugsnag.android.gradle
 
+import com.bugsnag.android.gradle.internal.listProperty
+import com.bugsnag.android.gradle.internal.mapProperty
+import com.bugsnag.android.gradle.internal.newInstance
+import com.bugsnag.android.gradle.internal.property
 import groovy.lang.Closure
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory

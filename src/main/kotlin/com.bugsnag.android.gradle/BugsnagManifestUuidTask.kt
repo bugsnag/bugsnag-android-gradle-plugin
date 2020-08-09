@@ -3,6 +3,7 @@ package com.bugsnag.android.gradle
 import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.tasks.ManifestProcessorTask
+import com.bugsnag.android.gradle.internal.property
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.Directory

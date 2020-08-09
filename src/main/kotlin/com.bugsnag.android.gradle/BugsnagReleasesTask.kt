@@ -1,6 +1,11 @@
 package com.bugsnag.android.gradle
 
+import com.bugsnag.android.gradle.internal.GradleVersions
 import com.bugsnag.android.gradle.internal.UploadRequestClient
+import com.bugsnag.android.gradle.internal.mapProperty
+import com.bugsnag.android.gradle.internal.property
+import com.bugsnag.android.gradle.internal.register
+import com.bugsnag.android.gradle.internal.versionNumber
 import com.squareup.moshi.JsonClass
 import okhttp3.OkHttpClient
 import org.gradle.api.DefaultTask
@@ -136,7 +141,7 @@ sealed class BugsnagReleasesTask(
         val manifestInfo = parseManifestInfo()
         val payload = generateJsonPayload(manifestInfo)
 
-        val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, payload.toString()) {
+        val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, payload.hashCode()) {
             logger.lifecycle("Bugsnag: Attempting upload to Releases API")
             lateinit var response: String
             object : Call(retryCount, logger) {

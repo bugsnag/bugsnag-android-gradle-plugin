@@ -2,7 +2,13 @@ package com.bugsnag.android.gradle
 
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.UploadRequestClient
+import com.bugsnag.android.gradle.internal.md5HashCode
+import com.bugsnag.android.gradle.internal.property
 import okhttp3.RequestBody
+import okio.HashingSource
+import okio.blackholeSink
+import okio.buffer
+import okio.source
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
@@ -93,8 +99,8 @@ open class BugsnagUploadProguardTask @Inject constructor(
         // Send the request
         val request = BugsnagMultiPartUploadRequest.from(this)
         val manifestInfo = parseManifestInfo()
-        val mappingFileContents = mappingFile.readText()
-        val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileContents) {
+        val mappingFileHash = mappingFile.md5HashCode()
+        val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileHash) {
             logger.lifecycle("Bugsnag: Attempting to upload JVM mapping file: $mappingFile")
             request.uploadMultipartEntity(parts, manifestInfo)
         }

@@ -1,5 +1,8 @@
 package com.bugsnag.android.gradle
 
+import com.bugsnag.android.gradle.internal.GradleVersions
+import com.bugsnag.android.gradle.internal.register
+import com.bugsnag.android.gradle.internal.versionNumber
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.ArchiveOperations

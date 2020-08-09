@@ -1,6 +1,10 @@
 @file:Suppress("MatchingDeclarationName") // This file contains multiple top-level members
-package com.bugsnag.android.gradle
+package com.bugsnag.android.gradle.internal
 
+import okio.HashingSource
+import okio.blackholeSink
+import okio.buffer
+import okio.source
 import org.gradle.api.Task
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.model.ObjectFactory
@@ -11,6 +15,7 @@ import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.util.VersionNumber
+import java.io.File
 
 internal object GradleVersions {
     val VERSION_5_3: VersionNumber = VersionNumber.parse("5.3")
@@ -20,6 +25,14 @@ internal object GradleVersions {
 }
 
 internal fun Gradle.versionNumber(): VersionNumber = VersionNumber.parse(gradleVersion)
+
+/** A fast file hash that don't load the entire file contents into memory at once. */
+internal fun File.md5HashCode(): Int {
+    return HashingSource.md5(source()).use { hashingSource ->
+        hashingSource.buffer().readAll(blackholeSink())
+        hashingSource.hash.hashCode()
+    }
+}
 
 /* Borrowed helper functions from the Gradle Kotlin DSL. */
 

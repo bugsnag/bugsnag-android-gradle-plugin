@@ -1,12 +1,11 @@
 package com.bugsnag.android.gradle.internal
 
 import com.bugsnag.android.gradle.AndroidManifestInfo
-import com.bugsnag.android.gradle.GradleVersions
-import com.bugsnag.android.gradle.versionNumber
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
+import java.util.Objects
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.FutureTask
 
@@ -27,11 +26,11 @@ sealed class UploadRequestClient : AutoCloseable {
      */
     fun makeRequestIfNeeded(
         manifestInfo: AndroidManifestInfo,
-        payload: String,
+        payloadHash: Int,
         request: () -> String
     ): String {
-        val versionInfoHash = manifestInfo.hashCode()
-        val requestIdHash = versionInfoHash + payload.hashCode()
+        val versionInfoHash = manifestInfo.requestHash()
+        val requestIdHash = Objects.hash(versionInfoHash, payloadHash)
 
         val future = requestMap.getOrPut(requestIdHash.toString()) {
             FutureTask { request() }
@@ -45,6 +44,16 @@ sealed class UploadRequestClient : AutoCloseable {
             future.cancel(true)
         }
     }
+}
+
+// Hashcode without buildUuid
+private fun AndroidManifestInfo.requestHash(): Int {
+    return Objects.hash(
+        apiKey,
+        versionCode,
+        versionName,
+        applicationId
+    )
 }
 
 /** A [BuildService]-based implementation of [UploadRequestClient]. */
