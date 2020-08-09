@@ -324,7 +324,7 @@ class BugsnagPlugin : Plugin<Project> {
                                        output: ApkVariantOutput,
                                        prefix: String): Set<String> {
         val variantName = output.name.split("-")[0].capitalize()
-        val assembleTask = variant.assembleProvider.getOrNull()
+        val assembleTask = variant.assembleProvider.orNull
 
         val taskNames = HashSet<String>()
         taskNames.add(prefix)

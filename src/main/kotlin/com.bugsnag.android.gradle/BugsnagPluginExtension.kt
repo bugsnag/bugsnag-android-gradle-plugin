@@ -19,56 +19,56 @@ private val NULL_BOOLEAN: Boolean? = null
 // After Gradle 5.2, this can use service injection for injecting ObjectFactory
 open class BugsnagPluginExtension(objects: ObjectFactory) {
 
-    val sourceControl: SourceControl = objects.newInstance(SourceControl::class.java)
+    val sourceControl: SourceControl = objects.newInstance()
 
-    val enabled: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+    val enabled: Property<Boolean> = objects.property<Boolean>()
         .convention(true)
 
-    val uploadJvmMappings: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+    val uploadJvmMappings: Property<Boolean> = objects.property<Boolean>()
         .convention(true)
 
-    val uploadNdkMappings: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+    val uploadNdkMappings: Property<Boolean> = objects.property<Boolean>()
         .convention(NULL_BOOLEAN)
 
-    val reportBuilds: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+    val reportBuilds: Property<Boolean> = objects.property<Boolean>()
         .convention(true)
 
-    val uploadDebugBuildMappings: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+    val uploadDebugBuildMappings: Property<Boolean> = objects.property<Boolean>()
         .convention(false)
 
-    val autoUpdateBuildUuid: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+    val autoUpdateBuildUuid: Property<Boolean> = objects.property<Boolean>()
         .convention(true)
 
-    val endpoint: Property<String> = objects.property(String::class.javaObjectType)
+    val endpoint: Property<String> = objects.property<String>()
         .convention("https://upload.bugsnag.com")
 
-    val releasesEndpoint = objects.property(String::class.javaObjectType)
+    val releasesEndpoint = objects.property<String>()
         .convention("https://build.bugsnag.com")
 
-    val overwrite: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+    val overwrite: Property<Boolean> = objects.property<Boolean>()
         .convention(false)
 
-    val retryCount: Property<Int> = objects.property(Int::class.javaObjectType)
+    val retryCount: Property<Int> = objects.property<Int>()
         .convention(0)
 
-    val sharedObjectPaths: ListProperty<File> = objects.listProperty(File::class.java)
+    val sharedObjectPaths: ListProperty<File> = objects.listProperty<File>()
         .convention(emptyList())
 
-    val projectRoot: Property<String> = objects.property(String::class.java).convention(NULL_STRING)
+    val projectRoot: Property<String> = objects.property<String>().convention(NULL_STRING)
 
-    val failOnUploadError: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+    val failOnUploadError: Property<Boolean> = objects.property<Boolean>()
         .convention(true)
 
-    val requestTimeoutMs: Property<Long> = objects.property(Long::class.javaObjectType)
+    val requestTimeoutMs: Property<Long> = objects.property<Long>()
         .convention(60000)
 
     // release API values
-    val builderName: Property<String> = objects.property(String::class.java).convention(NULL_STRING)
+    val builderName: Property<String> = objects.property<String>().convention(NULL_STRING)
 
-    val metadata: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java)
+    val metadata: MapProperty<String, String> = objects.mapProperty<String, String>()
         .convention(emptyMap())
 
-    val objdumpPaths: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java)
+    val objdumpPaths: MapProperty<String, String> = objects.mapProperty<String, String>()
         .convention(emptyMap())
 
     // exposes sourceControl as a nested object on the extension,

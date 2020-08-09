@@ -37,7 +37,7 @@ open class BugsnagUploadProguardTask @Inject constructor(
     }
 
     @get:Internal
-    internal val uploadRequestClient: Property<UploadRequestClient> = objects.property(UploadRequestClient::class.java)
+    internal val uploadRequestClient: Property<UploadRequestClient> = objects.property()
 
     @get:PathSensitive(NONE)
     @get:InputFile
@@ -51,19 +51,19 @@ open class BugsnagUploadProguardTask @Inject constructor(
     val requestOutputFile: RegularFileProperty = objects.fileProperty()
 
     @get:Input
-    override val failOnUploadError: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+    override val failOnUploadError: Property<Boolean> = objects.property()
 
     @get:Input
-    override val overwrite: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+    override val overwrite: Property<Boolean> = objects.property()
 
     @get:Input
-    override val endpoint: Property<String> = objects.property(String::class.javaObjectType)
+    override val endpoint: Property<String> = objects.property()
 
     @get:Input
-    override val retryCount: Property<Int> = objects.property(Int::class.javaObjectType)
+    override val retryCount: Property<Int> = objects.property()
 
     @get:Input
-    override val timeoutMillis: Property<Long> = objects.property(Long::class.javaObjectType)
+    override val timeoutMillis: Property<Long> = objects.property()
 
     @TaskAction
     fun upload() {

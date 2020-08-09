@@ -22,6 +22,18 @@ internal fun Gradle.versionNumber(): VersionNumber = VersionNumber.parse(gradleV
 /* Borrowed helper functions from the Gradle Kotlin DSL. */
 
 /**
+ * Create a new instance of [T], using [parameters] as the construction parameters.
+ *
+ * @param T The type of object to create
+ * @param parameters The construction parameters
+ * @return the created named object
+ *
+ * @see [ObjectFactory.newInstance]
+ */
+inline fun <reified T : Any> ObjectFactory.newInstance(vararg parameters: Any): T =
+    newInstance(T::class.javaObjectType, *parameters)
+
+/**
  * Creates a [Property] that holds values of the given type [T].
  *
  * @see [ObjectFactory.property]

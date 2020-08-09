@@ -27,7 +27,7 @@ abstract class BaseBugsnagManifestUuidTask(objects: ObjectFactory) : DefaultTask
     }
 
     @get:Input
-    val buildUuid: Property<String> = objects.property(String::class.java)
+    val buildUuid: Property<String> = objects.property()
 
     @get:OutputFile
     val manifestInfoProvider: RegularFileProperty = objects.fileProperty()

@@ -56,10 +56,10 @@ open class BugsnagUploadNdkTask @Inject constructor(
     }
 
     @get:Internal
-    internal val uploadRequestClient: Property<UploadRequestClient> = objects.property(UploadRequestClient::class.java)
+    internal val uploadRequestClient: Property<UploadRequestClient> = objects.property()
 
     @Input
-    val projectRoot: Property<String> = objects.property(String::class.javaObjectType)
+    val projectRoot: Property<String> = objects.property()
 
     @get:InputFiles
     val searchDirectories: Property<FileCollection> = objects.property(FileCollection::class.java)
@@ -79,22 +79,22 @@ open class BugsnagUploadNdkTask @Inject constructor(
         .convention(projectLayout.buildDirectory.dir("intermediates/bugsnag"))
 
     @get:Input
-    override val failOnUploadError: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+    override val failOnUploadError: Property<Boolean> = objects.property()
 
     @get:Input
-    override val overwrite: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+    override val overwrite: Property<Boolean> = objects.property()
 
     @get:Input
-    override val endpoint: Property<String> = objects.property(String::class.javaObjectType)
+    override val endpoint: Property<String> = objects.property()
 
     @get:Input
-    override val retryCount: Property<Int> = objects.property(Int::class.javaObjectType)
+    override val retryCount: Property<Int> = objects.property()
 
     @get:Input
-    override val timeoutMillis: Property<Long> = objects.property(Long::class.javaObjectType)
+    override val timeoutMillis: Property<Long> = objects.property()
 
     @get:Input
-    val objDumpPaths: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java)
+    val objDumpPaths: MapProperty<String, String> = objects.mapProperty()
 
     @TaskAction
     fun upload() {

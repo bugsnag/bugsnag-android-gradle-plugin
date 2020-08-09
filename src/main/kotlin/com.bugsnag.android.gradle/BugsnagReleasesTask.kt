@@ -52,7 +52,7 @@ sealed class BugsnagReleasesTask(
     }
 
     @get:Internal
-    internal val uploadRequestClient: Property<UploadRequestClient> = objects.property(UploadRequestClient::class.java)
+    internal val uploadRequestClient: Property<UploadRequestClient> = objects.property()
 
     @get:PathSensitive(NONE)
     @get:InputFile
@@ -72,60 +72,60 @@ sealed class BugsnagReleasesTask(
     @get:PathSensitive(NONE)
     @get:InputFiles
     @get:Optional
-    val ndkMappingFileProperty: Property<FileCollection> = objects.property(FileCollection::class.java)
+    val ndkMappingFileProperty: Property<FileCollection> = objects.property()
 
     @get:Input
-    val retryCount: Property<Int> = objects.property(Int::class.javaObjectType)
+    val retryCount: Property<Int> = objects.property()
 
     @get:Input
-    val timeoutMillis: Property<Long> = objects.property(Long::class.javaObjectType)
+    val timeoutMillis: Property<Long> = objects.property()
 
     @get:Input
-    val releasesEndpoint: Property<String> = objects.property(String::class.java)
-
-    @get:Optional
-    @get:Input
-    val builderName: Property<String> = objects.property(String::class.java)
+    val releasesEndpoint: Property<String> = objects.property()
 
     @get:Optional
     @get:Input
-    val metadata: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java)
+    val builderName: Property<String> = objects.property()
 
     @get:Optional
     @get:Input
-    val sourceControlProvider: Property<String> = objects.property(String::class.java)
+    val metadata: MapProperty<String, String> = objects.mapProperty()
 
     @get:Optional
     @get:Input
-    val sourceControlRepository: Property<String> = objects.property(String::class.java)
+    val sourceControlProvider: Property<String> = objects.property()
 
     @get:Optional
     @get:Input
-    val sourceControlRevision: Property<String> = objects.property(String::class.java)
+    val sourceControlRepository: Property<String> = objects.property()
+
+    @get:Optional
+    @get:Input
+    val sourceControlRevision: Property<String> = objects.property()
 
     @get:Input
     @get:Optional
-    val osArch: Property<String> = objects.property(String::class.java)
+    val osArch: Property<String> = objects.property()
 
     @get:Input
     @get:Optional
-    val osName: Property<String> = objects.property(String::class.java)
+    val osName: Property<String> = objects.property()
 
     @get:Input
     @get:Optional
-    val osVersion: Property<String> = objects.property(String::class.java)
+    val osVersion: Property<String> = objects.property()
 
     @get:Input
     @get:Optional
-    val javaVersion: Property<String> = objects.property(String::class.java)
+    val javaVersion: Property<String> = objects.property()
 
     @get:Input
     @get:Optional
-    val gradleVersion: Property<String> = objects.property(String::class.java)
+    val gradleVersion: Property<String> = objects.property()
 
     @get:Input
     @get:Optional
-    val gitVersion: Property<String> = objects.property(String::class.java)
+    val gitVersion: Property<String> = objects.property()
 
     internal abstract fun exec(action: (ExecSpec) -> Unit): ExecResult
 

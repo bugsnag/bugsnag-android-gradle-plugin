@@ -13,11 +13,10 @@ import java.io.IOException
 import java.io.PrintWriter
 import javax.xml.parsers.ParserConfigurationException
 
-class AndroidManifestParser {
+internal class AndroidManifestParser {
 
     private val namespace = Namespace("http://schemas.android.com/apk/res/android", "android")
 
-    @Throws(ParserConfigurationException::class, SAXException::class, IOException::class)
     fun readManifest(manifestPath: File, logger: Logger): AndroidManifestInfo {
         logger.debug("Bugsnag: Reading manifest at: $manifestPath")
         val root = XmlParser().parse(manifestPath)
@@ -63,6 +62,8 @@ class AndroidManifestParser {
                     |versionCode=$versionCode
                     |versionName=$versionName
                     |applicationId=$applicationId
+                    |Manifest file = $manifestPath
+                    |Manifest content=${manifestPath.readText()}
                 """.trimMargin())
         }
         return AndroidManifestInfo(apiKey, versionCode, buildUUID, versionName, applicationId)
