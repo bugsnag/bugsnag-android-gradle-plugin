@@ -2,11 +2,13 @@ package com.bugsnag.android.gradle
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.file.ArchiveOperations
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.CopySpec
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemOperations
+import org.gradle.api.file.FileTree
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.InputFiles
@@ -33,17 +35,19 @@ sealed class BugsnagInstallJniLibsTask(
     @get:InputFiles
     val bugsnagArtifacts: ConfigurableFileCollection = objects.fileCollection()
 
-    abstract fun copy(action: (CopySpec) -> Unit): WorkResult
+    internal abstract fun copy(action: (CopySpec) -> Unit): WorkResult
+    internal abstract fun zipTree(file: File): FileTree
 
     /**
      * Looks at all the dependencies and their dependencies and finds the `com.bugsnag` artifacts with SO files.
      */
     @TaskAction
     fun setupNdkProject() {
+        val destination = buildDirDestination.asFile.get()
         bugsnagArtifacts.forEach { file: File ->
             copy {
-                it.from(project.zipTree(file))
-                it.into(project.file(buildDirDestination))
+                it.from(zipTree(file))
+                it.into(destination)
             }
         }
     }
@@ -77,8 +81,13 @@ sealed class BugsnagInstallJniLibsTask(
             name: String,
             configurationAction: BugsnagInstallJniLibsTask.() -> Unit
         ): TaskProvider<out BugsnagInstallJniLibsTask> {
-            return if (project.gradle.gradleVersion.startsWith('6')) {
-                project.tasks.register(name, BugsnagInstallJniLibsTaskGradle6Plus::class.java, configurationAction)
+            val gradleVersion = project.gradle.gradleVersion
+            return if (gradleVersion.startsWith('6')) {
+                if (gradleVersion.startsWith("6.6")) {
+                    project.tasks.register(name, BugsnagInstallJniLibsTaskGradle66Plus::class.java, configurationAction)
+                } else {
+                    project.tasks.register(name, BugsnagInstallJniLibsTaskGradle6Plus::class.java, configurationAction)
+                }
             } else  {
                 project.tasks.register(name, BugsnagInstallJniLibsTaskLegacy::class.java, configurationAction)
             }
@@ -94,16 +103,36 @@ internal open class BugsnagInstallJniLibsTaskLegacy @Inject constructor(
     override fun copy(action: (CopySpec) -> Unit): WorkResult {
         return project.copy(action)
     }
+
+    override fun zipTree(file: File): FileTree {
+        return project.zipTree(file)
+    }
 }
 
-/**
- * A Gradle 6.0+ compatible [BugsnagInstallJniLibsTask], which uses [FileSystemOperations]
- * and supports configuration caching.
- */
+/** A Gradle 6+ compatible [BugsnagInstallJniLibsTask], which uses [FileSystemOperations]. */
 internal open class BugsnagInstallJniLibsTaskGradle6Plus @Inject constructor(
     objects: ObjectFactory,
     projectLayout: ProjectLayout,
     private val fsOperations: FileSystemOperations
 ) : BugsnagInstallJniLibsTask(objects, projectLayout) {
     override fun copy(action: (CopySpec) -> Unit): WorkResult = fsOperations.copy(action)
+    override fun zipTree(file: File): FileTree {
+        return project.zipTree(file)
+    }
+}
+
+/**
+ * A Gradle 6.6+ compatible [BugsnagInstallJniLibsTask], which uses [FileSystemOperations]
+ * and [ArchiveOperations] to support configuration caching.
+ */
+internal open class BugsnagInstallJniLibsTaskGradle66Plus @Inject constructor(
+    objects: ObjectFactory,
+    projectLayout: ProjectLayout,
+    private val fsOperations: FileSystemOperations,
+    private val archiveOperations: ArchiveOperations
+) : BugsnagInstallJniLibsTask(objects, projectLayout) {
+    override fun copy(action: (CopySpec) -> Unit): WorkResult = fsOperations.copy(action)
+    override fun zipTree(file: File): FileTree {
+        return archiveOperations.zipTree(file)
+    }
 }
