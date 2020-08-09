@@ -35,7 +35,7 @@ fun findSharedObjectMappingFiles(project: Project,
 
 private fun findSymbolPath(variantOutput: ApkVariantOutput?): File {
     val resources = variantOutput!!.processResourcesProvider.get()
-    return resources.property("textSymbolOutputFile") as File
+    return resources.property("textSymbolOutputFile") as? File
         ?: throw IllegalStateException("Could not find symbol path")
 }
 
