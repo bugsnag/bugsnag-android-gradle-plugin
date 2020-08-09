@@ -256,6 +256,7 @@ class BugsnagPlugin : Plugin<Project> {
             sourceControlRevision.set(bugsnag.sourceControl.revision)
             metadata.set(bugsnag.metadata)
             builderName.set(bugsnag.builderName)
+            gradleVersion.set(project.gradle.gradleVersion)
             addTaskToExecutionGraph(this, variant, output, project, bugsnag, bugsnag.reportBuilds.get())
             configureMetadata()
         }
