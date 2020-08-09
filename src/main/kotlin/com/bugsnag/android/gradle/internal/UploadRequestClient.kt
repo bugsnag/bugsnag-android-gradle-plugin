@@ -7,7 +7,6 @@ import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
-import org.gradle.tooling.internal.protocol.BuildParameters
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.FutureTask
 
