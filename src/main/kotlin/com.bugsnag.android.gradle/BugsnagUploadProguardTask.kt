@@ -1,6 +1,7 @@
 package com.bugsnag.android.gradle
 
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
+import com.bugsnag.android.gradle.internal.UploadRequestClient
 import okhttp3.RequestBody
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty

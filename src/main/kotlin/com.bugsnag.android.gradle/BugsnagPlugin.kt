@@ -11,6 +11,8 @@ import com.bugsnag.android.gradle.BugsnagInstallJniLibsTask.Companion.resolveBug
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.BuildServiceBugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.LegacyBugsnagHttpClientHelper
+import com.bugsnag.android.gradle.internal.UploadRequestClient
+import com.bugsnag.android.gradle.internal.newUploadRequestClientProvider
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -43,10 +45,6 @@ class BugsnagPlugin : Plugin<Project> {
         const val BUNDLE_TASK = "bundle"
     }
 
-    private val releasesUploadClient = UploadRequestClient()
-    private val proguardUploadClient = UploadRequestClient()
-    private val ndkUploadClient = UploadRequestClient()
-
     override fun apply(project: Project) {
         // After Gradle 5.2, this can use service injection for injecting ObjectFactory
         val bugsnag = project.extensions.create(
@@ -69,6 +67,10 @@ class BugsnagPlugin : Plugin<Project> {
             } else {
                 project.provider { LegacyBugsnagHttpClientHelper(bugsnag.requestTimeoutMs) }
             }
+
+            val releasesUploadClientProvider = newUploadRequestClientProvider(project, "releases")
+            val proguardUploadClientProvider = newUploadRequestClientProvider(project, "proguard")
+            val ndkUploadClientProvider = newUploadRequestClientProvider(project, "ndk")
 
             val android = project.extensions.getByType(AppExtension::class.java)
             if (BugsnagManifestUuidTaskV2.isApplicable()) {
@@ -96,7 +98,15 @@ class BugsnagPlugin : Plugin<Project> {
 
             project.afterEvaluate {
                 android.applicationVariants.configureEach { variant ->
-                    registerBugsnagTasksForVariant(project, variant, bugsnag, httpClientHelperProvider)
+                    registerBugsnagTasksForVariant(
+                        project,
+                        variant,
+                        bugsnag,
+                        httpClientHelperProvider,
+                        releasesUploadClientProvider,
+                        proguardUploadClientProvider,
+                        ndkUploadClientProvider
+                    )
                 }
                 registerNdkLibInstallTask(project, bugsnag, android)
             }
@@ -136,7 +146,10 @@ class BugsnagPlugin : Plugin<Project> {
         project: Project,
         variant: ApkVariant,
         bugsnag: BugsnagPluginExtension,
-        httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>
+        httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
+        releasesUploadClientProvider: Provider<out UploadRequestClient>,
+        proguardUploadClientProvider: Provider<out UploadRequestClient>,
+        ndkUploadClientProvider: Provider<out UploadRequestClient>
     ) {
         variant.outputs.configureEach {
             val output = it as ApkVariantOutput
@@ -179,15 +192,15 @@ class BugsnagPlugin : Plugin<Project> {
                 val mappingFileProvider = createMappingFileProvider(project, variant, output)
                 task.mappingFileProperty.set(mappingFileProvider)
                 releasesTask.get().jvmMappingFileProperty.set(mappingFileProvider)
-                task.uploadRequestClient.set(proguardUploadClient)
+                task.uploadRequestClient.set(proguardUploadClientProvider)
             }
 
             symbolFileTask?.get()?.let { task ->
                 val ndkSearchDirs = symbolFileTask.get().searchDirectories
                 releasesTask.get().ndkMappingFileProperty.from(ndkSearchDirs)
-                task.uploadRequestClient.set(ndkUploadClient)
+                task.uploadRequestClient.set(ndkUploadClientProvider)
             }
-            releasesTask.get().uploadRequestClient.set(releasesUploadClient)
+            releasesTask.get().uploadRequestClient.set(releasesUploadClientProvider)
             releasesTask.get().manifestInfoFile.set(manifestInfoFile)
             symbolFileTask?.get()?.manifestInfoFile?.set(manifestInfoFile)
             releasesTask.get().manifestInfoFile.set(manifestInfoFile)

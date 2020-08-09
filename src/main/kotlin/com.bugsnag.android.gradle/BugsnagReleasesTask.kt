@@ -1,5 +1,6 @@
 package com.bugsnag.android.gradle
 
+import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.squareup.moshi.JsonClass
 import okhttp3.OkHttpClient
 import org.gradle.api.DefaultTask

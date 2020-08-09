@@ -1,5 +1,6 @@
 package com.bugsnag.android.gradle
 
+import com.bugsnag.android.gradle.internal.LegacyUploadRequestClient
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -15,7 +16,7 @@ class UploadRequestClientTest {
 
     @Test
     fun testRequestDiffVersionInfo() {
-        val client = UploadRequestClient()
+        val client = LegacyUploadRequestClient()
         var requestCount = 0
         val request = {
             requestCount += 1
@@ -28,7 +29,7 @@ class UploadRequestClientTest {
 
     @Test
     fun testRequestDiffPayload() {
-        val client = UploadRequestClient()
+        val client = LegacyUploadRequestClient()
         var requestCount = 0
         val request = {
             requestCount += 1
@@ -41,7 +42,7 @@ class UploadRequestClientTest {
 
     @Test
     fun testRequestSameInfo() {
-        val client = UploadRequestClient()
+        val client = LegacyUploadRequestClient()
         var requestCount = 0
         val request = {
             requestCount += 1
