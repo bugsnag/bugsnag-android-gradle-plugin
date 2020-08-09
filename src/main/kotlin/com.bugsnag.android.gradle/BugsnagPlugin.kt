@@ -70,7 +70,9 @@ class BugsnagPlugin : Plugin<Project> {
                     spec.parameters.timeoutMillis.set(bugsnag.requestTimeoutMs)
                 }
             } else {
-                project.provider { LegacyBugsnagHttpClientHelper(bugsnag.requestTimeoutMs) }
+                // Reuse instance
+                val client = LegacyBugsnagHttpClientHelper(bugsnag.requestTimeoutMs)
+                project.provider { client }
             }
 
             val releasesUploadClientProvider = newUploadRequestClientProvider(project, "releases")
