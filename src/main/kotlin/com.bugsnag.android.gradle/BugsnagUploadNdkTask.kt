@@ -95,6 +95,7 @@ sealed class BugsnagUploadNdkTask(
     @get:Input
     val objDumpPaths: MapProperty<String, String> = objects.mapProperty()
 
+    @get:InputFiles
     abstract val searchDirectories: ConfigurableFileCollection
 
     @TaskAction

@@ -32,6 +32,7 @@ sealed class BugsnagInstallJniLibsTask(
     val buildDirDestination: DirectoryProperty = objects.directoryProperty()
         .convention(projectLayout.buildDirectory.dir("intermediates/bugsnag-libs"))
 
+    @get:InputFiles
     abstract val bugsnagArtifacts: ConfigurableFileCollection
 
     internal abstract fun copy(action: (CopySpec) -> Unit): WorkResult
