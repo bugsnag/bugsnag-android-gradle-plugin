@@ -216,23 +216,25 @@ class BugsnagPlugin : Plugin<Project> {
         }
     }
 
-    private fun registerSharedObjectUploadTask(project: Project,
-                                               variant: ApkVariant,
-                                               output: ApkVariantOutput,
-                                               bugsnag: BugsnagPluginExtension): TaskProvider<BugsnagUploadNdkTask> {
+    private fun registerSharedObjectUploadTask(
+        project: Project,
+        variant: ApkVariant,
+        output: ApkVariantOutput,
+        bugsnag: BugsnagPluginExtension
+    ): TaskProvider<out BugsnagUploadNdkTask> {
         // Create a Bugsnag task to upload NDK mapping file(s)
         val outputName = taskNameForOutput(output)
         val taskName = "uploadBugsnagNdk${outputName}Mapping"
         val path = "intermediates/bugsnag/requests/ndkFor${outputName}.json"
         val requestOutputFile = project.layout.buildDirectory.file(path)
-        return project.tasks.register(taskName, BugsnagUploadNdkTask::class.java) {
-            it.requestOutputFile.set(requestOutputFile)
-            it.projectRoot.set(bugsnag.projectRoot.getOrElse(project.projectDir.toString()))
-            it.searchDirectories.set(getSearchDirectories(project, variant))
-            it.variantOutput = output
-            it.objDumpPaths.set(bugsnag.objdumpPaths)
-            addTaskToExecutionGraph(it, variant, output, project, bugsnag, true)
-            it.configureWith(bugsnag)
+        return BugsnagUploadNdkTask.register(project, taskName) {
+            this.requestOutputFile.set(requestOutputFile)
+            projectRoot.set(bugsnag.projectRoot.getOrElse(project.projectDir.toString()))
+            searchDirectories.from(getSearchDirectories(project, variant))
+            variantOutput = output
+            objDumpPaths.set(bugsnag.objdumpPaths)
+            addTaskToExecutionGraph(this, variant, output, project, bugsnag, true)
+            configureWith(bugsnag)
         }
     }
 

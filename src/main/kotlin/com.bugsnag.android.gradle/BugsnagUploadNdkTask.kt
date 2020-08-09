@@ -11,6 +11,7 @@ import okio.source
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.ProjectLayout
@@ -27,6 +28,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.InputStream
 import java.io.Reader
@@ -45,7 +47,7 @@ import javax.inject.Inject
  * it is usually safe to have this be the absolute last task executed during
  * a build.
  */
-open class BugsnagUploadNdkTask @Inject constructor(
+sealed class BugsnagUploadNdkTask(
     objects: ObjectFactory,
     projectLayout: ProjectLayout
 ) : DefaultTask(), AndroidManifestInfoReceiver, BugsnagFileUploadTask {
@@ -60,9 +62,6 @@ open class BugsnagUploadNdkTask @Inject constructor(
 
     @Input
     val projectRoot: Property<String> = objects.property()
-
-    @get:InputFiles
-    val searchDirectories: Property<FileCollection> = objects.property(FileCollection::class.java)
 
     @get:PathSensitive(NONE)
     @get:InputFile
@@ -96,10 +95,12 @@ open class BugsnagUploadNdkTask @Inject constructor(
     @get:Input
     val objDumpPaths: MapProperty<String, String> = objects.mapProperty()
 
+    abstract val searchDirectories: ConfigurableFileCollection
+
     @TaskAction
     fun upload() {
         logger.lifecycle("Starting ndk upload")
-        val searchDirs = searchDirectories.get().files.toList()
+        val searchDirs = searchDirectories.files.toList()
         val files = findSharedObjectMappingFiles(project, variantOutput, searchDirs)
         logger.lifecycle("Processing shared object files")
         processFiles(files)
@@ -271,5 +272,39 @@ open class BugsnagUploadNdkTask @Inject constructor(
                 else -> null
             }
         }
+
+        internal fun register(
+            project: Project,
+            name: String,
+            configurationAction: BugsnagUploadNdkTask.() -> Unit
+        ): TaskProvider<out BugsnagUploadNdkTask> {
+            val gradleVersion = project.gradle.versionNumber()
+            return when {
+                gradleVersion >= GradleVersions.VERSION_5_3 -> {
+                    project.tasks.register<BugsnagUploadNdkTask53Plus>(name, configurationAction)
+                }
+                else -> {
+                    project.tasks.register<BugsnagUploadNdkTaskLegacy>(name, configurationAction)
+                }
+            }
+        }
     }
+}
+
+/** A legacy [BugsnagUploadNdkTask] that uses [ProjectLayout.configurableFiles]. */
+internal open class BugsnagUploadNdkTaskLegacy @Inject constructor(
+    objects: ObjectFactory,
+    projectLayout: ProjectLayout
+) : BugsnagUploadNdkTask(objects, projectLayout) {
+    @Suppress("DEPRECATION") // Here for backward compat
+    @get:InputFiles
+    override val searchDirectories: ConfigurableFileCollection = projectLayout.configurableFiles()
+}
+
+internal open class BugsnagUploadNdkTask53Plus @Inject constructor(
+    objects: ObjectFactory,
+    projectLayout: ProjectLayout
+) : BugsnagUploadNdkTask(objects, projectLayout) {
+    @get:InputFiles
+    override val searchDirectories: ConfigurableFileCollection = objects.fileCollection()
 }
