@@ -127,7 +127,7 @@ sealed class BugsnagReleasesTask(
     @get:Optional
     val gitVersion: Property<String> = objects.property(String::class.java)
 
-    abstract fun exec(action: (ExecSpec) -> Unit): ExecResult
+    internal abstract fun exec(action: (ExecSpec) -> Unit): ExecResult
 
     @TaskAction
     fun fetchReleaseInfo() {
