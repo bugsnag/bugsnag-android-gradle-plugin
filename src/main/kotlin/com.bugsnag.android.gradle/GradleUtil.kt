@@ -15,6 +15,7 @@ import org.gradle.util.VersionNumber
 internal object GradleVersions {
     val VERSION_5_3: VersionNumber = VersionNumber.parse("5.3")
     val VERSION_6: VersionNumber = VersionNumber.parse("6.0")
+    val VERSION_6_1: VersionNumber = VersionNumber.parse("6.1")
     val VERSION_6_6: VersionNumber = VersionNumber.parse("6.6")
 }
 

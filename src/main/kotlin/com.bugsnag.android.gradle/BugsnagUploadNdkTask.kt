@@ -3,6 +3,7 @@ package com.bugsnag.android.gradle
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApkVariantOutput
 import com.bugsnag.android.gradle.Abi.Companion.findByName
+import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
 import okhttp3.RequestBody
 import okio.buffer
 import okio.gzip
@@ -59,6 +60,9 @@ sealed class BugsnagUploadNdkTask(
 
     @get:Internal
     internal val uploadRequestClient: Property<UploadRequestClient> = objects.property()
+
+    @get:Internal
+    override val httpClientHelper: Property<BugsnagHttpClientHelper> = objects.property()
 
     @Input
     val projectRoot: Property<String> = objects.property()

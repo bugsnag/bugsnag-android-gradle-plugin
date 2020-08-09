@@ -1,5 +1,6 @@
 package com.bugsnag.android.gradle
 
+import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
 import okhttp3.RequestBody
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
@@ -38,6 +39,9 @@ open class BugsnagUploadProguardTask @Inject constructor(
 
     @get:Internal
     internal val uploadRequestClient: Property<UploadRequestClient> = objects.property()
+
+    @get:Internal
+    override val httpClientHelper: Property<BugsnagHttpClientHelper> = objects.property()
 
     @get:PathSensitive(NONE)
     @get:InputFile
