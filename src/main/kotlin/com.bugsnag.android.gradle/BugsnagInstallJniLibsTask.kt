@@ -81,16 +81,23 @@ sealed class BugsnagInstallJniLibsTask(
             configurationAction: BugsnagInstallJniLibsTask.() -> Unit
         ): TaskProvider<out BugsnagInstallJniLibsTask> {
             val gradleVersion = project.gradle.versionNumber()
-            return if (gradleVersion >= GradleVersions.VERSION_6) {
-                if (gradleVersion >= GradleVersions.VERSION_6_6) {
-                    project.tasks.register(name, BugsnagInstallJniLibsTaskGradle66Plus::class.java, configurationAction)
-                } else {
-                    project.tasks.register(name, BugsnagInstallJniLibsTaskGradle6Plus::class.java, configurationAction)
-                }
-            } else if (gradleVersion >= GradleVersions.VERSION_5_3) {
-                project.tasks.register(name, BugsnagInstallJniLibsTask53Plus::class.java, configurationAction)
-            } else  {
-                project.tasks.register(name, BugsnagInstallJniLibsTaskLegacy::class.java, configurationAction)
+            return when {
+              gradleVersion >= GradleVersions.VERSION_6 -> {
+                  when {
+                    gradleVersion >= GradleVersions.VERSION_6_6 -> {
+                        project.tasks.register<BugsnagInstallJniLibsTaskGradle66Plus>(name, configurationAction)
+                    }
+                    else -> {
+                        project.tasks.register<BugsnagInstallJniLibsTaskGradle6Plus>(name, configurationAction)
+                    }
+                  }
+              }
+              gradleVersion >= GradleVersions.VERSION_5_3 -> {
+                  project.tasks.register<BugsnagInstallJniLibsTask53Plus>(name, configurationAction)
+              }
+              else -> {
+                  project.tasks.register<BugsnagInstallJniLibsTaskLegacy>(name, configurationAction)
+              }
             }
         }
     }
