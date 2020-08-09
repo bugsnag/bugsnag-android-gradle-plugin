@@ -41,7 +41,7 @@ import java.nio.charset.Charset
 import java.time.Duration
 import javax.inject.Inject
 
-abstract class BugsnagReleasesTask(
+sealed class BugsnagReleasesTask(
     objects: ObjectFactory,
     private val providerFactory: ProviderFactory
 ) : DefaultTask(), AndroidManifestInfoReceiver {

@@ -17,7 +17,7 @@ import org.gradle.api.tasks.WorkResult
 import java.io.File
 import javax.inject.Inject
 
-abstract class BugsnagInstallJniLibsTask(
+sealed class BugsnagInstallJniLibsTask(
     objects: ObjectFactory,
     projectLayout: ProjectLayout
 ) : DefaultTask() {
