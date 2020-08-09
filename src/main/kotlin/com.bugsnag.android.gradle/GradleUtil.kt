@@ -1,3 +1,4 @@
+@file:Suppress("MatchingDeclarationName") // This file contains multiple top-level members
 package com.bugsnag.android.gradle
 
 import org.gradle.api.Task
@@ -30,6 +31,7 @@ internal fun Gradle.versionNumber(): VersionNumber = VersionNumber.parse(gradleV
  *
  * @see [ObjectFactory.newInstance]
  */
+@Suppress("SpreadOperator")
 inline fun <reified T : Any> ObjectFactory.newInstance(vararg parameters: Any): T =
     newInstance(T::class.javaObjectType, *parameters)
 
@@ -70,5 +72,7 @@ internal inline fun <reified K : Any, reified V : Any> ObjectFactory.mapProperty
  *
  * @see [TaskContainer.register]
  */
-internal inline fun <reified T : Task> TaskContainer.register(name: String, noinline configuration: T.() -> Unit): TaskProvider<T> =
-    register(name, T::class.javaObjectType, configuration)
+internal inline fun <reified T : Task> TaskContainer.register(
+    name: String,
+    noinline configuration: T.() -> Unit
+): TaskProvider<T> = register(name, T::class.javaObjectType, configuration)

@@ -124,23 +124,21 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
     }
 
     private fun getManifestOutputDir(processManifest: ManifestProcessorTask): File? {
-        try {
+        return try {
             val outputDir = processManifest.javaClass.getMethod("getManifestOutputDirectory").invoke(processManifest)
             if (outputDir is File) {
-                return outputDir
+                outputDir
             } else {
                 // gradle 4.7 introduced a provider API for lazy evaluation of properties,
                 // AGP subsequently changed the API from File to Provider<File>
                 // see https://docs.gradle.org/4.7/userguide/lazy_configuration.html
                 @Suppress("UNCHECKED_CAST") val dir = (outputDir as Provider<Directory?>).orNull
-                if (dir != null) {
-                    return dir.asFile
-                }
+                dir?.asFile
             }
         } catch (exc: Throwable) {
             logger.warn("Bugsnag: failed to find manifestOutputDir", exc)
+            null
         }
-        return null
     }
 
     private fun resolveBundleManifestOutputDirectory(processManifest: ManifestProcessorTask): File {
