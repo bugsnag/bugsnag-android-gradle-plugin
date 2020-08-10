@@ -63,7 +63,6 @@ internal class AndroidManifestParser {
                     |versionName=$versionName
                     |applicationId=$applicationId
                     |Manifest file = $manifestPath
-                    |Manifest content=${manifestPath.readText()}
                 """.trimMargin())
         }
         return AndroidManifestInfo(apiKey, versionCode, buildUUID, versionName, applicationId)
