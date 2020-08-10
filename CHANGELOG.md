@@ -5,11 +5,15 @@ improvements compared to previous versions of the plugin, such as:
 
 - Supporting [up-to-date checks](https://docs.gradle.org/current/userguide/more_about_tasks.html#sec:up_to_date_checks)
 - Supporting [task configuration avoidance](https://docs.gradle.org/current/userguide/task_configuration_avoidance.html)
+- Supporting the [configuration cache](https://docs.gradle.org/current/userguide/configuration_cache.html)
 - Avoidance of unnecessary work
 
 See the [Upgrade Guide](./UPGRADING.md) for migration instructions.
 
 ### Changes
+
+Support configuration caching
+[#257](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/257)
 
 Convert plugin extension to use property syntax
 [#251](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/251)
