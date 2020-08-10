@@ -1,6 +1,14 @@
 package com.bugsnag.android.gradle
 
+import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
+import com.bugsnag.android.gradle.internal.UploadRequestClient
+import com.bugsnag.android.gradle.internal.md5HashCode
+import com.bugsnag.android.gradle.internal.property
 import okhttp3.RequestBody
+import okio.HashingSource
+import okio.blackholeSink
+import okio.buffer
+import okio.source
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
@@ -37,7 +45,10 @@ open class BugsnagUploadProguardTask @Inject constructor(
     }
 
     @get:Internal
-    internal val uploadRequestClient: Property<UploadRequestClient> = objects.property(UploadRequestClient::class.java)
+    internal val uploadRequestClient: Property<UploadRequestClient> = objects.property()
+
+    @get:Internal
+    override val httpClientHelper: Property<BugsnagHttpClientHelper> = objects.property()
 
     @get:PathSensitive(NONE)
     @get:InputFile
@@ -51,31 +62,30 @@ open class BugsnagUploadProguardTask @Inject constructor(
     val requestOutputFile: RegularFileProperty = objects.fileProperty()
 
     @get:Input
-    override val failOnUploadError: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+    override val failOnUploadError: Property<Boolean> = objects.property()
 
     @get:Input
-    override val overwrite: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
+    override val overwrite: Property<Boolean> = objects.property()
 
     @get:Input
-    override val endpoint: Property<String> = objects.property(String::class.javaObjectType)
+    override val endpoint: Property<String> = objects.property()
 
     @get:Input
-    override val retryCount: Property<Int> = objects.property(Int::class.javaObjectType)
+    override val retryCount: Property<Int> = objects.property()
 
     @get:Input
-    override val timeoutMillis: Property<Long> = objects.property(Long::class.javaObjectType)
+    override val timeoutMillis: Property<Long> = objects.property()
 
     @TaskAction
     fun upload() {
         val mappingFile = mappingFileProperty.asFile.get()
         if (mappingFile.length() == 0L) { // proguard's -dontobfuscate generates an empty mapping file
-            project.logger.warn("Bugsnag: Ignoring empty proguard file")
+            logger.warn("Bugsnag: Ignoring empty proguard file")
             return
         }
         if (!mappingFile.exists()) {
             logger.warn("Bugsnag: Mapping file not found: $mappingFile")
-            val bugsnag = project.extensions.findByType(BugsnagPluginExtension::class.java)!!
-            if (bugsnag.failOnUploadError.get()) {
+            if (failOnUploadError.get()) {
                 throw IllegalStateException("Mapping file not found: $mappingFile")
             }
         }
@@ -89,8 +99,8 @@ open class BugsnagUploadProguardTask @Inject constructor(
         // Send the request
         val request = BugsnagMultiPartUploadRequest.from(this)
         val manifestInfo = parseManifestInfo()
-        val mappingFileContents = mappingFile.readText()
-        val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileContents) {
+        val mappingFileHash = mappingFile.md5HashCode()
+        val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileHash) {
             logger.lifecycle("Bugsnag: Attempting to upload JVM mapping file: $mappingFile")
             request.uploadMultipartEntity(parts, manifestInfo)
         }

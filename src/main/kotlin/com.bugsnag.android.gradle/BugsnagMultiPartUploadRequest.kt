@@ -16,7 +16,6 @@ import retrofit2.http.POST
 import retrofit2.http.PartMap
 import retrofit2.http.Url
 import java.io.File
-import java.time.Duration
 
 /**
  * Task to upload ProGuard mapping files to Bugsnag.
@@ -37,10 +36,10 @@ class BugsnagMultiPartUploadRequest(
     private val overwrite: Boolean,
     private val endpoint: String,
     private val retryCount: Int,
-    timeoutDuration: Duration
+    okHttpClient: OkHttpClient
 ) {
 
-    private val bugsnagService = createService(timeoutDuration)
+    private val bugsnagService = createService(okHttpClient)
 
     fun uploadMultipartEntity(
         parts: MutableMap<String, RequestBody>,
@@ -124,15 +123,8 @@ class BugsnagMultiPartUploadRequest(
                 overwrite = task.overwrite.get(),
                 endpoint = task.endpoint.get(),
                 retryCount = task.retryCount.get(),
-                timeoutDuration = Duration.ofMillis(task.timeoutMillis.get())
+                okHttpClient = task.httpClientHelper.get().okHttpClient
             )
-        }
-
-        private fun createService(timeoutDuration: Duration): BugsnagService {
-            return createService(OkHttpClient.Builder()
-                .connectTimeout(timeoutDuration)
-                .callTimeout(timeoutDuration)
-                .build())
         }
 
         internal fun createService(client: OkHttpClient): BugsnagService {

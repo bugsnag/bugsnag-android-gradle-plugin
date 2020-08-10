@@ -7,7 +7,15 @@ import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
-import com.bugsnag.android.gradle.BugsnagInstallJniLibsTask.Companion.resolveBugsnagArtefacts
+import com.bugsnag.android.gradle.BugsnagInstallJniLibsTask.Companion.resolveBugsnagArtifacts
+import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
+import com.bugsnag.android.gradle.internal.BuildServiceBugsnagHttpClientHelper
+import com.bugsnag.android.gradle.internal.GradleVersions
+import com.bugsnag.android.gradle.internal.LegacyBugsnagHttpClientHelper
+import com.bugsnag.android.gradle.internal.UploadRequestClient
+import com.bugsnag.android.gradle.internal.newUploadRequestClientProvider
+import com.bugsnag.android.gradle.internal.register
+import com.bugsnag.android.gradle.internal.versionNumber
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -15,7 +23,6 @@ import org.gradle.api.Task
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
 import java.util.UUID
 
 /**
@@ -41,10 +48,7 @@ class BugsnagPlugin : Plugin<Project> {
         const val BUNDLE_TASK = "bundle"
     }
 
-    private val releasesUploadClient = UploadRequestClient()
-    private val proguardUploadClient = UploadRequestClient()
-    private val ndkUploadClient = UploadRequestClient()
-
+    @Suppress("LongMethod")
     override fun apply(project: Project) {
         // After Gradle 5.2, this can use service injection for injecting ObjectFactory
         val bugsnag = project.extensions.create(
@@ -56,6 +60,24 @@ class BugsnagPlugin : Plugin<Project> {
             if (!bugsnag.enabled.get()) {
                 return@withPlugin
             }
+
+            val canUseBuildService = project.gradle.versionNumber() >= GradleVersions.VERSION_6_1
+            val httpClientHelperProvider = if (canUseBuildService) {
+                project.gradle.sharedServices.registerIfAbsent("bugsnagHttpClientHelper",
+                    BuildServiceBugsnagHttpClientHelper::class.java
+                ) { spec ->
+                    // Provide some parameters
+                    spec.parameters.timeoutMillis.set(bugsnag.requestTimeoutMs)
+                }
+            } else {
+                // Reuse instance
+                val client = LegacyBugsnagHttpClientHelper(bugsnag.requestTimeoutMs)
+                project.provider { client }
+            }
+
+            val releasesUploadClientProvider = newUploadRequestClientProvider(project, "releases")
+            val proguardUploadClientProvider = newUploadRequestClientProvider(project, "proguard")
+            val ndkUploadClientProvider = newUploadRequestClientProvider(project, "ndk")
 
             val android = project.extensions.getByType(AppExtension::class.java)
             if (BugsnagManifestUuidTaskV2.isApplicable()) {
@@ -83,28 +105,40 @@ class BugsnagPlugin : Plugin<Project> {
 
             project.afterEvaluate {
                 android.applicationVariants.configureEach { variant ->
-                    registerBugsnagTasksForVariant(project, variant, bugsnag)
+                    registerBugsnagTasksForVariant(
+                        project,
+                        variant,
+                        bugsnag,
+                        httpClientHelperProvider,
+                        releasesUploadClientProvider,
+                        proguardUploadClientProvider,
+                        ndkUploadClientProvider
+                    )
                 }
                 registerNdkLibInstallTask(project, bugsnag, android)
             }
         }
     }
 
-    private fun registerNdkLibInstallTask(project: Project,
-                                          bugsnag: BugsnagPluginExtension,
-                                          android: AppExtension) {
+    private fun registerNdkLibInstallTask(
+        project: Project,
+        bugsnag: BugsnagPluginExtension,
+        android: AppExtension
+    ) {
         val ndkTasks = project.tasks.withType(ExternalNativeBuildTask::class.java)
         val cleanTasks = ndkTasks.filter { it.name.contains(CLEAN_TASK) }.toSet()
         val buildTasks = ndkTasks.filter { !it.name.contains(CLEAN_TASK) }.toSet()
 
         if (buildTasks.isNotEmpty()) {
-            val ndkSetupTask = project.tasks.create("bugsnagInstallJniLibsTask", BugsnagInstallJniLibsTask::class.java)
-            ndkSetupTask.buildDirDestination.set(File(project.buildDir, "/intermediates/bugsnag-libs"))
-            val files = resolveBugsnagArtefacts(project)
-            ndkSetupTask.bugsnagArtefacts.set(files)
+            val ndkSetupTask = BugsnagInstallJniLibsTask.register(project, "bugsnagInstallJniLibsTask") {
+                val files = resolveBugsnagArtifacts(project)
+                bugsnagArtifacts.from(files)
+            }
 
             if (isNdkUploadEnabled(bugsnag, android)) {
-                ndkSetupTask.mustRunAfter(cleanTasks)
+                ndkSetupTask.configure {
+                    it.mustRunAfter(cleanTasks)
+                }
                 buildTasks.forEach { it.dependsOn(ndkSetupTask) }
             }
         }
@@ -115,10 +149,15 @@ class BugsnagPlugin : Plugin<Project> {
      *
      * See https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide#TOC-Build-Variants
      */
+    @Suppress("LongParameterList")
     private fun registerBugsnagTasksForVariant(
         project: Project,
         variant: ApkVariant,
-        bugsnag: BugsnagPluginExtension
+        bugsnag: BugsnagPluginExtension,
+        httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
+        releasesUploadClientProvider: Provider<out UploadRequestClient>,
+        proguardUploadClientProvider: Provider<out UploadRequestClient>,
+        ndkUploadClientProvider: Provider<out UploadRequestClient>
     ) {
         variant.outputs.configureEach {
             val output = it as ApkVariantOutput
@@ -133,11 +172,23 @@ class BugsnagPlugin : Plugin<Project> {
             // register bugsnag tasks
             val manifestInfoFile = registerManifestUuidTask(project, variant, output)
             val proguardTask = when {
-                jvmMinificationEnabled -> registerProguardUploadTask(project, variant, output, bugsnag)
+                jvmMinificationEnabled -> registerProguardUploadTask(
+                    project,
+                    variant,
+                    output,
+                    bugsnag,
+                    httpClientHelperProvider
+                )
                 else -> null
             }
             val symbolFileTask = when {
-                ndkEnabled -> registerSharedObjectUploadTask(project, variant, output, bugsnag)
+                ndkEnabled -> registerSharedObjectUploadTask(
+                    project,
+                    variant,
+                    output,
+                    bugsnag,
+                    httpClientHelperProvider
+                )
                 else -> null
             }
             val releasesTask = registerReleasesUploadTask(project, variant, output, bugsnag)
@@ -149,15 +200,15 @@ class BugsnagPlugin : Plugin<Project> {
                 val mappingFileProvider = createMappingFileProvider(project, variant, output)
                 task.mappingFileProperty.set(mappingFileProvider)
                 releasesTask.get().jvmMappingFileProperty.set(mappingFileProvider)
-                task.uploadRequestClient.set(proguardUploadClient)
+                task.uploadRequestClient.set(proguardUploadClientProvider)
             }
 
             symbolFileTask?.get()?.let { task ->
                 val ndkSearchDirs = symbolFileTask.get().searchDirectories
-                releasesTask.get().ndkMappingFileProperty.set(ndkSearchDirs)
-                task.uploadRequestClient.set(ndkUploadClient)
+                releasesTask.get().ndkMappingFileProperty.from(ndkSearchDirs)
+                task.uploadRequestClient.set(ndkUploadClientProvider)
             }
-            releasesTask.get().uploadRequestClient.set(releasesUploadClient)
+            releasesTask.get().uploadRequestClient.set(releasesUploadClientProvider)
             releasesTask.get().manifestInfoFile.set(manifestInfoFile)
             symbolFileTask?.get()?.manifestInfoFile?.set(manifestInfoFile)
             releasesTask.get().manifestInfoFile.set(manifestInfoFile)
@@ -198,60 +249,72 @@ class BugsnagPlugin : Plugin<Project> {
     /**
      * Creates a bugsnag task to upload proguard mapping file
      */
-    private fun registerProguardUploadTask(project: Project,
-                                           variant: ApkVariant,
-                                           output: ApkVariantOutput,
-                                           bugsnag: BugsnagPluginExtension): TaskProvider<BugsnagUploadProguardTask> {
+    private fun registerProguardUploadTask(
+        project: Project,
+        variant: ApkVariant,
+        output: ApkVariantOutput,
+        bugsnag: BugsnagPluginExtension,
+        httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>
+    ): TaskProvider<BugsnagUploadProguardTask> {
         val outputName = taskNameForOutput(output)
         val taskName = "uploadBugsnag${outputName}Mapping"
         val path = "intermediates/bugsnag/requests/proguardFor${outputName}.json"
-        val requestOutputFile = project.layout.buildDirectory.file(path)
-        return project.tasks.register(taskName, BugsnagUploadProguardTask::class.java) {
-            it.requestOutputFile.set(requestOutputFile)
-            addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.uploadJvmMappings.get())
-            it.configureWith(bugsnag)
+        val requestOutputFileProvider = project.layout.buildDirectory.file(path)
+        return project.tasks.register<BugsnagUploadProguardTask>(taskName) {
+            requestOutputFile.set(requestOutputFileProvider)
+            httpClientHelper.set(httpClientHelperProvider)
+            addTaskToExecutionGraph(this, variant, output, project, bugsnag, bugsnag.uploadJvmMappings.get())
+            configureWith(bugsnag)
         }
     }
 
-    private fun registerSharedObjectUploadTask(project: Project,
-                                               variant: ApkVariant,
-                                               output: ApkVariantOutput,
-                                               bugsnag: BugsnagPluginExtension): TaskProvider<BugsnagUploadNdkTask> {
+    private fun registerSharedObjectUploadTask(
+        project: Project,
+        variant: ApkVariant,
+        output: ApkVariantOutput,
+        bugsnag: BugsnagPluginExtension,
+        httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>
+    ): TaskProvider<out BugsnagUploadNdkTask> {
         // Create a Bugsnag task to upload NDK mapping file(s)
         val outputName = taskNameForOutput(output)
         val taskName = "uploadBugsnagNdk${outputName}Mapping"
         val path = "intermediates/bugsnag/requests/ndkFor${outputName}.json"
         val requestOutputFile = project.layout.buildDirectory.file(path)
-        return project.tasks.register(taskName, BugsnagUploadNdkTask::class.java) {
-            it.requestOutputFile.set(requestOutputFile)
-            it.projectRoot.set(bugsnag.projectRoot.getOrElse(project.projectDir.toString()))
-            it.searchDirectories.set(getSearchDirectories(project, variant))
-            it.variantOutput = output
-            addTaskToExecutionGraph(it, variant, output, project, bugsnag, true)
-            it.configureWith(bugsnag)
+        return BugsnagUploadNdkTask.register(project, taskName) {
+            this.requestOutputFile.set(requestOutputFile)
+            projectRoot.set(bugsnag.projectRoot.getOrElse(project.projectDir.toString()))
+            searchDirectories.from(getSearchDirectories(project, variant))
+            variantOutput = output
+            objDumpPaths.set(bugsnag.objdumpPaths)
+            httpClientHelper.set(httpClientHelperProvider)
+            addTaskToExecutionGraph(this, variant, output, project, bugsnag, true)
+            configureWith(bugsnag)
         }
     }
 
-    private fun registerReleasesUploadTask(project: Project,
-                                           variant: ApkVariant,
-                                           output: ApkVariantOutput,
-                                           bugsnag: BugsnagPluginExtension): TaskProvider<BugsnagReleasesTask> {
+    private fun registerReleasesUploadTask(
+        project: Project,
+        variant: ApkVariant,
+        output: ApkVariantOutput,
+        bugsnag: BugsnagPluginExtension
+    ): TaskProvider<out BugsnagReleasesTask> {
         val outputName = taskNameForOutput(output)
         val taskName = "bugsnagRelease${outputName}Task"
         val path = "intermediates/bugsnag/requests/releasesFor${outputName}.json"
         val requestOutputFile = project.layout.buildDirectory.file(path)
-        return project.tasks.register(taskName, BugsnagReleasesTask::class.java) {
-            it.requestOutputFile.set(requestOutputFile)
-            it.retryCount.set(bugsnag.retryCount)
-            it.timeoutMillis.set(bugsnag.requestTimeoutMs)
-            it.releasesEndpoint.set(bugsnag.releasesEndpoint)
-            it.sourceControlProvider.set(bugsnag.sourceControl.provider)
-            it.sourceControlRepository.set(bugsnag.sourceControl.repository)
-            it.sourceControlRevision.set(bugsnag.sourceControl.revision)
-            it.metadata.set(bugsnag.metadata)
-            it.builderName.set(bugsnag.builderName)
-            addTaskToExecutionGraph(it, variant, output, project, bugsnag, bugsnag.reportBuilds.get())
-            it.configureMetadata(project)
+        return BugsnagReleasesTask.register(project, taskName) {
+            this.requestOutputFile.set(requestOutputFile)
+            retryCount.set(bugsnag.retryCount)
+            timeoutMillis.set(bugsnag.requestTimeoutMs)
+            releasesEndpoint.set(bugsnag.releasesEndpoint)
+            sourceControlProvider.set(bugsnag.sourceControl.provider)
+            sourceControlRepository.set(bugsnag.sourceControl.repository)
+            sourceControlRevision.set(bugsnag.sourceControl.revision)
+            metadata.set(bugsnag.metadata)
+            builderName.set(bugsnag.builderName)
+            gradleVersion.set(project.gradle.gradleVersion)
+            addTaskToExecutionGraph(this, variant, output, project, bugsnag, bugsnag.reportBuilds.get())
+            configureMetadata()
         }
     }
 
@@ -317,7 +380,7 @@ class BugsnagPlugin : Plugin<Project> {
                                        output: ApkVariantOutput,
                                        prefix: String): Set<String> {
         val variantName = output.name.split("-")[0].capitalize()
-        val assembleTask = variant.assembleProvider.getOrNull()
+        val assembleTask = variant.assembleProvider.orNull
 
         val taskNames = HashSet<String>()
         taskNames.add(prefix)

@@ -1,24 +1,36 @@
 package com.bugsnag.android.gradle
 
+import com.bugsnag.android.gradle.internal.GradleVersions
+import com.bugsnag.android.gradle.internal.UploadRequestClient
+import com.bugsnag.android.gradle.internal.mapProperty
+import com.bugsnag.android.gradle.internal.property
+import com.bugsnag.android.gradle.internal.register
+import com.bugsnag.android.gradle.internal.versionNumber
 import com.squareup.moshi.JsonClass
 import okhttp3.OkHttpClient
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
-import org.gradle.api.file.FileCollection
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
+import org.gradle.process.ExecOperations
+import org.gradle.process.ExecResult
+import org.gradle.process.ExecSpec
 import org.gradle.process.internal.ExecException
 import org.gradle.util.VersionNumber
 import retrofit2.Response
@@ -36,8 +48,9 @@ import java.nio.charset.Charset
 import java.time.Duration
 import javax.inject.Inject
 
-open class BugsnagReleasesTask @Inject constructor(
-    objects: ObjectFactory
+sealed class BugsnagReleasesTask(
+    objects: ObjectFactory,
+    private val providerFactory: ProviderFactory
 ) : DefaultTask(), AndroidManifestInfoReceiver {
 
     init {
@@ -46,7 +59,7 @@ open class BugsnagReleasesTask @Inject constructor(
     }
 
     @get:Internal
-    internal val uploadRequestClient: Property<UploadRequestClient> = objects.property(UploadRequestClient::class.java)
+    internal val uploadRequestClient: Property<UploadRequestClient> = objects.property()
 
     @get:PathSensitive(NONE)
     @get:InputFile
@@ -66,68 +79,70 @@ open class BugsnagReleasesTask @Inject constructor(
     @get:PathSensitive(NONE)
     @get:InputFiles
     @get:Optional
-    val ndkMappingFileProperty: Property<FileCollection> = objects.property(FileCollection::class.java)
+    abstract val ndkMappingFileProperty: ConfigurableFileCollection
 
     @get:Input
-    val retryCount: Property<Int> = objects.property(Int::class.javaObjectType)
+    val retryCount: Property<Int> = objects.property()
 
     @get:Input
-    val timeoutMillis: Property<Long> = objects.property(Long::class.javaObjectType)
+    val timeoutMillis: Property<Long> = objects.property()
 
     @get:Input
-    val releasesEndpoint: Property<String> = objects.property(String::class.java)
-
-    @get:Optional
-    @get:Input
-    val builderName: Property<String> = objects.property(String::class.java)
+    val releasesEndpoint: Property<String> = objects.property()
 
     @get:Optional
     @get:Input
-    val metadata: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java)
+    val builderName: Property<String> = objects.property()
 
     @get:Optional
     @get:Input
-    val sourceControlProvider: Property<String> = objects.property(String::class.java)
+    val metadata: MapProperty<String, String> = objects.mapProperty()
 
     @get:Optional
     @get:Input
-    val sourceControlRepository: Property<String> = objects.property(String::class.java)
+    val sourceControlProvider: Property<String> = objects.property()
 
     @get:Optional
     @get:Input
-    val sourceControlRevision: Property<String> = objects.property(String::class.java)
+    val sourceControlRepository: Property<String> = objects.property()
+
+    @get:Optional
+    @get:Input
+    val sourceControlRevision: Property<String> = objects.property()
 
     @get:Input
     @get:Optional
-    val osArch: Property<String> = objects.property(String::class.java)
+    val osArch: Property<String> = objects.property()
 
     @get:Input
     @get:Optional
-    val osName: Property<String> = objects.property(String::class.java)
+    val osName: Property<String> = objects.property()
 
     @get:Input
     @get:Optional
-    val osVersion: Property<String> = objects.property(String::class.java)
+    val osVersion: Property<String> = objects.property()
 
     @get:Input
     @get:Optional
-    val javaVersion: Property<String> = objects.property(String::class.java)
+    val javaVersion: Property<String> = objects.property()
 
     @get:Input
     @get:Optional
-    val gradleVersion: Property<String> = objects.property(String::class.java)
+    val gradleVersion: Property<String> = objects.property()
 
     @get:Input
     @get:Optional
-    val gitVersion: Property<String> = objects.property(String::class.java)
+    val gitVersion: Property<String> = objects.property()
+
+    internal abstract fun exec(action: (ExecSpec) -> Unit): ExecResult
 
     @TaskAction
     fun fetchReleaseInfo() {
         val manifestInfo = parseManifestInfo()
         val payload = generateJsonPayload(manifestInfo)
 
-        val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, payload.toString()) {
-            project.logger.lifecycle("Bugsnag: Attempting upload to Releases API")
+        val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, payload.hashCode()) {
+            logger.lifecycle("Bugsnag: Attempting upload to Releases API")
             lateinit var response: String
             object : Call(retryCount, logger) {
                 override fun makeApiCall(): Boolean {
@@ -140,7 +155,7 @@ open class BugsnagReleasesTask @Inject constructor(
             response
         }
         requestOutputFile.asFile.get().writeText(response)
-        project.logger.lifecycle("Bugsnag: Releases request complete")
+        logger.lifecycle("Bugsnag: Releases request complete")
     }
 
     private fun deliverPayload(
@@ -240,7 +255,7 @@ open class BugsnagReleasesTask @Inject constructor(
     private fun runCmd(vararg cmd: String): String? {
         return try {
             val baos = ByteArrayOutputStream()
-            project.exec { execSpec ->
+            exec { execSpec ->
                 execSpec.commandLine(*cmd)
                 execSpec.standardOutput = baos
                 logging.captureStandardError(LogLevel.INFO)
@@ -251,21 +266,22 @@ open class BugsnagReleasesTask @Inject constructor(
         }
     }
 
-    internal fun configureMetadata(project: Project) {
-        val gradleVersionString = project.gradle.gradleVersion
-        val gradleVersionNumber = VersionNumber.parse(gradleVersionString)
-        gradleVersion.set(gradleVersionString)
-        gitVersion.set(project.provider { runCmd(VCS_COMMAND, "--version") } )
-        if (gradleVersionNumber >= SYS_PROPERTIES_VERSION)  {
-            osArch.set(project.providers.systemProperty(MK_OS_ARCH) )
-            osName.set(project.providers.systemProperty(MK_OS_NAME) )
-            osVersion.set(project.providers.systemProperty(MK_OS_VERSION) )
-            javaVersion.set(project.providers.systemProperty(MK_JAVA_VERSION))
+    internal fun configureMetadata() {
+        val gradleVersionNumber = gradleVersion.orNull?.let {
+            gradleVersion.set(it)
+            VersionNumber.parse(it)
+        }
+        gitVersion.set(providerFactory.provider { runCmd(VCS_COMMAND, "--version") } )
+        if (gradleVersionNumber != null && gradleVersionNumber >= GradleVersions.VERSION_6_1)  {
+            osArch.set(providerFactory.systemProperty(MK_OS_ARCH) )
+            osName.set(providerFactory.systemProperty(MK_OS_NAME) )
+            osVersion.set(providerFactory.systemProperty(MK_OS_VERSION) )
+            javaVersion.set(providerFactory.systemProperty(MK_JAVA_VERSION))
         } else {
-            osArch.set(project.provider { System.getProperty(MK_OS_ARCH) } )
-            osName.set(project.provider { System.getProperty(MK_OS_NAME) } )
-            osVersion.set(project.provider { System.getProperty(MK_OS_VERSION) } )
-            javaVersion.set(project.provider { System.getProperty(MK_JAVA_VERSION) })
+            osArch.set(providerFactory.provider { System.getProperty(MK_OS_ARCH) } )
+            osName.set(providerFactory.provider { System.getProperty(MK_OS_NAME) } )
+            osVersion.set(providerFactory.provider { System.getProperty(MK_OS_VERSION) } )
+            javaVersion.set(providerFactory.provider { System.getProperty(MK_JAVA_VERSION) })
         }
     }
 
@@ -278,7 +294,6 @@ open class BugsnagReleasesTask @Inject constructor(
         private const val MK_JAVA_VERSION = "java.version"
         private const val VCS_COMMAND = "git"
         private const val CHARSET_UTF8 = "UTF-8"
-        private val SYS_PROPERTIES_VERSION = VersionNumber.parse("6.1")
 
         @JvmStatic
         fun isValidVcsProvider(provider: String?): Boolean {
@@ -318,6 +333,81 @@ open class BugsnagReleasesTask @Inject constructor(
                 .build()
                 .create()
         }
+
+        /**
+         * Registers the appropriate subtype to this [project] with the given [name] and
+         * [configurationAction]
+         */
+        internal fun register(
+            project: Project,
+            name: String,
+            configurationAction: BugsnagReleasesTask.() -> Unit
+        ): TaskProvider<out BugsnagReleasesTask> {
+            return when {
+              project.gradle.versionNumber() >= GradleVersions.VERSION_6 -> {
+                  project.tasks.register<BugsnagReleasesTaskGradle6Plus>(name, configurationAction)
+              }
+              project.gradle.versionNumber() >= GradleVersions.VERSION_5_3 -> {
+                  project.tasks.register<BugsnagReleasesTaskGradle53Plus>(name, configurationAction)
+              }
+              else -> {
+                  project.tasks.register<BugsnagReleasesTaskLegacy>(name, configurationAction)
+              }
+            }
+        }
+    }
+}
+
+/**
+ * Legacy [BugsnagReleasesTask] task that requires using [getProject] and
+ * [ProjectLayout.configurableFiles].
+ */
+internal open class BugsnagReleasesTaskLegacy @Inject constructor(
+    objects: ObjectFactory,
+    providerFactory: ProviderFactory,
+    projectLayout: ProjectLayout
+) : BugsnagReleasesTask(objects, providerFactory) {
+
+    @Suppress("DEPRECATION") // Here for backward compat
+    @get:PathSensitive(NONE)
+    @get:InputFiles
+    @get:Optional
+    override val ndkMappingFileProperty: ConfigurableFileCollection = projectLayout.configurableFiles()
+
+    override fun exec(action: (ExecSpec) -> Unit): ExecResult = project.exec(action)
+}
+
+/** Legacy [BugsnagReleasesTask] task that requires using [getProject]. */
+internal open class BugsnagReleasesTaskGradle53Plus @Inject constructor(
+    objects: ObjectFactory,
+    providerFactory: ProviderFactory
+) : BugsnagReleasesTask(objects, providerFactory) {
+    @get:PathSensitive(NONE)
+    @get:InputFiles
+    @get:Optional
+    override val ndkMappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
+
+    override fun exec(action: (ExecSpec) -> Unit): ExecResult {
+        return project.exec(action)
+    }
+}
+
+/**
+ * A Gradle 6.0+ compatible [BugsnagReleasesTask], which uses [ExecOperations]
+ * and supports configuration caching.
+ */
+internal open class BugsnagReleasesTaskGradle6Plus @Inject constructor(
+    objects: ObjectFactory,
+    providerFactory: ProviderFactory,
+    private val execOperations: ExecOperations
+) : BugsnagReleasesTask(objects, providerFactory) {
+    @get:PathSensitive(NONE)
+    @get:InputFiles
+    @get:Optional
+    override val ndkMappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
+
+    override fun exec(action: (ExecSpec) -> Unit): ExecResult {
+        return execOperations.exec(action)
     }
 }
 
