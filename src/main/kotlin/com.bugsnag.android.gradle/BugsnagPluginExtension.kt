@@ -36,9 +36,6 @@ open class BugsnagPluginExtension(objects: ObjectFactory) {
     val uploadDebugBuildMappings: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
         .convention(false)
 
-    val autoUpdateBuildUuid: Property<Boolean> = objects.property(Boolean::class.javaObjectType)
-        .convention(true)
-
     val endpoint: Property<String> = objects.property(String::class.javaObjectType)
         .convention("https://upload.bugsnag.com")
 

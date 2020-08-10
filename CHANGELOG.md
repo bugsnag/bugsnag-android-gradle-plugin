@@ -17,9 +17,6 @@ Convert plugin extension to use property syntax
 Deduplicate unnecessary upload requests for APK splits
 [#248](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/248)
 
-Add autoUpdateBuildUuid flag to prevent manifest UUID generation
-[#249](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/249)
-
 Switch to OkHttp for networking
 [#247](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/247)
 

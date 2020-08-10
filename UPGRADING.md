@@ -78,23 +78,6 @@ bugsnag {
 }
 ```
 
-#### Added `autoUpdateBuildUuid` flag to prevent manifest UUID generation
-
-A new flag has been added to disable the generation of UUIDs in the manifest. When this flag
-is set to false the `versionCode/versionName/applicationId` are used to uniquely identify
-mapping files instead.
-
-UUID generation can be disabled like thus:
-
-```groovy
-bugsnag {
-    autoUpdateBuildUuid = false
-}
-```
-
-Disabling UUID generation can result in performance improvements but requires a versioning scheme
-where each build's version is unique.
-
 #### Multiple Shared object search paths
 
 It is now possible to specify multiple file paths which the plugin will search for shared object files.
