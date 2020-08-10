@@ -423,10 +423,7 @@ class BugsnagPlugin : Plugin<Project> {
     private fun Project.newUuidProvider(): Provider<String> {
         val bugsnag = extensions.findByType(BugsnagPluginExtension::class.java)!!
         return provider {
-            when {
-                bugsnag.autoUpdateBuildUuid.get() -> UUID.randomUUID().toString()
-                else -> AndroidManifestParser.IGNORE_BUILD_UUID
-            }
+            UUID.randomUUID().toString()
         }
     }
 
