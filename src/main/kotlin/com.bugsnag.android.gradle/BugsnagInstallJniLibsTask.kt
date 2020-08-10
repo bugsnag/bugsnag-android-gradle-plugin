@@ -88,12 +88,12 @@ sealed class BugsnagInstallJniLibsTask(
             return when {
               gradleVersion >= GradleVersions.VERSION_6 -> {
                   when {
-                    gradleVersion >= GradleVersions.VERSION_6_6 -> {
-                        project.tasks.register<BugsnagInstallJniLibsTaskGradle66Plus>(name, configurationAction)
-                    }
-                    else -> {
-                        project.tasks.register<BugsnagInstallJniLibsTaskGradle6Plus>(name, configurationAction)
-                    }
+                      gradleVersion >= GradleVersions.VERSION_6_6 -> {
+                          project.tasks.register<BugsnagInstallJniLibsTaskGradle66Plus>(name, configurationAction)
+                      }
+                      else -> {
+                          project.tasks.register<BugsnagInstallJniLibsTaskGradle6Plus>(name, configurationAction)
+                      }
                   }
               }
               gradleVersion >= GradleVersions.VERSION_5_3 -> {

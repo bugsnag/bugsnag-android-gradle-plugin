@@ -21,7 +21,7 @@ sealed class UploadRequestClient : AutoCloseable {
      * will be returned. If no existing requests match, a new request will
      * be enqueued and executed.
      *
-     * Equality is measured by the [AndroidManifestInfo] (excluding buildUuid)
+     * Equality is measured by the [AndroidManifestInfo]
      * and the request payload.
      */
     fun makeRequestIfNeeded(

@@ -272,7 +272,7 @@ sealed class BugsnagReleasesTask(
             VersionNumber.parse(it)
         }
         gitVersion.set(providerFactory.provider { runCmd(VCS_COMMAND, "--version") } )
-        if (gradleVersionNumber != null && gradleVersionNumber >= SYS_PROPERTIES_VERSION)  {
+        if (gradleVersionNumber != null && gradleVersionNumber >= GradleVersions.VERSION_6_1)  {
             osArch.set(providerFactory.systemProperty(MK_OS_ARCH) )
             osName.set(providerFactory.systemProperty(MK_OS_NAME) )
             osVersion.set(providerFactory.systemProperty(MK_OS_VERSION) )
@@ -294,7 +294,6 @@ sealed class BugsnagReleasesTask(
         private const val MK_JAVA_VERSION = "java.version"
         private const val VCS_COMMAND = "git"
         private const val CHARSET_UTF8 = "UTF-8"
-        private val SYS_PROPERTIES_VERSION = VersionNumber.parse("6.1")
 
         @JvmStatic
         fun isValidVcsProvider(provider: String?): Boolean {
