@@ -29,7 +29,7 @@ sealed class UploadRequestClient : AutoCloseable {
         payloadHash: Int,
         request: () -> String
     ): String {
-        val versionInfoHash = manifestInfo.requestHash()
+        val versionInfoHash = manifestInfo.hashCode()
         val requestIdHash = Objects.hash(versionInfoHash, payloadHash)
 
         val future = requestMap.getOrPut(requestIdHash.toString()) {
@@ -44,16 +44,6 @@ sealed class UploadRequestClient : AutoCloseable {
             future.cancel(true)
         }
     }
-}
-
-// Hashcode without buildUuid
-private fun AndroidManifestInfo.requestHash(): Int {
-    return Objects.hash(
-        apiKey,
-        versionCode,
-        versionName,
-        applicationId
-    )
 }
 
 /** A [BuildService]-based implementation of [UploadRequestClient]. */
