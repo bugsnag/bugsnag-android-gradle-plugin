@@ -4,8 +4,6 @@ import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.bugsnag.android.gradle.internal.md5HashCode
 import com.bugsnag.android.gradle.internal.property
-import okhttp3.MultipartBody
-import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
@@ -18,7 +16,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
-import java.io.IOException
 import javax.inject.Inject
 
 /**
