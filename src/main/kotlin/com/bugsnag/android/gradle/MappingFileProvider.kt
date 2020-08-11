@@ -3,9 +3,7 @@ package com.bugsnag.android.gradle
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
-import org.gradle.api.GradleException
 import org.gradle.api.Project
-import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import java.io.File
@@ -14,20 +12,22 @@ import java.nio.file.Paths
 /**
  * Creates a Provider which finds the mapping file for a given variantOutput.
  */
-fun createMappingFileProvider(project: Project,
-                              variant: ApkVariant,
-                              variantOutput: ApkVariantOutput): Provider<RegularFile> {
+internal fun createMappingFileProvider(
+    project: Project,
+    variant: ApkVariant,
+    variantOutput: ApkVariantOutput
+): Provider<RegularFile> {
     val fileProvider: Provider<File> = project.provider {
         val mappingFile = findMappingFile(project, variant, variantOutput)
-        val logger = project.logger
-        logger.info("Bugsnag: Using mapping file: $mappingFile")
 
         // If we haven't enabled proguard for this variant, or the proguard
         // configuration includes -dontobfuscate, the mapping file
         // will not exist (but we also won't need it).
-        if (mappingFile == null) {
-            throw IllegalStateException("Mapping file not found: $mappingFile")
+        checkNotNull(mappingFile) {
+            "Mapping file not found for variant ${variant.name}"
         }
+
+        project.logger.info("Bugsnag: Using mapping file: $mappingFile")
         mappingFile
     }
     return project.layout.file(fileProvider)
