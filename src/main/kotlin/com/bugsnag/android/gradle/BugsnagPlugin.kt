@@ -13,6 +13,7 @@ import com.bugsnag.android.gradle.internal.BuildServiceBugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.GradleVersions
 import com.bugsnag.android.gradle.internal.LegacyBugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.UploadRequestClient
+import com.bugsnag.android.gradle.internal.dependsOn
 import com.bugsnag.android.gradle.internal.newUploadRequestClientProvider
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.versionNumber
@@ -173,8 +174,10 @@ class BugsnagPlugin : Plugin<Project> {
         proguardUploadClientProvider: Provider<out UploadRequestClient>,
         ndkUploadClientProvider: Provider<out UploadRequestClient>
     ) {
-        variant.outputs.configureEach {
-            val output = it as ApkVariantOutput
+        variant.outputs.configureEach { output ->
+            check(output is ApkVariantOutput) {
+                "Expected variant output to be ApkVariantOutput but found ${output.javaClass}"
+            }
             val jvmMinificationEnabled = variant.buildType.isMinifyEnabled || hasDexguardPlugin(project)
             val ndkEnabled = isNdkUploadEnabled(bugsnag, project.extensions.getByType(AppExtension::class.java))
 
@@ -184,48 +187,51 @@ class BugsnagPlugin : Plugin<Project> {
             }
 
             // register bugsnag tasks
-            val manifestInfoFile = registerManifestUuidTask(project, variant, output)
-            val proguardTask = when {
+            val manifestInfoFileProvider = registerManifestUuidTask(project, variant, output)
+            val mappingFileProvider = createMappingFileProvider(project, variant, output)
+
+            val assembleProvider = variant.assembleProvider
+            val proguardTaskProvider = when {
                 jvmMinificationEnabled -> registerProguardUploadTask(
                     project,
                     variant,
                     output,
                     bugsnag,
-                    httpClientHelperProvider
+                    httpClientHelperProvider,
+                    manifestInfoFileProvider,
+                    proguardUploadClientProvider,
+                    mappingFileProvider
                 )
                 else -> null
+            }?.also {
+                assembleProvider.dependsOn(it)
             }
-            val symbolFileTask = when {
+            val symbolFileTaskProvider = when {
                 ndkEnabled -> registerSharedObjectUploadTask(
                     project,
                     variant,
                     output,
                     bugsnag,
-                    httpClientHelperProvider
+                    httpClientHelperProvider,
+                    manifestInfoFileProvider,
+                    ndkUploadClientProvider
                 )
                 else -> null
+            }?.also {
+                assembleProvider.dependsOn(it)
             }
-            val releasesTask = registerReleasesUploadTask(project, variant, output, bugsnag)
-
-            // Set the manifest info provider to prevent reading
-            // the manifest more than once
-            proguardTask?.get()?.let { task ->
-                task.manifestInfoFile.set(manifestInfoFile)
-                val mappingFileProvider = createMappingFileProvider(project, variant, output)
-                task.mappingFileProperty.set(mappingFileProvider)
-                releasesTask.get().jvmMappingFileProperty.set(mappingFileProvider)
-                task.uploadRequestClient.set(proguardUploadClientProvider)
+            registerReleasesUploadTask(
+                project,
+                variant,
+                output,
+                bugsnag,
+                manifestInfoFileProvider,
+                releasesUploadClientProvider,
+                proguardTaskProvider?.let { mappingFileProvider },
+                symbolFileTaskProvider != null
+            ).also {
+                assembleProvider.dependsOn(it)
             }
-
-            symbolFileTask?.get()?.let { task ->
-                val ndkSearchDirs = symbolFileTask.get().searchDirectories
-                releasesTask.get().ndkMappingFileProperty.from(ndkSearchDirs)
-                task.uploadRequestClient.set(ndkUploadClientProvider)
-            }
-            releasesTask.get().uploadRequestClient.set(releasesUploadClientProvider)
-            releasesTask.get().manifestInfoFile.set(manifestInfoFile)
-            symbolFileTask?.get()?.manifestInfoFile?.set(manifestInfoFile)
-            releasesTask.get().manifestInfoFile.set(manifestInfoFile)
         }
     }
 
@@ -268,7 +274,10 @@ class BugsnagPlugin : Plugin<Project> {
         variant: ApkVariant,
         output: ApkVariantOutput,
         bugsnag: BugsnagPluginExtension,
-        httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>
+        httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
+        manifestInfoFileProvider: Provider<RegularFile>,
+        proguardUploadClientProvider: Provider<out UploadRequestClient>,
+        mappingFileProvider: Provider<RegularFile>
     ): TaskProvider<BugsnagUploadProguardTask> {
         val outputName = taskNameForOutput(output)
         val taskName = "uploadBugsnag${outputName}Mapping"
@@ -277,6 +286,9 @@ class BugsnagPlugin : Plugin<Project> {
         return project.tasks.register<BugsnagUploadProguardTask>(taskName) {
             requestOutputFile.set(requestOutputFileProvider)
             httpClientHelper.set(httpClientHelperProvider)
+            manifestInfoFile.set(manifestInfoFileProvider)
+            uploadRequestClient.set(proguardUploadClientProvider)
+            mappingFileProperty.set(mappingFileProvider)
             addTaskToExecutionGraph(this, variant, output, project, bugsnag, bugsnag.uploadJvmMappings.get())
             configureWith(bugsnag)
         }
@@ -287,7 +299,9 @@ class BugsnagPlugin : Plugin<Project> {
         variant: ApkVariant,
         output: ApkVariantOutput,
         bugsnag: BugsnagPluginExtension,
-        httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>
+        httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
+        manifestInfoFileProvider: Provider<RegularFile>,
+        ndkUploadClientProvider: Provider<out UploadRequestClient>
     ): TaskProvider<out BugsnagUploadNdkTask> {
         // Create a Bugsnag task to upload NDK mapping file(s)
         val outputName = taskNameForOutput(output)
@@ -297,10 +311,12 @@ class BugsnagPlugin : Plugin<Project> {
         return BugsnagUploadNdkTask.register(project, taskName) {
             this.requestOutputFile.set(requestOutputFile)
             projectRoot.set(bugsnag.projectRoot.getOrElse(project.projectDir.toString()))
-            searchDirectories.from(getSearchDirectories(project, variant))
+            searchDirectories.from()
             variantOutput = output
             objDumpPaths.set(bugsnag.objdumpPaths)
             httpClientHelper.set(httpClientHelperProvider)
+            manifestInfoFile.set(manifestInfoFileProvider)
+            uploadRequestClient.set(ndkUploadClientProvider)
             addTaskToExecutionGraph(this, variant, output, project, bugsnag, true)
             configureWith(bugsnag)
         }
@@ -310,7 +326,11 @@ class BugsnagPlugin : Plugin<Project> {
         project: Project,
         variant: ApkVariant,
         output: ApkVariantOutput,
-        bugsnag: BugsnagPluginExtension
+        bugsnag: BugsnagPluginExtension,
+        manifestInfoFileProvider: Provider<RegularFile>,
+        releasesUploadClientProvider: Provider<out UploadRequestClient>,
+        mappingFileProvider: Provider<RegularFile>?,
+        checkSearchDirectories: Boolean
     ): TaskProvider<out BugsnagReleasesTask> {
         val outputName = taskNameForOutput(output)
         val taskName = "bugsnagRelease${outputName}Task"
@@ -327,6 +347,15 @@ class BugsnagPlugin : Plugin<Project> {
             metadata.set(bugsnag.metadata)
             builderName.set(bugsnag.builderName)
             gradleVersion.set(project.gradle.gradleVersion)
+            manifestInfoFile.set(manifestInfoFileProvider)
+            uploadRequestClient.set(releasesUploadClientProvider)
+            mappingFileProvider?.let(jvmMappingFileProperty::set)
+            if (checkSearchDirectories) {
+                variant.externalNativeBuildProviders.forEach { task ->
+                    ndkMappingFileProperty.from(task.map { it.objFolder })
+                    ndkMappingFileProperty.from(task.map { it.soFolder })
+                }
+            }
             addTaskToExecutionGraph(this, variant, output, project, bugsnag, bugsnag.reportBuilds.get())
             configureMetadata()
         }

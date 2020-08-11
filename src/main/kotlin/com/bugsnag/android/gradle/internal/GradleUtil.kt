@@ -34,6 +34,14 @@ internal fun File.md5HashCode(): Int {
     }
 }
 
+internal fun <T: Task> TaskProvider<out T>.dependsOn(vararg tasks: TaskProvider<out Task>): TaskProvider<out T> {
+    if (tasks.isEmpty().not()) {
+        configure { it.dependsOn(*tasks) }
+    }
+
+    return this
+}
+
 /* Borrowed helper functions from the Gradle Kotlin DSL. */
 
 /**
