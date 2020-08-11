@@ -1,5 +1,6 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.VariantOutput
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApkVariantOutput
 import com.bugsnag.android.gradle.Abi.Companion.findByName
@@ -11,10 +12,7 @@ import com.bugsnag.android.gradle.internal.md5HashCode
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.versionNumber
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
-import okio.HashingSource
-import okio.blackholeSink
 import okio.buffer
 import okio.gzip
 import okio.sink
@@ -115,10 +113,45 @@ sealed class BugsnagUploadNdkTask(
     fun upload() {
         logger.lifecycle("Starting ndk upload")
         val searchDirs = searchDirectories.files.toList()
-        val files = findSharedObjectMappingFiles(project, variantOutput, searchDirs)
+        val files = findSharedObjectMappingFiles(variantOutput, searchDirs)
         logger.lifecycle("Processing shared object files")
         processFiles(files)
         requestOutputFile.asFile.get().writeText("OK")
+    }
+
+    private fun findSharedObjectMappingFiles(
+        variantOutput: ApkVariantOutput,
+        searchDirectories: List<File>
+    ): Collection<File> {
+        val splitArch = variantOutput.getFilter(VariantOutput.FilterType.ABI)
+        return searchDirectories.flatMap { findSharedObjectFiles(it, splitArch) }
+            // sort SO files alphabetically by architecture for consistent request order
+            .toSortedSet(compareBy { it.parentFile.name })
+    }
+
+    /**
+     * Searches the subdirectories of a given path for SO files. These are added to a
+     * collection and returned if they should be uploaded by the current task.
+     *
+     * If the variantOutput is an APK split the splitArch parameter should be non-null,
+     * as this allows the avoidance of unnecessary uploads of all architectures for each split.
+     *
+     * @param searchDirectory The parent path to search. Each subdirectory should
+     * represent an architecture
+     * @param abiArchitecture The architecture of the ABI split, or null if this is not an APK split.
+     */
+    private fun findSharedObjectFiles(
+        searchDirectory: File,
+        abiArchitecture: String?
+    ): Collection<File> {
+        return if (searchDirectory.exists() && searchDirectory.isDirectory) {
+            searchDirectory.walkTopDown()
+                .onEnter { archDir -> abiArchitecture == null || archDir.name == abiArchitecture }
+                .filter { file -> file.extension == "so" }
+                .toSet()
+        } else {
+            emptySet()
+        }
     }
 
     private fun processFiles(files: Collection<File>) {
