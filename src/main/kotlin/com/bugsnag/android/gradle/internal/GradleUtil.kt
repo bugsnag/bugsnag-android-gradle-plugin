@@ -1,7 +1,7 @@
 @file:Suppress("MatchingDeclarationName") // This file contains multiple top-level members
 package com.bugsnag.android.gradle.internal
 
-import okio.HashingSource
+import okio.HashingSink
 import okio.blackholeSink
 import okio.buffer
 import okio.source
@@ -28,9 +28,11 @@ internal fun Gradle.versionNumber(): VersionNumber = VersionNumber.parse(gradleV
 
 /** A fast file hash that don't load the entire file contents into memory at once. */
 internal fun File.md5HashCode(): Int {
-    return HashingSource.md5(source()).use { hashingSource ->
-        hashingSource.buffer().readAll(blackholeSink())
-        hashingSource.hash.hashCode()
+    return HashingSink.md5(blackholeSink()).use { sink ->
+        source().buffer().use { fileSource ->
+            fileSource.readAll(sink)
+        }
+        sink.hash.hashCode()
     }
 }
 
