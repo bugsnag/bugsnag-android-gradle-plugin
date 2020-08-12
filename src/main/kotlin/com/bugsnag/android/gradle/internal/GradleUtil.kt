@@ -1,10 +1,14 @@
 @file:Suppress("MatchingDeclarationName") // This file contains multiple top-level members
 package com.bugsnag.android.gradle.internal
 
+import com.android.build.gradle.AppExtension
+import com.android.build.gradle.api.ApplicationVariant
 import okio.HashingSink
 import okio.blackholeSink
 import okio.buffer
 import okio.source
+import org.gradle.api.DomainObjectSet
+import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.model.ObjectFactory
@@ -34,6 +38,38 @@ internal fun File.md5HashCode(): Int {
         }
         sink.hash.hashCode()
     }
+}
+
+internal fun <T: Task> TaskProvider<out T>.dependsOn(vararg tasks: TaskProvider<out Task>): TaskProvider<out T> {
+    if (tasks.isEmpty().not()) {
+        configure { it.dependsOn(*tasks) }
+    }
+
+    return this
+}
+
+/**
+ * Returns true if a project has configured multiple variant outputs.
+ *
+ * This calculation is based on a heuristic - the number of variantOutputs in a project must be
+ * greater than the number of variants.
+ */
+internal fun AppExtension.hasMultipleOutputs(): Boolean {
+    val variants: DomainObjectSet<ApplicationVariant> = applicationVariants
+    val variantSize = variants.count()
+    var outputSize = 0
+
+    variants.forEach { variant ->
+        outputSize += variant.outputs.count()
+    }
+    return outputSize > variantSize
+}
+
+/**
+ * Returns true if the DexGuard plugin has been applied to the project
+ */
+fun Project.hasDexguardPlugin(): Boolean {
+    return pluginManager.hasPlugin("dexguard")
 }
 
 /* Borrowed helper functions from the Gradle Kotlin DSL. */

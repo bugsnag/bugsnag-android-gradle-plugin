@@ -5,7 +5,6 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
-import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.bugsnag.android.gradle.BugsnagInstallJniLibsTask.Companion.resolveBugsnagArtifacts
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
@@ -13,13 +12,15 @@ import com.bugsnag.android.gradle.internal.BuildServiceBugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.GradleVersions
 import com.bugsnag.android.gradle.internal.LegacyBugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.UploadRequestClient
+import com.bugsnag.android.gradle.internal.dependsOn
+import com.bugsnag.android.gradle.internal.hasDexguardPlugin
 import com.bugsnag.android.gradle.internal.newUploadRequestClientProvider
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.versionNumber
-import org.gradle.api.DomainObjectSet
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -89,7 +90,8 @@ class BugsnagPlugin : Plugin<Project> {
                     val taskName = computeManifestTaskNameFor(variantName)
                     val manifestInfoOutputFile = project.computeManifestInfoOutputV2(variantName)
                     val buildUuidProvider = project.newUuidProvider()
-                    val manifestUpdater = project.tasks.register(taskName, BugsnagManifestUuidTaskV2::class.java) {
+                    val manifestUpdater = project.tasks.register(taskName,
+                        BugsnagManifestUuidTaskV2::class.java) {
                         it.buildUuid.set(buildUuidProvider)
                         it.manifestInfoProvider.set(manifestInfoOutputFile)
                     }
@@ -113,6 +115,7 @@ class BugsnagPlugin : Plugin<Project> {
                     }
                     registerBugsnagTasksForVariant(
                         project,
+                        android,
                         variant,
                         bugsnag,
                         httpClientHelperProvider,
@@ -142,7 +145,8 @@ class BugsnagPlugin : Plugin<Project> {
         val buildTasks = ndkTasks.filter { !it.name.contains(CLEAN_TASK) }.toSet()
 
         if (buildTasks.isNotEmpty()) {
-            val ndkSetupTask = BugsnagInstallJniLibsTask.register(project, "bugsnagInstallJniLibsTask") {
+            val ndkSetupTask = BugsnagInstallJniLibsTask.register(project,
+                "bugsnagInstallJniLibsTask") {
                 val files = resolveBugsnagArtifacts(project)
                 bugsnagArtifacts.from(files)
             }
@@ -164,6 +168,7 @@ class BugsnagPlugin : Plugin<Project> {
     @Suppress("LongParameterList")
     private fun registerBugsnagTasksForVariant(
         project: Project,
+        android: AppExtension,
         variant: ApkVariant,
         bugsnag: BugsnagPluginExtension,
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
@@ -175,8 +180,9 @@ class BugsnagPlugin : Plugin<Project> {
             check(output is ApkVariantOutput) {
                 "Expected variant output to be ApkVariantOutput but found ${output.javaClass}"
             }
-            val jvmMinificationEnabled = variant.buildType.isMinifyEnabled || hasDexguardPlugin(project)
-            val ndkEnabled = isNdkUploadEnabled(bugsnag, project.extensions.getByType(AppExtension::class.java))
+            val jvmMinificationEnabled = variant.buildType.isMinifyEnabled || project.hasDexguardPlugin()
+            val ndkEnabled = isNdkUploadEnabled(bugsnag,
+                project.extensions.getByType(AppExtension::class.java))
 
             // skip tasks for variant if JVM/NDK minification not enabled
             if (!jvmMinificationEnabled && !ndkEnabled) {
@@ -185,20 +191,21 @@ class BugsnagPlugin : Plugin<Project> {
 
             // register bugsnag tasks
             val manifestInfoFileProvider = registerManifestUuidTask(project, variant, output)
-            val mappingFileProvider = createMappingFileProvider(project, variant, output)
+            val mappingFilesProvider = createMappingFileProvider(project, variant, output, android)
 
             val proguardTaskProvider = when {
                 jvmMinificationEnabled -> registerProguardUploadTask(
                     project,
+                    variant,
                     output,
                     bugsnag,
                     httpClientHelperProvider,
                     manifestInfoFileProvider,
                     proguardUploadClientProvider,
-                    mappingFileProvider
+                    mappingFilesProvider
                 )
                 else -> null
-            }?.registerWithAssembleTasks(variant, output, bugsnag, bugsnag.uploadJvmMappings)
+            }
 
             val symbolFileTaskProvider = when {
                 ndkEnabled -> registerSharedObjectUploadTask(
@@ -211,18 +218,43 @@ class BugsnagPlugin : Plugin<Project> {
                     ndkUploadClientProvider
                 )
                 else -> null
-            }?.registerWithAssembleTasks(variant, output, bugsnag, bugsnag.uploadNdkMappings)
+            }
 
-            registerReleasesUploadTask(
+            val releaseUploadTask = registerReleasesUploadTask(
                 project,
                 variant,
                 output,
                 bugsnag,
                 manifestInfoFileProvider,
                 releasesUploadClientProvider,
-                proguardTaskProvider?.let { mappingFileProvider },
+                proguardTaskProvider?.let { mappingFilesProvider },
                 symbolFileTaskProvider != null
-            ).registerWithAssembleTasks(variant, output, bugsnag, bugsnag.reportBuilds)
+            )
+
+            println("Registering tasks")
+            println("Should upload?")
+            if (shouldUploadMappings(output, bugsnag)) {
+                println("Should upload!")
+                println("Should autoupload?")
+                if (bugsnag.reportBuilds.get()) {
+                    println("Should autoupload!")
+                    println(
+                        "Variant registering ${releaseUploadTask.name} with variant ${variant.name}")
+                    variant.assembleProvider.dependsOn(releaseUploadTask)
+                }
+                if (symbolFileTaskProvider != null && bugsnag.uploadNdkMappings.get()) {
+                    println("Should autoupload!")
+                    println(
+                        "Variant registering ${releaseUploadTask.name} with variant ${variant.name}")
+                    variant.assembleProvider.dependsOn(symbolFileTaskProvider)
+                }
+                if (proguardTaskProvider != null && bugsnag.uploadJvmMappings.get()) {
+                    println("Should autoupload!")
+                    println(
+                        "Variant registering ${releaseUploadTask.name} with variant ${variant.name}")
+                    variant.assembleProvider.dependsOn(proguardTaskProvider)
+                }
+            }
         }
     }
 
@@ -262,12 +294,13 @@ class BugsnagPlugin : Plugin<Project> {
      */
     private fun registerProguardUploadTask(
         project: Project,
+        variant: ApkVariant,
         output: ApkVariantOutput,
         bugsnag: BugsnagPluginExtension,
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
         manifestInfoFileProvider: Provider<RegularFile>,
         proguardUploadClientProvider: Provider<out UploadRequestClient>,
-        mappingFileProvider: Provider<RegularFile>
+        mappingFilesProvider: Provider<FileCollection>
     ): TaskProvider<BugsnagUploadProguardTask> {
         val outputName = taskNameForOutput(output)
         val taskName = "uploadBugsnag${outputName}Mapping"
@@ -278,8 +311,9 @@ class BugsnagPlugin : Plugin<Project> {
             httpClientHelper.set(httpClientHelperProvider)
             manifestInfoFile.set(manifestInfoFileProvider)
             uploadRequestClient.set(proguardUploadClientProvider)
-            mappingFileProperty.set(mappingFileProvider)
+            mappingFileProperty.set(project.layout.file(mappingFilesProvider.map { it.singleFile }))
             configureWith(bugsnag)
+            registerWithVariant(variant, output, bugsnag, bugsnag.uploadJvmMappings)
         }
     }
 
@@ -310,6 +344,7 @@ class BugsnagPlugin : Plugin<Project> {
                 searchDirectories.from(provider.map(ExternalNativeBuildTask::objFolder))
                 searchDirectories.from(provider.map(ExternalNativeBuildTask::soFolder))
             }
+            registerWithVariant(variant, output, bugsnag, bugsnag.uploadNdkMappings)
         }
     }
 
@@ -320,7 +355,7 @@ class BugsnagPlugin : Plugin<Project> {
         bugsnag: BugsnagPluginExtension,
         manifestInfoFileProvider: Provider<RegularFile>,
         releasesUploadClientProvider: Provider<out UploadRequestClient>,
-        mappingFileProvider: Provider<RegularFile>?,
+        mappingFilesProvider: Provider<FileCollection>?,
         checkSearchDirectories: Boolean
     ): TaskProvider<out BugsnagReleasesTask> {
         val outputName = taskNameForOutput(output)
@@ -340,7 +375,9 @@ class BugsnagPlugin : Plugin<Project> {
             gradleVersion.set(project.gradle.gradleVersion)
             manifestInfoFile.set(manifestInfoFileProvider)
             uploadRequestClient.set(releasesUploadClientProvider)
-            mappingFileProvider?.let(jvmMappingFileProperty::set)
+            mappingFilesProvider?.let {
+                jvmMappingFileProperty.from(it)
+            }
             if (checkSearchDirectories) {
                 variant.externalNativeBuildProviders.forEach { task ->
                     ndkMappingFileProperty.from(task.map { it.objFolder })
@@ -348,32 +385,40 @@ class BugsnagPlugin : Plugin<Project> {
                 }
             }
             configureMetadata()
+            registerWithVariant(variant, output, bugsnag, bugsnag.reportBuilds)
         }
     }
 
-    private fun TaskProvider<out Task>.registerWithAssembleTasks(
+    private fun <T : Task> T.registerWithVariant(
         variant: ApkVariant,
         output: ApkVariantOutput,
         bugsnag: BugsnagPluginExtension,
         autoUpload: Provider<Boolean>
     ) {
-        if (shouldUploadDebugMappings(output, bugsnag)) {
-            configure {
-                if (autoUpload.get()) {
-                    // This handles ensuring it's run before assemble or bundle tasks
-                    variant.register(it)
-                }
+        println("Registering $name")
+        println("Should upload?")
+        if (shouldUploadMappings(output, bugsnag)) {
+            println("Should upload!")
+            println("Should autoupload?")
+            if (autoUpload.get()) {
+                println("Should autoupload!")
+                println("Variant registering $name with variant ${variant.name}")
+                // TODO this throws an exception when we try to register it here
+//                variant.register(this)
             }
         }
     }
 
-    private fun shouldUploadDebugMappings(output: ApkVariantOutput,
-                                          bugsnag: BugsnagPluginExtension): Boolean {
-        return !output.name.toLowerCase().endsWith("debug") || bugsnag.uploadDebugBuildMappings.get()
+    private fun shouldUploadMappings(
+        output: ApkVariantOutput,
+        bugsnag: BugsnagPluginExtension
+    ): Boolean {
+        return !output.name.toLowerCase().endsWith(
+            "debug") || bugsnag.uploadDebugBuildMappings.get()
     }
 
     private fun isNdkUploadEnabled(bugsnag: BugsnagPluginExtension,
-                                   android: AppExtension): Boolean {
+        android: AppExtension): Boolean {
         val usesCmake = android.externalNativeBuild.cmake.path != null
         val usesNdkBuild = android.externalNativeBuild.ndkBuild.path != null
         val default = usesCmake || usesNdkBuild
@@ -397,7 +442,8 @@ class BugsnagPlugin : Plugin<Project> {
         return layout.buildDirectory.file(path)
     }
 
-    private fun Project.computeManifestInfoOutputV1(output: ApkVariantOutput): Provider<RegularFile> {
+    private fun Project.computeManifestInfoOutputV1(
+        output: ApkVariantOutput): Provider<RegularFile> {
         val path = "intermediates/bugsnag/manifestInfoFor${taskNameForOutput(output)}.json"
         return layout.buildDirectory.file(path)
     }
@@ -406,29 +452,5 @@ class BugsnagPlugin : Plugin<Project> {
         return provider {
             UUID.randomUUID().toString()
         }
-    }
-
-    /**
-     * Returns true if the DexGuard plugin has been applied to the project
-     */
-    fun hasDexguardPlugin(project: Project): Boolean {
-        return project.pluginManager.hasPlugin("dexguard")
-    }
-
-    /**
-     * Returns true if a project has configured multiple variant outputs.
-     *
-     * This calculation is based on a heuristic - the number of variantOutputs in a project must be
-     * greater than the number of variants.
-     */
-    fun hasMultipleOutputs(android: AppExtension): Boolean {
-        val variants: DomainObjectSet<ApplicationVariant> = android.applicationVariants
-        val variantSize = variants.count()
-        var outputSize = 0
-
-        variants.forEach { variant ->
-            outputSize += variant.outputs.count()
-        }
-        return outputSize > variantSize
     }
 }

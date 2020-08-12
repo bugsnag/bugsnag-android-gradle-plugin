@@ -3,45 +3,39 @@ package com.bugsnag.android.gradle
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
+import com.bugsnag.android.gradle.internal.hasDexguardPlugin
+import com.bugsnag.android.gradle.internal.hasMultipleOutputs
 import org.gradle.api.Project
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import java.io.File
 import java.nio.file.Paths
 
 /**
- * Creates a Provider which finds the mapping file for a given variantOutput.
+ * Creates a Provider which finds the mapping file for a given variantOutput and filters out
+ * non-existent outputs.
  */
 internal fun createMappingFileProvider(
     project: Project,
     variant: ApkVariant,
-    variantOutput: ApkVariantOutput
-): Provider<RegularFile> {
-    val fileProvider: Provider<File> = project.provider {
-        val mappingFile = findMappingFile(project, variant, variantOutput)
-
-        // If we haven't enabled proguard for this variant, or the proguard
-        // configuration includes -dontobfuscate, the mapping file
-        // will not exist (but we also won't need it).
-        checkNotNull(mappingFile) {
-            "Mapping file not found for variant ${variant.name}"
-        }
-
-        project.logger.info("Bugsnag: Using mapping file: $mappingFile")
-        mappingFile
-    }
-    return project.layout.file(fileProvider)
+    variantOutput: ApkVariantOutput,
+    android: AppExtension
+): Provider<FileCollection> {
+    return findMappingFiles(project, variant, variantOutput, android)
+        .map { files -> files.filter { it.exists() } }
 }
 
-private fun findMappingFile(project: Project,
-                            variant: ApkVariant,
-                            variantOutput: ApkVariantOutput): File? {
-    val plugin = project.plugins.getPlugin(BugsnagPlugin::class.java)
-    val android = project.extensions.getByType(AppExtension::class.java)
-    if (plugin.hasDexguardPlugin(project) && plugin.hasMultipleOutputs(android)) {
+private fun findMappingFiles(
+    project: Project,
+    variant: ApkVariant,
+    variantOutput: ApkVariantOutput,
+    android: AppExtension
+): Provider<FileCollection> {
+    if (project.hasDexguardPlugin() && android.hasMultipleOutputs()) {
         val mappingFile = findDexguardMappingFile(project, variant, variantOutput)
         if (mappingFile.exists()) {
-            return mappingFile
+            return project.provider { project.layout.files(mappingFile) }
         } else {
             project.logger.warn("Bugsnag: Could not find DexGuard mapping file at: $mappingFile -" +
                 " falling back to AGP mapping file value")
@@ -51,16 +45,9 @@ private fun findMappingFile(project: Project,
     // Use AGP supplied value, preferring the new "getMappingFileProvider" API but falling back
     // to the old "mappingFile" API if necessary
     return try {
-        val mappingFileProvider = variant.mappingFileProvider.orNull
-
-        // We will warn about not finding a mapping file later, so there's no need to warn here
-        if (mappingFileProvider == null || mappingFileProvider.isEmpty) {
-            null
-        } else {
-            mappingFileProvider.singleFile
-        }
+        variant.mappingFileProvider
     } catch (exc: Throwable) {
-        variant.mappingFile
+        project.provider { project.layout.files(variant.mappingFile) }
     }
 }
 

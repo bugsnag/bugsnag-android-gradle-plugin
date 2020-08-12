@@ -71,12 +71,10 @@ sealed class BugsnagReleasesTask(
     // should take the JVM + NDK mapping files as inputs because the manifestInfo will
     // not necessarily vary between different builds. it is not guaranteed that
     // either of these properties will be set so they are marked as optional.
-    @get:PathSensitive(NONE)
-    @get:InputFile
+    @get:InputFiles
     @get:Optional
-    val jvmMappingFileProperty: RegularFileProperty = objects.fileProperty()
+    abstract val jvmMappingFileProperty: ConfigurableFileCollection
 
-    @get:PathSensitive(NONE)
     @get:InputFiles
     @get:Optional
     abstract val ndkMappingFileProperty: ConfigurableFileCollection
@@ -367,9 +365,12 @@ internal open class BugsnagReleasesTaskLegacy @Inject constructor(
     providerFactory: ProviderFactory,
     projectLayout: ProjectLayout
 ) : BugsnagReleasesTask(objects, providerFactory) {
+    @Suppress("DEPRECATION") // Here for backward compat
+    @get:InputFile
+    @get:Optional
+    override val jvmMappingFileProperty: ConfigurableFileCollection = projectLayout.configurableFiles()
 
     @Suppress("DEPRECATION") // Here for backward compat
-    @get:PathSensitive(NONE)
     @get:InputFiles
     @get:Optional
     override val ndkMappingFileProperty: ConfigurableFileCollection = projectLayout.configurableFiles()
@@ -382,7 +383,10 @@ internal open class BugsnagReleasesTaskGradle53Plus @Inject constructor(
     objects: ObjectFactory,
     providerFactory: ProviderFactory
 ) : BugsnagReleasesTask(objects, providerFactory) {
-    @get:PathSensitive(NONE)
+    @get:InputFile
+    @get:Optional
+    override val jvmMappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
+
     @get:InputFiles
     @get:Optional
     override val ndkMappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
@@ -401,7 +405,10 @@ internal open class BugsnagReleasesTaskGradle6Plus @Inject constructor(
     providerFactory: ProviderFactory,
     private val execOperations: ExecOperations
 ) : BugsnagReleasesTask(objects, providerFactory) {
-    @get:PathSensitive(NONE)
+    @get:InputFile
+    @get:Optional
+    override val jvmMappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
+
     @get:InputFiles
     @get:Optional
     override val ndkMappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
