@@ -90,12 +90,11 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
         val directoryBundle: File
         val manifestPaths = mutableListOf<File?>()
         var getMergedManifest = isRunningAssembleTask(project, variant, variantOutput)
-        var getBundleManifest = isRunningBundleTask(project, variant, variantOutput)
+        val getBundleManifest = isRunningBundleTask(project, variant, variantOutput)
 
-        // If the manifest location could not be reliably determined, attempt to get both
+        // If the manifest location could not be reliably determined, default to the assemble manifest
         if (!getMergedManifest && !getBundleManifest) {
             getMergedManifest = true
-            getBundleManifest = true
         }
         val processManifest = variantOutput.processManifestProvider.get()
         if (getMergedManifest) {
