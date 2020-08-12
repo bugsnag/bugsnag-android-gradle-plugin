@@ -4,11 +4,9 @@ import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.bugsnag.android.gradle.internal.md5HashCode
 import com.bugsnag.android.gradle.internal.property
-import okhttp3.RequestBody
-import okio.HashingSource
-import okio.blackholeSink
-import okio.buffer
-import okio.source
+import okhttp3.MultipartBody
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.asRequestBody
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
@@ -20,6 +18,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
+import java.io.IOException
 import javax.inject.Inject
 
 /**
@@ -93,16 +92,17 @@ open class BugsnagUploadProguardTask @Inject constructor(
         // Read the API key and Build ID etc..
 
         // Construct a basic request
-        val parts = mutableMapOf<String, RequestBody>()
-        parts["proguard"] = mappingFile.toOctetRequestBody()
+        val manifestInfo = parseManifestInfo()
 
         // Send the request
         val request = BugsnagMultiPartUploadRequest.from(this)
-        val manifestInfo = parseManifestInfo()
         val mappingFileHash = mappingFile.md5HashCode()
         val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileHash) {
             logger.lifecycle("Bugsnag: Attempting to upload JVM mapping file: $mappingFile")
-            request.uploadMultipartEntity(parts, manifestInfo)
+            request.uploadMultipartEntity(manifestInfo) { builder ->
+                builder.addFormDataPart("proguard", mappingFile.name, mappingFile.asRequestBody())
+
+            }
         }
         requestOutputFile.asFile.get().writeText(response)
         logger.lifecycle("Bugsnag: JVM mapping file complete for $mappingFile")

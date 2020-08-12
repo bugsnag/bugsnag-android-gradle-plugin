@@ -1,21 +1,12 @@
 package com.bugsnag.android.gradle
 
-import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
-import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Request
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.logging.Logger
-import retrofit2.Retrofit
-import retrofit2.converter.scalars.ScalarsConverterFactory
-import retrofit2.create
-import retrofit2.http.Multipart
-import retrofit2.http.POST
-import retrofit2.http.PartMap
-import retrofit2.http.Url
-import java.io.File
+import java.io.IOException
 
 /**
  * Task to upload ProGuard mapping files to Bugsnag.
@@ -36,20 +27,19 @@ class BugsnagMultiPartUploadRequest(
     private val overwrite: Boolean,
     private val endpoint: String,
     private val retryCount: Int,
-    okHttpClient: OkHttpClient
+    private val okHttpClient: OkHttpClient
 ) {
 
-    private val bugsnagService = createService(okHttpClient)
-
     fun uploadMultipartEntity(
-        parts: MutableMap<String, RequestBody>,
-        manifestInfo: AndroidManifestInfo
+        manifestInfo: AndroidManifestInfo,
+        action: (MultipartBody.Builder) -> Unit
     ): String {
-        addPropertiesToMultipartEntity(parts, manifestInfo)
+        val builder = buildMultipartBody(manifestInfo, overwrite)
+        action(builder)
+        val body = builder.build()
 
-        val finalParts = parts.toMap()
 
-        var response = uploadToServer(finalParts)
+        var response = uploadToServer(body)
         var uploadSuccessful = response != null
 
         // Note - this should eventually be moved to a native OkHttp interceptor
@@ -58,7 +48,7 @@ class BugsnagMultiPartUploadRequest(
         while (!uploadSuccessful && retryCount > 0) {
             logger.warn(String.format("Bugsnag: Retrying upload (%d/%d) ...",
                 maxRetryCount - retryCount + 1, maxRetryCount))
-            response = uploadToServer(finalParts)
+            response = uploadToServer(body)
             uploadSuccessful = response != null
             retryCount--
         }
@@ -69,35 +59,18 @@ class BugsnagMultiPartUploadRequest(
         }
     }
 
-    private fun addPropertiesToMultipartEntity(
-        parts: MutableMap<String, RequestBody>,
-        manifestInfo: AndroidManifestInfo
-    ) {
-        parts["apiKey"] = manifestInfo.apiKey.toTextRequestBody()
-        parts["appId"] = manifestInfo.applicationId.toTextRequestBody()
-        parts["versionCode"] = manifestInfo.versionCode.toTextRequestBody()
-        parts["buildUUID"] = manifestInfo.buildUUID.toTextRequestBody()
-        parts["versionName"] = manifestInfo.versionName.toTextRequestBody()
-        if (overwrite) {
-            parts["overwrite"] = "true".toTextRequestBody()
-        }
-        logger.debug("Bugsnag: payload information=$manifestInfo")
-    }
-
-    private fun uploadToServer(parts: Map<String, RequestBody>): String? {
+    private fun uploadToServer(body: MultipartBody): String? {
         // Make the request
-        try {
-            val response = bugsnagService.uploadFile(endpoint, parts).execute()
-            val statusCode = response.code()
-            val responseEntity = response.body()
+        val request = Request.Builder()
+            .url(endpoint)
+            .post(body)
+            .build()
 
-            if (statusCode != 200) {
-                throw IllegalStateException("Bugsnag upload failed with code $statusCode $responseEntity")
-            } else {
-                return responseEntity
+        okHttpClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                throw IOException("Bugsnag upload failed with code ${response.code}")
             }
-        } catch (exc: Throwable) {
-            throw IllegalStateException("Bugsnag Upload failed", exc)
+            return response.body?.string()
         }
     }
 
@@ -114,6 +87,21 @@ class BugsnagMultiPartUploadRequest(
     companion object {
         const val MAX_RETRY_COUNT = 5
 
+        internal fun buildMultipartBody(manifestInfo: AndroidManifestInfo, overwrite: Boolean): MultipartBody.Builder {
+            val builder = MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("apiKey", manifestInfo.apiKey)
+                .addFormDataPart("appId", manifestInfo.applicationId)
+                .addFormDataPart("versionCode", manifestInfo.versionCode)
+                .addFormDataPart("buildUUID", manifestInfo.buildUUID)
+                .addFormDataPart("versionName", manifestInfo.versionName)
+
+            if (overwrite) {
+                builder.addFormDataPart("overwrite", "true")
+            }
+            return builder
+        }
+
         internal fun <T> from(
             task: T
         ): BugsnagMultiPartUploadRequest where T : DefaultTask, T: BugsnagFileUploadTask {
@@ -126,34 +114,5 @@ class BugsnagMultiPartUploadRequest(
                 okHttpClient = task.httpClientHelper.get().okHttpClient
             )
         }
-
-        internal fun createService(client: OkHttpClient): BugsnagService {
-            return Retrofit.Builder()
-                .baseUrl("https://upload.bugsnag.com") // Not actually used
-                .validateEagerly(true)
-                .callFactory(client)
-                .addConverterFactory(ScalarsConverterFactory.create())
-                .build()
-                .create()
-        }
     }
-}
-private val TEXT_PLAIN = "text/plain".toMediaType()
-private val OCTET = "application/octet-stream".toMediaType()
-
-internal fun String.toTextRequestBody(): RequestBody {
-    return toRequestBody(TEXT_PLAIN)
-}
-
-internal fun File.toOctetRequestBody(): RequestBody {
-    return asRequestBody(OCTET)
-}
-
-internal interface BugsnagService {
-    @Multipart
-    @POST
-    fun uploadFile(
-        @Url endpoint: String,
-        @PartMap parts: Map<String, @JvmSuppressWildcards RequestBody>
-    ): retrofit2.Call<String>
 }

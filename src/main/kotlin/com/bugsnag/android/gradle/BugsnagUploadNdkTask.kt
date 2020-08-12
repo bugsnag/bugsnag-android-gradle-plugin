@@ -12,6 +12,7 @@ import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.versionNumber
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import okio.HashingSource
 import okio.blackholeSink
 import okio.buffer
@@ -194,15 +195,7 @@ sealed class BugsnagUploadNdkTask(
             logger.warn("Bugsnag: Skipping upload of empty/invalid mapping file: $mappingFile")
             return
         }
-        val parts = mutableMapOf<String, RequestBody>()
-        parts["soSymbolFile"] = mappingFile.toOctetRequestBody()
-        arch?.let {
-            parts["arch"] = it.toTextRequestBody()
-        }
-        sharedObjectName?.let {
-            parts["sharedObjectName"] = it.toTextRequestBody()
-        }
-        parts["projectRoot"] = projectRoot.get().toTextRequestBody()
+
         val request = BugsnagMultiPartUploadRequest.from(this)
         logger.lifecycle("Bugsnag: Attempting to upload shared object mapping " +
             "file for $sharedObjectName-$arch from $mappingFile")
@@ -212,7 +205,17 @@ sealed class BugsnagUploadNdkTask(
         val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileHash) {
             logger.lifecycle("Bugsnag: Attempting to upload shared object mapping " +
                 "file for $sharedObjectName-$arch from $mappingFile")
-            request.uploadMultipartEntity(parts, parseManifestInfo())
+            request.uploadMultipartEntity(parseManifestInfo()) { builder ->
+                builder.addFormDataPart("soSymbolFile", mappingFile.name, mappingFile.asRequestBody())
+
+                if (arch != null) {
+                    builder.addFormDataPart("arch", arch)
+                }
+                if (sharedObjectName != null) {
+                    builder.addFormDataPart("sharedObjectName", sharedObjectName)
+                }
+                builder.addFormDataPart("projectRoot", projectRoot.get())
+            }
         }
         requestOutputFile.asFile.get().writeText(response)
         logger.lifecycle("Bugsnag: shared object mapping file complete for $mappingFile")
