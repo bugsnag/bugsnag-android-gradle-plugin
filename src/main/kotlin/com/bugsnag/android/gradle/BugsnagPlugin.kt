@@ -210,7 +210,7 @@ class BugsnagPlugin : Plugin<Project> {
                     ndkUploadClientProvider
                 )
                 else -> null
-            }?.registerWithAssembleTasks(variant, output, bugsnag, project.provider { true })
+            }?.registerWithAssembleTasks(variant, output, bugsnag, bugsnag.uploadNdkMappings)
 
             registerReleasesUploadTask(
                 project,
