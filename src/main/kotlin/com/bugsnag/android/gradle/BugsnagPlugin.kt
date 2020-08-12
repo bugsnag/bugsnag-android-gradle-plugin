@@ -83,6 +83,9 @@ class BugsnagPlugin : Plugin<Project> {
             if (BugsnagManifestUuidTaskV2.isApplicable()) {
                 check(android is CommonExtension<*, *, *, *, *, *, *, *>)
                 android.onVariants {
+                    if (!bugsnag.enabled.get()) {
+                        return@onVariants
+                    }
                     val variant = VariantFilterImpl(name)
                     if (!isVariantEnabled(bugsnag, variant)) {
                         return@onVariants
@@ -108,6 +111,9 @@ class BugsnagPlugin : Plugin<Project> {
             }
 
             project.afterEvaluate {
+                if (!bugsnag.enabled.get()) {
+                    return@afterEvaluate
+                }
                 android.applicationVariants.configureEach { variant ->
                     val filterImpl = VariantFilterImpl(variant.name)
                     if (!isVariantEnabled(bugsnag, filterImpl)) {
