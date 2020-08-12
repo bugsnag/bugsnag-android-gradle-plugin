@@ -203,6 +203,7 @@ class BugsnagPlugin : Plugin<Project> {
             val symbolFileTaskProvider = when {
                 ndkEnabled -> registerSharedObjectUploadTask(
                     project,
+                    variant,
                     output,
                     bugsnag,
                     httpClientHelperProvider,
@@ -284,6 +285,7 @@ class BugsnagPlugin : Plugin<Project> {
 
     private fun registerSharedObjectUploadTask(
         project: Project,
+        variant: ApkVariant,
         output: ApkVariantOutput,
         bugsnag: BugsnagPluginExtension,
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
@@ -298,13 +300,16 @@ class BugsnagPlugin : Plugin<Project> {
         return BugsnagUploadNdkTask.register(project, taskName) {
             this.requestOutputFile.set(requestOutputFile)
             projectRoot.set(bugsnag.projectRoot.getOrElse(project.projectDir.toString()))
-            searchDirectories.from()
             variantOutput = output
             objDumpPaths.set(bugsnag.objdumpPaths)
             httpClientHelper.set(httpClientHelperProvider)
             manifestInfoFile.set(manifestInfoFileProvider)
             uploadRequestClient.set(ndkUploadClientProvider)
             configureWith(bugsnag)
+            variant.externalNativeBuildProviders.forEach { provider ->
+                searchDirectories.from(provider.map(ExternalNativeBuildTask::objFolder))
+                searchDirectories.from(provider.map(ExternalNativeBuildTask::soFolder))
+            }
         }
     }
 
