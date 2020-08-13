@@ -125,8 +125,8 @@ bugsnag {
 ```groovy
 // new API
 def paths = [
-    File("app/build/jni/libs"),
-    File("app/build/someOtherFolder")
+    new File("app/build/jni/libs"),
+    new File("app/build/someOtherFolder")
 ]
 bugsnag {
     sharedObjectPaths = paths
