@@ -64,7 +64,7 @@ which meant the plugin could be configured like this:
 ```groovy
 // old API
 bugsnag {
-    enabled false
+    uploadJvmMappings false
 }
 ```
 
@@ -74,7 +74,39 @@ make the following change on any affected fields:
 ```groovy
 // new API
 bugsnag {
-    enabled = false
+    uploadJvmMappings = false
+}
+```
+
+#### Change how bugsnag plugin is disabled for build variants
+
+You should disable the bugsnag plugin for any build variants which do not use obfuscation.
+The old API for disabling the plugin on individual build variants has been removed:
+
+```groovy
+// old API
+android {
+    buildTypes {
+        debug {
+            ext.enableBugsnag = false
+        }
+    }
+}
+```
+
+You should use the new API instead. This allows for multiple build variants to be ignored at once
+and behaves similarly to AGP's [variant filtering API](https://developer.android.com/studio/build/build-variants#filter-variants):
+
+```groovy
+// new API
+bugsnag {
+    variantFilter { variant ->
+        // disables plugin for all variants with debug buildType
+        def name = variant.name.toLowerCase()
+        if (name.contains("debug")) {
+            enabled = false
+        }
+    }
 }
 ```
 

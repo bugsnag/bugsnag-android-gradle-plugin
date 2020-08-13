@@ -82,4 +82,23 @@ open class BugsnagPluginExtension(objects: ObjectFactory) {
     fun sourceControl(action: Action<SourceControl>) {
         action.execute(sourceControl)
     }
+
+    internal var filter: Action<VariantFilter>? = null
+
+    fun variantFilter(action: Action<VariantFilter>) {
+        this.filter = action
+    }
+}
+
+interface VariantFilter {
+    val name: String
+    fun setEnabled(enabled: Boolean)
+}
+
+internal class VariantFilterImpl(override val name: String) : VariantFilter {
+    internal var variantEnabled: Boolean? = true
+
+    override fun setEnabled(enabled: Boolean) {
+        this.variantEnabled = enabled
+    }
 }

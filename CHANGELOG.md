@@ -15,6 +15,9 @@ See the [Upgrade Guide](./UPGRADING.md) for migration instructions.
 Support configuration caching
 [#257](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/257)
 
+Change how bugsnag plugin is disabled for build variants
+[#255](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/255)
+
 Convert plugin extension to use property syntax
 [#251](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/251)
 

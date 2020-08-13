@@ -1,0 +1,11 @@
+project.afterEvaluate {
+    project.bugsnag.endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+    project.bugsnag.releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+
+    // disable bugsnag plugin for 'release' buildType
+    project.bugsnag.variantFilter { variant ->
+        if (variant.name.toLowerCase().contains("release")) {
+            enabled = false
+        }
+    }
+}
