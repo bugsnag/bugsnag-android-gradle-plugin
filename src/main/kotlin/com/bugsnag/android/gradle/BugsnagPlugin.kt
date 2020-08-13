@@ -12,14 +12,12 @@ import com.bugsnag.android.gradle.internal.BuildServiceBugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.GradleVersions
 import com.bugsnag.android.gradle.internal.LegacyBugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.UploadRequestClient
-import com.bugsnag.android.gradle.internal.dependsOn
 import com.bugsnag.android.gradle.internal.hasDexguardPlugin
 import com.bugsnag.android.gradle.internal.newUploadRequestClientProvider
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.versionNumber
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
@@ -196,7 +194,6 @@ class BugsnagPlugin : Plugin<Project> {
             val proguardTaskProvider = when {
                 jvmMinificationEnabled -> registerProguardUploadTask(
                     project,
-                    variant,
                     output,
                     bugsnag,
                     httpClientHelperProvider,
@@ -231,28 +228,15 @@ class BugsnagPlugin : Plugin<Project> {
                 symbolFileTaskProvider != null
             )
 
-            println("Registering tasks")
-            println("Should upload?")
             if (shouldUploadMappings(output, bugsnag)) {
-                println("Should upload!")
-                println("Should autoupload?")
                 if (bugsnag.reportBuilds.get()) {
-                    println("Should autoupload!")
-                    println(
-                        "Variant registering ${releaseUploadTask.name} with variant ${variant.name}")
-                    variant.assembleProvider.dependsOn(releaseUploadTask)
+                    variant.register(project, releaseUploadTask)
                 }
                 if (symbolFileTaskProvider != null && bugsnag.uploadNdkMappings.get()) {
-                    println("Should autoupload!")
-                    println(
-                        "Variant registering ${releaseUploadTask.name} with variant ${variant.name}")
-                    variant.assembleProvider.dependsOn(symbolFileTaskProvider)
+                    variant.register(project, symbolFileTaskProvider)
                 }
                 if (proguardTaskProvider != null && bugsnag.uploadJvmMappings.get()) {
-                    println("Should autoupload!")
-                    println(
-                        "Variant registering ${releaseUploadTask.name} with variant ${variant.name}")
-                    variant.assembleProvider.dependsOn(proguardTaskProvider)
+                    variant.register(project, proguardTaskProvider)
                 }
             }
         }
@@ -294,7 +278,6 @@ class BugsnagPlugin : Plugin<Project> {
      */
     private fun registerProguardUploadTask(
         project: Project,
-        variant: ApkVariant,
         output: ApkVariantOutput,
         bugsnag: BugsnagPluginExtension,
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
@@ -313,7 +296,6 @@ class BugsnagPlugin : Plugin<Project> {
             uploadRequestClient.set(proguardUploadClientProvider)
             mappingFileProperty.set(project.layout.file(mappingFilesProvider.map { it.singleFile }))
             configureWith(bugsnag)
-            registerWithVariant(variant, output, bugsnag, bugsnag.uploadJvmMappings)
         }
     }
 
@@ -344,7 +326,6 @@ class BugsnagPlugin : Plugin<Project> {
                 searchDirectories.from(provider.map(ExternalNativeBuildTask::objFolder))
                 searchDirectories.from(provider.map(ExternalNativeBuildTask::soFolder))
             }
-            registerWithVariant(variant, output, bugsnag, bugsnag.uploadNdkMappings)
         }
     }
 
@@ -385,27 +366,6 @@ class BugsnagPlugin : Plugin<Project> {
                 }
             }
             configureMetadata()
-            registerWithVariant(variant, output, bugsnag, bugsnag.reportBuilds)
-        }
-    }
-
-    private fun <T : Task> T.registerWithVariant(
-        variant: ApkVariant,
-        output: ApkVariantOutput,
-        bugsnag: BugsnagPluginExtension,
-        autoUpload: Provider<Boolean>
-    ) {
-        println("Registering $name")
-        println("Should upload?")
-        if (shouldUploadMappings(output, bugsnag)) {
-            println("Should upload!")
-            println("Should autoupload?")
-            if (autoUpload.get()) {
-                println("Should autoupload!")
-                println("Variant registering $name with variant ${variant.name}")
-                // TODO this throws an exception when we try to register it here
-//                variant.register(this)
-            }
         }
     }
 

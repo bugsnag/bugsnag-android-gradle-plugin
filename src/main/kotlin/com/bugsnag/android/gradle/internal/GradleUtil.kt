@@ -3,6 +3,12 @@ package com.bugsnag.android.gradle.internal
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApplicationVariant
+import com.android.build.gradle.api.BaseVariant
+// TODO use the new replacement when min AGP version is 4.0
+import com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION
+import com.android.build.gradle.internal.api.ApplicationVariantImpl
+import com.android.build.gradle.internal.scope.TaskContainer as AgpTaskContainer
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import okio.HashingSink
 import okio.blackholeSink
 import okio.buffer
@@ -30,6 +36,13 @@ internal object GradleVersions {
 
 internal fun Gradle.versionNumber(): VersionNumber = VersionNumber.parse(gradleVersion)
 
+internal object AgpVersions {
+    // Use baseVersion to avoid any qualifiers like `-alpha06`
+    val CURRENT: VersionNumber = VersionNumber.parse(ANDROID_GRADLE_PLUGIN_VERSION).baseVersion
+    val VERSION_3_4: VersionNumber = VersionNumber.parse("3.4.0")
+    val VERSION_4_0: VersionNumber = VersionNumber.parse("4.0.0")
+}
+
 /** A fast file hash that don't load the entire file contents into memory at once. */
 internal fun File.md5HashCode(): Int {
     return HashingSink.md5(blackholeSink()).use { sink ->
@@ -46,6 +59,67 @@ internal fun <T: Task> TaskProvider<out T>.dependsOn(vararg tasks: TaskProvider<
     }
 
     return this
+}
+
+/** An alternative to [BaseVariant.register] that accepts a [TaskProvider] input. */
+internal fun BaseVariant.register(project: Project, provider: TaskProvider<out Task>) {
+    val success = when {
+        AgpVersions.CURRENT >= AgpVersions.VERSION_4_0 -> {
+            registerAgp4(provider)
+        }
+        AgpVersions.CURRENT >= AgpVersions.VERSION_3_4 -> {
+            registerAgp3(provider)
+        }
+        else -> false
+    }
+
+    if (!success) {
+        registerManual(project, provider)
+    }
+}
+
+private fun BaseVariant.registerAgp4(provider: TaskProvider<out Task>): Boolean {
+    return try {
+        // This is of type ComponentPropertiesImpl
+        val componentProperties = javaClass.getField("componentProperties")
+            .apply { isAccessible = true }
+            .get(this)
+        val taskContainer = componentProperties.javaClass.getMethod("getTaskContainer")
+            .apply { isAccessible = true }
+            .invoke(componentProperties) as AgpTaskContainer
+        taskContainer.register(provider)
+        true
+    } catch (t: Throwable) {
+        false
+    }
+}
+
+private fun BaseVariant.registerAgp3(provider: TaskProvider<out Task>): Boolean {
+    return try {
+        if (this is ApplicationVariantImpl) {
+            variantData.taskContainer.register(provider)
+        }
+        true
+    } catch (t: Throwable) {
+        false
+    }
+}
+
+private fun AgpTaskContainer.register(provider: TaskProvider<out Task>) {
+    assembleTask.dependsOn(provider)
+    bundleLibraryTask?.dependsOn(provider)
+    if (this is MutableTaskContainer) {
+        bundleTask?.dependsOn(provider)
+    }
+}
+
+private fun BaseVariant.registerManual(project: Project, provider: TaskProvider<out Task>) {
+    assembleProvider.dependsOn(provider)
+    val bundleName = "bundle" + assembleProvider.name.removePrefix("assemble")
+    project.tasks.matching { it.name == bundleName }
+        .configureEach {
+            it.dependsOn(provider)
+        }
 }
 
 /**
