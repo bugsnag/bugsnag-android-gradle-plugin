@@ -1,4 +1,4 @@
-@file:Suppress("MatchingDeclarationName") // This file contains multiple top-level members
+@file:Suppress("MatchingDeclarationName", "TooManyFunctions") // This file contains multiple top-level members
 package com.bugsnag.android.gradle.internal
 
 import com.android.build.gradle.AppExtension
@@ -53,6 +53,7 @@ internal fun File.md5HashCode(): Int {
     }
 }
 
+@Suppress("SpreadOperator")
 internal fun <T: Task> TaskProvider<out T>.dependsOn(vararg tasks: TaskProvider<out Task>): TaskProvider<out T> {
     if (tasks.isEmpty().not()) {
         configure { it.dependsOn(*tasks) }
@@ -78,6 +79,7 @@ internal fun BaseVariant.register(project: Project, provider: TaskProvider<out T
     }
 }
 
+@Suppress("TooGenericExceptionCaught")
 private fun BaseVariant.registerAgp4(provider: TaskProvider<out Task>): Boolean {
     return try {
         // This is of type ComponentPropertiesImpl
@@ -94,6 +96,7 @@ private fun BaseVariant.registerAgp4(provider: TaskProvider<out Task>): Boolean 
     }
 }
 
+@Suppress("TooGenericExceptionCaught")
 private fun BaseVariant.registerAgp3(provider: TaskProvider<out Task>): Boolean {
     return try {
         if (this is ApplicationVariantImpl) {

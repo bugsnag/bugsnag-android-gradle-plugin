@@ -163,7 +163,7 @@ class BugsnagPlugin : Plugin<Project> {
      *
      * See https://sites.google.com/a/android.com/tools/tech-docs/new-build-system/user-guide#TOC-Build-Variants
      */
-    @Suppress("LongParameterList")
+    @Suppress("LongParameterList", "LongMethod", "ComplexMethod")
     private fun registerBugsnagTasksForVariant(
         project: Project,
         android: AppExtension,
@@ -276,6 +276,7 @@ class BugsnagPlugin : Plugin<Project> {
     /**
      * Creates a bugsnag task to upload proguard mapping file
      */
+    @Suppress("LongParameterList")
     private fun registerProguardUploadTask(
         project: Project,
         output: ApkVariantOutput,
@@ -299,6 +300,7 @@ class BugsnagPlugin : Plugin<Project> {
         }
     }
 
+    @Suppress("LongParameterList")
     private fun registerSharedObjectUploadTask(
         project: Project,
         variant: ApkVariant,
@@ -329,6 +331,7 @@ class BugsnagPlugin : Plugin<Project> {
         }
     }
 
+    @Suppress("LongParameterList")
     private fun registerReleasesUploadTask(
         project: Project,
         variant: ApkVariant,
