@@ -203,7 +203,6 @@ class BugsnagPlugin : Plugin<Project> {
                 )
                 else -> null
             }
-
             val symbolFileTaskProvider = when {
                 ndkEnabled -> registerSharedObjectUploadTask(
                     project,
@@ -224,7 +223,7 @@ class BugsnagPlugin : Plugin<Project> {
                 bugsnag,
                 manifestInfoFileProvider,
                 releasesUploadClientProvider,
-                proguardTaskProvider?.let { mappingFilesProvider },
+                mappingFilesProvider,
                 symbolFileTaskProvider != null
             )
 
@@ -295,7 +294,10 @@ class BugsnagPlugin : Plugin<Project> {
             httpClientHelper.set(httpClientHelperProvider)
             manifestInfoFile.set(manifestInfoFileProvider)
             uploadRequestClient.set(proguardUploadClientProvider)
-            mappingFileProperty.set(project.layout.file(mappingFilesProvider.map { it.singleFile }))
+
+            mappingFilesProvider.let {
+                mappingFileProperty.from(it)
+            }
             configureWith(bugsnag)
         }
     }

@@ -6,12 +6,15 @@ import com.bugsnag.android.gradle.internal.md5HashCode
 import com.bugsnag.android.gradle.internal.property
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
@@ -46,9 +49,8 @@ open class BugsnagUploadProguardTask @Inject constructor(
     @get:Internal
     override val httpClientHelper: Property<BugsnagHttpClientHelper> = objects.property()
 
-    @get:PathSensitive(NONE)
-    @get:InputFile
-    val mappingFileProperty: RegularFileProperty = objects.fileProperty()
+    @get:InputFiles
+    val mappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
 
     @get:PathSensitive(NONE)
     @get:InputFile
@@ -74,7 +76,7 @@ open class BugsnagUploadProguardTask @Inject constructor(
 
     @TaskAction
     fun upload() {
-        val mappingFile = mappingFileProperty.asFile.get()
+        val mappingFile = mappingFileProperty.singleFile
         if (mappingFile.length() == 0L) { // proguard's -dontobfuscate generates an empty mapping file
             logger.warn("Bugsnag: Ignoring empty proguard file")
             return
