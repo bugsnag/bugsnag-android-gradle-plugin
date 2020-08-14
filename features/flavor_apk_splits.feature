@@ -53,6 +53,7 @@ Scenario: Flavor Density Split automatic upload disabled
     Then I should receive no requests
 
 @skip_agp4_1_or_higher
+@skip_agp3_5
 Scenario: Flavor Density Split manual upload of build API
     When I build the "Bar-xxhdpi-release" variantOutput for "flavor_apk_splits" using the "all_disabled" bugsnag config
     Then I should receive 1 request

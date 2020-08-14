@@ -64,6 +64,7 @@ Scenario: ABI Splits automatic upload disabled
     Then I should receive no requests
 
 @skip_agp4_1_or_higher
+@skip_agp3_5
 Scenario: ABI Splits manual upload of build API
     When I build the "Armeabi-release" variantOutput for "abi_splits" using the "all_disabled" bugsnag config
     Then I should receive 1 request

@@ -40,6 +40,7 @@ internal object AgpVersions {
     // Use baseVersion to avoid any qualifiers like `-alpha06`
     val CURRENT: VersionNumber = VersionNumber.parse(ANDROID_GRADLE_PLUGIN_VERSION).baseVersion
     val VERSION_3_4: VersionNumber = VersionNumber.parse("3.4.0")
+    val VERSION_3_5: VersionNumber = VersionNumber.parse("3.5.0")
     val VERSION_4_0: VersionNumber = VersionNumber.parse("4.0.0")
 }
 
@@ -123,6 +124,17 @@ private fun BaseVariant.registerManual(project: Project, provider: TaskProvider<
         .configureEach {
             it.dependsOn(provider)
         }
+
+    if (AgpVersions.CURRENT.major == AgpVersions.VERSION_3_5.major
+        && AgpVersions.CURRENT.minor == AgpVersions.VERSION_3_5.minor) {
+        // workaround - AGP 3.5.0 executes upload tasks before the package tasks
+        // so we need to manually specify that it must run after the package task
+        // this stops config avoidance for AGP 3.5.0 only
+        project.tasks.matching { it.name.contains("package") }
+            .configureEach { packageTask ->
+                provider.get().mustRunAfter(packageTask)
+            }
+    }
 }
 
 /**

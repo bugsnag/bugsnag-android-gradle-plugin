@@ -1,5 +1,6 @@
 Feature: Generating Android app bundles
 
+@skip_agp3_5
 Scenario: Single-module default app bundles successfully
     When I bundle "default_app" using the "standard" bugsnag config
     Then I should receive 2 requests
@@ -28,6 +29,7 @@ Scenario: Single-module default app bundles successfully
     And the field "appId" for multipart request 1 equals "com.bugsnag.android.example"
     And the field "overwrite" for multipart request 1 is null
 
+@skip_agp3_5
 Scenario: Bundling multiple flavors automatically
     When I bundle "flavors" using the "standard" bugsnag config
     Then I should receive 4 requests
