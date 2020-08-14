@@ -284,12 +284,13 @@ class BugsnagPlugin : Plugin<Project> {
         manifestInfoFileProvider: Provider<RegularFile>,
         proguardUploadClientProvider: Provider<out UploadRequestClient>,
         mappingFilesProvider: Provider<FileCollection>
-    ): TaskProvider<BugsnagUploadProguardTask> {
+    ): TaskProvider<out BugsnagUploadProguardTask> {
         val outputName = taskNameForOutput(output)
         val taskName = "uploadBugsnag${outputName}Mapping"
         val path = "intermediates/bugsnag/requests/proguardFor${outputName}.json"
         val requestOutputFileProvider = project.layout.buildDirectory.file(path)
-        return project.tasks.register<BugsnagUploadProguardTask>(taskName) {
+
+        return BugsnagUploadProguardTask.register(project, taskName) {
             requestOutputFile.set(requestOutputFileProvider)
             httpClientHelper.set(httpClientHelperProvider)
             manifestInfoFile.set(manifestInfoFileProvider)
