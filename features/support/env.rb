@@ -38,7 +38,7 @@ end
 def equals_target(target)
   version = ENV["AGP_VERSION"].slice(0, 5)
   version = version.gsub(".", "")
-  return version.to_i >= target
+  return version.to_i == target
 end
 
 def is_above_or_equal_to_target(target)
