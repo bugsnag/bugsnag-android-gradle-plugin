@@ -231,7 +231,7 @@ class BugsnagPlugin : Plugin<Project> {
                 if (bugsnag.reportBuilds.get()) {
                     variant.register(project, releaseUploadTask)
                 }
-                if (symbolFileTaskProvider != null && bugsnag.uploadNdkMappings.get()) {
+                if (symbolFileTaskProvider != null && isNdkUploadEnabled(bugsnag, android)) {
                     variant.register(project, symbolFileTaskProvider)
                 }
                 if (proguardTaskProvider != null && bugsnag.uploadJvmMappings.get()) {
