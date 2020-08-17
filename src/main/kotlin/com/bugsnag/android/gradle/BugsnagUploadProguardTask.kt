@@ -1,24 +1,29 @@
 package com.bugsnag.android.gradle
 
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
+import com.bugsnag.android.gradle.internal.GradleVersions
 import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.bugsnag.android.gradle.internal.md5HashCode
 import com.bugsnag.android.gradle.internal.property
-import okhttp3.MultipartBody
-import okhttp3.Request
+import com.bugsnag.android.gradle.internal.register
+import com.bugsnag.android.gradle.internal.versionNumber
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.gradle.api.DefaultTask
+import org.gradle.api.Project
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
-import java.io.IOException
+import org.gradle.api.tasks.TaskProvider
 import javax.inject.Inject
 
 /**
@@ -34,7 +39,7 @@ import javax.inject.Inject
  * it is usually safe to have this be the absolute last task executed during
  * a build.
  */
-open class BugsnagUploadProguardTask @Inject constructor(
+sealed class BugsnagUploadProguardTask @Inject constructor(
     objects: ObjectFactory
 ) : DefaultTask(), AndroidManifestInfoReceiver, BugsnagFileUploadTask {
 
@@ -49,9 +54,8 @@ open class BugsnagUploadProguardTask @Inject constructor(
     @get:Internal
     override val httpClientHelper: Property<BugsnagHttpClientHelper> = objects.property()
 
-    @get:PathSensitive(NONE)
-    @get:InputFile
-    val mappingFileProperty: RegularFileProperty = objects.fileProperty()
+    @get:InputFiles
+    abstract val mappingFileProperty: ConfigurableFileCollection
 
     @get:PathSensitive(NONE)
     @get:InputFile
@@ -77,7 +81,7 @@ open class BugsnagUploadProguardTask @Inject constructor(
 
     @TaskAction
     fun upload() {
-        val mappingFile = mappingFileProperty.asFile.get()
+        val mappingFile = mappingFileProperty.singleFile
         if (mappingFile.length() == 0L) { // proguard's -dontobfuscate generates an empty mapping file
             logger.warn("Bugsnag: Ignoring empty proguard file")
             return
@@ -108,4 +112,46 @@ open class BugsnagUploadProguardTask @Inject constructor(
         logger.lifecycle("Bugsnag: JVM mapping file complete for $mappingFile")
     }
 
+    companion object {
+
+        /**
+         * Registers the appropriate subtype to this [project] with the given [name] and
+         * [configurationAction]
+         */
+        internal fun register(
+            project: Project,
+            name: String,
+            configurationAction: BugsnagUploadProguardTask.() -> Unit
+        ): TaskProvider<out BugsnagUploadProguardTask> {
+            return when {
+                project.gradle.versionNumber() >= GradleVersions.VERSION_5_3 -> {
+                    project.tasks.register<BugsnagUploadProguardTaskGradle53Plus>(name, configurationAction)
+                } else -> {
+                    project.tasks.register<BugsnagUploadProguardTaskLegacy>(name, configurationAction)
+                }
+            }
+        }
+    }
+
+}
+
+/**
+ * Legacy [BugsnagUploadProguardTask] task that requires using [getProject] and
+ * [ProjectLayout.configurableFiles].
+ */
+internal open class BugsnagUploadProguardTaskLegacy @Inject constructor(
+    objects: ObjectFactory,
+    projectLayout: ProjectLayout
+) : BugsnagUploadProguardTask(objects) {
+
+    @get:InputFiles
+    override val mappingFileProperty: ConfigurableFileCollection = projectLayout.configurableFiles()
+}
+
+internal open class BugsnagUploadProguardTaskGradle53Plus @Inject constructor(
+    objects: ObjectFactory
+) : BugsnagUploadProguardTask(objects) {
+
+    @get:InputFiles
+    override val mappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
 }

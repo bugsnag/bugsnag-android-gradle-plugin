@@ -50,6 +50,11 @@ abstract class BaseBugsnagManifestUuidTask(objects: ObjectFactory) : DefaultTask
  */
 open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) : BaseBugsnagManifestUuidTask(objects) {
 
+    companion object {
+        private const val ASSEMBLE_TASK = "assemble"
+        private const val BUNDLE_TASK = "bundle"
+    }
+
     @get:Internal
     internal lateinit var variantOutput: ApkVariantOutput
 
@@ -157,7 +162,7 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
     private fun isRunningAssembleTask(project: Project,
                               variant: ApkVariant,
                               output: ApkVariantOutput): Boolean {
-        return isRunningTaskWithPrefix(project, variant, output, BugsnagPlugin.ASSEMBLE_TASK)
+        return isRunningTaskWithPrefix(project, variant, output, ASSEMBLE_TASK)
     }
 
     /**
@@ -166,7 +171,7 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
     private fun isRunningBundleTask(project: Project,
                             variant: ApkVariant,
                             output: ApkVariantOutput): Boolean {
-        return isRunningTaskWithPrefix(project, variant, output, BugsnagPlugin.BUNDLE_TASK)
+        return isRunningTaskWithPrefix(project, variant, output, BUNDLE_TASK)
     }
 
     /**
@@ -178,13 +183,42 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
                                         output: ApkVariantOutput,
                                         prefix: String): Boolean {
         val taskNames = HashSet<String>()
-        val plugin = project.plugins.getPlugin(BugsnagPlugin::class.java)
-        taskNames.addAll(plugin.findTaskNamesForPrefix(variant, output, prefix))
+        taskNames.addAll(findTaskNamesForPrefix(variant, output, prefix))
 
         return project.gradle.taskGraph.allTasks.any { task ->
             taskNames.any {
                 task.name.endsWith(it)
             }
         }
+    }
+
+
+
+    /**
+     * Finds all the task names which can be used to assemble a variant, and replaces 'assemble' with the given
+     * prefix.
+     *
+     * E.g. [bundle, bundleRelease, bundleFooRelease]
+     */
+    internal fun findTaskNamesForPrefix(variant: ApkVariant,
+        output: ApkVariantOutput,
+        prefix: String): Set<String> {
+        val variantName = output.name.split("-")[0].capitalize()
+        val assembleTask = variant.assembleProvider.orNull
+
+        val taskNames = HashSet<String>()
+        taskNames.add(prefix)
+
+        if (assembleTask != null) {
+            val assembleTaskName = assembleTask.name
+            val buildTypeTaskName = assembleTaskName.replace(variantName, "")
+            val buildType = buildTypeTaskName.replace(ASSEMBLE_TASK, "")
+            val variantTaskName = assembleTaskName.replace(buildType, "")
+
+            taskNames.add(assembleTaskName.replace(ASSEMBLE_TASK, prefix))
+            taskNames.add(buildTypeTaskName.replace(ASSEMBLE_TASK, prefix))
+            taskNames.add(variantTaskName.replace(ASSEMBLE_TASK, prefix))
+        }
+        return taskNames
     }
 }
