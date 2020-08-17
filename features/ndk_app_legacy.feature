@@ -58,6 +58,7 @@ Scenario: Custom projectRoot is added to payload
     And the request 0 is valid for the Build API
 
 # Sets a non-existent objdump location for x86 and arm64-v8a, delivery should proceed as normal for other files
+@skip_agp3_6 # skip AGP 3.6 until request ordering does not matter in tests
 @skip_agp4_0_or_higher
 Scenario: Custom objdump location
     When I set environment variable "OBJDUMP_LOCATION" to "/fake/objdump"
@@ -74,6 +75,7 @@ Scenario: Custom objdump location
 
     And the request 0 is valid for the Build API
 
+@skip_agp3_6 # skip AGP 3.6 until request ordering does not matter in tests
 @skip_agp4_0_or_higher
 Scenario: NDK app only uploads SO file matching architecture for ABI splits
     When I set environment variable "ABI_SPLITS" to "enabled"
