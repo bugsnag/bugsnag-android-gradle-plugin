@@ -3,6 +3,7 @@ package com.bugsnag.android.gradle
 import com.bugsnag.android.gradle.internal.GradleVersions
 import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.bugsnag.android.gradle.internal.mapProperty
+import com.bugsnag.android.gradle.internal.newClient
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.versionNumber
@@ -160,8 +161,8 @@ sealed class BugsnagReleasesTask(
         payload: ReleasePayload,
         manifestInfo: AndroidManifestInfo
     ): String {
-        val timeoutDuration = Duration.ofMillis(timeoutMillis.get())
-        val bugsnagService = createService(timeoutDuration)
+        val okHttpClient = newClient(timeoutMillis.get())
+        val bugsnagService = createService(okHttpClient)
 
         val response = try {
             bugsnagService.upload(
@@ -308,15 +309,6 @@ sealed class BugsnagReleasesTask(
                 }
             }
             return null
-        }
-
-        private fun createService(
-            timeoutDuration: Duration
-        ): BugsnagReleasesService {
-            return createService(OkHttpClient.Builder()
-                .connectTimeout(timeoutDuration)
-                .callTimeout(timeoutDuration)
-                .build())
         }
 
         internal fun createService(

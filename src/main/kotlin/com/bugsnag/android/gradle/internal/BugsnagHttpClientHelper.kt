@@ -35,10 +35,12 @@ class LegacyBugsnagHttpClientHelper(timeoutMillis: Provider<Long>) : BugsnagHttp
     override val okHttpClient: OkHttpClient by lazy { newClient(timeoutMillis.get()) }
 }
 
-private fun newClient(timeoutMillis: Long): OkHttpClient {
+internal fun newClient(timeoutMillis: Long): OkHttpClient {
     val timeoutDuration = Duration.ofMillis(timeoutMillis)
     return OkHttpClient.Builder()
-        .connectTimeout(timeoutDuration)
+        .readTimeout(Duration.ZERO)
+        .writeTimeout(Duration.ZERO)
+        .connectTimeout(Duration.ZERO)
         .callTimeout(timeoutDuration)
         .build()
 }
