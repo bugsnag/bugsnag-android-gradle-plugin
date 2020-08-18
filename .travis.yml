@@ -5,6 +5,7 @@ sudo: false
 env:
   global:
   - ANDROID_HOME=/usr/local/android-sdk
+  - ORG_GRADLE_PROJECT_RELEASE_SIGNING_ENABLED=false
 
 android:
   components:
