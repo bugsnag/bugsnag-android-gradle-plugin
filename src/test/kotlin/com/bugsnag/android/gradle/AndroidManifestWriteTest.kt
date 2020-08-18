@@ -34,12 +34,4 @@ class AndroidManifestWriteTest {
         val expected = classLoader.getResource("AndroidManifest.xml")!!.readText()
         assertEquals(expected, obs)
     }
-
-    @Test
-    fun writeNoBuildUuid() {
-        AndroidManifestParser().writeBuildUuid(manifestFile, outputFile, AndroidManifestParser.IGNORE_BUILD_UUID)
-        val obs = outputFile.readText()
-        val expected = classLoader.getResource("manifest_no_uuid.xml")!!.readText()
-        assertEquals(expected, obs)
-    }
 }

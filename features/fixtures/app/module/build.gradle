@@ -5,9 +5,7 @@ def bugsnagConfig = System.env.BUGSNAG_CONFIG ?: "standard"
 apply from: "../../config/android/${moduleConfig}.gradle"
 
 if (!System.env.UPDATING_GRADLEW) {
-    // apply config first (not overwritten by applying bugsnag plugin)
-    apply from: "../../config/bugsnag/${bugsnagConfig}.gradle"
 
     // apply bugsnag plugin configuration (e.g. custom sourceControl info)
-    apply plugin: 'com.bugsnag.android.gradle'
+    apply from: "../../config/bugsnag/${bugsnagConfig}.gradle"
 }

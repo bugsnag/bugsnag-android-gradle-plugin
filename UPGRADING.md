@@ -64,7 +64,7 @@ which meant the plugin could be configured like this:
 ```groovy
 // old API
 bugsnag {
-    enabled false
+    uploadJvmMappings false
 }
 ```
 
@@ -74,26 +74,41 @@ make the following change on any affected fields:
 ```groovy
 // new API
 bugsnag {
-    enabled = false
+    uploadJvmMappings = false
 }
 ```
 
-#### Added `autoUpdateBuildUuid` flag to prevent manifest UUID generation
+#### Change how bugsnag plugin is disabled for build variants
 
-A new flag has been added to disable the generation of UUIDs in the manifest. When this flag
-is set to false the `versionCode/versionName/applicationId` are used to uniquely identify
-mapping files instead.
-
-UUID generation can be disabled like thus:
+You should disable the bugsnag plugin for any build variants which do not use obfuscation.
+The old API for disabling the plugin on individual build variants has been removed:
 
 ```groovy
-bugsnag {
-    autoUpdateBuildUuid = false
+// old API
+android {
+    buildTypes {
+        debug {
+            ext.enableBugsnag = false
+        }
+    }
 }
 ```
 
-Disabling UUID generation can result in performance improvements but requires a versioning scheme
-where each build's version is unique.
+You should use the new API instead. This allows for multiple build variants to be ignored at once
+and behaves similarly to AGP's [variant filtering API](https://developer.android.com/studio/build/build-variants#filter-variants):
+
+```groovy
+// new API
+bugsnag {
+    variantFilter { variant ->
+        // disables plugin for all variants with debug buildType
+        def name = variant.name.toLowerCase()
+        if (name.contains("debug")) {
+            enabled = false
+        }
+    }
+}
+```
 
 #### Multiple Shared object search paths
 
@@ -110,8 +125,8 @@ bugsnag {
 ```groovy
 // new API
 def paths = [
-    File("app/build/jni/libs"),
-    File("app/build/someOtherFolder")
+    new File("app/build/jni/libs"),
+    new File("app/build/someOtherFolder")
 ]
 bugsnag {
     sharedObjectPaths = paths

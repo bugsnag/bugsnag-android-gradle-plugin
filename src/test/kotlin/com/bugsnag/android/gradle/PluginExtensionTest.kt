@@ -26,7 +26,6 @@ class PluginExtensionTest {
         val bugsnag = proj.extensions.getByType(BugsnagPluginExtension::class.java)
 
         with(bugsnag) {
-            assertTrue(autoUpdateBuildUuid.get())
             assertNull(builderName.orNull)
             assertTrue(enabled.get())
             assertEquals("https://upload.bugsnag.com", endpoint.get())

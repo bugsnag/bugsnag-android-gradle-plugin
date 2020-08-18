@@ -13,11 +13,10 @@ import java.io.IOException
 import java.io.PrintWriter
 import javax.xml.parsers.ParserConfigurationException
 
-class AndroidManifestParser {
+internal class AndroidManifestParser {
 
     private val namespace = Namespace("http://schemas.android.com/apk/res/android", "android")
 
-    @Throws(ParserConfigurationException::class, SAXException::class, IOException::class)
     fun readManifest(manifestPath: File, logger: Logger): AndroidManifestInfo {
         logger.debug("Bugsnag: Reading manifest at: $manifestPath")
         val root = XmlParser().parse(manifestPath)
@@ -40,7 +39,7 @@ class AndroidManifestParser {
         // Uniquely identify the build so that we can identify the proguard file.
         val buildUUID = getManifestMetaData(metadataTags, TAG_BUILD_UUID)
         if (buildUUID == null) {
-            logger.info("Bugsnag: Could not find '$TAG_BUILD_UUID'" +
+            logger.warn("Bugsnag: Could not find '$TAG_BUILD_UUID'" +
                 " <meta-data> tag in your AndroidManifest.xml")
         }
 
@@ -56,13 +55,16 @@ class AndroidManifestParser {
             logger.warn("Bugsnag: Could not find 'package' value in your AndroidManifest.xml")
         }
 
-        if (apiKey == null || "" == apiKey || versionCode == null || versionName == null || applicationId == null) {
+        if (apiKey == null || "" == apiKey || versionCode == null ||
+            buildUUID == null || versionName == null || applicationId == null) {
             throw IllegalStateException(
                 """Bugsnag: Missing apiKey/versionCode/buildUuid/versionName/package, required to upload to bugsnag.
                     |apiKey=$apiKey
                     |versionCode=$versionCode
+                    |buildUUID=$buildUUID
                     |versionName=$versionName
                     |applicationId=$applicationId
+                    |Manifest file = $manifestPath
                 """.trimMargin())
         }
         return AndroidManifestInfo(apiKey, versionCode, buildUUID, versionName, applicationId)
@@ -80,7 +82,7 @@ class AndroidManifestParser {
         val metadataTags = findMetadataTags(application)
 
         // Add the new BUILD_UUID_TAG element
-        if (!hasBuildUuid(metadataTags) && IGNORE_BUILD_UUID != buildUuid) {
+        if (!hasBuildUuid(metadataTags)) {
             application.appendNode(TAG_META_DATA, hashMapOf(
                 namespace.get(ATTR_NAME) to TAG_BUILD_UUID,
                 namespace.get(ATTR_VALUE) to buildUuid
@@ -130,13 +132,6 @@ class AndroidManifestParser {
     }
 
     companion object {
-
-        /**
-         * Used as a predictable task input when autoUpdateBuildUuid is set to false,
-         * as the versionName/versionCode/package fields should be used instead.
-         */
-        const val IGNORE_BUILD_UUID = "IGNORE_BUILD_UUID"
-
         private const val TAG_APPLICATION = "application"
         private const val TAG_META_DATA = "meta-data"
         private const val TAG_API_KEY = "com.bugsnag.android.API_KEY"

@@ -5,52 +5,52 @@ Scenario: Density Splits project builds successfully
     When I build "density_splits" using the "standard" bugsnag config
     Then I should receive 14 requests
 
-    And the request 13 is valid for the Build API
-    And the payload field "appVersionCode" equals "4" for request 13
+    And the request 0 is valid for the Build API
+    And the payload field "appVersionCode" equals "4" for request 0
 
-    And the request 12 is valid for the Build API
-    And the payload field "appVersionCode" equals "2" for request 12
+    And the request 1 is valid for the Build API
+    And the payload field "appVersionCode" equals "2" for request 1
 
-    And the request 11 is valid for the Build API
-    And the payload field "appVersionCode" equals "3" for request 11
+    And the request 2 is valid for the Build API
+    And the payload field "appVersionCode" equals "3" for request 2
 
-    And the request 10 is valid for the Build API
-    And the payload field "appVersionCode" equals "1" for request 10
+    And the request 3 is valid for the Build API
+    And the payload field "appVersionCode" equals "1" for request 3
 
-    And the request 9 is valid for the Build API
-    And the payload field "appVersionCode" equals "5" for request 9
+    And the request 4 is valid for the Build API
+    And the payload field "appVersionCode" equals "5" for request 4
 
-    And the request 8 is valid for the Build API
-    And the payload field "appVersionCode" equals "6" for request 8
+    And the request 5 is valid for the Build API
+    And the payload field "appVersionCode" equals "6" for request 5
 
-    And the request 7 is valid for the Build API
-    And the payload field "appVersionCode" equals "7" for request 7
-    And the payload field "appVersion" equals "1.0" for request 7
-    And the payload field "apiKey" equals "TEST_API_KEY" for request 7
+    And the request 6 is valid for the Build API
+    And the payload field "appVersionCode" equals "7" for request 6
+    And the payload field "appVersion" equals "1.0" for request 6
+    And the payload field "apiKey" equals "TEST_API_KEY" for request 6
 
-    And the request 6 is valid for the Android Mapping API
-    And the field "versionCode" for multipart request 6 equals "4"
+    And the request 7 is valid for the Android Mapping API
+    And the field "versionCode" for multipart request 7 equals "4"
 
-    And the request 5 is valid for the Android Mapping API
-    And the field "versionCode" for multipart request 5 equals "2"
+    And the request 8 is valid for the Android Mapping API
+    And the field "versionCode" for multipart request 8 equals "2"
 
-    And the request 4 is valid for the Android Mapping API
-    And the field "versionCode" for multipart request 4 equals "3"
+    And the request 9 is valid for the Android Mapping API
+    And the field "versionCode" for multipart request 9 equals "3"
 
-    And the request 3 is valid for the Android Mapping API
-    And the field "versionCode" for multipart request 3 equals "1"
+    And the request 10 is valid for the Android Mapping API
+    And the field "versionCode" for multipart request 10 equals "1"
 
-    And the request 2 is valid for the Android Mapping API
-    And the field "versionCode" for multipart request 2 equals "5"
+    And the request 11 is valid for the Android Mapping API
+    And the field "versionCode" for multipart request 11 equals "5"
 
-    And the request 1 is valid for the Android Mapping API
-    And the field "versionCode" for multipart request 1 equals "6"
+    And the request 12 is valid for the Android Mapping API
+    And the field "versionCode" for multipart request 12 equals "6"
 
-    And the request 0 is valid for the Android Mapping API
-    And the field "versionCode" for multipart request 0 equals "7"
-    And the field "apiKey" for multipart request 0 equals "TEST_API_KEY"
-    And the field "versionName" for multipart request 0 equals "1.0"
-    And the field "appId" for multipart request 0 equals "com.bugsnag.android.example"
+    And the request 13 is valid for the Android Mapping API
+    And the field "versionCode" for multipart request 13 equals "7"
+    And the field "apiKey" for multipart request 13 equals "TEST_API_KEY"
+    And the field "versionName" for multipart request 13 equals "1.0"
+    And the field "appId" for multipart request 13 equals "com.bugsnag.android.example"
 
 @skip_agp4_1_or_higher
 Scenario: Density Splits automatic upload disabled
@@ -58,6 +58,7 @@ Scenario: Density Splits automatic upload disabled
     Then I should receive no requests
 
 @skip_agp4_1_or_higher
+@skip_agp3_5
 Scenario: Density Splits manual upload of build API
     When I build the "Hdpi-release" variantOutput for "density_splits" using the "all_disabled" bugsnag config
     Then I should receive 1 request

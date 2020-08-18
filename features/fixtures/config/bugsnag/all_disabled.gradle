@@ -1,6 +1,8 @@
-project.afterEvaluate {
-    project.bugsnag.endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
-    project.bugsnag.releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
-    project.bugsnag.uploadJvmMappings = false
-    project.bugsnag.reportBuilds = false
+apply plugin: 'com.bugsnag.android.gradle'
+
+bugsnag {
+    endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+    releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+    uploadJvmMappings = false
+    reportBuilds = false
 }

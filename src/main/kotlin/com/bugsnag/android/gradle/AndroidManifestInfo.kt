@@ -9,11 +9,11 @@ import java.io.File
 
 @JsonClass(generateAdapter = true)
 data class AndroidManifestInfo(
-    var apiKey: String,
-    var versionCode: String,
-    var buildUUID: String?,
-    var versionName: String,
-    var applicationId: String
+    val apiKey: String,
+    val versionCode: String,
+    val buildUUID: String,
+    val versionName: String,
+    val applicationId: String
 ) {
     internal fun write(file: File) {
         file.sink().buffer().use {

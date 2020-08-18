@@ -3,6 +3,7 @@ package com.bugsnag.android.gradle
 import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.tasks.ManifestProcessorTask
+import com.bugsnag.android.gradle.internal.property
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
@@ -27,7 +28,7 @@ abstract class BaseBugsnagManifestUuidTask(objects: ObjectFactory) : DefaultTask
     }
 
     @get:Input
-    val buildUuid: Property<String> = objects.property(String::class.java)
+    val buildUuid: Property<String> = objects.property()
 
     @get:OutputFile
     val manifestInfoProvider: RegularFileProperty = objects.fileProperty()
@@ -49,6 +50,11 @@ abstract class BaseBugsnagManifestUuidTask(objects: ObjectFactory) : DefaultTask
  */
 open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) : BaseBugsnagManifestUuidTask(objects) {
 
+    companion object {
+        private const val ASSEMBLE_TASK = "assemble"
+        private const val BUNDLE_TASK = "bundle"
+    }
+
     @get:Internal
     internal lateinit var variantOutput: ApkVariantOutput
 
@@ -59,10 +65,10 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
     fun updateManifest() {
         val manifestPath = getManifestPaths(project, variant, variantOutput)
         if (manifestPath == null) {
-            project.logger.warn("Bugsnag: Failed to find manifest at $manifestPath for $variantOutput")
+            logger.warn("Bugsnag: Failed to find manifest at $manifestPath for $variantOutput")
         }
 
-        project.logger.info("Bugsnag: Updating manifest with build UUID: $manifestPath")
+        logger.info("Bugsnag: Updating manifest with build UUID: $manifestPath")
 
         // read the manifest information and store it for subsequent tasks
         val manifestParser = AndroidManifestParser()
@@ -89,25 +95,24 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
         val directoryBundle: File
         val manifestPaths = mutableListOf<File?>()
         var getMergedManifest = isRunningAssembleTask(project, variant, variantOutput)
-        var getBundleManifest = isRunningBundleTask(project, variant, variantOutput)
+        val getBundleManifest = isRunningBundleTask(project, variant, variantOutput)
 
-        // If the manifest location could not be reliably determined, attempt to get both
+        // If the manifest location could not be reliably determined, default to the assemble manifest
         if (!getMergedManifest && !getBundleManifest) {
             getMergedManifest = true
-            getBundleManifest = true
         }
         val processManifest = variantOutput.processManifestProvider.get()
         if (getMergedManifest) {
-            directoryMerged = getManifestOutputDir(processManifest, project)
+            directoryMerged = getManifestOutputDir(processManifest)
             if (directoryMerged != null) {
-                addManifestPath(manifestPaths, directoryMerged, project.logger, variantOutput)
+                addManifestPath(manifestPaths, directoryMerged, logger, variantOutput)
             }
         }
 
         // Attempt to get the bundle manifest directory if required
         if (getBundleManifest) {
             directoryBundle = resolveBundleManifestOutputDirectory(processManifest)
-            addManifestPath(manifestPaths, directoryBundle, project.logger, variantOutput)
+            addManifestPath(manifestPaths, directoryBundle, logger, variantOutput)
         }
         require(manifestPaths.size == 1) { "Unexpected number of manifest paths.$manifestPaths" }
         return manifestPaths[0]
@@ -116,31 +121,29 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
     private fun addManifestPath(manifestPaths: MutableList<File?>, directory: File, logger: Logger, variantOutput: ApkVariantOutput) {
         val manifestFile = Paths.get(directory.toString(), variantOutput.dirName, "AndroidManifest.xml").toFile()
         if (manifestFile.exists()) {
-            logger.info("Bugsnag: Found manifest at ${manifestFile}")
+            logger.info("Bugsnag: Found manifest at $manifestFile")
             manifestPaths.add(manifestFile)
         } else {
-            logger.info("Bugsnag: Failed to find manifest at ${manifestFile}")
+            logger.info("Bugsnag: Failed to find manifest at $manifestFile")
         }
     }
 
-    private fun getManifestOutputDir(processManifest: ManifestProcessorTask, project: Project): File? {
-        try {
+    private fun getManifestOutputDir(processManifest: ManifestProcessorTask): File? {
+        return try {
             val outputDir = processManifest.javaClass.getMethod("getManifestOutputDirectory").invoke(processManifest)
             if (outputDir is File) {
-                return outputDir
+                outputDir
             } else {
                 // gradle 4.7 introduced a provider API for lazy evaluation of properties,
                 // AGP subsequently changed the API from File to Provider<File>
                 // see https://docs.gradle.org/4.7/userguide/lazy_configuration.html
                 @Suppress("UNCHECKED_CAST") val dir = (outputDir as Provider<Directory?>).orNull
-                if (dir != null) {
-                    return dir.asFile
-                }
+                dir?.asFile
             }
         } catch (exc: Throwable) {
-            project.logger.warn("Bugsnag: failed to find manifestOutputDir", exc)
+            logger.warn("Bugsnag: failed to find manifestOutputDir", exc)
+            null
         }
-        return null
     }
 
     private fun resolveBundleManifestOutputDirectory(processManifest: ManifestProcessorTask): File {
@@ -159,7 +162,7 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
     private fun isRunningAssembleTask(project: Project,
                               variant: ApkVariant,
                               output: ApkVariantOutput): Boolean {
-        return isRunningTaskWithPrefix(project, variant, output, BugsnagPlugin.ASSEMBLE_TASK)
+        return isRunningTaskWithPrefix(project, variant, output, ASSEMBLE_TASK)
     }
 
     /**
@@ -168,7 +171,7 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
     private fun isRunningBundleTask(project: Project,
                             variant: ApkVariant,
                             output: ApkVariantOutput): Boolean {
-        return isRunningTaskWithPrefix(project, variant, output, BugsnagPlugin.BUNDLE_TASK)
+        return isRunningTaskWithPrefix(project, variant, output, BUNDLE_TASK)
     }
 
     /**
@@ -180,13 +183,42 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
                                         output: ApkVariantOutput,
                                         prefix: String): Boolean {
         val taskNames = HashSet<String>()
-        val plugin = project.plugins.getPlugin(BugsnagPlugin::class.java)
-        taskNames.addAll(plugin.findTaskNamesForPrefix(variant, output, prefix))
+        taskNames.addAll(findTaskNamesForPrefix(variant, output, prefix))
 
         return project.gradle.taskGraph.allTasks.any { task ->
             taskNames.any {
                 task.name.endsWith(it)
             }
         }
+    }
+
+
+
+    /**
+     * Finds all the task names which can be used to assemble a variant, and replaces 'assemble' with the given
+     * prefix.
+     *
+     * E.g. [bundle, bundleRelease, bundleFooRelease]
+     */
+    internal fun findTaskNamesForPrefix(variant: ApkVariant,
+        output: ApkVariantOutput,
+        prefix: String): Set<String> {
+        val variantName = output.name.split("-")[0].capitalize()
+        val assembleTask = variant.assembleProvider.orNull
+
+        val taskNames = HashSet<String>()
+        taskNames.add(prefix)
+
+        if (assembleTask != null) {
+            val assembleTaskName = assembleTask.name
+            val buildTypeTaskName = assembleTaskName.replace(variantName, "")
+            val buildType = buildTypeTaskName.replace(ASSEMBLE_TASK, "")
+            val variantTaskName = assembleTaskName.replace(buildType, "")
+
+            taskNames.add(assembleTaskName.replace(ASSEMBLE_TASK, prefix))
+            taskNames.add(buildTypeTaskName.replace(ASSEMBLE_TASK, prefix))
+            taskNames.add(variantTaskName.replace(ASSEMBLE_TASK, prefix))
+        }
+        return taskNames
     }
 }
