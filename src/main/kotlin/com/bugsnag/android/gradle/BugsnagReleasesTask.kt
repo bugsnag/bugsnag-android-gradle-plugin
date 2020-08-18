@@ -1,11 +1,12 @@
 package com.bugsnag.android.gradle
 
+import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.GradleVersions
 import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.bugsnag.android.gradle.internal.mapProperty
-import com.bugsnag.android.gradle.internal.newClient
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
+import com.bugsnag.android.gradle.internal.systemPropertyCompat
 import com.bugsnag.android.gradle.internal.versionNumber
 import com.squareup.moshi.JsonClass
 import okhttp3.OkHttpClient
@@ -18,6 +19,7 @@ import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -33,7 +35,6 @@ import org.gradle.process.ExecOperations
 import org.gradle.process.ExecResult
 import org.gradle.process.ExecSpec
 import org.gradle.process.internal.ExecException
-import org.gradle.util.VersionNumber
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -60,6 +61,9 @@ sealed class BugsnagReleasesTask(
 
     @get:Internal
     internal val uploadRequestClient: Property<UploadRequestClient> = objects.property()
+
+    @get:Internal
+    internal val httpClientHelper: Property<BugsnagHttpClientHelper> = objects.property()
 
     @get:PathSensitive(NONE)
     @get:InputFile
@@ -162,7 +166,7 @@ sealed class BugsnagReleasesTask(
         payload: ReleasePayload,
         manifestInfo: AndroidManifestInfo
     ): String {
-        val okHttpClient = newClient(timeoutMillis.get(), retryCount.get())
+        val okHttpClient = httpClientHelper.get().okHttpClient
         val bugsnagService = createService(okHttpClient)
 
         val response = try {
@@ -267,22 +271,12 @@ sealed class BugsnagReleasesTask(
     }
 
     internal fun configureMetadata() {
-        val gradleVersionNumber = gradleVersion.orNull?.let {
-            gradleVersion.set(it)
-            VersionNumber.parse(it)
-        }
+        gradleVersion.orNull?.let(gradleVersion::set)
         gitVersion.set(providerFactory.provider { runCmd(VCS_COMMAND, "--version") } )
-        if (gradleVersionNumber != null && gradleVersionNumber >= GradleVersions.VERSION_6_1)  {
-            osArch.set(providerFactory.systemProperty(MK_OS_ARCH) )
-            osName.set(providerFactory.systemProperty(MK_OS_NAME) )
-            osVersion.set(providerFactory.systemProperty(MK_OS_VERSION) )
-            javaVersion.set(providerFactory.systemProperty(MK_JAVA_VERSION))
-        } else {
-            osArch.set(providerFactory.provider { System.getProperty(MK_OS_ARCH) } )
-            osName.set(providerFactory.provider { System.getProperty(MK_OS_NAME) } )
-            osVersion.set(providerFactory.provider { System.getProperty(MK_OS_VERSION) } )
-            javaVersion.set(providerFactory.provider { System.getProperty(MK_JAVA_VERSION) })
-        }
+        osArch.set(providerFactory.systemPropertyCompat(MK_OS_ARCH) )
+        osName.set(providerFactory.systemPropertyCompat(MK_OS_NAME) )
+        osVersion.set(providerFactory.systemPropertyCompat(MK_OS_VERSION) )
+        javaVersion.set(providerFactory.systemPropertyCompat(MK_JAVA_VERSION))
     }
 
     companion object {
@@ -332,17 +326,22 @@ sealed class BugsnagReleasesTask(
         internal fun register(
             project: Project,
             name: String,
+            clientHelperProvider: Provider<out BugsnagHttpClientHelper>,
             configurationAction: BugsnagReleasesTask.() -> Unit
         ): TaskProvider<out BugsnagReleasesTask> {
+            val delegatingProvider: BugsnagReleasesTask.() -> Unit = {
+                httpClientHelper.set(clientHelperProvider)
+                configurationAction()
+            }
             return when {
               project.gradle.versionNumber() >= GradleVersions.VERSION_6 -> {
-                  project.tasks.register<BugsnagReleasesTaskGradle6Plus>(name, configurationAction)
+                  project.tasks.register<BugsnagReleasesTaskGradle6Plus>(name, delegatingProvider)
               }
               project.gradle.versionNumber() >= GradleVersions.VERSION_5_3 -> {
-                  project.tasks.register<BugsnagReleasesTaskGradle53Plus>(name, configurationAction)
+                  project.tasks.register<BugsnagReleasesTaskGradle53Plus>(name, delegatingProvider)
               }
               else -> {
-                  project.tasks.register<BugsnagReleasesTaskLegacy>(name, configurationAction)
+                  project.tasks.register<BugsnagReleasesTaskLegacy>(name, delegatingProvider)
               }
             }
         }

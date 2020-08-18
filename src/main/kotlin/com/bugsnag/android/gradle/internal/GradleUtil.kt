@@ -21,6 +21,8 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
+import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
@@ -157,8 +159,17 @@ internal fun AppExtension.hasMultipleOutputs(): Boolean {
 /**
  * Returns true if the DexGuard plugin has been applied to the project
  */
-fun Project.hasDexguardPlugin(): Boolean {
+internal fun Project.hasDexguardPlugin(): Boolean {
     return pluginManager.hasPlugin("dexguard")
+}
+
+/** Returns a String provider for a system property. */
+internal fun ProviderFactory.systemPropertyCompat(name: String): Provider<String> {
+    return if (gradle.versionNumber() >= GradleVersions.VERSION_6_1) {
+        providers.systemProperty(name)
+    } else {
+        provider { System.getProperty(name) }
+    }
 }
 
 /* Borrowed helper functions from the Gradle Kotlin DSL. */
@@ -173,7 +184,7 @@ fun Project.hasDexguardPlugin(): Boolean {
  * @see [ObjectFactory.newInstance]
  */
 @Suppress("SpreadOperator")
-inline fun <reified T : Any> ObjectFactory.newInstance(vararg parameters: Any): T =
+internal inline fun <reified T : Any> ObjectFactory.newInstance(vararg parameters: Any): T =
     newInstance(T::class.javaObjectType, *parameters)
 
 /**
