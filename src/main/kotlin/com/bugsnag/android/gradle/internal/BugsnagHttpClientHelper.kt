@@ -61,20 +61,18 @@ internal fun newClient(
 internal fun retryInterceptor(maxRetries: Int): Interceptor {
     return object : Interceptor {
         override fun intercept(chain: Interceptor.Chain): Response {
-            var response: Response? = null
-            var attempts = 1
-            var cause: Throwable? = null
-
-            while (response == null && maxRetries >= attempts) {
+            var attempts = 0
+            var cause: Throwable?
+            do {
                 try {
                     val request = chain.request()
-                    response = chain.proceed(request)
+                    return chain.proceed(request)
                 } catch (exc: Throwable) {
                     cause = exc
                 }
                 attempts++
-            }
-            return response ?: throw IllegalStateException("Bugsnag request failed to complete", cause)
+            } while (attempts < maxRetries)
+            throw IllegalStateException("Bugsnag request failed to complete", cause)
         }
     }
 }

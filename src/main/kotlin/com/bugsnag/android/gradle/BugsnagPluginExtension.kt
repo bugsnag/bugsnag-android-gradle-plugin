@@ -50,7 +50,7 @@ open class BugsnagPluginExtension(objects: ObjectFactory) {
         .convention(false)
 
     val retryCount: Property<Int> = objects.property<Int>()
-        .convention(1)
+        .convention(0)
 
     val sharedObjectPaths: ListProperty<File> = objects.listProperty<File>()
         .convention(emptyList())
