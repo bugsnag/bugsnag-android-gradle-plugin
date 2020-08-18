@@ -1,16 +1,33 @@
 package com.bugsnag.android.gradle.internal
 
+import com.bugsnag.android.gradle.BugsnagPluginExtension
 import com.bugsnag.android.gradle.internal.BuildServiceBugsnagHttpClientHelper.Params
+import okhttp3.Authenticator
+import okhttp3.Credentials
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.Response
+import okhttp3.Route
+import org.gradle.api.Project
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
+import java.net.InetSocketAddress
+import java.net.Proxy
 import java.time.Duration
 
-/** A simple API for providing a shared [OkHttpClient] instance for shared use in upload tasks. */
+private const val DEFAULT_PROXY_PORT = 80
+private const val KEY_PROXY_HOST = "http.proxyHost"
+private const val KEY_PROXY_PORT = "http.proxyPort"
+private const val KEY_PROXY_USER = "http.proxyUser"
+private const val KEY_PROXY_PASSWORD = "http.proxyPassword"
+
+/**
+ * A simple API for providing a shared [OkHttpClient] instance for shared use in upload tasks. This
+ * also handles common shared configuration such as timeouts, proxies, etc.
+ */
 interface BugsnagHttpClientHelper : AutoCloseable {
     val okHttpClient: OkHttpClient
 
@@ -19,33 +36,99 @@ interface BugsnagHttpClientHelper : AutoCloseable {
         okHttpClient.connectionPool.evictAll()
         okHttpClient.cache?.close()
     }
+
+    companion object {
+        fun create(
+            canUseBuildService: Boolean,
+            project: Project,
+            bugsnag: BugsnagPluginExtension
+        ): Provider<out BugsnagHttpClientHelper> {
+            val proxyHost = project.providers.systemPropertyCompat(KEY_PROXY_HOST)
+            val proxyPort = project.providers.systemPropertyCompat(KEY_PROXY_PORT)
+            val proxyUsername = project.providers.systemPropertyCompat(KEY_PROXY_USER)
+            val proxyPassword = project.providers.systemPropertyCompat(KEY_PROXY_PASSWORD)
+
+            return if (canUseBuildService) {
+                project.gradle.sharedServices.registerIfAbsent("bugsnagHttpClientHelper",
+                    BuildServiceBugsnagHttpClientHelper::class.java
+                ) { spec ->
+                    // Provide some parameters
+                    spec.parameters.timeoutMillis.set(bugsnag.requestTimeoutMs)
+                    spec.parameters.retryCount.set(bugsnag.retryCount)
+                    spec.parameters.proxyHost.set(proxyHost)
+                    spec.parameters.proxyPort.set(proxyPort)
+                    spec.parameters.proxyUsername.set(proxyUsername)
+                    spec.parameters.proxyPassword.set(proxyPassword)
+                }
+            } else {
+                // Reuse instance
+                val client = LegacyBugsnagHttpClientHelper(
+                    bugsnag.requestTimeoutMs,
+                    bugsnag.retryCount,
+                    proxyHost,
+                    proxyPort,
+                    proxyUsername,
+                    proxyPassword
+                )
+                project.provider { client }
+            }
+        }
+    }
 }
 
 /** A [BuildService] implementation of [BugsnagHttpClientHelper]. */
-abstract class BuildServiceBugsnagHttpClientHelper
+internal abstract class BuildServiceBugsnagHttpClientHelper
     : BuildService<Params>, BugsnagHttpClientHelper {
 
     interface Params : BuildServiceParameters {
         val timeoutMillis: Property<Long>
         val retryCount: Property<Int>
+        val proxyHost: Property<String>
+        val proxyPort: Property<String>
+        val proxyUsername: Property<String>
+        val proxyPassword: Property<String>
     }
 
     override val okHttpClient: OkHttpClient by lazy {
-        newClient(parameters.timeoutMillis.get(), parameters.retryCount.get())
+        newClient(
+            parameters.timeoutMillis.get(),
+            parameters.retryCount.get(),
+            parameters.proxyHost.orNull,
+            parameters.proxyPort.map { it.toInt() }.getOrElse(DEFAULT_PROXY_PORT),
+            parameters.proxyUsername.orNull,
+            parameters.proxyPassword.orNull
+        )
     }
 }
 
 /** A simple instance-based [BugsnagHttpClientHelper] for use on Gradle <6.1. */
-class LegacyBugsnagHttpClientHelper(
+internal class LegacyBugsnagHttpClientHelper(
     timeoutMillis: Provider<Long>,
-    retryCount: Provider<Int>
+    retryCount: Provider<Int>,
+    proxyHost: Provider<String>,
+    proxyPort: Provider<String>,
+    proxyUsername: Provider<String>,
+    proxyPassword: Provider<String>
 ) : BugsnagHttpClientHelper {
-    override val okHttpClient: OkHttpClient by lazy { newClient(timeoutMillis.get(), retryCount.get()) }
+    override val okHttpClient: OkHttpClient by lazy {
+        newClient(
+            timeoutMillis.get(),
+            retryCount.get(),
+            proxyHost.orNull,
+            proxyPort.map { it.toInt() }.getOrElse(DEFAULT_PROXY_PORT),
+            proxyUsername.orNull,
+            proxyPassword.orNull
+        )
+    }
 }
 
-internal fun newClient(
+private fun newClient(
     timeoutMillis: Long,
-    retryCount: Int
+    retryCount: Int,
+    proxyHost: String?,
+    proxyPort: Int,
+    proxyUsername: String?,
+    proxyPassword: String?
 ): OkHttpClient {
     val timeoutDuration = Duration.ofMillis(timeoutMillis)
     val interceptor = retryInterceptor(retryCount)
@@ -55,10 +138,26 @@ internal fun newClient(
         .connectTimeout(Duration.ZERO)
         .callTimeout(timeoutDuration)
         .addInterceptor(interceptor)
+        .apply {
+            if (proxyHost != null) {
+                proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
+                if (proxyUsername != null && proxyPassword != null) {
+                    val auth = object : Authenticator {
+                        override fun authenticate(route: Route?, response: Response): Request? {
+                            val credential: String = Credentials.basic(proxyUsername, proxyPassword)
+                            return response.request.newBuilder()
+                                .header("Proxy-Authorization", credential)
+                                .build()
+                        }
+                    }
+                    proxyAuthenticator(auth)
+                }
+            }
+        }
         .build()
 }
 
-internal fun retryInterceptor(maxRetries: Int): Interceptor {
+private fun retryInterceptor(maxRetries: Int): Interceptor {
     return object : Interceptor {
         override fun intercept(chain: Interceptor.Chain): Response {
             var attempts = 0
