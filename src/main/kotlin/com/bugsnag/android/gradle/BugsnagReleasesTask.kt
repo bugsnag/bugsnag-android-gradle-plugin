@@ -34,6 +34,7 @@ import org.gradle.process.ExecOperations
 import org.gradle.process.ExecResult
 import org.gradle.process.ExecSpec
 import org.gradle.process.internal.ExecException
+import org.gradle.util.VersionNumber
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -270,12 +271,15 @@ sealed class BugsnagReleasesTask(
     }
 
     internal fun configureMetadata() {
-        gradleVersion.orNull?.let(gradleVersion::set)
+        val gradleVersionNumber = gradleVersion.orNull?.let {
+            gradleVersion.set(it)
+            VersionNumber.parse(it)
+        }
         gitVersion.set(providerFactory.provider { runCmd(VCS_COMMAND, "--version") } )
-        osArch.set(providerFactory.systemPropertyCompat(MK_OS_ARCH) )
-        osName.set(providerFactory.systemPropertyCompat(MK_OS_NAME) )
-        osVersion.set(providerFactory.systemPropertyCompat(MK_OS_VERSION) )
-        javaVersion.set(providerFactory.systemPropertyCompat(MK_JAVA_VERSION))
+        osArch.set(providerFactory.systemPropertyCompat(MK_OS_ARCH, gradleVersionNumber) )
+        osName.set(providerFactory.systemPropertyCompat(MK_OS_NAME, gradleVersionNumber) )
+        osVersion.set(providerFactory.systemPropertyCompat(MK_OS_VERSION, gradleVersionNumber) )
+        javaVersion.set(providerFactory.systemPropertyCompat(MK_JAVA_VERSION, gradleVersionNumber))
     }
 
     companion object {

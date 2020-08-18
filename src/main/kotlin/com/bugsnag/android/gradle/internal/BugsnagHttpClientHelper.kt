@@ -42,10 +42,12 @@ interface BugsnagHttpClientHelper : AutoCloseable {
             project: Project,
             bugsnag: BugsnagPluginExtension
         ): Provider<out BugsnagHttpClientHelper> {
-            val proxyHost = project.providers.systemPropertyCompat(KEY_PROXY_HOST)
-            val proxyPort = project.providers.systemPropertyCompat(KEY_PROXY_PORT)
-            val proxyUsername = project.providers.systemPropertyCompat(KEY_PROXY_USER)
-            val proxyPassword = project.providers.systemPropertyCompat(KEY_PROXY_PASSWORD)
+            val gradleVersion = project.gradle.versionNumber()
+            val providers = project.providers
+            val proxyHost = providers.systemPropertyCompat(KEY_PROXY_HOST, gradleVersion)
+            val proxyPort = providers.systemPropertyCompat(KEY_PROXY_PORT, gradleVersion)
+            val proxyUsername = providers.systemPropertyCompat(KEY_PROXY_USER, gradleVersion)
+            val proxyPassword = providers.systemPropertyCompat(KEY_PROXY_PASSWORD, gradleVersion)
 
             val canUseBuildService = project.gradle.versionNumber() >= GradleVersions.VERSION_6_1
             return if (canUseBuildService) {
