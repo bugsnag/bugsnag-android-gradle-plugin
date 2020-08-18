@@ -122,6 +122,7 @@ internal class LegacyBugsnagHttpClientHelper(
     }
 }
 
+@Suppress("LongParameterList")
 private fun newClient(
     timeoutMillis: Long,
     retryCount: Int,
