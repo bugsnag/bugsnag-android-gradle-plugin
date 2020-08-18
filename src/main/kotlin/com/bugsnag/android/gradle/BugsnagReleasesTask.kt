@@ -19,7 +19,6 @@ import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -326,22 +325,17 @@ sealed class BugsnagReleasesTask(
         internal fun register(
             project: Project,
             name: String,
-            clientHelperProvider: Provider<out BugsnagHttpClientHelper>,
             configurationAction: BugsnagReleasesTask.() -> Unit
         ): TaskProvider<out BugsnagReleasesTask> {
-            val delegatingProvider: BugsnagReleasesTask.() -> Unit = {
-                httpClientHelper.set(clientHelperProvider)
-                configurationAction()
-            }
             return when {
               project.gradle.versionNumber() >= GradleVersions.VERSION_6 -> {
-                  project.tasks.register<BugsnagReleasesTaskGradle6Plus>(name, delegatingProvider)
+                  project.tasks.register<BugsnagReleasesTaskGradle6Plus>(name, configurationAction)
               }
               project.gradle.versionNumber() >= GradleVersions.VERSION_5_3 -> {
-                  project.tasks.register<BugsnagReleasesTaskGradle53Plus>(name, delegatingProvider)
+                  project.tasks.register<BugsnagReleasesTaskGradle53Plus>(name, configurationAction)
               }
               else -> {
-                  project.tasks.register<BugsnagReleasesTaskLegacy>(name, delegatingProvider)
+                  project.tasks.register<BugsnagReleasesTaskLegacy>(name, configurationAction)
               }
             }
         }

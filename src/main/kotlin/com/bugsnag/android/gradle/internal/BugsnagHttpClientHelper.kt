@@ -39,7 +39,6 @@ interface BugsnagHttpClientHelper : AutoCloseable {
 
     companion object {
         fun create(
-            canUseBuildService: Boolean,
             project: Project,
             bugsnag: BugsnagPluginExtension
         ): Provider<out BugsnagHttpClientHelper> {
@@ -48,6 +47,7 @@ interface BugsnagHttpClientHelper : AutoCloseable {
             val proxyUsername = project.providers.systemPropertyCompat(KEY_PROXY_USER)
             val proxyPassword = project.providers.systemPropertyCompat(KEY_PROXY_PASSWORD)
 
+            val canUseBuildService = project.gradle.versionNumber() >= GradleVersions.VERSION_6_1
             return if (canUseBuildService) {
                 project.gradle.sharedServices.registerIfAbsent("bugsnagHttpClientHelper",
                     BuildServiceBugsnagHttpClientHelper::class.java
