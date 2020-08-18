@@ -164,9 +164,12 @@ internal fun Project.hasDexguardPlugin(): Boolean {
 }
 
 /** Returns a String provider for a system property. */
-internal fun ProviderFactory.systemPropertyCompat(name: String): Provider<String> {
-    return if (gradle.versionNumber() >= GradleVersions.VERSION_6_1) {
-        providers.systemProperty(name)
+internal fun ProviderFactory.systemPropertyCompat(
+    name: String,
+    gradleVersion: VersionNumber?
+): Provider<String> {
+    return if (gradleVersion != null && gradleVersion >= GradleVersions.VERSION_6_1) {
+        systemProperty(name)
     } else {
         provider { System.getProperty(name) }
     }
