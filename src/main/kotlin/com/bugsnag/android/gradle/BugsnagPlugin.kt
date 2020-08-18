@@ -65,10 +65,11 @@ class BugsnagPlugin : Plugin<Project> {
                 ) { spec ->
                     // Provide some parameters
                     spec.parameters.timeoutMillis.set(bugsnag.requestTimeoutMs)
+                    spec.parameters.retryCount.set(bugsnag.retryCount)
                 }
             } else {
                 // Reuse instance
-                val client = LegacyBugsnagHttpClientHelper(bugsnag.requestTimeoutMs)
+                val client = LegacyBugsnagHttpClientHelper(bugsnag.requestTimeoutMs, bugsnag.retryCount)
                 project.provider { client }
             }
 
@@ -359,6 +360,7 @@ class BugsnagPlugin : Plugin<Project> {
             this.requestOutputFile.set(requestOutputFile)
             retryCount.set(bugsnag.retryCount)
             timeoutMillis.set(bugsnag.requestTimeoutMs)
+            failOnUploadError.set(bugsnag.failOnUploadError)
             releasesEndpoint.set(bugsnag.releasesEndpoint)
             sourceControlProvider.set(bugsnag.sourceControl.provider)
             sourceControlRepository.set(bugsnag.sourceControl.repository)

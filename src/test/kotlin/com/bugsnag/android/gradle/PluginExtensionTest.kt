@@ -37,7 +37,7 @@ class PluginExtensionTest {
             assertEquals("https://build.bugsnag.com", releasesEndpoint.get())
             assertTrue(reportBuilds.get())
             assertEquals(60000, requestTimeoutMs.get())
-            assertEquals(0, retryCount.get())
+            assertEquals(1, retryCount.get())
             assertEquals(emptyList<File>(), sharedObjectPaths.get())
             assertFalse(uploadDebugBuildMappings.get())
             assertTrue(uploadJvmMappings.get())

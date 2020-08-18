@@ -27,6 +27,7 @@ Deduplicate unnecessary upload requests for APK splits
 Switch to OkHttp for networking
 [#247](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/247)
 [#268](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/268)
+[#269](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/266)
 
 Specify shared object files as input for ndk task
 [#243](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/243)
