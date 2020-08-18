@@ -46,7 +46,6 @@ import retrofit2.http.Url
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.nio.charset.Charset
-import java.time.Duration
 import javax.inject.Inject
 
 sealed class BugsnagReleasesTask(
@@ -85,6 +84,9 @@ sealed class BugsnagReleasesTask(
 
     @get:Input
     val timeoutMillis: Property<Long> = objects.property()
+
+    @get:Input
+    val failOnUploadError: Property<Boolean> = objects.property()
 
     @get:Input
     val releasesEndpoint: Property<String> = objects.property()
@@ -142,15 +144,14 @@ sealed class BugsnagReleasesTask(
 
         val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, payload.hashCode()) {
             logger.lifecycle("Bugsnag: Attempting upload to Releases API")
-            lateinit var response: String
-            object : Call(retryCount, logger) {
-                override fun makeApiCall(): Boolean {
-                    response = deliverPayload(payload, manifestInfo)
-                    requestOutputFile.asFile.get().writeText(response)
-                    logger.lifecycle("Bugsnag: Upload succeeded")
-                    return true
+            val response = try {
+                deliverPayload(payload, manifestInfo)
+            } catch (exc: Throwable) {
+                when {
+                    failOnUploadError.get() -> throw exc
+                    else -> "Failure"
                 }
-            }.execute()
+            }
             response
         }
         requestOutputFile.asFile.get().writeText(response)
@@ -161,7 +162,7 @@ sealed class BugsnagReleasesTask(
         payload: ReleasePayload,
         manifestInfo: AndroidManifestInfo
     ): String {
-        val okHttpClient = newClient(timeoutMillis.get())
+        val okHttpClient = newClient(timeoutMillis.get(), retryCount.get())
         val bugsnagService = createService(okHttpClient)
 
         val response = try {
