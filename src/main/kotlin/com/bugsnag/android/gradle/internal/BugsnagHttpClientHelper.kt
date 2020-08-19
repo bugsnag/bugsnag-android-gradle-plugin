@@ -11,7 +11,6 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
-import java.net.ProxySelector
 import java.time.Duration
 
 /**
@@ -96,7 +95,6 @@ private fun newClient(
         .connectTimeout(Duration.ZERO)
         .callTimeout(timeoutDuration)
         .addInterceptor(interceptor)
-        .proxySelector(ProxySelector.getDefault())
         .proxyAuthenticator(Authenticator.JAVA_NET_AUTHENTICATOR)
         .build()
 }
