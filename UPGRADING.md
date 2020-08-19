@@ -6,6 +6,12 @@ Upgrade from 4.X to 5.X
 
 This release contains **breaking changes**.
 
+```groovy
+dependencies {
+    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:5.x.x'
+}
+```
+
 ### Minimum requirements
 
 The plugin now requires a Gradle wrapper >= 5.1.1, Android Gradle Plugin >= 3.4.0, and JDK >= 8.
@@ -33,16 +39,16 @@ bugsnag {
 </application>
 ```
 
-#### Renamed properties on `bugsnag` plugin extension
+#### Changed properties on `bugsnag` plugin extension
 The following properties have been renamed on the bugsnag plugin extension
 to better reflect their purpose:
 
 ```groovy
 // old API
 bugsnag {
-    autoUpload = false
-    ndk = false
-    autoReportBuilds = false
+    autoUpload false
+    ndk false
+    autoReportBuilds false
 }
 ```
 
@@ -52,6 +58,40 @@ bugsnag {
     uploadJvmMappings = false
     uploadNdkMappings = false
     reportBuilds = false
+}
+```
+
+The `sharedObjectPath` property has been renamed to `sharedObjectPaths` and changed to a `List`:
+
+```groovy
+// old API
+bugsnag {
+    sharedObjectPath = "app/build/jni/libs"
+}
+```
+
+```groovy
+// new API
+bugsnag {
+    sharedObjectPaths = [
+        "app/build/jni/libs"
+    ]
+}
+```
+
+The `requestTimeoutMs` property has been changed to a `Long`:
+
+```groovy
+// old API
+bugsnag {
+    requestTimeoutMs 5000
+}
+```
+
+```groovy
+// new API
+bugsnag {
+    requestTimeoutMs = 5000L
 }
 ```
 
@@ -135,8 +175,8 @@ bugsnag {
 
 #### `BugsnagProguardConfigTask` removed
 
-The `BugsnagProguardConfigTask` has been removed from the plugin. This task is no longer
-required because consumer proguard rules are shipped with the bugsnag-android AARs.
+The `BugsnagProguardConfigTask` has been removed from the plugin, along with the `autoProguardConfig` property. 
+This task is no longer required because consumer proguard rules are shipped with the bugsnag-android AARs.
 
 Upgrade from 3.X to 4.X
 -----------------------
@@ -145,6 +185,6 @@ This release removes support for the [Jack compiler](https://android-developers.
 
 ```groovy
 dependencies {
-    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:4.+'
+    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:4.x.x'
 }
 ```
