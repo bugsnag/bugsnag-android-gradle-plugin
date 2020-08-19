@@ -3,26 +3,16 @@ package com.bugsnag.android.gradle.internal
 import com.bugsnag.android.gradle.BugsnagPluginExtension
 import com.bugsnag.android.gradle.internal.BuildServiceBugsnagHttpClientHelper.Params
 import okhttp3.Authenticator
-import okhttp3.Credentials
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import okhttp3.Response
-import okhttp3.Route
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
-import java.net.InetSocketAddress
-import java.net.Proxy
+import java.net.ProxySelector
 import java.time.Duration
-
-private const val DEFAULT_PROXY_PORT = 80
-private const val KEY_PROXY_HOST = "http.proxyHost"
-private const val KEY_PROXY_PORT = "http.proxyPort"
-private const val KEY_PROXY_USER = "http.proxyUser"
-private const val KEY_PROXY_PASSWORD = "http.proxyPassword"
 
 /**
  * A simple API for providing a shared [OkHttpClient] instance for shared use in upload tasks. This
@@ -42,13 +32,6 @@ interface BugsnagHttpClientHelper : AutoCloseable {
             project: Project,
             bugsnag: BugsnagPluginExtension
         ): Provider<out BugsnagHttpClientHelper> {
-            val gradleVersion = project.gradle.versionNumber()
-            val providers = project.providers
-            val proxyHost = providers.systemPropertyCompat(KEY_PROXY_HOST, gradleVersion)
-            val proxyPort = providers.systemPropertyCompat(KEY_PROXY_PORT, gradleVersion)
-            val proxyUsername = providers.systemPropertyCompat(KEY_PROXY_USER, gradleVersion)
-            val proxyPassword = providers.systemPropertyCompat(KEY_PROXY_PASSWORD, gradleVersion)
-
             val canUseBuildService = project.gradle.versionNumber() >= GradleVersions.VERSION_6_1
             return if (canUseBuildService) {
                 project.gradle.sharedServices.registerIfAbsent("bugsnagHttpClientHelper",
@@ -57,20 +40,12 @@ interface BugsnagHttpClientHelper : AutoCloseable {
                     // Provide some parameters
                     spec.parameters.timeoutMillis.set(bugsnag.requestTimeoutMs)
                     spec.parameters.retryCount.set(bugsnag.retryCount)
-                    spec.parameters.proxyHost.set(proxyHost)
-                    spec.parameters.proxyPort.set(proxyPort)
-                    spec.parameters.proxyUsername.set(proxyUsername)
-                    spec.parameters.proxyPassword.set(proxyPassword)
                 }
             } else {
                 // Reuse instance
                 val client = LegacyBugsnagHttpClientHelper(
                     bugsnag.requestTimeoutMs,
-                    bugsnag.retryCount,
-                    proxyHost,
-                    proxyPort,
-                    proxyUsername,
-                    proxyPassword
+                    bugsnag.retryCount
                 )
                 project.provider { client }
             }
@@ -85,20 +60,12 @@ internal abstract class BuildServiceBugsnagHttpClientHelper
     interface Params : BuildServiceParameters {
         val timeoutMillis: Property<Long>
         val retryCount: Property<Int>
-        val proxyHost: Property<String>
-        val proxyPort: Property<String>
-        val proxyUsername: Property<String>
-        val proxyPassword: Property<String>
     }
 
     override val okHttpClient: OkHttpClient by lazy {
         newClient(
             parameters.timeoutMillis.get(),
-            parameters.retryCount.get(),
-            parameters.proxyHost.orNull,
-            parameters.proxyPort.map { it.toInt() }.getOrElse(DEFAULT_PROXY_PORT),
-            parameters.proxyUsername.orNull,
-            parameters.proxyPassword.orNull
+            parameters.retryCount.get()
         )
     }
 }
@@ -106,20 +73,12 @@ internal abstract class BuildServiceBugsnagHttpClientHelper
 /** A simple instance-based [BugsnagHttpClientHelper] for use on Gradle <6.1. */
 internal class LegacyBugsnagHttpClientHelper(
     timeoutMillis: Provider<Long>,
-    retryCount: Provider<Int>,
-    proxyHost: Provider<String>,
-    proxyPort: Provider<String>,
-    proxyUsername: Provider<String>,
-    proxyPassword: Provider<String>
+    retryCount: Provider<Int>
 ) : BugsnagHttpClientHelper {
     override val okHttpClient: OkHttpClient by lazy {
         newClient(
             timeoutMillis.get(),
-            retryCount.get(),
-            proxyHost.orNull,
-            proxyPort.map { it.toInt() }.getOrElse(DEFAULT_PROXY_PORT),
-            proxyUsername.orNull,
-            proxyPassword.orNull
+            retryCount.get()
         )
     }
 }
@@ -127,11 +86,7 @@ internal class LegacyBugsnagHttpClientHelper(
 @Suppress("LongParameterList")
 private fun newClient(
     timeoutMillis: Long,
-    retryCount: Int,
-    proxyHost: String?,
-    proxyPort: Int,
-    proxyUsername: String?,
-    proxyPassword: String?
+    retryCount: Int
 ): OkHttpClient {
     val timeoutDuration = Duration.ofMillis(timeoutMillis)
     val interceptor = retryInterceptor(retryCount)
@@ -141,22 +96,8 @@ private fun newClient(
         .connectTimeout(Duration.ZERO)
         .callTimeout(timeoutDuration)
         .addInterceptor(interceptor)
-        .apply {
-            if (proxyHost != null) {
-                proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
-                if (proxyUsername != null && proxyPassword != null) {
-                    val auth = object : Authenticator {
-                        override fun authenticate(route: Route?, response: Response): Request? {
-                            val credential: String = Credentials.basic(proxyUsername, proxyPassword)
-                            return response.request.newBuilder()
-                                .header("Proxy-Authorization", credential)
-                                .build()
-                        }
-                    }
-                    proxyAuthenticator(auth)
-                }
-            }
-        }
+        .proxySelector(ProxySelector.getDefault())
+        .proxyAuthenticator(Authenticator.JAVA_NET_AUTHENTICATOR)
         .build()
 }
 
