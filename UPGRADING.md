@@ -6,6 +6,12 @@ Upgrade from 4.X to 5.X
 
 This release contains **breaking changes**.
 
+```groovy
+dependencies {
+    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:5.+'
+}
+```
+
 ### Minimum requirements
 
 The plugin now requires a Gradle wrapper >= 5.1.1, Android Gradle Plugin >= 3.4.0, and JDK >= 8.
@@ -40,9 +46,9 @@ to better reflect their purpose:
 ```groovy
 // old API
 bugsnag {
-    autoUpload = false
-    ndk = false
-    autoReportBuilds = false
+    autoUpload false
+    ndk false
+    autoReportBuilds false
 }
 ```
 
@@ -52,6 +58,24 @@ bugsnag {
     uploadJvmMappings = false
     uploadNdkMappings = false
     reportBuilds = false
+}
+```
+
+The `sharedObjectPath` property has also been renamed to `sharedObjectPathss` and changed to a `List`:
+
+```groovy
+// old API
+bugsnag {
+    sharedObjectPath = "app/build/jni/libs"
+}
+```
+
+```groovy
+// new API
+bugsnag {
+    sharedObjectPaths = [
+        "app/build/jni/libs"
+    ]
 }
 ```
 
