@@ -8,7 +8,7 @@ This release contains **breaking changes**.
 
 ```groovy
 dependencies {
-    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:5.+'
+    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:5.x.x'
 }
 ```
 
@@ -185,6 +185,6 @@ This release removes support for the [Jack compiler](https://android-developers.
 
 ```groovy
 dependencies {
-    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:4.+'
+    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:4.x.x'
 }
 ```
