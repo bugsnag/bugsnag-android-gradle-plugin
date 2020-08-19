@@ -39,7 +39,7 @@ bugsnag {
 </application>
 ```
 
-#### Renamed properties on `bugsnag` plugin extension
+#### Changed properties on `bugsnag` plugin extension
 The following properties have been renamed on the bugsnag plugin extension
 to better reflect their purpose:
 
@@ -61,7 +61,7 @@ bugsnag {
 }
 ```
 
-The `sharedObjectPath` property has also been renamed to `sharedObjectPathss` and changed to a `List`:
+The `sharedObjectPath` property has been renamed to `sharedObjectPaths` and changed to a `List`:
 
 ```groovy
 // old API
@@ -76,6 +76,22 @@ bugsnag {
     sharedObjectPaths = [
         "app/build/jni/libs"
     ]
+}
+```
+
+The `requestTimeoutMs` property has been changed to a `Long`:
+
+```groovy
+// old API
+bugsnag {
+    requestTimeoutMs 5000
+}
+```
+
+```groovy
+// new API
+bugsnag {
+    requestTimeoutMs = 5000L
 }
 ```
 
@@ -159,8 +175,8 @@ bugsnag {
 
 #### `BugsnagProguardConfigTask` removed
 
-The `BugsnagProguardConfigTask` has been removed from the plugin. This task is no longer
-required because consumer proguard rules are shipped with the bugsnag-android AARs.
+The `BugsnagProguardConfigTask` has been removed from the plugin, along with the `autoProguardConfig` property. 
+This task is no longer required because consumer proguard rules are shipped with the bugsnag-android AARs.
 
 Upgrade from 3.X to 4.X
 -----------------------
