@@ -1,5 +1,6 @@
 Feature: Plugin integrated in project with Density + ABI APK splits
 
+@skip_agp4_1_or_higher
 Scenario: Density ABI Splits project builds successfully
     When I build "density_abi_splits" using the "standard" bugsnag config
     Then I should receive 26 requests
@@ -82,10 +83,13 @@ Scenario: Density ABI Splits project builds successfully
     And the request 25 is valid for the Android Mapping API
     And the field "versionCode" for multipart request 25 equals "53"
 
+@skip_agp4_1_or_higher
 Scenario: Density ABI Splits automatic upload disabled
     When I build "density_abi_splits" using the "all_disabled" bugsnag config
     Then I should receive no requests
 
+@skip_agp4_1_or_higher
+@skip_agp3_5
 Scenario: Density ABI Splits manual upload of build API
     When I build the "XxxhdpiArmeabi-release" variantOutput for "density_abi_splits" using the "all_disabled" bugsnag config
     Then I should receive 1 request

@@ -1,5 +1,6 @@
 Feature: Generating Android app bundles
 
+@skip_agp3_5
 Scenario: Single-module default app bundles successfully
     When I bundle "default_app" using the "standard" bugsnag config
     Then I should receive 2 requests
@@ -28,6 +29,7 @@ Scenario: Single-module default app bundles successfully
     And the field "appId" for multipart request 1 equals "com.bugsnag.android.example"
     And the field "overwrite" for multipart request 1 is null
 
+@skip_agp3_5
 Scenario: Bundling multiple flavors automatically
     When I bundle "flavors" using the "standard" bugsnag config
     Then I should receive 4 requests
@@ -37,16 +39,16 @@ Scenario: Bundling multiple flavors automatically
     And the payload field "apiKey" equals "TEST_API_KEY" for request 0
     And the payload field "appVersionCode" equals "1" for request 0
 
-    And the request 1 is valid for the Build API
-    And the payload field "appVersion" equals "1.0" for request 1
-    And the payload field "apiKey" equals "TEST_API_KEY" for request 1
-    And the payload field "appVersionCode" equals "1" for request 1
+    And the request 2 is valid for the Build API
+    And the payload field "appVersion" equals "1.0" for request 2
+    And the payload field "apiKey" equals "TEST_API_KEY" for request 2
+    And the payload field "appVersionCode" equals "1" for request 2
 
-    And the request 2 is valid for the Android Mapping API
-    And the field "apiKey" for multipart request 2 equals "TEST_API_KEY"
-    And the field "versionCode" for multipart request 2 equals "1"
-    And the field "versionName" for multipart request 2 equals "1.0"
-    And the field "appId" for multipart request 2 equals "com.bugsnag.android.example.bar"
+    And the request 1 is valid for the Android Mapping API
+    And the field "apiKey" for multipart request 1 equals "TEST_API_KEY"
+    And the field "versionCode" for multipart request 1 equals "1"
+    And the field "versionName" for multipart request 1 equals "1.0"
+    And the field "appId" for multipart request 1 equals "com.bugsnag.android.example.bar"
 
     And the request 3 is valid for the Android Mapping API
     And the field "apiKey" for multipart request 3 equals "TEST_API_KEY"

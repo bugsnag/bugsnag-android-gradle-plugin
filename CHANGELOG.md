@@ -1,3 +1,73 @@
+## 5.0.0 (2020-08-20)
+
+This release contains **breaking changes**. It contains numerous performance
+improvements compared to previous versions of the plugin, such as:
+
+- Supporting [up-to-date checks](https://docs.gradle.org/current/userguide/more_about_tasks.html#sec:up_to_date_checks)
+- Supporting [task configuration avoidance](https://docs.gradle.org/current/userguide/task_configuration_avoidance.html)
+- Supporting the [configuration cache](https://docs.gradle.org/current/userguide/configuration_cache.html)
+- Avoidance of unnecessary work
+
+See the [Upgrade Guide](./UPGRADING.md) for migration instructions.
+
+### Changes
+
+Support configuration caching
+[#257](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/257)
+
+Change how bugsnag plugin is disabled for build variants
+[#255](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/255)
+
+Convert plugin extension to use property syntax
+[#251](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/251)
+
+Deduplicate unnecessary upload requests for APK splits
+[#248](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/248)
+
+Switch to OkHttp for networking
+[#247](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/247)
+[#268](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/268)
+[#269](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/266)
+
+Specify shared object files as input for ndk task
+[#243](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/243)
+
+Make upload tasks support up-to-date checks
+[#239](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/239)
+
+Avoid unnecessary SO mapping file uploads for ABI splits
+[#238](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/238)
+
+Alter bugsnag extension to allow multiple shared object paths
+[#237](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/237)
+
+Support for manifest processing in AGP 4.1.0-alpha04 and above
+[#234](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/234)
+[#236](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/236)
+[#240](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/240)
+
+Alter bugsnag tasks to support the Incremental Build API
+[#230](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/230)
+
+Rename properties on bugsnag extension that control request autoUpload
+[#231](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/231)
+
+Bump supported JDK version to 8
+[#224](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/224)
+
+Use register() rather than create() for adding tasks
+[#221](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/221)
+[#227](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/227)
+
+Remove unused BugsnagProguardConfigTask
+[#209](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/209)
+
+Make AGP dependency compile only
+[#211](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/211)
+
+Remove apiKey property from bugsnag plugin extension
+[#210](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/210)
+
 ## 4.7.5 (2020-05-18)
 
 Add compatibility with AGP 4.0 by using the `mappingFileProvider` API when possible

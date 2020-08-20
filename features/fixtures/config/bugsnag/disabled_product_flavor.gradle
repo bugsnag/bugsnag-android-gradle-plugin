@@ -1,0 +1,13 @@
+apply plugin: 'com.bugsnag.android.gradle'
+
+bugsnag {
+    endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+    releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+
+    // disable bugsnag plugin for 'foo' productFlavor
+    variantFilter { variant ->
+        if (variant.name.toLowerCase().contains("foo")) {
+            enabled = false
+        }
+    }
+}

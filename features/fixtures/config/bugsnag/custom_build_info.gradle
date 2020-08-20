@@ -1,0 +1,18 @@
+apply plugin: 'com.bugsnag.android.gradle'
+
+bugsnag {
+    endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+    releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+    uploadJvmMappings = false
+
+    builderName = "Mark Twain"
+    sourceControl.provider = "bitbucket"
+    sourceControl.repository = "https://example.com/bar/foo.git"
+    sourceControl.revision = "fab8721"
+
+    def map = new HashMap()
+    map.put("MyKey", "MyValue")
+    map.put("os_version", "BeOS")
+    metadata = map
+
+}

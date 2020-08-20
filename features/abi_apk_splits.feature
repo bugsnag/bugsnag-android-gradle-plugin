@@ -1,5 +1,6 @@
 Feature: Plugin integrated in project with ABI APK splits
 
+@skip_agp4_1_or_higher
 Scenario: ABI Splits project builds successfully
     When I build "abi_splits" using the "standard" bugsnag config
     Then I should receive 16 requests
@@ -57,10 +58,13 @@ Scenario: ABI Splits project builds successfully
     And the field "versionName" for multipart request 15 equals "1.0"
     And the field "appId" for multipart request 15 equals "com.bugsnag.android.example"
 
+@skip_agp4_1_or_higher
 Scenario: ABI Splits automatic upload disabled
     When I build "abi_splits" using the "all_disabled" bugsnag config
     Then I should receive no requests
 
+@skip_agp4_1_or_higher
+@skip_agp3_5
 Scenario: ABI Splits manual upload of build API
     When I build the "Armeabi-release" variantOutput for "abi_splits" using the "all_disabled" bugsnag config
     Then I should receive 1 request

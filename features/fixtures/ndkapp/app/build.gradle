@@ -1,11 +1,15 @@
 apply plugin: 'com.android.application'
 
+ext.abiCodes = ['arm64-v8a':2, 'armeabi-v7a':3, 'x86':4, 'x86_64':5]
+
 android {
-    compileSdkVersion 26
+    compileSdkVersion 29
+    ndkVersion "16.1.4479499"
+
     defaultConfig {
         applicationId "com.bugsnag.android.ndkapp"
         minSdkVersion 14
-        targetSdkVersion 26
+        targetSdkVersion 29
         versionCode 1
         versionName "1.0"
         externalNativeBuild {
@@ -14,7 +18,7 @@ android {
             }
         }
         ndk {
-            abiFilters "x86", "x86_64", "armeabi", "armeabi-v7a", "arm64-v8a"
+            abiFilters "x86", "x86_64", "armeabi-v7a", "arm64-v8a"
         }
     }
     buildTypes {
@@ -28,30 +32,57 @@ android {
             path "CMakeLists.txt"
         }
     }
+    lintOptions {
+        checkReleaseBuilds false
+    }
+
+    if ("enabled" == System.env.ABI_SPLITS) {
+        splits {
+            abi {
+                reset()
+                enable true
+                universalApk true
+                include 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
+            }
+        }
+
+        applicationVariants.all { variant ->
+            variant.outputs.each { output ->
+                def abiVersionCode =
+                    project.ext.abiCodes.get(output.getFilter("ABI"))
+
+                if (abiVersionCode != null) {
+                    output.versionCodeOverride = abiVersionCode
+                }
+            }
+        }
+    }
 }
 
 dependencies {
-    compile 'com.bugsnag:bugsnag-android-ndk:4.+'
+    compile 'com.bugsnag:bugsnag-android:5.0.0'
 }
 
-apply plugin: 'com.bugsnag.android.gradle'
+if (!System.env.UPDATING_GRADLEW) {
+    apply plugin: 'com.bugsnag.android.gradle'
 
-bugsnag {
-    ndk true
-    endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
-    releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+    bugsnag {
+        uploadNdkMappings = true
+        endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+        releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
 
-    def customPath = System.env.PROJECT_ROOT
-    def objdumpLocation = System.env.OBJDUMP_LOCATION
+        def customPath = System.env.PROJECT_ROOT
+        def objdumpLocation = System.env.OBJDUMP_LOCATION
 
-    if (customPath != null) {
-        projectRoot = customPath
-    }
+        if (customPath != null) {
+            projectRoot = customPath
+        }
 
-    if (objdumpLocation != null) {
-        objdumpPaths = [
+        if (objdumpLocation != null) {
+            objdumpPaths = [
                 "x86": objdumpLocation,
                 "arm64-v8a": objdumpLocation
-        ]
+            ]
+        }
     }
 }

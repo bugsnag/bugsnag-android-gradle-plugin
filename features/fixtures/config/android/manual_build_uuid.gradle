@@ -1,0 +1,10 @@
+apply plugin: 'com.android.application'
+apply from: "../../config/android/common.gradle"
+
+android {
+    sourceSets {
+        main {
+            manifest.srcFile "src/main/AndroidManifestBuildUuid.xml"
+        }
+    }
+}

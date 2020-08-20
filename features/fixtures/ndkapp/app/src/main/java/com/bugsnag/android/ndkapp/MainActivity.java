@@ -2,9 +2,11 @@ package com.bugsnag.android.ndkapp;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
 
 import com.bugsnag.android.Bugsnag;
+import com.example.Bar;
 
 public class MainActivity extends Activity {
 
@@ -16,10 +18,11 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Bugsnag.init(this);
+        Bugsnag.start(this);
         TextView view = new TextView(this);
         view.setText(stringFromJNI());
         setContentView(view);
+        Log.v("Bugsnag", new Bar().doSomething());
     }
 
     /**
