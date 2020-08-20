@@ -1,4 +1,4 @@
-## 5.0.0 (TBD)
+## 5.0.0 (2020-08-20)
 
 This release contains **breaking changes**. It contains numerous performance
 improvements compared to previous versions of the plugin, such as:
@@ -52,7 +52,7 @@ Alter bugsnag tasks to support the Incremental Build API
 Rename properties on bugsnag extension that control request autoUpload
 [#231](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/231)
 
-Bump supported JDK version to 7
+Bump supported JDK version to 8
 [#224](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/224)
 
 Use register() rather than create() for adding tasks
