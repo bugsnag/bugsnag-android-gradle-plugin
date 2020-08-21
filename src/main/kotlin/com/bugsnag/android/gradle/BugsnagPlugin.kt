@@ -216,6 +216,8 @@ class BugsnagPlugin : Plugin<Project> {
                         )
                         existingProguardTaskProvider = registered
                     }
+
+                    // Guaranteed to be initialized if we reach here
                     existingProguardTaskProvider
                 }
                 else -> null
