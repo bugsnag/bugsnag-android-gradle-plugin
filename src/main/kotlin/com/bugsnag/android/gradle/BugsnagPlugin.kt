@@ -5,6 +5,7 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
+import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.bugsnag.android.gradle.BugsnagInstallJniLibsTask.Companion.resolveBugsnagArtifacts
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
@@ -23,6 +24,7 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.
@@ -174,13 +176,15 @@ class BugsnagPlugin : Plugin<Project> {
     private fun registerBugsnagTasksForVariant(
         project: Project,
         android: AppExtension,
-        variant: ApkVariant,
+        variant: ApplicationVariant,
         bugsnag: BugsnagPluginExtension,
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
         releasesUploadClientProvider: Provider<out UploadRequestClient>,
         proguardUploadClientProvider: Provider<out UploadRequestClient>,
         ndkUploadClientProvider: Provider<out UploadRequestClient>
     ) {
+        val proguardTaskRegistered = AtomicBoolean()
+        lateinit var existingProguardTaskProvider: TaskProvider<out BugsnagUploadProguardTask>
         variant.outputs.configureEach { output ->
             check(output is ApkVariantOutput) {
                 "Expected variant output to be ApkVariantOutput but found ${output.javaClass}"
@@ -199,15 +203,21 @@ class BugsnagPlugin : Plugin<Project> {
             val mappingFilesProvider = createMappingFileProvider(project, variant, output, android)
 
             val proguardTaskProvider = when {
-                jvmMinificationEnabled -> registerProguardUploadTask(
-                    project,
-                    output,
-                    bugsnag,
-                    httpClientHelperProvider,
-                    manifestInfoFileProvider,
-                    proguardUploadClientProvider,
-                    mappingFilesProvider
-                )
+                jvmMinificationEnabled -> {
+                    if (proguardTaskRegistered.compareAndSet(false, true)) {
+                        val registered = registerProguardUploadTask(
+                            project,
+                            variant,
+                            bugsnag,
+                            httpClientHelperProvider,
+                            manifestInfoFileProvider,
+                            proguardUploadClientProvider,
+                            mappingFilesProvider
+                        )
+                        existingProguardTaskProvider = registered
+                    }
+                    existingProguardTaskProvider
+                }
                 else -> null
             }
             val symbolFileTaskProvider = when {
@@ -285,14 +295,14 @@ class BugsnagPlugin : Plugin<Project> {
     @Suppress("LongParameterList")
     private fun registerProguardUploadTask(
         project: Project,
-        output: ApkVariantOutput,
+        variant: ApplicationVariant,
         bugsnag: BugsnagPluginExtension,
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
         manifestInfoFileProvider: Provider<RegularFile>,
         proguardUploadClientProvider: Provider<out UploadRequestClient>,
         mappingFilesProvider: Provider<FileCollection>
     ): TaskProvider<out BugsnagUploadProguardTask> {
-        val outputName = taskNameForOutput(output)
+        val outputName = taskNameForVariant(variant)
         val taskName = "uploadBugsnag${outputName}Mapping"
         val path = "intermediates/bugsnag/requests/proguardFor${outputName}.json"
         val requestOutputFileProvider = project.layout.buildDirectory.file(path)
