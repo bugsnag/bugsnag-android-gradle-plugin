@@ -195,3 +195,8 @@ detekt {
         }
     }
 }
+
+// see https://github.com/asciidoctor/asciidoctorj/pull/862
+Signature.metaClass.getToSignArtifact = { ->
+    return (delegate as Signature).source
+}
