@@ -69,7 +69,7 @@ class BugsnagPlugin : Plugin<Project> {
                 }
             } else {
                 // Reuse instance
-                val client = LegacyBugsnagHttpClientHelper(bugsnag.requestTimeoutMs, bugsnag.retryCount)
+                val client = LegacyBugsnagHttpClientHelper(bugsnag.requestTimeoutMs)
                 project.provider { client }
             }
 

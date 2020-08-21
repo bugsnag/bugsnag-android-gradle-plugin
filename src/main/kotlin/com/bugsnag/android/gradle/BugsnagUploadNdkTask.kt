@@ -238,7 +238,7 @@ sealed class BugsnagUploadNdkTask(
         val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileHash) {
             logger.lifecycle("Bugsnag: Attempting to upload shared object mapping " +
                 "file for $sharedObjectName-$arch from $mappingFile")
-            request.uploadMultipartEntity(parseManifestInfo()) { builder ->
+            request.uploadMultipartEntity(parseManifestInfo(), retryCount.get()) { builder ->
                 builder.addFormDataPart("soSymbolFile", mappingFile.name, mappingFile.asRequestBody())
 
                 if (arch != null) {

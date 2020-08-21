@@ -1,3 +1,8 @@
+## TBD
+
+Retry request by constructing new OkHttp request
+[#278](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/278)
+
 ## 5.0.0 (2020-08-20)
 
 This release contains **breaking changes**. It contains numerous performance
