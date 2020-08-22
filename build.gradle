@@ -73,6 +73,9 @@ dependencies {
     // For multiple I/O use cases
     implementation "com.squareup.okio:okio:2.7.0"
 
+    // For showing upload progress
+    implementation "me.tongfei:progressbar:0.8.1"
+
     testImplementation "com.android.tools.build:gradle:4.1.0-rc01"
     testImplementation "junit:junit:4.12"
     testImplementation "org.mockito:mockito-core:2.28.2"
