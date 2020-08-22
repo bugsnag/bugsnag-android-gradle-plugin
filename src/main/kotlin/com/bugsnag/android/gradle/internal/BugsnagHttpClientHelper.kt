@@ -45,24 +45,33 @@ abstract class BuildServiceBugsnagHttpClientHelper
     interface Params : BuildServiceParameters {
         val timeoutMillis: Property<Long>
         val retryCount: Property<Int>
+        val displayProgress: Property<Boolean>
     }
 
     override val okHttpClient: OkHttpClient by lazy {
-        newClient(parameters.timeoutMillis.get(), parameters.retryCount.get())
+        newClient(
+            parameters.timeoutMillis.get(),
+            parameters.retryCount.get(),
+            parameters.displayProgress.get()
+        )
     }
 }
 
 /** A simple instance-based [BugsnagHttpClientHelper] for use on Gradle <6.1. */
 class LegacyBugsnagHttpClientHelper(
     timeoutMillis: Provider<Long>,
-    retryCount: Provider<Int>
+    retryCount: Provider<Int>,
+    displayProgress: Provider<Boolean>
 ) : BugsnagHttpClientHelper {
-    override val okHttpClient: OkHttpClient by lazy { newClient(timeoutMillis.get(), retryCount.get()) }
+    override val okHttpClient: OkHttpClient by lazy {
+        newClient(timeoutMillis.get(), retryCount.get(), displayProgress.get())
+    }
 }
 
 internal fun newClient(
     timeoutMillis: Long,
-    retryCount: Int
+    retryCount: Int,
+    displayProgress: Boolean
 ): OkHttpClient {
     val timeoutDuration = Duration.ofMillis(timeoutMillis)
     val interceptor = retryInterceptor(retryCount)
@@ -72,7 +81,11 @@ internal fun newClient(
         .connectTimeout(Duration.ZERO)
         .callTimeout(timeoutDuration)
         .addInterceptor(interceptor)
-        .addInterceptor(ProgressInterceptor())
+        .apply {
+            if (displayProgress) {
+                addInterceptor(ProgressInterceptor())
+            }
+        }
         .build()
 }
 

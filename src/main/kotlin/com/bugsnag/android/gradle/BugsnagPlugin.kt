@@ -66,10 +66,15 @@ class BugsnagPlugin : Plugin<Project> {
                     // Provide some parameters
                     spec.parameters.timeoutMillis.set(bugsnag.requestTimeoutMs)
                     spec.parameters.retryCount.set(bugsnag.retryCount)
+                    spec.parameters.displayProgress.set(bugsnag.displayUploadProgress)
                 }
             } else {
                 // Reuse instance
-                val client = LegacyBugsnagHttpClientHelper(bugsnag.requestTimeoutMs, bugsnag.retryCount)
+                val client = LegacyBugsnagHttpClientHelper(
+                    bugsnag.requestTimeoutMs,
+                    bugsnag.retryCount,
+                    bugsnag.displayUploadProgress
+                )
                 project.provider { client }
             }
 

@@ -72,6 +72,9 @@ open class BugsnagPluginExtension(objects: ObjectFactory) {
     val objdumpPaths: MapProperty<String, String> = objects.mapProperty<String, String>()
         .convention(emptyMap())
 
+    /** Display a progress bar during mapping file uploads. */
+    val displayUploadProgress: Property<Boolean> = objects.property<Boolean>().convention(true)
+
     // exposes sourceControl as a nested object on the extension,
     // see https://docs.gradle.org/current/userguide/custom_gradle_types.html#nested_objects
 
