@@ -1,9 +1,17 @@
 package com.bugsnag.android.gradle
 
+import com.bugsnag.android.gradle.internal.DisplayProgress
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
-import okhttp3.Request
+import okhttp3.RequestBody
 import org.gradle.api.DefaultTask
+import retrofit2.Call
+import retrofit2.Retrofit
+import retrofit2.converter.scalars.ScalarsConverterFactory
+import retrofit2.create
+import retrofit2.http.Body
+import retrofit2.http.POST
+import retrofit2.http.Url
 import java.io.IOException
 
 /**
@@ -26,6 +34,14 @@ class BugsnagMultiPartUploadRequest(
     private val okHttpClient: OkHttpClient
 ) {
 
+    private val uploadService = Retrofit.Builder()
+        .baseUrl("https://upload.bugsnag.com") // Not actually used
+        .validateEagerly(true)
+        .callFactory(okHttpClient)
+        .addConverterFactory(ScalarsConverterFactory.create())
+        .build()
+        .create<UploadService>()
+
     fun uploadMultipartEntity(
         manifestInfo: AndroidManifestInfo,
         action: (MultipartBody.Builder) -> Unit
@@ -46,17 +62,21 @@ class BugsnagMultiPartUploadRequest(
 
     private fun uploadToServer(body: MultipartBody): String? {
         // Make the request
-        val request = Request.Builder()
-            .url(endpoint)
-            .post(body)
-            .build()
-
-        okHttpClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                throw IOException("Bugsnag upload failed with code ${response.code}")
-            }
-            return response.body?.string()
+        val response = uploadService.upload(endpoint, body).execute()
+        if (!response.isSuccessful) {
+            throw IOException("Bugsnag upload failed with code ${response.code()}")
+        } else {
+            return response.body()!!
         }
+    }
+
+    internal interface UploadService {
+        @DisplayProgress("Uploading")
+        @POST
+        fun upload(
+            @Url endpoint: String,
+            @Body payload: RequestBody
+        ): Call<String>
     }
 
     companion object {
