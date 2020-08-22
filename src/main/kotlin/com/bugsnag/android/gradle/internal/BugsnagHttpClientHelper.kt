@@ -90,6 +90,7 @@ internal fun newClient(
 }
 
 internal class ProgressInterceptor: Interceptor {
+    @Suppress("NestedBlockDepth")
     override fun intercept(chain: Chain): Response {
         var request = chain.request()
         var progressListener: ProgressListener? = null
