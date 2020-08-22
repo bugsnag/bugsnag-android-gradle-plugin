@@ -86,6 +86,9 @@ sealed class BugsnagReleasesTask(
     val timeoutMillis: Property<Long> = objects.property()
 
     @get:Input
+    val displayProgress: Property<Boolean> = objects.property()
+
+    @get:Input
     val failOnUploadError: Property<Boolean> = objects.property()
 
     @get:Input
@@ -162,7 +165,7 @@ sealed class BugsnagReleasesTask(
         payload: ReleasePayload,
         manifestInfo: AndroidManifestInfo
     ): String {
-        val okHttpClient = newClient(timeoutMillis.get(), retryCount.get())
+        val okHttpClient = newClient(timeoutMillis.get(), retryCount.get(), displayProgress.get())
         val bugsnagService = createService(okHttpClient)
 
         val response = try {

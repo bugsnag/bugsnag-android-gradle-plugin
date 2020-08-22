@@ -365,6 +365,7 @@ class BugsnagPlugin : Plugin<Project> {
             this.requestOutputFile.set(requestOutputFile)
             retryCount.set(bugsnag.retryCount)
             timeoutMillis.set(bugsnag.requestTimeoutMs)
+            displayProgress.set(bugsnag.displayUploadProgress)
             failOnUploadError.set(bugsnag.failOnUploadError)
             releasesEndpoint.set(bugsnag.releasesEndpoint)
             sourceControlProvider.set(bugsnag.sourceControl.provider)
