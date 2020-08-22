@@ -7,7 +7,7 @@ import okio.ForwardingSink
 import okio.buffer
 
 /** Simple interface for listening to progress information. */
-internal interface ProgressListener {
+internal interface ProgressListener : AutoCloseable {
     fun update(bytesRead: Long, contentLength: Long, done: Boolean)
 }
 

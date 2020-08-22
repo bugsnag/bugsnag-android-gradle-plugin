@@ -14,6 +14,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import retrofit2.Invocation
+import java.io.IOException
 import java.time.Duration
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.annotation.AnnotationTarget.FUNCTION
@@ -78,6 +79,7 @@ internal fun newClient(
 internal class ProgressInterceptor: Interceptor {
     override fun intercept(chain: Chain): Response {
         var request = chain.request()
+        var progressListener: ProgressListener? = null
         if (request.method == "POST") {
             // Get the retrofit invocation off of it
             val invocation = request.tag(Invocation::class.java)
@@ -87,9 +89,10 @@ internal class ProgressInterceptor: Interceptor {
                     .getAnnotation(DisplayProgress::class.java)
                 if (displayProgress != null) {
                     request = request.body?.let { requestBody ->
-                        val progressListener = progressListener(displayProgress.name)
+                        val listener = progressListener(displayProgress.name)
+                        progressListener = listener
                         request.newBuilder()
-                            .post(ProgressRequestBody(requestBody, progressListener))
+                            .post(ProgressRequestBody(requestBody, listener))
                             .build()
                     } ?: request
 
@@ -97,7 +100,12 @@ internal class ProgressInterceptor: Interceptor {
             }
         }
 
-        return chain.proceed(request)
+        return try {
+            chain.proceed(request)
+        } catch (e: IOException) {
+            progressListener?.close()
+            throw e
+        }
     }
 }
 
@@ -151,6 +159,12 @@ internal fun progressListener(taskName: String) = object : ProgressListener {
             if (contentLength != -1L) {
                 progressBar.stepTo(bytesRead)
             }
+        }
+    }
+
+    override fun close() {
+        if (::progressBar.isInitialized) {
+            progressBar.close()
         }
     }
 }
