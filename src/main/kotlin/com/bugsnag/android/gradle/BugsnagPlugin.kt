@@ -22,7 +22,6 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
-import java.util.UUID
 
 /**
  * Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.
@@ -51,7 +50,8 @@ class BugsnagPlugin : Plugin<Project> {
         val bugsnag = project.extensions.create(
             "bugsnag",
             BugsnagPluginExtension::class.java,
-            project.objects
+            project.objects,
+            project.providers
         )
         project.pluginManager.withPlugin("com.android.application") {
             if (!bugsnag.enabled.get()) {
@@ -78,6 +78,7 @@ class BugsnagPlugin : Plugin<Project> {
             val ndkUploadClientProvider = newUploadRequestClientProvider(project, "ndk")
 
             val android = project.extensions.getByType(AppExtension::class.java)
+            val buildUuidProvider = bugsnag.buildUuid.map { it.toString() }
             if (BugsnagManifestUuidTaskV2.isApplicable()) {
                 check(android is CommonExtension<*, *, *, *, *, *, *, *>)
                 android.onVariants {
@@ -91,7 +92,6 @@ class BugsnagPlugin : Plugin<Project> {
                     val variantName = name
                     val taskName = computeManifestTaskNameFor(variantName)
                     val manifestInfoOutputFile = project.computeManifestInfoOutputV2(variantName)
-                    val buildUuidProvider = project.newUuidProvider()
                     val manifestUpdater = project.tasks.register(taskName,
                         BugsnagManifestUuidTaskV2::class.java) {
                         it.buildUuid.set(buildUuidProvider)
@@ -126,7 +126,8 @@ class BugsnagPlugin : Plugin<Project> {
                         httpClientHelperProvider,
                         releasesUploadClientProvider,
                         proguardUploadClientProvider,
-                        ndkUploadClientProvider
+                        ndkUploadClientProvider,
+                        buildUuidProvider
                     )
                 }
                 registerNdkLibInstallTask(project, bugsnag, android)
@@ -179,7 +180,8 @@ class BugsnagPlugin : Plugin<Project> {
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
         releasesUploadClientProvider: Provider<out UploadRequestClient>,
         proguardUploadClientProvider: Provider<out UploadRequestClient>,
-        ndkUploadClientProvider: Provider<out UploadRequestClient>
+        ndkUploadClientProvider: Provider<out UploadRequestClient>,
+        buildUuidProvider: Provider<String>
     ) {
         variant.outputs.configureEach { output ->
             check(output is ApkVariantOutput) {
@@ -195,7 +197,7 @@ class BugsnagPlugin : Plugin<Project> {
             }
 
             // register bugsnag tasks
-            val manifestInfoFileProvider = registerManifestUuidTask(project, variant, output)
+            val manifestInfoFileProvider = registerManifestUuidTask(project, variant, output, buildUuidProvider)
             val mappingFilesProvider = createMappingFileProvider(project, variant, output, android)
 
             val proguardTaskProvider = when {
@@ -251,7 +253,8 @@ class BugsnagPlugin : Plugin<Project> {
     private fun registerManifestUuidTask(
         project: Project,
         variant: ApkVariant,
-        output: ApkVariantOutput
+        output: ApkVariantOutput,
+        buildUuidProvider: Provider<String>
     ): Provider<RegularFile> {
         return if (BugsnagManifestUuidTaskV2.isApplicable()) {
             val taskName = computeManifestTaskNameFor(variant.name)
@@ -263,7 +266,6 @@ class BugsnagPlugin : Plugin<Project> {
         } else {
             val taskName = computeManifestTaskNameFor(output.name)
             val manifestInfoOutputFile = project.computeManifestInfoOutputV1(output)
-            val buildUuidProvider = project.newUuidProvider()
             project.tasks.register(taskName, BugsnagManifestUuidTask::class.java) {
                 it.buildUuid.set(buildUuidProvider)
                 it.variantOutput = output
@@ -420,11 +422,5 @@ class BugsnagPlugin : Plugin<Project> {
         output: ApkVariantOutput): Provider<RegularFile> {
         val path = "intermediates/bugsnag/manifestInfoFor${taskNameForOutput(output)}.json"
         return layout.buildDirectory.file(path)
-    }
-
-    private fun Project.newUuidProvider(): Provider<String> {
-        return provider {
-            UUID.randomUUID().toString()
-        }
     }
 }

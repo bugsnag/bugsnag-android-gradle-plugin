@@ -10,8 +10,10 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.ProviderFactory
 import org.gradle.util.ConfigureUtil
 import java.io.File
+import java.util.UUID
 
 // To make kotlin happy with gradle's nullability
 private val NULL_STRING: String? = null
@@ -20,8 +22,11 @@ private val NULL_BOOLEAN: Boolean? = null
 /**
  * Defines configuration options (Gradle plugin extensions) for the BugsnagPlugin
  */
-// After Gradle 5.2, this can use service injection for injecting ObjectFactory
-open class BugsnagPluginExtension(objects: ObjectFactory) {
+// After Gradle 5.2, this can use service injection for injecting ObjectFactory and ProviderFactory
+open class BugsnagPluginExtension(
+    objects: ObjectFactory,
+    providers: ProviderFactory
+) {
 
     val sourceControl: SourceControl = objects.newInstance()
 
@@ -71,6 +76,15 @@ open class BugsnagPluginExtension(objects: ObjectFactory) {
 
     val objdumpPaths: MapProperty<String, String> = objects.mapProperty<String, String>()
         .convention(emptyMap())
+
+    /**
+     * Build UUID generation control. Useful to override if you have a heuristic and want to have
+     * reproducible build UUIDs based on it. Default is a random ID
+     */
+    val buildUuid: Property<UUID> = objects.property<UUID>()
+        .convention(providers.provider {
+            UUID.randomUUID()
+        })
 
     // exposes sourceControl as a nested object on the extension,
     // see https://docs.gradle.org/current/userguide/custom_gradle_types.html#nested_objects
