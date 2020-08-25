@@ -43,10 +43,10 @@ class LegacyBugsnagHttpClientHelper(
 internal fun newClient(timeoutMillis: Long): OkHttpClient {
     val timeoutDuration = Duration.ofMillis(timeoutMillis)
     return OkHttpClient.Builder()
-        .readTimeout(Duration.ZERO)
-        .writeTimeout(Duration.ZERO)
-        .connectTimeout(Duration.ZERO)
-        .callTimeout(timeoutDuration)
+        .readTimeout(timeoutDuration)
+        .writeTimeout(timeoutDuration)
+        .connectTimeout(timeoutDuration)
+        .callTimeout(Duration.ZERO)
         .build()
 }
 
