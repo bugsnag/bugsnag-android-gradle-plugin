@@ -58,7 +58,6 @@ internal fun runRequestWithRetries(maxRetries: Int, request: () -> String): Stri
             return request()
         } catch (exc: Throwable) {
             cause = exc
-            exc.printStackTrace(System.out)
         }
         attempts++
     } while (attempts < maxRetries)

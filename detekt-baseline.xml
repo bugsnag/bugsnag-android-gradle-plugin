@@ -15,6 +15,7 @@
     <ID>TooGenericExceptionCaught:BugsnagUploadNdkTask.kt$BugsnagUploadNdkTask$e: Exception</ID>
     <ID>TooGenericExceptionCaught:BugsnagUploadNdkTask.kt$BugsnagUploadNdkTask$ex: Throwable</ID>
     <ID>TooGenericExceptionCaught:MappingFileProvider.kt$exc: Throwable</ID>
+    <ID>TooGenericExceptionCaught:BugsnagHttpClientHelper.kt$exc: Throwable</ID>
     <ID>TooManyFunctions:BugsnagPlugin.kt$BugsnagPlugin$BugsnagPlugin</ID>
   </Whitelist>
 </SmellBaseline>
