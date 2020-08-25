@@ -103,7 +103,7 @@ sealed class BugsnagUploadProguardTask @Inject constructor(
         val mappingFileHash = mappingFile.md5HashCode()
         val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileHash) {
             logger.lifecycle("Bugsnag: Attempting to upload JVM mapping file: $mappingFile")
-            request.uploadMultipartEntity(manifestInfo) { builder ->
+            request.uploadMultipartEntity(manifestInfo, retryCount.get()) { builder ->
                 builder.addFormDataPart("proguard", mappingFile.name, mappingFile.asRequestBody())
 
             }
