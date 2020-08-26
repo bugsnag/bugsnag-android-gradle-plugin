@@ -1,5 +1,6 @@
 Feature: Plugin integrated in project with Density APK splits
 
+@skip_agp4_1_or_higher
 Scenario: Density Splits project builds successfully
     When I build "density_splits" using the "standard" bugsnag config
     Then I should receive 14 requests
@@ -47,14 +48,17 @@ Scenario: Density Splits project builds successfully
 
     And the request 13 is valid for the Android Mapping API
     And the field "versionCode" for multipart request 13 equals "7"
-    And the field "apiKey" for multipart request 7 equals "TEST_API_KEY"
-    And the field "versionName" for multipart request 7 equals "1.0"
-    And the field "appId" for multipart request 7 equals "com.bugsnag.android.example"
+    And the field "apiKey" for multipart request 13 equals "TEST_API_KEY"
+    And the field "versionName" for multipart request 13 equals "1.0"
+    And the field "appId" for multipart request 13 equals "com.bugsnag.android.example"
 
+@skip_agp4_1_or_higher
 Scenario: Density Splits automatic upload disabled
     When I build "density_splits" using the "all_disabled" bugsnag config
     Then I should receive no requests
 
+@skip_agp4_1_or_higher
+@skip_agp3_5
 Scenario: Density Splits manual upload of build API
     When I build the "Hdpi-release" variantOutput for "density_splits" using the "all_disabled" bugsnag config
     Then I should receive 1 request

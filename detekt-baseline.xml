@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <Blacklist></Blacklist>
+  <Whitelist>
+    <ID>ComplexCondition:AndroidManifestParser.kt$AndroidManifestParser$apiKey == null || "" == apiKey || versionCode == null || buildUUID == null || versionName == null || applicationId == null</ID>
+    <ID>MagicNumber:BugsnagPluginExtension.kt$BugsnagPluginExtension$60000</ID>
+    <ID>MagicNumber:BugsnagReleasesTask.kt$BugsnagReleasesTask$200</ID>
+    <ID>MaxLineLength:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$private</ID>
+    <ID>MaxLineLength:BugsnagUploadNdkTask.kt$BugsnagUploadNdkTask.Companion$return File("$ndkDir/toolchains/${abi.toolchainPrefix}-4.9/prebuilt/$osName/bin/${abi.objdumpPrefix}-$executable")</ID>
+    <ID>SpreadOperator:BugsnagReleasesTask.kt$BugsnagReleasesTask$(*cmd)</ID>
+    <ID>TooGenericExceptionCaught:BugsnagHttpClientHelper.kt$&lt;no name provided&gt;$exc: Throwable</ID>
+    <ID>TooGenericExceptionCaught:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$exc: Throwable</ID>
+    <ID>TooGenericExceptionCaught:BugsnagMultiPartUploadRequest.kt$BugsnagMultiPartUploadRequest$exc: Throwable</ID>
+    <ID>TooGenericExceptionCaught:BugsnagReleasesTask.kt$BugsnagReleasesTask$exc: Throwable</ID>
+    <ID>TooGenericExceptionCaught:BugsnagUploadNdkTask.kt$BugsnagUploadNdkTask$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:BugsnagUploadNdkTask.kt$BugsnagUploadNdkTask$ex: Throwable</ID>
+    <ID>TooGenericExceptionCaught:MappingFileProvider.kt$exc: Throwable</ID>
+    <ID>TooGenericExceptionCaught:BugsnagHttpClientHelper.kt$exc: Throwable</ID>
+    <ID>TooManyFunctions:BugsnagPlugin.kt$BugsnagPlugin$BugsnagPlugin</ID>
+  </Whitelist>
+</SmellBaseline>

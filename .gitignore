@@ -3,9 +3,14 @@
 ### Gradle ###
 .gradle
 build/
+out/
 
 # Ignore Gradle GUI config
 gradle-app.setting
 .idea/
 local.properties
 maze_output/
+package-lock.json
+.cxx
+
+*.iml

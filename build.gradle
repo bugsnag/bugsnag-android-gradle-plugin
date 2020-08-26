@@ -5,7 +5,9 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.0'
+        classpath "com.android.tools.build:gradle:4.1.0-rc01" // compile against 4.1.0-rc01, but maintain compat to 3.4.0
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.72"
+        classpath "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.9.1"
     }
 }
 
@@ -15,19 +17,29 @@ plugins {
 
 // Gradle plugins
 plugins {
-    id 'groovy'
-    id 'codenarc'
-    id 'com.gradle.plugin-publish' version '0.11.0'
-    id 'com.bmuschko.nexus' version '2.3.1'
-    id 'com.jfrog.bintray' version '1.8.4'
+    id "java-gradle-plugin"
+    id "groovy"
+    id "com.gradle.plugin-publish" version "0.12.0"
+    id "com.bmuschko.nexus" version "2.3.1"
+    id "com.jfrog.bintray" version "1.8.5"
 }
-apply plugin: 'maven-publish'
-
+apply plugin: "org.jetbrains.kotlin.jvm"
+apply plugin: "org.jetbrains.kotlin.kapt"
+apply plugin: "maven-publish"
+apply plugin: "io.gitlab.arturbosch.detekt"
 
 allprojects {
     repositories {
         jcenter()
         google()
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir("build/generated/source/kapt/main")
+        }
     }
 }
 
@@ -37,53 +49,69 @@ repositories {
     google()
 }
 
-// Target Java 1.6 when compiling groovy code
-compileGroovy {
-    sourceCompatibility = '1.6'
-    targetCompatibility = '1.6'
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 }
 
 // Build dependencies
 dependencies {
-    compile gradleApi()
-    compile localGroovy()
-    compile 'com.android.tools.build:gradle:3.1.0'
-    compile 'org.apache.httpcomponents:httpclient:4.5.2'
-    compile 'org.apache.httpcomponents:httpmime:4.5.2'
-    testCompile 'junit:junit:4.12'
+    kapt "com.squareup.moshi:moshi-kotlin-codegen:1.9.3"
+    compileOnly "com.android.tools.build:gradle:4.1.0-rc01"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.72"
+
+    // For uploading proguard/ndk files
+    implementation "com.squareup.okhttp3:okhttp:4.8.0"
+    implementation "com.squareup.retrofit2:retrofit:2.9.0"
+    implementation "com.squareup.retrofit2:converter-moshi:2.9.0"
+    implementation "com.squareup.retrofit2:converter-scalars:2.9.0"
+
+    // For serialization of shared data
+    implementation "com.squareup.moshi:moshi:1.9.3"
+
+    // For multiple I/O use cases
+    implementation "com.squareup.okio:okio:2.7.0"
+
+    testImplementation "com.android.tools.build:gradle:4.1.0-rc01"
+    testImplementation "junit:junit:4.12"
+    testImplementation "org.mockito:mockito-core:2.28.2"
+    testImplementation "com.squareup.okhttp3:mockwebserver:4.8.0"
+    testImplementation "com.squareup.okhttp3:logging-interceptor:4.8.0"
+    testImplementation "com.google.truth:truth:1.0.1"
 }
 
 // Maven publishing settings (nexus-maven-plugins)
 modifyPom {
     project {
-        name 'Bugsnag Android Gradle Plugin'
-        description 'Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.'
-        url 'https://github.com/bugsnag/bugsnag-android-gradle-plugin'
+        name "Bugsnag Android Gradle Plugin"
+        description "Gradle plugin to automatically upload ProGuard mapping files to Bugsnag."
+        url "https://github.com/bugsnag/bugsnag-android-gradle-plugin"
 
         scm {
-            url 'https://github.com/bugsnag/bugsnag-android-gradle-plugin'
-            connection 'scm:git:git://github.com/bugsnag/bugsnag-android-gradle-plugin.git'
-            developerConnection 'scm:git:ssh://git@github.com/bugsnag/bugsnag-android-gradle-plugin.git'
+            url "https://github.com/bugsnag/bugsnag-android-gradle-plugin"
+            connection "scm:git:git://github.com/bugsnag/bugsnag-android-gradle-plugin.git"
+            developerConnection "scm:git:ssh://git@github.com/bugsnag/bugsnag-android-gradle-plugin.git"
         }
 
         licenses {
             license {
-                name 'MIT'
-                url 'http://opensource.org/licenses/MIT'
-                distribution 'repo'
+                name "MIT"
+                url "http://opensource.org/licenses/MIT"
+                distribution "repo"
             }
         }
 
         organization {
-            name 'Bugsnag'
-            url 'https://bugsnag.com'
+            name "Bugsnag"
+            url "https://bugsnag.com"
         }
 
         developers {
             developer {
-                id 'loopj'
-                name 'James Smith'
-                email 'james@bugsnag.com'
+                id "loopj"
+                name "James Smith"
+                email "james@bugsnag.com"
             }
         }
     }
@@ -91,21 +119,21 @@ modifyPom {
 
 // Gradle plugin publishing settings (plugins.gradle.com)
 pluginBundle {
-    website = 'https://github.com/bugsnag/bugsnag-android-gradle-plugin'
-    vcsUrl = 'https://github.com/bugsnag/bugsnag-android-gradle-plugin.git'
+    website = "https://github.com/bugsnag/bugsnag-android-gradle-plugin"
+    vcsUrl = "https://github.com/bugsnag/bugsnag-android-gradle-plugin.git"
 
     plugins {
         androidGradlePlugin {
-            id = 'com.bugsnag.android.gradle'
-            displayName = 'Bugsnag Android Gradle Plugin'
-            description = 'Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.'
-            tags = ['bugsnag', 'proguard', 'android', 'upload']
+            id = "com.bugsnag.android.gradle"
+            displayName = "Bugsnag Android Gradle Plugin"
+            description = "Gradle plugin to automatically upload ProGuard mapping files to Bugsnag."
+            tags = ["bugsnag", "proguard", "android", "upload"]
         }
     }
 
     mavenCoordinates {
-        groupId = 'com.bugsnag'
-        artifactId = 'bugsnag-android-gradle-plugin'
+        groupId = "com.bugsnag"
+        artifactId = "bugsnag-android-gradle-plugin"
     }
 }
 
@@ -117,9 +145,45 @@ publishing {
     publications {
         Publication(MavenPublication) {
             artifact jar
-            groupId 'com.bugsnag'
-            artifactId 'bugsnag-android-gradle-plugin'
+            groupId "com.bugsnag"
+            artifactId "bugsnag-android-gradle-plugin"
             version project.version
+        }
+
+        BintrayPublication(MavenPublication) {
+            artifact jar
+            groupId "com.bugsnag"
+            artifactId "bugsnag-android-gradle-plugin"
+            version project.version
+
+            pom.withXml {
+                def dependenciesNode = asNode().getAt('dependencies')[0] ?: asNode().appendNode('dependencies')
+
+                // Iterate over the implementation dependencies and add a <dependency> node for each
+                configurations.implementation.allDependencies.each {
+                    // Ensure dependencies such as fileTree are not included in the pom
+                    if (it.name != 'unspecified') {
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+
+                        dependencyNode.appendNode('groupId', it.group)
+                        dependencyNode.appendNode('artifactId', it.name)
+                        dependencyNode.appendNode('version', it.version)
+                        dependencyNode.appendNode('scope', 'runtime')
+                    }
+                }
+
+                configurations.testImplementation.allDependencies.each {
+                    // Ensure we don't add the same dependency twice
+                    if (it.name != 'unspecified' && !configurations.implementation.allDependencies.contains(it)) {
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+
+                        dependencyNode.appendNode('groupId', it.group)
+                        dependencyNode.appendNode('artifactId', it.name)
+                        dependencyNode.appendNode('version', it.version)
+                        dependencyNode.appendNode('scope', 'test')
+                    }
+                }
+            }
         }
     }
 }
@@ -129,37 +193,41 @@ bintray {
     user = project.hasProperty("bintray_user") ? "$bintray_user" : System.getenv("bintray_user")
     key = project.hasProperty("bintray_api_key") ? "$bintray_api_key" : System.getenv("bintray_api_key")
 
-    publications = ['Publication']
-    configurations = ['archives']
+    publications = ["BintrayPublication"]
+    configurations = ["archives"]
     pkg {
-        repo = 'maven'
-        name = 'bugsnag-android-gradle-plugin'
-        userOrg = 'bugsnag'
-        licenses = ['MIT']
-        vcsUrl = 'https://github.com/bugsnag/bugsnag-android-gradle-plugin.git'
+        repo = "maven"
+        name = "bugsnag-android-gradle-plugin"
+        userOrg = "bugsnag"
+        licenses = ["MIT"]
+        vcsUrl = "https://github.com/bugsnag/bugsnag-android-gradle-plugin.git"
         version {
             name = project.version
             vcsTag = "v${project.version}"
-            attributes = ['gradle-plugin': "com.bugsnag.android.gradle"]
+            attributes = ["gradle-plugin": "com.bugsnag.android.gradle"]
         }
     }
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.4'
-}
-
-codenarc {
-    // ignore baseline violations for now
-    maxPriority2Violations 7
-    maxPriority3Violations 20
-}
-
 // license checking
 license {
-    header rootProject.file('LICENSE')
+    header rootProject.file("LICENSE")
     ignoreFailures true
 }
 downloadLicenses {
   dependencyConfiguration "compile"
+}
+
+sourceSets {
+    main.java.srcDirs += "src/main/kotlin"
+}
+
+detekt {
+    input = files("src/main/kotlin")
+    baseline = file("detekt-baseline.xml")
+    reports {
+        html {
+            enabled = true
+        }
+    }
 }

@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
+set -e
 
-./gradlew clean build install -PlocalVersion=9000.0.0-test
+./gradlew build install -x groovyDoc -x detekt -x test -PlocalVersion=9000.0.0-test

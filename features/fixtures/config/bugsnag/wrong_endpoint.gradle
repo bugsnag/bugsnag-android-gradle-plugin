@@ -1,0 +1,6 @@
+apply plugin: 'com.bugsnag.android.gradle'
+
+bugsnag {
+    endpoint = "http://localhost:12345"
+    releasesEndpoint = "http://localhost:12345"
+}
