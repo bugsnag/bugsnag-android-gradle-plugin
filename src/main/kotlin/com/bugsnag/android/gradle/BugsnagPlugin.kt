@@ -189,7 +189,8 @@ class BugsnagPlugin : Plugin<Project> {
             val ndkEnabled = isNdkUploadEnabled(bugsnag,
                 project.extensions.getByType(AppExtension::class.java))
 
-            // skip tasks for variant if JVM/NDK minification not enabled
+            // skip tasks for variant if JVM/NDK minification not enabled, or if
+            // uploadDebugBuildMappings is false on the debug buildType
             if ((!jvmMinificationEnabled && !ndkEnabled) || !shouldUploadMappings(output, bugsnag)) {
                 return@configureEach
             }
