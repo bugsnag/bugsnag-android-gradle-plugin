@@ -190,7 +190,7 @@ class BugsnagPlugin : Plugin<Project> {
                 project.extensions.getByType(AppExtension::class.java))
 
             // skip tasks for variant if JVM/NDK minification not enabled
-            if (!jvmMinificationEnabled && !ndkEnabled) {
+            if ((!jvmMinificationEnabled && !ndkEnabled) || !shouldUploadMappings(output, bugsnag)) {
                 return@configureEach
             }
 
