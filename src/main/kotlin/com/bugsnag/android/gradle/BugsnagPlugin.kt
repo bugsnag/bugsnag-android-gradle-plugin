@@ -234,16 +234,14 @@ class BugsnagPlugin : Plugin<Project> {
                 symbolFileTaskProvider != null
             )
 
-            if (shouldUploadMappings(output, bugsnag)) {
-                if (bugsnag.reportBuilds.get()) {
-                    variant.register(project, releaseUploadTask)
-                }
-                if (symbolFileTaskProvider != null && isNdkUploadEnabled(bugsnag, android)) {
-                    variant.register(project, symbolFileTaskProvider)
-                }
-                if (proguardTaskProvider != null && bugsnag.uploadJvmMappings.get()) {
-                    variant.register(project, proguardTaskProvider)
-                }
+            if (bugsnag.reportBuilds.get()) {
+                variant.register(project, releaseUploadTask)
+            }
+            if (symbolFileTaskProvider != null && isNdkUploadEnabled(bugsnag, android)) {
+                variant.register(project, symbolFileTaskProvider)
+            }
+            if (proguardTaskProvider != null && bugsnag.uploadJvmMappings.get()) {
+                variant.register(project, proguardTaskProvider)
             }
         }
     }
@@ -381,14 +379,6 @@ class BugsnagPlugin : Plugin<Project> {
             }
             configureMetadata()
         }
-    }
-
-    private fun shouldUploadMappings(
-        output: ApkVariantOutput,
-        bugsnag: BugsnagPluginExtension
-    ): Boolean {
-        return !output.name.toLowerCase().endsWith(
-            "debug") || bugsnag.uploadDebugBuildMappings.get()
     }
 
     private fun isNdkUploadEnabled(bugsnag: BugsnagPluginExtension,

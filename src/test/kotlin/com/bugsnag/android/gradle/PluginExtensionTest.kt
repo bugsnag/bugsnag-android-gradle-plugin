@@ -39,7 +39,6 @@ class PluginExtensionTest {
             assertEquals(60000, requestTimeoutMs.get())
             assertEquals(0, retryCount.get())
             assertEquals(emptyList<File>(), sharedObjectPaths.get())
-            assertFalse(uploadDebugBuildMappings.get())
             assertTrue(uploadJvmMappings.get())
             assertNull(uploadNdkMappings.orNull)
             assertNull(sourceControl.repository.orNull)

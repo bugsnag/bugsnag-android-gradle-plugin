@@ -1,3 +1,8 @@
+## TBD
+
+* Remove undocumented uploadDebugBuildMappings flag in favour of variantFilter
+  [#290](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/290)
+
 ## 5.0.1 (2020-08-26)
 
 * Retry request by constructing new OkHttp request

@@ -12,6 +12,21 @@ dependencies {
 }
 ```
 
+You should add a variant filter to disable the plugin for the debug buildType, and any other build variants
+which do not require deobfuscation. This improves the plugin's build performance:
+
+```groovy
+bugsnag {
+    variantFilter { variant ->
+        // disables plugin for all variants of the 'debug' buildType
+        def name = variant.name.toLowerCase()
+        if (name.contains("debug")) {
+            enabled = false
+        }
+    }
+}
+```
+
 ### Minimum requirements
 
 The plugin now requires a Gradle wrapper >= 5.1.1, Android Gradle Plugin >= 3.4.0, and JDK >= 8.
