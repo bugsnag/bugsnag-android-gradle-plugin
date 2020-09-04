@@ -67,6 +67,13 @@ if (!System.env.UPDATING_GRADLEW) {
     apply plugin: 'com.bugsnag.android.gradle'
 
     bugsnag {
+        variantFilter { variant ->
+            // disables plugin for all variants of the 'debug' buildType
+            def name = variant.name.toLowerCase()
+            if (name.contains("debug")) {
+                enabled = false
+            }
+        }
         uploadNdkMappings = true
         endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
         releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
