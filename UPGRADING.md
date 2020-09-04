@@ -13,7 +13,8 @@ dependencies {
 ```
 
 You should add a variant filter to disable the plugin for the debug buildType, and any other build variants
-which do not require deobfuscation. This improves the plugin's build performance:
+that do not require deobfuscated stacktraces in Bugsnag. This will improve your project's build performance and can be 
+achieved by adding the following to your module-level build.gradle:
 
 ```groovy
 bugsnag {
