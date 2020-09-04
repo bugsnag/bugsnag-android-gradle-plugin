@@ -1,4 +1,4 @@
-## TBD
+## 5.1.0 (2020-09-07)
 
 * Remove undocumented uploadDebugBuildMappings flag in favour of variantFilter
   [#290](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/290)
