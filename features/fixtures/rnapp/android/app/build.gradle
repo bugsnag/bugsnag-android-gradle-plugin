@@ -156,14 +156,8 @@ task copyDownloadableDepsToLibs(type: Copy) {
 if (!System.env.UPDATING_GRADLEW) {
     apply plugin: 'com.bugsnag.android.gradle'
 
-<<<<<<< Updated upstream
     bugsnag {
-        endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
-        releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+        endpoint = "http://localhost:9339"
+        releasesEndpoint = "http://localhost:9339"
     }
-=======
-bugsnag {
-    endpoint = "http://localhost:9339"
-    releasesEndpoint = "http://localhost:9339"
->>>>>>> Stashed changes
 }
