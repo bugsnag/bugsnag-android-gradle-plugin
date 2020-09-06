@@ -54,13 +54,10 @@ Then(/^the request (\d+) is valid for the Android NDK Mapping API$/) do |request
 end
 
 When("I build the failing {string} using the {string} bugsnag config") do |module_config, bugsnag_config|
-  begin
-    steps %Q{
-      When I build "#{module_config}" using the "#{bugsnag_config}" bugsnag config
-    }
-    assert(false, "Expected script to fail with non-zero exit code")
-  rescue SystemExit
-  end
+  Runner.environment["MODULE_CONFIG"] = module_config
+  Runner.environment["BUGSNAG_CONFIG"] = bugsnag_config
+  _, exit_code = Runner.run_script("features/scripts/bundle_project_module.sh", blocking: true)
+  assert(exit_code != 0, "Expected script to fail with non-zero exit code, got #{exit_code}")
 end
 
 Then(/^the exit code equals (\d+)$/) do |exit_code|
