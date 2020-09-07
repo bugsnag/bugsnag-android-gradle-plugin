@@ -1,7 +1,11 @@
 language: android
-dist: trusty
-rvm: 2.6.0
+dist: bionic
 sudo: false
+
+addons:
+  apt:
+    packages:
+    - ruby2.5
 
 env:
   global:
