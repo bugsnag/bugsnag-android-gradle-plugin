@@ -14,6 +14,7 @@ android:
     - extra-android-m2repository
 
 before_install:
+  - rvm install ruby-2.5
   - rvm use 2.5
   - echo y | sdkmanager "platform-tools" >/dev/null
   - echo y | sdkmanager "tools" >/dev/null
