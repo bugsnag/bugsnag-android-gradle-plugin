@@ -1,6 +1,13 @@
 language: android
-dist: bionic
+dist: trusty
 sudo: false
+
+addons:
+  apt:
+    sources:
+      - ppa:brightbox/ruby-ng
+    packages:
+      - ruby2.5
 
 env:
   global:
