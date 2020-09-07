@@ -2,13 +2,6 @@ language: android
 dist: trusty
 sudo: false
 
-addons:
-  apt:
-    sources:
-      - ppa:brightbox/ruby-ng
-    packages:
-      - ruby2.5
-
 env:
   global:
   - ANDROID_HOME=/usr/local/android-sdk
@@ -21,6 +14,9 @@ android:
     - extra-android-m2repository
 
 before_install:
+  - sudo add-apt-repository -y ppa:brightbox/ruby-ng
+  - sudo apt-get -q update
+  - sudo apt-get -y install ruby2.5
   - echo y | sdkmanager "platform-tools" >/dev/null
   - echo y | sdkmanager "tools" >/dev/null
   - echo y | sdkmanager 'cmake;3.6.4111459' >/dev/null
