@@ -1,5 +1,6 @@
 language: android
 dist: trusty
+rvm: 2.6.0
 sudo: false
 
 env:
