@@ -38,7 +38,7 @@ Scenario: NDK apps send requests
 Scenario: Custom projectRoot is added to payload
     When I set environment variable "PROJECT_ROOT" to "/repos/custom/my-app"
     And I build the NDK app
-    And I should receive 6 requests
+    And I wait to receive 6 requests
 
     Then the request is valid for the Build API
     And I discard the oldest request

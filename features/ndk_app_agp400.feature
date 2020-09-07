@@ -12,22 +12,22 @@ Scenario: NDK apps send requests
     And the payload field "appVersionCode" equals "1"
     And I discard the oldest request
 
-    And the request is valid for the Android NDK Mapping API
+    And the request is valid for the Android Mapping API
     And the payload field "projectRoot" is not null
     And the payload field "arch" equals "arm64-v8a"
     And I discard the oldest request
 
-    And the request is valid for the Android NDK Mapping API
+    And the request is valid for the Android Mapping API
     And the payload field "projectRoot" is not null
     And the payload field "arch" equals "armeabi-v7a"
     And I discard the oldest request
 
-    And the request is valid for the Android NDK Mapping API
+    And the request is valid for the Android Mapping API
     And the payload field "projectRoot" is not null
     And the payload field "arch" equals "x86"
     And I discard the oldest request
 
-    And the request is valid for the Android NDK Mapping API
+    And the request is valid for the Android Mapping API
     And the payload field "projectRoot" is not null
     And the payload field "arch" equals "x86_64"
     And I discard the oldest request
@@ -43,19 +43,19 @@ Scenario: Custom projectRoot is added to payload
     Then the request is valid for the Build API
     And I discard the oldest request
 
-    And the request is valid for the Android NDK Mapping API
+    And the request is valid for the Android Mapping API
     And the payload field "projectRoot" equals "/repos/custom/my-app"
     And I discard the oldest request
 
-    And the request is valid for the Android NDK Mapping API
+    And the request is valid for the Android Mapping API
     And the payload field "projectRoot" equals "/repos/custom/my-app"
     And I discard the oldest request
 
-    And the request is valid for the Android NDK Mapping API
+    And the request is valid for the Android Mapping API
     And the payload field "projectRoot" equals "/repos/custom/my-app"
     And I discard the oldest request
 
-    And the request is valid for the Android NDK Mapping API
+    And the request is valid for the Android Mapping API
     And the payload field "projectRoot" equals "/repos/custom/my-app"
     And I discard the oldest request
 
@@ -71,11 +71,11 @@ Scenario: Custom objdump location
     And the request is valid for the Build API
     And I discard the oldest request
 
-    Then the request is valid for the Android NDK Mapping API
+    And the request is valid for the Android Mapping API
     And the payload field "arch" equals "armeabi-v7a"
     And I discard the oldest request
 
-    And the request is valid for the Android NDK Mapping API
+    And the request is valid for the Android Mapping API
     And the payload field "arch" equals "x86_64"
     And I discard the oldest request
 
