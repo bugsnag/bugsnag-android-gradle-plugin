@@ -1,8 +1,3 @@
-## TBD
-
-* Avoid creating debug tasks unless uploadDebugBuildMappings flag enabled
-  [#288](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/288)
-
 ## 5.0.1 (2020-08-26)
 
 * Retry request by constructing new OkHttp request
