@@ -2,11 +2,6 @@ language: android
 dist: bionic
 sudo: false
 
-addons:
-  apt:
-    packages:
-    - ruby2.5
-
 env:
   global:
   - ANDROID_HOME=/usr/local/android-sdk
