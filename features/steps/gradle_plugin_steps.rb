@@ -63,3 +63,49 @@ end
 Then(/^the exit code equals (\d+)$/) do |exit_code|
   assert_equal(exit_code, $?.exitstatus.to_i)
 end
+
+Then('{int} requests are valid for the build API and match the following:') do |request_count, data_table|
+  build_requests = get_build_requests
+  assert(build_requests.length == request_count, "The number of build API requests received was #{build_requests.length}, expected: #{request_count}")
+  expected_values = data_table.hashes
+  assert_equal(expected_values.length, build_requests.length)
+  payload_values = build_requests.map do |request|
+    valid_build_api?(request[:body])
+    payload_hash = {}
+    data_table.headers.each_with_object(payload_hash) do |field_path, payload_hash|
+      payload_hash[field_path] = read_key_path(request[:body], field_path)
+    end
+    payload_hash
+  end
+  assert_equal(expected_values.to_set, payload_values.to_set)
+end
+
+Then('{int} requests are valid for the android mapping API and match the following:') do |request_count, data_table|
+  mapping_requests = get_android_mapping_requests
+  assert(mapping_requests.length == request_count, "The number of android mapping API requests received was #{mapping_requests.length}, expected: #{request_count}")
+  expected_values = data_table.hashes
+  assert_equal(expected_values.length, mapping_requests.length)
+  payload_values = mapping_requests.map do |request|
+    valid_android_mapping_api?(request[:body])
+    payload_hash = {}
+    data_table.headers.each_with_object(payload_hash) do |field_path, payload_hash|
+      payload_hash[field_path] = request[:body][field_path]
+    end
+    payload_hash
+  end
+  assert_equal(expected_values.to_set, payload_values.to_set)
+end
+
+def valid_build_api?(request_body)
+  assert_equal($api_key, read_key_path(request_body, 'apiKey'))
+  assert_not_nil(read_key_path(request_body, 'appVersion'))
+end
+
+def valid_android_mapping_api?(request_body)
+  assert_equal($api_key, request_body['apiKey'])
+  assert_not_nil(request_body['proguard'])
+  assert_not_nil(request_body['appId'])
+  assert_not_nil(request_body['versionCode'])
+  assert_not_nil(request_body['buildUUID'])
+  assert_not_nil(request_body['versionName'])
+end
