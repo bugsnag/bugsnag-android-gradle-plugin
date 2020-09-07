@@ -14,7 +14,6 @@ android:
     - extra-android-m2repository
 
 before_install:
-  - rvm list known
   - rvm install 2.5.5
   - rvm use 2.5.5
   - echo y | sdkmanager "platform-tools" >/dev/null
