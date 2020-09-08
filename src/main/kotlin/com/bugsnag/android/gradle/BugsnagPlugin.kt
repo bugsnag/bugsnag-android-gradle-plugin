@@ -271,6 +271,17 @@ class BugsnagPlugin : Plugin<Project> {
                 it.variant = variant
                 it.manifestInfoProvider.set(manifestInfoOutputFile)
                 it.dependsOn(output.processManifestProvider)
+                it.mustRunAfter(output.processManifestProvider)
+            }
+
+            // Enforces correct task ordering. The manifest can only be edited inbetween
+            // when the merged manifest is generated (processManifestProvider) and when
+            // the merged manifest is copied for use in packaging the artefact (processResourcesProvider).
+            // This ensures BugsnagManifestUuidTask runs at the correct time for both tasks.
+            //
+            // https://docs.gradle.org/current/userguide/more_about_tasks.html#sec:ordering_tasks
+            output.processResourcesProvider.configure {
+                it.mustRunAfter(manifestTask)
             }
             output.processManifestProvider.configure {
                 // Trigger eager configuration of the manifest task. This creates the task
