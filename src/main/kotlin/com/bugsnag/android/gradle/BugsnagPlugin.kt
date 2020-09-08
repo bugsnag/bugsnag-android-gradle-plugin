@@ -185,7 +185,7 @@ class BugsnagPlugin : Plugin<Project> {
             check(output is ApkVariantOutput) {
                 "Expected variant output to be ApkVariantOutput but found ${output.javaClass}"
             }
-            val jvmMinificationEnabled = variant.buildType.isMinifyEnabled || project.hasDexguardPlugin()
+            val jvmMinificationEnabled = project.isJvmMinificationEnabled(variant)
             val ndkEnabled = isNdkUploadEnabled(bugsnag,
                 project.extensions.getByType(AppExtension::class.java))
 
@@ -247,6 +247,9 @@ class BugsnagPlugin : Plugin<Project> {
             }
         }
     }
+
+    private fun Project.isJvmMinificationEnabled(variant: ApkVariant) =
+        variant.buildType.isMinifyEnabled || hasDexguardPlugin()
 
     private fun registerManifestUuidTask(
         project: Project,
@@ -387,8 +390,11 @@ class BugsnagPlugin : Plugin<Project> {
             gradleVersion.set(project.gradle.gradleVersion)
             manifestInfoFile.set(manifestInfoFileProvider)
             uploadRequestClient.set(releasesUploadClientProvider)
-            mappingFilesProvider?.let {
-                jvmMappingFileProperty.from(it)
+
+            if (project.isJvmMinificationEnabled(variant)) {
+                mappingFilesProvider?.let {
+                    jvmMappingFileProperty.from(it)
+                }
             }
             if (checkSearchDirectories) {
                 variant.externalNativeBuildProviders.forEach { task ->
