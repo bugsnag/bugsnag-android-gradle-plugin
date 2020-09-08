@@ -279,7 +279,7 @@ class BugsnagPlugin : Plugin<Project> {
 
             // Enforces correct task ordering. The manifest can only be edited inbetween
             // when the merged manifest is generated (processManifestProvider) and when
-            // the merged manifest is copied for use in packaging the artefact (processResourcesProvider).
+            // the merged manifest is copied for use in packaging the artifact (processResourcesProvider).
             // This ensures BugsnagManifestUuidTask runs at the correct time for both tasks.
             //
             // https://docs.gradle.org/current/userguide/more_about_tasks.html#sec:ordering_tasks
