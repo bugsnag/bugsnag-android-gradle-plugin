@@ -264,18 +264,24 @@ class BugsnagPlugin : Plugin<Project> {
             val taskName = computeManifestTaskNameFor(output.name)
             val manifestInfoOutputFile = project.computeManifestInfoOutputV1(output)
             val buildUuidProvider = project.newUuidProvider()
-            project.tasks.register(taskName, BugsnagManifestUuidTask::class.java) {
+
+            val manifestTask = project.tasks.register(taskName, BugsnagManifestUuidTask::class.java) {
                 it.buildUuid.set(buildUuidProvider)
                 it.variantOutput = output
                 it.variant = variant
                 it.manifestInfoProvider.set(manifestInfoOutputFile)
-                val processManifest = output.processManifestProvider.orNull
-
-                if (processManifest != null) {
-                    processManifest.finalizedBy(it)
-                    it.dependsOn(processManifest)
-                }
-            }.flatMap(BaseBugsnagManifestUuidTask::manifestInfoProvider)
+                it.dependsOn(output.processManifestProvider)
+            }
+            output.processManifestProvider.configure {
+                // Trigger eager configuration of the manifest task. This creates the task
+                // and ensures that it is configured whenever the manifest is processed
+                // and avoids mutating the task directly which should be avoided.
+                //
+                // https://docs.gradle.org/current/userguide/task_configuration_avoidance.html
+                // #sec:task_configuration_avoidance_general
+                manifestTask.get()
+            }
+            manifestTask.flatMap(BaseBugsnagManifestUuidTask::manifestInfoProvider)
         }
     }
 
