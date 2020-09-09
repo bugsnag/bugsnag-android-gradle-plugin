@@ -1,3 +1,22 @@
+## TBD
+
+* Only set mappingFilesProvider on release task if obfuscation enabled
+  [#292](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/292)
+
+* Fix task dependencies and order for BugsnagManifestUuidTask in AGP <4.1.0
+  [#294](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/294)
+
+## 5.0.1 (2020-08-26)
+
+* Retry request by constructing new OkHttp request
+  [#278](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/278)
+
+* Apply `requestTimeoutMs` as an idle timeout
+  [#282](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/282)
+
+* Fix Bintray/jcenter publishing
+  [#283](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/283)
+
 ## 5.0.0 (2020-08-20)
 
 This release contains **breaking changes**. It contains numerous performance

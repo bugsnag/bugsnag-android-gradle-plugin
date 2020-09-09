@@ -51,7 +51,6 @@ abstract class BuildServiceBugsnagHttpClientHelper
     override val okHttpClient: OkHttpClient by lazy {
         newClient(
             parameters.timeoutMillis.get(),
-            parameters.retryCount.get(),
             parameters.displayProgress.get()
         )
     }
@@ -60,27 +59,23 @@ abstract class BuildServiceBugsnagHttpClientHelper
 /** A simple instance-based [BugsnagHttpClientHelper] for use on Gradle <6.1. */
 class LegacyBugsnagHttpClientHelper(
     timeoutMillis: Provider<Long>,
-    retryCount: Provider<Int>,
     displayProgress: Provider<Boolean>
 ) : BugsnagHttpClientHelper {
     override val okHttpClient: OkHttpClient by lazy {
-        newClient(timeoutMillis.get(), retryCount.get(), displayProgress.get())
+        newClient(timeoutMillis.get(), displayProgress.get())
     }
 }
 
 internal fun newClient(
     timeoutMillis: Long,
-    retryCount: Int,
     displayProgress: Boolean
 ): OkHttpClient {
     val timeoutDuration = Duration.ofMillis(timeoutMillis)
-    val interceptor = retryInterceptor(retryCount)
     return OkHttpClient.Builder()
-        .readTimeout(Duration.ZERO)
-        .writeTimeout(Duration.ZERO)
-        .connectTimeout(Duration.ZERO)
-        .callTimeout(timeoutDuration)
-        .addInterceptor(interceptor)
+        .readTimeout(timeoutDuration)
+        .writeTimeout(timeoutDuration)
+        .connectTimeout(timeoutDuration)
+        .callTimeout(Duration.ZERO)
         .apply {
             if (displayProgress) {
                 addInterceptor(ProgressInterceptor())
@@ -123,23 +118,18 @@ internal class ProgressInterceptor: Interceptor {
     }
 }
 
-internal fun retryInterceptor(maxRetries: Int): Interceptor {
-    return object : Interceptor {
-        override fun intercept(chain: Chain): Response {
-            var attempts = 0
-            var cause: Throwable?
-            do {
-                try {
-                    val request = chain.request()
-                    return chain.proceed(request)
-                } catch (exc: Throwable) {
-                    cause = exc
-                }
-                attempts++
-            } while (attempts < maxRetries)
-            throw IllegalStateException("Bugsnag request failed to complete", cause)
+internal fun runRequestWithRetries(maxRetries: Int, request: () -> String): String {
+    var attempts = 0
+    var cause: Throwable?
+    do {
+        try {
+            return request()
+        } catch (exc: Throwable) {
+            cause = exc
         }
-    }
+        attempts++
+    } while (attempts < maxRetries)
+    throw IllegalStateException("Bugsnag request failed to complete", cause)
 }
 
 internal fun progressListener(taskName: String) = object : ProgressListener {

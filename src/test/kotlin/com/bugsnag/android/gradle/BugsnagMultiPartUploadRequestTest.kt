@@ -53,7 +53,7 @@ class BugsnagMultiPartUploadRequestTest {
                 "1.0",
                 "com.example"
             )
-        ) {
+        , 1) {
             it.addFormDataPart("proguard", fakeMappingFile.name, fakeMappingFile.asRequestBody())
         }
     }

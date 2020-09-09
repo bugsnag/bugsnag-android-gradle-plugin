@@ -6,6 +6,7 @@ import com.bugsnag.android.gradle.internal.mapProperty
 import com.bugsnag.android.gradle.internal.newClient
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
+import com.bugsnag.android.gradle.internal.runRequestWithRetries
 import com.bugsnag.android.gradle.internal.versionNumber
 import com.squareup.moshi.JsonClass
 import okhttp3.OkHttpClient
@@ -165,19 +166,21 @@ sealed class BugsnagReleasesTask(
         payload: ReleasePayload,
         manifestInfo: AndroidManifestInfo
     ): String {
-        val okHttpClient = newClient(timeoutMillis.get(), retryCount.get(), displayProgress.get())
+        val okHttpClient = newClient(timeoutMillis.get(), displayProgress.get())
         val bugsnagService = createService(okHttpClient)
 
-        val response = try {
-            bugsnagService.upload(
-                releasesEndpoint.get(),
-                apiKey = manifestInfo.apiKey,
-                payload = payload
-            ).execute()
+        return try {
+            runRequestWithRetries(retryCount.get()) {
+                val response = bugsnagService.upload(
+                    releasesEndpoint.get(),
+                    apiKey = manifestInfo.apiKey,
+                    payload = payload
+                )
+                readRequestResponse(response.execute())
+            }
         } catch (e: IOException) {
             throw IllegalStateException("Request to Bugsnag Releases API failed, aborting build.", e)
         }
-        return readRequestResponse(response)
     }
 
     private fun readRequestResponse(response: Response<String>): String {
