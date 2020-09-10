@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/bugsnag/maze-runner
-  revision: f10e7fa53cce3433b5afa029816396c3af562fb0
+  revision: d2b2ba92afedbc5baa1a6b611097bb74b2d5df2e
   branch: fix-content-type-regex
   specs:
     bugsnag-maze-runner (2.5.0)
