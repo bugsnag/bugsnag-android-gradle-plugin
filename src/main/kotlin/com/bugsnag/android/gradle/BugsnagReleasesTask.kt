@@ -144,7 +144,7 @@ sealed class BugsnagReleasesTask(
         val payload = generateJsonPayload(manifestInfo)
 
         val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, payload.hashCode()) {
-            logger.lifecycle("Bugsnag: Attempting upload to Releases API")
+            logger.lifecycle("Bugsnag: Uploading to Releases API")
             val response = try {
                 deliverPayload(payload, manifestInfo)
             } catch (exc: Throwable) {
@@ -156,7 +156,6 @@ sealed class BugsnagReleasesTask(
             response
         }
         requestOutputFile.asFile.get().writeText(response)
-        logger.lifecycle("Bugsnag: Releases request complete")
     }
 
     private fun deliverPayload(
