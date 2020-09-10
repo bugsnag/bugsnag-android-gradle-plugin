@@ -118,5 +118,4 @@ def valid_android_mapping_api?(request_body)
   assert_not_nil(request_body['versionCode'])
   assert_not_nil(request_body['buildUUID'])
   assert_not_nil(request_body['versionName'])
-  assert_not_nil(req)
 end
