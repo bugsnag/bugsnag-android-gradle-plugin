@@ -1,5 +1,8 @@
 ## TBD
 
+* Reword log messages that implied duplicate uploads
+  [#296](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/296)
+
 * Only set mappingFilesProvider on release task if obfuscation enabled
   [#292](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/292)
 
