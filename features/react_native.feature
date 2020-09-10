@@ -11,8 +11,3 @@ Scenario: React Native sends requests
     And 1 requests are valid for the android mapping API and match the following:
       | versionCode | versionName | appId                     |
       | 1           | 1.0         | com.bugsnag.android.rnapp |
-
-    And the request is valid for the Android Mapping API
-    And the field "versionCode" for multipart request equals "1"
-    And the field "versionName" for multipart request equals "1.0"
-    And the field "appId" for multipart request equals "com.bugsnag.android.rnapp"

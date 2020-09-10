@@ -1,9 +1,9 @@
 GIT
   remote: https://github.com/bugsnag/maze-runner
-  revision: 30e0af6dce10a68ab2cdc5de43b9a22363d3a8ce
-  branch: fix-build-api-steps
+  revision: f10e7fa53cce3433b5afa029816396c3af562fb0
+  branch: fix-content-type-regex
   specs:
-    bugsnag-maze-runner (2.4.0)
+    bugsnag-maze-runner (2.5.0)
       appium_lib (~> 10.2)
       cucumber (~> 3.1.2)
       cucumber-expressions (~> 6.0.0)

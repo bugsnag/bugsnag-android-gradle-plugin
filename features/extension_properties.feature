@@ -12,9 +12,11 @@ Scenario: Enable debug mapping upload
     Then 2 requests are valid for the build API and match the following:
       | appVersionCode |
       | 1              |
+      | 1              |
 
     And 2 requests are valid for the android mapping API and match the following:
       | versionCode |
+      | 1           |
       | 1           |
 
 Scenario: Enable overwrite
