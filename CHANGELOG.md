@@ -1,4 +1,4 @@
-## 5.1.0 (2020-09-10)
+## 5.0.2 (2020-09-10)
 
 * Reword log messages that implied duplicate uploads
   [#296](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/296)
