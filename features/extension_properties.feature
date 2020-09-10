@@ -8,17 +8,14 @@ Scenario: Disable autoReportBuilds
 Scenario: Enable debug mapping upload
     When I build "debug_proguard" using the "upload_debug_enabled" bugsnag config
     And I wait to receive 4 requests
-    Then the request is valid for the Build API
-    And I discard the oldest request
 
-    And the request is valid for the Android Mapping API
-    And I discard the oldest request
+    Then 2 requests are valid for the build API and match the following:
+      | appVersionCode |
+      | 1              |
 
-    And the request is valid for the Build API
-    And I discard the oldest request
-
-    And the request is valid for the Android Mapping API
-    And I discard the oldest request
+    And 2 requests are valid for the android mapping API and match the following:
+      | versionCode |
+      | 1           |
 
 Scenario: Enable overwrite
     When I build "default_app" using the "overwrite_enabled" bugsnag config

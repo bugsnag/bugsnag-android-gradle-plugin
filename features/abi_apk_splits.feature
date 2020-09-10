@@ -30,7 +30,7 @@ Scenario: ABI Splits project builds successfully
 @skip_agp4_1_or_higher
 Scenario: ABI Splits automatic upload disabled
     When I build "abi_splits" using the "all_disabled" bugsnag config
-    And I wait for 5 seconds
+    And I wait for 3 seconds
     Then I should receive no requests
 
 @skip_agp4_1_or_higher

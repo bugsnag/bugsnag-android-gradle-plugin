@@ -1,79 +1,44 @@
 Feature: Generating Android app bundles
 
-@skip_agp3_5
 Scenario: Single-module default app bundles successfully
     When I bundle "default_app" using the "standard" bugsnag config
     And I wait to receive 2 requests
 
-    Then the request is valid for the Build API
-    And the payload field "appVersion" equals "1.0"
-    And the payload field "apiKey" equals "TEST_API_KEY"
-    And the payload field "builderName" is not null
-    And the payload field "buildTool" equals "gradle-android"
-    And the payload field "appVersionCode" equals "1"
-    And the payload field "sourceControl.provider" equals "github"
-    And the payload field "sourceControl.repository" equals "https://github.com/bugsnag/bugsnag-android-gradle-plugin.git"
-    And the payload field "sourceControl.revision" is not null
+    Then 1 requests are valid for the build API and match the following:
+      | appVersionCode | appVersion | buildTool      | sourceControl.provider | sourceControl.repository                                     |
+      | 1              | 1.0        | gradle-android | github                 | https://github.com/bugsnag/bugsnag-android-gradle-plugin.git |
 
-    And the payload field "metadata.os_arch" is not null
-    And the payload field "metadata.os_name" is not null
-    And the payload field "metadata.os_version" is not null
-    And the payload field "metadata.java_version" is not null
-    And the payload field "metadata.gradle_version" is not null
-    And the payload field "metadata.git_version" is not null
-    And I discard the oldest request
+    And 1 requests are valid for the android mapping API and match the following:
+      | versionCode | versionName | appId                       | overwrite |
+      | 1           | 1.0         | com.bugsnag.android.example | null      |
 
-    And the request is valid for the Android Mapping API
-    And the field "apiKey" for multipart request equals "TEST_API_KEY"
-    And the field "versionCode" for multipart request equals "1"
-    And the field "versionName" for multipart request equals "1.0"
-    And the field "appId" for multipart request equals "com.bugsnag.android.example"
-    And the field "overwrite" for multipart request is null
-
-@skip_agp3_5
 Scenario: Bundling multiple flavors automatically
     When I bundle "flavors" using the "standard" bugsnag config
     And I wait to receive 4 requests
 
-    Then the request is valid for the Build API
-    And the payload field "appVersion" equals "1.0"
-    And the payload field "apiKey" equals "TEST_API_KEY"
-    And the payload field "appVersionCode" equals "1"
-    And I discard the oldest request
+    Then 2 requests are valid for the build API and match the following:
+      | appVersion | appVersionCode |
+      | 1.0        | 1              |
+      | 1.0        | 1              |
 
-    And the request is valid for the Android Mapping API
-    And the field "apiKey" for multipart request equals "TEST_API_KEY"
-    And the field "versionCode" for multipart request equals "1"
-    And the field "versionName" for multipart request equals "1.0"
-    And the field "appId" for multipart request equals "com.bugsnag.android.example.bar"
-    And I discard the oldest request
-
-    And the request is valid for the Build API
-    And the payload field "appVersion" equals "1.0"
-    And the payload field "apiKey" equals "TEST_API_KEY"
-    And the payload field "appVersionCode" equals "1"
-    And I discard the oldest request
-
-    And the request is valid for the Android Mapping API
-    And the field "apiKey" for multipart request equals "TEST_API_KEY"
-    And the field "versionCode" for multipart request equals "1"
-    And the field "versionName" for multipart request equals "1.0"
-    And the field "appId" for multipart request equals "com.bugsnag.android.example.foo"
+    And 2 requests are valid for the android mapping API and match the following:
+      | versionCode | versionName | appId                           |
+      | 1           | 1.0         | com.bugsnag.android.example.foo |
+      | 1           | 1.0         | com.bugsnag.android.example.bar |
 
 Scenario: Bundling single flavor
     When I bundle the "Foo" variantOutput for "flavors" using the "standard" bugsnag config
     And I wait to receive 2 requests
 
-    Then the request is valid for the Build API
-    And I discard the oldest request
+    Then 1 requests are valid for the build API and match the following:
+      | appVersion | appVersionCode |
+      | 1.0        | 1              |
 
-    And the request is valid for the Android Mapping API
-    And the field "apiKey" for multipart request equals "TEST_API_KEY"
-    And the field "versionCode" for multipart request equals "1"
-    And the field "versionName" for multipart request equals "1.0"
-    And the field "appId" for multipart request equals "com.bugsnag.android.example.foo"
+    And 1 requests are valid for the android mapping API and match the following:
+      | versionCode | versionName | appId                           |
+      | 1           | 1.0         | com.bugsnag.android.example.foo |
 
 Scenario: Auto upload disabled
     When I bundle "default_app" using the "all_disabled" bugsnag config
-    And I wait for 5 seconds
+    And I wait for 3 seconds
     Then I should receive no requests
