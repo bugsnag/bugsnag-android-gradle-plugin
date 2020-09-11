@@ -1,3 +1,3 @@
 source "https://rubygems.org"
 
-gem "bugsnag-maze-runner", git: 'https://github.com/bugsnag/maze-runner', branch: 'fix-content-type-regex'
+gem "bugsnag-maze-runner", git: 'https://github.com/bugsnag/maze-runner', tag: 'v2.5.0'

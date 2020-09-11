@@ -33,6 +33,10 @@ Before('@skip_agp3_5') do |scenario|
   skip_this_scenario() if equals_target(350)
 end
 
+Before('@skip_agp3_6') do |scenario|
+  skip_this_scenario() if equals_target(360)
+end
+
 def equals_target(target)
   version = ENV["AGP_VERSION"].slice(0, 5)
   version = version.gsub(".", "")
@@ -55,6 +59,13 @@ end
 def get_android_mapping_requests
   Server.stored_requests.reject do |request|
     value = read_key_path(request[:body], 'proguard')
+    value.nil?
+  end
+end
+
+def get_android_ndk_mapping_requests
+  Server.stored_requests.reject do |request|
+    value = read_key_path(request[:body], 'soSymbolFile')
     value.nil?
   end
 end

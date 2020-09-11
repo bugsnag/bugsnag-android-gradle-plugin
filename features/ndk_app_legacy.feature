@@ -5,34 +5,20 @@ Scenario: NDK apps send requests
     When I build the NDK app
     And I wait to receive 6 requests
 
-    Then the request is valid for the Build API
-    And the payload field "appVersion" equals "1.0"
-    And the payload field "builderName" is not null
-    And the payload field "buildTool" equals "gradle-android"
-    And the payload field "appVersionCode" equals "1"
-    And I discard the oldest request
+    Then 1 requests are valid for the build API and match the following:
+        | appVersionCode | appVersion | buildTool      |
+        | 1              | 1.0        | gradle-android |
 
-    And the request is valid for the Android Mapping API
-    And the payload field "projectRoot" is not null
-    And the payload field "arch" equals "arm64-v8a"
-    And I discard the oldest request
+    And 4 requests are valid for the android NDK mapping API and match the following:
+        | arch        | sharedObjectName |
+        | arm64-v8a   | libnative-lib.so |
+        | armeabi-v7a | libnative-lib.so |
+        | x86         | libnative-lib.so |
+        | x86_64      | libnative-lib.so |
 
-    And the request is valid for the Android Mapping API
-    And the payload field "projectRoot" is not null
-    And the payload field "arch" equals "armeabi-v7a"
-    And I discard the oldest request
-
-    And the request is valid for the Android Mapping API
-    And the payload field "projectRoot" is not null
-    And the payload field "arch" equals "x86"
-    And I discard the oldest request
-
-    And the request is valid for the Android Mapping API
-    And the payload field "projectRoot" is not null
-    And the payload field "arch" equals "x86_64"
-    And I discard the oldest request
-
-    And the request is valid for the Android Mapping API
+    And 1 requests are valid for the android mapping API and match the following:
+        | appId                      |
+        | com.bugsnag.android.ndkapp |
 
 @skip_agp4_0_or_higher
 Scenario: Custom projectRoot is added to payload
@@ -40,106 +26,62 @@ Scenario: Custom projectRoot is added to payload
     And I build the NDK app
     And I wait to receive 6 requests
 
-    Then the request is valid for the Build API
-    And I discard the oldest request
+    Then 1 requests are valid for the build API and match the following:
+        | appVersionCode | appVersion | buildTool      |
+        | 1              | 1.0        | gradle-android |
 
-    And the request is valid for the Android Mapping API
-    And the payload field "projectRoot" equals "/repos/custom/my-app"
-    And I discard the oldest request
+    And 4 requests are valid for the android NDK mapping API and match the following:
+        | arch        | projectRoot          |
+        | arm64-v8a   | /repos/custom/my-app |
+        | armeabi-v7a | /repos/custom/my-app |
+        | x86         | /repos/custom/my-app |
+        | x86_64      | /repos/custom/my-app |
 
-    And the request is valid for the Android Mapping API
-    And the payload field "projectRoot" equals "/repos/custom/my-app"
-    And I discard the oldest request
-
-    And the request is valid for the Android Mapping API
-    And the payload field "projectRoot" equals "/repos/custom/my-app"
-    And I discard the oldest request
-
-    And the request is valid for the Android Mapping API
-    And the payload field "projectRoot" equals "/repos/custom/my-app"
-    And I discard the oldest request
-
-    And the request is valid for the Android Mapping API
+    And 1 requests are valid for the android mapping API and match the following:
+        | appId                      |
+        | com.bugsnag.android.ndkapp |
 
 # Sets a non-existent objdump location for x86 and arm64-v8a, delivery should proceed as normal for other files
-@skip_agp3_6 # skip AGP 3.6 until request ordering does not matter in tests
 @skip_agp4_0_or_higher
 Scenario: Custom objdump location
     When I set environment variable "OBJDUMP_LOCATION" to "/fake/objdump"
     And I build the NDK app
     And I wait to receive 4 requests
 
-    Then the request is valid for the Build API
-    And I discard the oldest request
+    Then 1 requests are valid for the build API and match the following:
+        | appVersionCode | appVersion | buildTool      |
+        | 1              | 1.0        | gradle-android |
 
-    And the request is valid for the Android Mapping API
-    And the payload field "arch" equals "armeabi-v7a"
-    And I discard the oldest request
+    And 2 requests are valid for the android NDK mapping API and match the following:
+        | arch           |
+        | armeabi-v7a    |
+        | x86_64         |
 
-    And the request is valid for the Android Mapping API
-    And the payload field "arch" equals "x86_64"
-    And I discard the oldest request
+    And 1 requests are valid for the android mapping API and match the following:
+        | appId                      |
+        | com.bugsnag.android.ndkapp |
 
-    And the request is valid for the Android Mapping API
-
-@skip_agp3_6 # skip AGP 3.6 until request ordering does not matter in tests
 @skip_agp4_0_or_higher
-Scenario: NDK app only uploads SO file matching architecture for ABI splits
-    When I set environment variable "ABI_SPLITS" to "enabled"
-    And I build the NDK app
-    And I wait to receive 14 requests
+Scenario: Mapping files uploaded for custom sharedObjectPaths
+    When I set environment variable "USE_SHARED_OBJECT_PATH" to "true"
+    When I build the NDK app
+    And I wait to receive 10 requests
 
-    Then the request is valid for the Build API
-    And the payload field "appVersionCode" equals "2"
-    And I discard the oldest request
+    Then 1 requests are valid for the build API and match the following:
+        | appVersionCode | appVersion | buildTool      |
+        | 1              | 1.0        | gradle-android |
 
-    And the request is valid for the Build API
-    And the payload field "appVersionCode" equals "3"
-    And I discard the oldest request
+    And 8 requests are valid for the android NDK mapping API and match the following:
+        | arch        | projectRoot | sharedObjectName |
+        | arm64-v8a   | foo         | libnative-lib.so |
+        | arm64-v8a   | foo         | libmonochrome.so |
+        | armeabi-v7a | foo         | libnative-lib.so |
+        | armeabi-v7a | foo         | libmonochrome.so |
+        | x86         | foo         | libnative-lib.so |
+        | x86         | foo         | libmonochrome.so |
+        | x86_64      | foo         | libnative-lib.so |
+        | x86_64      | foo         | libmonochrome.so |
 
-    And the request is valid for the Build API
-    And the payload field "appVersionCode" equals "1"
-    And I discard the oldest request
-
-    And the request is valid for the Build API
-    And the payload field "appVersionCode" equals "4"
-    And I discard the oldest request
-
-    And the request is valid for the Build API
-    And the payload field "appVersionCode" equals "5"
-    And I discard the oldest request
-
-    And the request is valid for the Android Mapping API
-    And the payload field "versionCode" equals "2"
-    And I discard the oldest request
-
-    And the request is valid for the Android Mapping API
-    And the payload field "versionCode" equals "3"
-    And I discard the oldest request
-
-    And the request is valid for the Android Mapping API
-    And the payload field "arch" equals "arm64-v8a"
-    And I discard the oldest request
-
-    And the request is valid for the Android Mapping API
-    And the payload field "arch" equals "armeabi-v7a"
-    And I discard the oldest request
-
-    And the request is valid for the Android Mapping API
-    And the payload field "arch" equals "x86"
-    And I discard the oldest request
-
-    And the request is valid for the Android Mapping API
-    And the payload field "arch" equals "x86_64"
-    And I discard the oldest request
-
-    And the request is valid for the Android Mapping API
-    And the payload field "versionCode" equals "1"
-    And I discard the oldest request
-
-    And the request is valid for the Android Mapping API
-    And the payload field "versionCode" equals "4"
-    And I discard the oldest request
-
-    And the request is valid for the Android Mapping API
-    And the payload field "versionCode" equals "5"
+    And 1 requests are valid for the android mapping API and match the following:
+        | appId                      |
+        | com.bugsnag.android.ndkapp |

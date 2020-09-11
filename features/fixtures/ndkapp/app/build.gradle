@@ -84,5 +84,11 @@ if (!System.env.UPDATING_GRADLEW) {
                 "arm64-v8a": objdumpLocation
             ]
         }
+
+        if (System.env.USE_SHARED_OBJECT_PATH != null) {
+            sharedObjectPaths = [
+                new File("customLibs")
+            ]
+        }
     }
 }

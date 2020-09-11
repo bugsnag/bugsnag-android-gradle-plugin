@@ -44,14 +44,6 @@ steps %Q{
 }
 end
 
-Then(/^the request (\d+) is valid for the Android NDK Mapping API$/) do |request_index|
-  parts = find_request(request_index)[:body]
-  assert_not_nil(parts["soSymbolFile"], "'soSymbolFile' should not be nil")
-  assert_not_nil(parts["apiKey"], "'apiKey' should not be nil")
-  assert_not_nil(parts["sharedObjectName"], "'sharedObjectName' should not be nil")
-  assert_not_nil(parts["appId"], "'appId' should not be nil")
-  assert_not_nil(parts["arch"], "'arch' should not be nil")
-end
 
 When("I build the failing {string} using the {string} bugsnag config") do |module_config, bugsnag_config|
   Runner.environment["MODULE_CONFIG"] = module_config
@@ -98,6 +90,24 @@ Then('{int} requests are valid for the android mapping API and match the followi
   assert_equal(expected_values.to_set, payload_values.to_set)
 end
 
+# TODO some duplication can probably be avoided here
+Then('{int} requests are valid for the android NDK mapping API and match the following:') do |request_count, data_table|
+  mapping_requests = get_android_ndk_mapping_requests
+  assert(mapping_requests.length == request_count, "The number of android NDK mapping API requests received was #{mapping_requests.length}, expected: #{request_count}")
+  expected_values = data_table.hashes
+  expected_values.each { |p_hash| p_hash.each { |k, v| p_hash[k] = nil if v == 'null' } }
+  assert_equal(expected_values.length, mapping_requests.length)
+  payload_values = mapping_requests.map do |request|
+    valid_android_ndk_mapping_api?(request[:body])
+    payload_hash = {}
+    data_table.headers.each_with_object(payload_hash) do |field_path, payload_hash|
+      payload_hash[field_path] = request[:body][field_path]
+    end
+    payload_hash
+  end
+  assert_equal(expected_values.to_set, payload_values.to_set)
+end
+
 def valid_build_api?(request_body)
   assert_equal($api_key, read_key_path(request_body, 'apiKey'))
   assert_not_nil(read_key_path(request_body, 'appVersion'))
@@ -114,6 +124,16 @@ end
 def valid_android_mapping_api?(request_body)
   assert_equal($api_key, request_body['apiKey'])
   assert_not_nil(request_body['proguard'])
+  assert_not_nil(request_body['appId'])
+  assert_not_nil(request_body['versionCode'])
+  assert_not_nil(request_body['buildUUID'])
+  assert_not_nil(request_body['versionName'])
+end
+
+# TODO can avoid duplication
+def valid_android_ndk_mapping_api?(request_body)
+  assert_equal($api_key, request_body['apiKey'])
+  assert_not_nil(request_body['soSymbolFile'])
   assert_not_nil(request_body['appId'])
   assert_not_nil(request_body['versionCode'])
   assert_not_nil(request_body['buildUUID'])
