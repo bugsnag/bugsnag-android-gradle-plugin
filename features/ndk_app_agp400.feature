@@ -21,7 +21,7 @@ Scenario: NDK apps send requests
     And the payload field "sharedObjectName" equals "liblog.so"
     And I discard the oldest request
 
-    And the request is valid for the Android NDK Mapping API
+    And the request is valid for the Android Mapping API
     And the payload field "projectRoot" is not null
     And the payload field "arch" equals "arm64-v8a"
     And the payload field "sharedObjectName" equals "libnative-lib.so"
@@ -47,7 +47,7 @@ Scenario: NDK apps send requests
 
     And the request is valid for the Android Mapping API
     And the payload field "projectRoot" is not null
-    And the payload field "arch" equals "x86
+    And the payload field "arch" equals "x86"
     And the payload field "sharedObjectName" equals "libnative-lib.so"
     And I discard the oldest request
 
@@ -145,7 +145,7 @@ Scenario: Mapping files uploaded for custom sharedObjectPaths
     When I build the NDK app
     And I wait to receive 14 requests
 
-    And the request 0 is valid for the Build API
+    And the request is valid for the Build API
     And I discard the oldest request
 
     And the request is valid for the Android Mapping API
