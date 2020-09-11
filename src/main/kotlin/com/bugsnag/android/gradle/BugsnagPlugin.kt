@@ -357,6 +357,7 @@ class BugsnagPlugin : Plugin<Project> {
             variant.externalNativeBuildProviders.forEach { provider ->
                 searchDirectories.from(provider.map(ExternalNativeBuildTask::objFolder))
                 searchDirectories.from(provider.map(ExternalNativeBuildTask::soFolder))
+                searchDirectories.from(bugsnag.sharedObjectPaths)
             }
         }
     }

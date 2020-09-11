@@ -125,8 +125,7 @@ sealed class BugsnagUploadNdkTask(
     ): Collection<File> {
         val splitArch = variantOutput.getFilter(VariantOutput.FilterType.ABI)
         return searchDirectories.flatMap { findSharedObjectFiles(it, splitArch) }
-            // sort SO files alphabetically by architecture for consistent request order
-            .toSortedSet(compareBy { it.parentFile.name })
+            .toSortedSet(compareBy { it.absolutePath })
     }
 
     /**
