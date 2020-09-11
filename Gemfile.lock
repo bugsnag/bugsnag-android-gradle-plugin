@@ -1,7 +1,7 @@
 GIT
   remote: https://github.com/bugsnag/maze-runner
-  revision: d760a817f5f4050661a42314b8248b095a0d9087
-  branch: fixes-for-bagp
+  revision: 22ba5734ba38eba1db12ca170fe4205ce225d4c3
+  branch: request-tables
   specs:
     bugsnag-maze-runner (2.5.0)
       appium_lib (~> 10.2)
