@@ -14,14 +14,14 @@ Scenario: NDK apps send requests
 
     And 8 requests are valid for the android NDK mapping API and match the following:
       | arch        | projectRoot | sharedObjectName |
-      | arm64-v8a   | foo         | liblog.so        |
-      | arm64-v8a   | foo         | libnative-lib.so |
-      | armeabi-v7a | foo         | liblog.so        |
-      | armeabi-v7a | foo         | libnative-lib.so |
-      | x86         | foo         | liblog.so        |
-      | x86         | foo         | libnative-lib.so |
-      | x86_64      | foo         | liblog.so        |
-      | x86_64      | foo         | libnative-lib.so |
+      | arm64-v8a   | /\S+/       | liblog.so        |
+      | arm64-v8a   | /\S+/       | libnative-lib.so |
+      | armeabi-v7a | /\S+/       | liblog.so        |
+      | armeabi-v7a | /\S+/       | libnative-lib.so |
+      | x86         | /\S+/       | liblog.so        |
+      | x86         | /\S+/       | libnative-lib.so |
+      | x86_64      | /\S+/       | liblog.so        |
+      | x86_64      | /\S+/       | libnative-lib.so |
 
     And 1 requests are valid for the android mapping API and match the following:
       | appId                      |
@@ -86,18 +86,18 @@ Scenario: Mapping files uploaded for custom sharedObjectPaths
 
     And 12 requests are valid for the android NDK mapping API and match the following:
         | arch        | projectRoot | sharedObjectName |
-        | arm64-v8a   | foo         | liblog.so        |
-        | arm64-v8a   | foo         | libnative-lib.so |
-        | arm64-v8a   | foo         | libmonochrome.so |
-        | armeabi-v7a | foo         | liblog.so        |
-        | armeabi-v7a | foo         | libnative-lib.so |
-        | armeabi-v7a | foo         | libmonochrome.so |
-        | x86         | foo         | liblog.so        |
-        | x86         | foo         | libnative-lib.so |
-        | x86         | foo         | libmonochrome.so |
-        | x86_64      | foo         | liblog.so        |
-        | x86_64      | foo         | libnative-lib.so |
-        | x86_64      | foo         | libmonochrome.so |
+        | arm64-v8a   | /\S+/       | liblog.so        |
+        | arm64-v8a   | /\S+/       | libnative-lib.so |
+        | arm64-v8a   | /\S+/       | libmonochrome.so |
+        | armeabi-v7a | /\S+/       | liblog.so        |
+        | armeabi-v7a | /\S+/       | libnative-lib.so |
+        | armeabi-v7a | /\S+/       | libmonochrome.so |
+        | x86         | /\S+/       | liblog.so        |
+        | x86         | /\S+/       | libnative-lib.so |
+        | x86         | /\S+/       | libmonochrome.so |
+        | x86_64      | /\S+/       | liblog.so        |
+        | x86_64      | /\S+/       | libnative-lib.so |
+        | x86_64      | /\S+/       | libmonochrome.so |
 
     And 1 requests are valid for the android mapping API and match the following:
         | appId                      |
