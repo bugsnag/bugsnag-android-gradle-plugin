@@ -74,7 +74,7 @@ Scenario: Mapping files uploaded for custom sharedObjectPaths
     And 8 requests are valid for the android NDK mapping API and match the following:
         | arch        | projectRoot | sharedObjectName |
         | arm64-v8a   | /\S+/       | libnative-lib.so |
-        | arm64-v8a   | /\S+/     §  | libmonochrome.so |
+        | arm64-v8a   | /\S+/       | libmonochrome.so |
         | armeabi-v7a | /\S+/       | libnative-lib.so |
         | armeabi-v7a | /\S+/       | libmonochrome.so |
         | x86         | /\S+/       | libnative-lib.so |
