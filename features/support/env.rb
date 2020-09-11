@@ -14,27 +14,27 @@ ENV["GRADLE_WRAPPER_VERSION"] ||= "6.5.1"
 `./features/scripts/install_gradle_plugin.sh`
 
 Before('@requires_agp4_0_or_higher') do |scenario|
-  skip_this_scenario() if !is_above_or_equal_to_target(400)
+  skip_this_scenario unless is_above_or_equal_to_target(400)
 end
 
 Before('@requires_agp4_1_or_higher') do |scenario|
-  skip_this_scenario() if !is_above_or_equal_to_target(410)
+  skip_this_scenario unless is_above_or_equal_to_target(410)
 end
 
 Before('@skip_agp4_0_or_higher') do |scenario|
-  skip_this_scenario() if is_above_or_equal_to_target(400)
+  skip_this_scenario if is_above_or_equal_to_target(400)
 end
 
 Before('@skip_agp4_1_or_higher') do |scenario|
-  skip_this_scenario() if is_above_or_equal_to_target(410)
+  skip_this_scenario if is_above_or_equal_to_target(410)
 end
 
 Before('@skip_agp3_5') do |scenario|
-  skip_this_scenario() if equals_target(350)
+  skip_this_scenario if equals_target(350)
 end
 
 Before('@skip_agp3_6') do |scenario|
-  skip_this_scenario() if equals_target(360)
+  skip_this_scenario if equals_target(360)
 end
 
 def equals_target(target)
