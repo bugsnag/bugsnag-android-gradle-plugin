@@ -57,7 +57,10 @@ Then(/^the exit code equals (\d+)$/) do |exit_code|
 end
 
 Then('{int} requests are valid for the build API and match the following:') do |request_count, data_table|
+
   build_requests = get_build_requests
+
+
   assert(build_requests.length == request_count, "The number of build API requests received was #{build_requests.length}, expected: #{request_count}")
   expected_values = data_table.hashes
   expected_values.each { |p_hash| p_hash.each { |k, v| p_hash[k] = nil if v == 'null' } }
@@ -92,20 +95,10 @@ end
 
 # TODO some duplication can probably be avoided here
 Then('{int} requests are valid for the android NDK mapping API and match the following:') do |request_count, data_table|
-  mapping_requests = get_android_ndk_mapping_requests
-  assert(mapping_requests.length == request_count, "The number of android NDK mapping API requests received was #{mapping_requests.length}, expected: #{request_count}")
-  expected_values = data_table.hashes
-  expected_values.each { |p_hash| p_hash.each { |k, v| p_hash[k] = nil if v == 'null' } }
-  assert_equal(expected_values.length, mapping_requests.length)
-  payload_values = mapping_requests.map do |request|
-    valid_android_ndk_mapping_api?(request[:body])
-    payload_hash = {}
-    data_table.headers.each_with_object(payload_hash) do |field_path, payload_hash|
-      payload_hash[field_path] = request[:body][field_path]
-    end
-    payload_hash
-  end
-  assert_equal(expected_values.to_set, payload_values.to_set)
+  # Verify number of requests received
+  requests = get_android_ndk_mapping_requests
+
+  RequestSetAssertions.assert_requests_match(requests, data_table)
 end
 
 def valid_build_api?(request_body)
