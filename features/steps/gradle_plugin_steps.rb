@@ -44,7 +44,6 @@ steps %Q{
 }
 end
 
-
 When("I build the failing {string} using the {string} bugsnag config") do |module_config, bugsnag_config|
   Runner.environment["MODULE_CONFIG"] = module_config
   Runner.environment["BUGSNAG_CONFIG"] = bugsnag_config
@@ -57,48 +56,21 @@ Then(/^the exit code equals (\d+)$/) do |exit_code|
 end
 
 Then('{int} requests are valid for the build API and match the following:') do |request_count, data_table|
-
-  build_requests = get_build_requests
-
-
-  assert(build_requests.length == request_count, "The number of build API requests received was #{build_requests.length}, expected: #{request_count}")
-  expected_values = data_table.hashes
-  expected_values.each { |p_hash| p_hash.each { |k, v| p_hash[k] = nil if v == 'null' } }
-  assert_equal(expected_values.length, build_requests.length)
-  payload_values = build_requests.map do |request|
-    valid_build_api?(request[:body])
-    payload_hash = {}
-    data_table.headers.each_with_object(payload_hash) do |field_path, payload_hash|
-      payload_hash[field_path] = read_key_path(request[:body], field_path)
-    end
-    payload_hash
-  end
-  assert_equal(expected_values.to_set, payload_values.to_set)
+  requests = get_build_requests
+  assert_equal(request_count, requests.length, 'Wrong number of build API requests')
+  RequestSetAssertions.assert_requests_match requests, data_table
 end
 
 Then('{int} requests are valid for the android mapping API and match the following:') do |request_count, data_table|
-  mapping_requests = get_android_mapping_requests
-  assert(mapping_requests.length == request_count, "The number of android mapping API requests received was #{mapping_requests.length}, expected: #{request_count}")
-  expected_values = data_table.hashes
-  expected_values.each { |p_hash| p_hash.each { |k, v| p_hash[k] = nil if v == 'null' } }
-  assert_equal(expected_values.length, mapping_requests.length)
-  payload_values = mapping_requests.map do |request|
-    valid_android_mapping_api?(request[:body])
-    payload_hash = {}
-    data_table.headers.each_with_object(payload_hash) do |field_path, payload_hash|
-      payload_hash[field_path] = request[:body][field_path]
-    end
-    payload_hash
-  end
-  assert_equal(expected_values.to_set, payload_values.to_set)
+  requests = get_android_mapping_requests
+  assert_equal(request_count, requests.length, 'Wrong number of mapping API requests')
+  RequestSetAssertions.assert_requests_match requests, data_table
 end
 
-# TODO some duplication can probably be avoided here
 Then('{int} requests are valid for the android NDK mapping API and match the following:') do |request_count, data_table|
-  # Verify number of requests received
   requests = get_android_ndk_mapping_requests
-
-  RequestSetAssertions.assert_requests_match(requests, data_table)
+  assert_equal(request_count, requests.length, 'Wrong number of NDK mapping API requests')
+  RequestSetAssertions.assert_requests_match requests, data_table
 end
 
 def valid_build_api?(request_body)
