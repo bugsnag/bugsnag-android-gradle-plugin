@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/bugsnag/maze-runner
-  revision: 4a1415c918bbea7b2f99b9a58ffa6d40dfa31ad1
+  revision: 5d398be89f8ed1ac027c74b2bff6f80112c5de9b
   branch: request-tables
   specs:
     bugsnag-maze-runner (2.5.0)
