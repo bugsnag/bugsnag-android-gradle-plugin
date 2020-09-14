@@ -7,16 +7,16 @@ Scenario: Upload successfully with API key, mapping file, and correct endpoint
 
 Scenario: No uploads or build failures when obfuscation is disabled
     When I build "disabled_obfuscation" using the "standard" bugsnag config
-    And I wait for 5 seconds
+    And I wait for 3 seconds
     Then I should receive no requests
     Then the exit code equals 0
 
 Scenario: Upload failure due to empty API key
     When I build the failing "default_app" using the "empty_api_key" bugsnag config
-    And I wait for 5 seconds
+    And I wait for 3 seconds
     Then I should receive no requests
 
 Scenario: Upload failure due to connectivity failure
     When I build the failing "default_app" using the "wrong_endpoint" bugsnag config
-    And I wait for 5 seconds
+    And I wait for 3 seconds
     Then I should receive no requests
