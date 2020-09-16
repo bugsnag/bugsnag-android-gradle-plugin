@@ -235,14 +235,16 @@ class BugsnagPlugin : Plugin<Project> {
             )
 
             if (shouldUploadMappings(output, bugsnag)) {
-                if (bugsnag.reportBuilds.get()) {
-                    variant.register(project, releaseUploadTask)
+                val releaseAutoUpload = bugsnag.reportBuilds.get()
+                variant.register(project, releaseUploadTask, releaseAutoUpload)
+
+                if (symbolFileTaskProvider != null) {
+                    val ndkAutoUpload = isNdkUploadEnabled(bugsnag, android)
+                    variant.register(project, symbolFileTaskProvider, ndkAutoUpload)
                 }
-                if (symbolFileTaskProvider != null && isNdkUploadEnabled(bugsnag, android)) {
-                    variant.register(project, symbolFileTaskProvider)
-                }
-                if (proguardTaskProvider != null && bugsnag.uploadJvmMappings.get()) {
-                    variant.register(project, proguardTaskProvider)
+                if (proguardTaskProvider != null) {
+                    val jvmAutoUpload = bugsnag.uploadJvmMappings.get()
+                    variant.register(project, proguardTaskProvider, jvmAutoUpload)
                 }
             }
         }

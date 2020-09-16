@@ -1,3 +1,8 @@
+## TBD
+
+* Fix task ordering for upload task on AGP 3.5
+  [#300](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/300)
+
 ## 5.0.2 (2020-09-10)
 
 * Reword log messages that implied duplicate uploads
