@@ -4,6 +4,7 @@ import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -39,7 +40,6 @@ class PluginExtensionTest {
             assertEquals(60000, requestTimeoutMs.get())
             assertEquals(0, retryCount.get())
             assertEquals(emptyList<File>(), sharedObjectPaths.get())
-            assertFalse(uploadDebugBuildMappings.get())
             assertTrue(uploadJvmMappings.get())
             assertNull(uploadNdkMappings.orNull)
             assertNull(sourceControl.repository.orNull)

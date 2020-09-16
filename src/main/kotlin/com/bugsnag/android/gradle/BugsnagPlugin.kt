@@ -136,7 +136,7 @@ class BugsnagPlugin : Plugin<Project> {
 
     private fun isVariantEnabled(bugsnag: BugsnagPluginExtension,
                                  variant: VariantFilterImpl): Boolean {
-        bugsnag.filter?.execute(variant)
+        bugsnag.filter.execute(variant)
         return variant.variantEnabled ?: true
     }
 
@@ -234,18 +234,16 @@ class BugsnagPlugin : Plugin<Project> {
                 symbolFileTaskProvider != null
             )
 
-            if (shouldUploadMappings(output, bugsnag)) {
-                val releaseAutoUpload = bugsnag.reportBuilds.get()
-                variant.register(project, releaseUploadTask, releaseAutoUpload)
+            val releaseAutoUpload = bugsnag.reportBuilds.get()
+            variant.register(project, releaseUploadTask, releaseAutoUpload)
 
-                if (symbolFileTaskProvider != null) {
-                    val ndkAutoUpload = isNdkUploadEnabled(bugsnag, android)
-                    variant.register(project, symbolFileTaskProvider, ndkAutoUpload)
-                }
-                if (proguardTaskProvider != null) {
-                    val jvmAutoUpload = bugsnag.uploadJvmMappings.get()
-                    variant.register(project, proguardTaskProvider, jvmAutoUpload)
-                }
+            if (symbolFileTaskProvider != null) {
+                val ndkAutoUpload = isNdkUploadEnabled(bugsnag, android)
+                variant.register(project, symbolFileTaskProvider, ndkAutoUpload)
+            }
+            if (proguardTaskProvider != null) {
+                val jvmAutoUpload = bugsnag.uploadJvmMappings.get()
+                variant.register(project, proguardTaskProvider, jvmAutoUpload)
             }
         }
     }
@@ -407,14 +405,6 @@ class BugsnagPlugin : Plugin<Project> {
             }
             configureMetadata()
         }
-    }
-
-    private fun shouldUploadMappings(
-        output: ApkVariantOutput,
-        bugsnag: BugsnagPluginExtension
-    ): Boolean {
-        return !output.name.toLowerCase().endsWith(
-            "debug") || bugsnag.uploadDebugBuildMappings.get()
     }
 
     private fun isNdkUploadEnabled(bugsnag: BugsnagPluginExtension,

@@ -1,5 +1,8 @@
 ## TBD
 
+* Remove uploadDebugBuildMappings flag in favour of variantFilter
+  [#301](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/301)
+
 * Fix task ordering for upload task on AGP 3.5
   [#300](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/300)
 
