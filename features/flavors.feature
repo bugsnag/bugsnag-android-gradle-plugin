@@ -19,7 +19,6 @@ Scenario: Flavors automatic upload disabled
     And I wait for 5 seconds
     Then I should receive no requests
 
-@skip_agp3_5
 Scenario: Flavors manual upload of build API
     When I build the "Foo-release" variantOutput for "flavors" using the "all_disabled" bugsnag config
     And I wait to receive 1 requests

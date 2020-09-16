@@ -1,7 +1,5 @@
 Feature: Generating Android app bundles
 
-# See [PLAT-5038]
-@skip_agp3_5
 Scenario: Single-module default app bundles successfully
     When I bundle "default_app" using the "standard" bugsnag config
     And I wait to receive 2 requests
@@ -14,8 +12,6 @@ Scenario: Single-module default app bundles successfully
       | versionCode | versionName | appId                       | overwrite |
       | 1           | 1.0         | com.bugsnag.android.example | null      |
 
-# See [PLAT-5038]
-@skip_agp3_5
 Scenario: Bundling multiple flavors automatically
     When I bundle "flavors" using the "standard" bugsnag config
     And I wait to receive 4 requests
@@ -30,8 +26,6 @@ Scenario: Bundling multiple flavors automatically
       | 1           | 1.0         | com.bugsnag.android.example.foo |
       | 1           | 1.0         | com.bugsnag.android.example.bar |
 
-# See [PLAT-5038]
-@skip_agp3_5
 Scenario: Bundling single flavor
     When I bundle the "Foo" variantOutput for "flavors" using the "standard" bugsnag config
     And I wait to receive 2 requests
@@ -44,8 +38,6 @@ Scenario: Bundling single flavor
       | versionCode | versionName | appId                           |
       | 1           | 1.0         | com.bugsnag.android.example.foo |
 
-# See [PLAT-5038]
-@skip_agp3_5
 Scenario: Auto upload disabled
     When I bundle "default_app" using the "all_disabled" bugsnag config
     And I wait for 3 seconds

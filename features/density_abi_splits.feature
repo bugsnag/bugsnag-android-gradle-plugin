@@ -44,7 +44,6 @@ Scenario: Density ABI Splits automatic upload disabled
     Then I should receive no requests
 
 @skip_agp4_1_or_higher
-@skip_agp3_5
 Scenario: Density ABI Splits manual upload of build API
     When I build the "XxxhdpiArmeabi-release" variantOutput for "density_abi_splits" using the "all_disabled" bugsnag config
     And I wait to receive a request
