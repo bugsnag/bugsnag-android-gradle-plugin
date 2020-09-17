@@ -1,3 +1,14 @@
+## 5.1.0 (2020-09-17)
+
+* Remove uploadDebugBuildMappings flag in favour of variantFilter
+  [#301](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/301)
+
+* Fix task ordering for upload task on AGP 3.5
+  [#300](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/300)
+
+* Fix bugsnag.sharedObjectPaths not uploading SO files
+  [#295](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/295)
+
 ## 5.0.2 (2020-09-10)
 
 * Reword log messages that implied duplicate uploads
