@@ -3,5 +3,5 @@ apply plugin: 'com.bugsnag.android.gradle'
 bugsnag {
     endpoint = "http://localhost:9339"
     releasesEndpoint = "http://localhost:9339"
-    uploadDebugBuildMappings = true
+    variantFilter {}
 }

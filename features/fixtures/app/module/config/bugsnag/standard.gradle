@@ -1,4 +1,0 @@
-project.afterEvaluate {
-    project.bugsnag.endpoint = "http://localhost:9339"
-    project.bugsnag.releasesEndpoint = "http://localhost:9339"
-}
