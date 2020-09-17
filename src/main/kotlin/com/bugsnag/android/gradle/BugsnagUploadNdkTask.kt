@@ -125,8 +125,7 @@ sealed class BugsnagUploadNdkTask(
     ): Collection<File> {
         val splitArch = variantOutput.getFilter(VariantOutput.FilterType.ABI)
         return searchDirectories.flatMap { findSharedObjectFiles(it, splitArch) }
-            // sort SO files alphabetically by architecture for consistent request order
-            .toSortedSet(compareBy { it.parentFile.name })
+            .toSortedSet(compareBy { it.absolutePath })
     }
 
     /**
@@ -230,14 +229,11 @@ sealed class BugsnagUploadNdkTask(
         }
 
         val request = BugsnagMultiPartUploadRequest.from(this)
-        logger.lifecycle("Bugsnag: Attempting to upload shared object mapping " +
-            "file for $sharedObjectName-$arch from $mappingFile")
-
         val manifestInfo = parseManifestInfo()
         val mappingFileHash = mappingFile.md5HashCode()
         val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileHash) {
-            logger.lifecycle("Bugsnag: Attempting to upload shared object mapping " +
-                "file for $sharedObjectName-$arch from $mappingFile")
+            logger.lifecycle("Bugsnag: Uploading SO mapping file for " +
+                "$sharedObjectName ($arch) from $mappingFile")
             request.uploadMultipartEntity(parseManifestInfo(), retryCount.get()) { builder ->
                 builder.addFormDataPart("soSymbolFile", mappingFile.name, mappingFile.asRequestBody())
 
@@ -251,7 +247,6 @@ sealed class BugsnagUploadNdkTask(
             }
         }
         requestOutputFile.asFile.get().writeText(response)
-        logger.lifecycle("Bugsnag: shared object mapping file complete for $mappingFile")
     }
 
     /**

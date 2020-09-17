@@ -86,7 +86,11 @@ open class BugsnagPluginExtension(objects: ObjectFactory) {
         action.execute(sourceControl)
     }
 
-    internal var filter: Action<VariantFilter>? = null
+    internal var filter: Action<VariantFilter> = Action {
+        if (it.name.toLowerCase().contains("debug")) {
+            it.setEnabled(false)
+        }
+    }
 
     fun variantFilter(action: Action<VariantFilter>) {
         this.filter = action

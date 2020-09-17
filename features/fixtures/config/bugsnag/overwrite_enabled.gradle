@@ -1,8 +1,8 @@
 apply plugin: 'com.bugsnag.android.gradle'
 
 bugsnag {
-    endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
-    releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+    endpoint = "http://localhost:9339"
+    releasesEndpoint = "http://localhost:9339"
     reportBuilds = false
     overwrite = true
 }

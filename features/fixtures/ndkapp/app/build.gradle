@@ -68,8 +68,8 @@ if (!System.env.UPDATING_GRADLEW) {
 
     bugsnag {
         uploadNdkMappings = true
-        endpoint = "http://localhost:${System.env.MOCK_API_PORT}"
-        releasesEndpoint = "http://localhost:${System.env.MOCK_API_PORT}"
+        endpoint = "http://localhost:9339"
+        releasesEndpoint = "http://localhost:9339"
 
         def customPath = System.env.PROJECT_ROOT
         def objdumpLocation = System.env.OBJDUMP_LOCATION
@@ -82,6 +82,12 @@ if (!System.env.UPDATING_GRADLEW) {
             objdumpPaths = [
                 "x86": objdumpLocation,
                 "arm64-v8a": objdumpLocation
+            ]
+        }
+
+        if (System.env.USE_SHARED_OBJECT_PATH != null) {
+            sharedObjectPaths = [
+                new File("customLibs")
             ]
         }
     }
