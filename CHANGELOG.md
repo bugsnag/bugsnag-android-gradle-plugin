@@ -9,13 +9,13 @@
 * Support mapping upload from Android Gradle Plugin through a proxy
   [#298](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/298)
 
+* Fix bugsnag.sharedObjectPaths not uploading SO files
+  [#295](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/295)
+
 ## 5.0.2 (2020-09-10)
 
 * Reword log messages that implied duplicate uploads
   [#296](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/296)
-
-* Fix bugsnag.sharedObjectPaths not uploading SO files
-  [#295](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/295)
 
 * Only set mappingFilesProvider on release task if obfuscation enabled
   [#292](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/292)
