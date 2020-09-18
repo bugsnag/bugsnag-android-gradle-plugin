@@ -98,7 +98,7 @@ private fun configureHttpProxySettings(builder: OkHttpClient.Builder) {
     val pass: String? = System.getProperty("http.proxyPassword")
 
     if (user != null && pass != null) { // set the default authenticator if credentials set
-        java.net.Authenticator.setDefault(ProxyAuthenticator(user, password))
+        java.net.Authenticator.setDefault(ProxyAuthenticator(user, pass))
         builder.proxyAuthenticator(Authenticator.JAVA_NET_AUTHENTICATOR)
     }
 }
