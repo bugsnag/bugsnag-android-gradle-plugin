@@ -89,7 +89,7 @@ private fun configureHttpProxySettings(builder: OkHttpClient.Builder) {
     val port: String? = System.getProperty("http.proxyPort")
 
     if (host != null && port != null) { // set the proxy host/port if set
-        val socketAddress = InetSocketAddress("localhost", port.toInt())
+        val socketAddress = InetSocketAddress(host, port.toInt())
         val proxy = Proxy(Proxy.Type.HTTP, socketAddress)
         builder.proxy(proxy)
     }
@@ -98,7 +98,7 @@ private fun configureHttpProxySettings(builder: OkHttpClient.Builder) {
     val pass: String? = System.getProperty("http.proxyPassword")
 
     if (user != null && pass != null) { // set the default authenticator if credentials set
-        java.net.Authenticator.setDefault(ProxyAuthenticator("user", "password"))
+        java.net.Authenticator.setDefault(ProxyAuthenticator(user, password))
         builder.proxyAuthenticator(Authenticator.JAVA_NET_AUTHENTICATOR)
     }
 }
