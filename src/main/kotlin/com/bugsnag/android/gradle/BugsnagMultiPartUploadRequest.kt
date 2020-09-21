@@ -81,12 +81,13 @@ class BugsnagMultiPartUploadRequest(
         }
 
         internal fun <T> from(
-            task: T
+            task: T,
+            endpoint: String = task.endpoint.get()
         ): BugsnagMultiPartUploadRequest where T : DefaultTask, T: BugsnagFileUploadTask {
             return BugsnagMultiPartUploadRequest(
                 failOnUploadError = task.failOnUploadError.get(),
                 overwrite = task.overwrite.get(),
-                endpoint = task.endpoint.get(),
+                endpoint = endpoint,
                 okHttpClient = task.httpClientHelper.get().okHttpClient
             )
         }

@@ -375,13 +375,13 @@ class BugsnagPlugin : Plugin<Project> {
         manifestInfoFileProvider: Provider<RegularFile>,
         ndkUploadClientProvider: Provider<out UploadRequestClient>,
         generateTaskProvider: TaskProvider<out BugsnagGenerateNdkSoMappingTask>
-    ): TaskProvider<out BugsnagUploadNdkTask> {
+    ): TaskProvider<out BugsnagUploadSharedObjectTask> {
         // Create a Bugsnag task to upload NDK mapping file(s)
         val outputName = taskNameForOutput(output)
         val taskName = "uploadBugsnagNdk${outputName}Mapping"
         val path = "intermediates/bugsnag/requests/ndkFor${outputName}.json"
         val requestOutputFile = project.layout.buildDirectory.file(path)
-        return BugsnagUploadNdkTask.register(project, taskName) {
+        return BugsnagUploadSharedObjectTask.register(project, taskName) {
             // upload task requires SO mapping generation to occur first
             this.dependsOn(generateTaskProvider)
             this.requestOutputFile.set(requestOutputFile)
@@ -389,6 +389,7 @@ class BugsnagPlugin : Plugin<Project> {
             httpClientHelper.set(httpClientHelperProvider)
             manifestInfoFile.set(manifestInfoFileProvider)
             uploadRequestClient.set(ndkUploadClientProvider)
+            uploadType.set(BugsnagUploadSharedObjectTask.UploadType.NDK)
             configureWith(bugsnag)
         }
     }
