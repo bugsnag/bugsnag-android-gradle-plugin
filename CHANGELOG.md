@@ -5,6 +5,9 @@
 
 * Separate generation/upload of shared objects into two tasks
   [#303](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/303)
+  
+* Add uploadNdkUnityLibraryMappings flag to bugsnag extension
+  [#306](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/306)
 
 ## 5.1.0 (2020-09-17)
 
