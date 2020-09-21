@@ -1,5 +1,8 @@
 ## TBD
 
+* Generate shared object mapping files in separate class
+  [#304](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/304)
+
 * Separate generation/upload of shared objects into two tasks
   [#303](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/303)
 
