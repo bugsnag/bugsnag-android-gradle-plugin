@@ -5,6 +5,9 @@
 
 * Fix task ordering for upload task on AGP 3.5
   [#300](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/300)
+  
+* Support mapping upload from Android Gradle Plugin through a proxy
+  [#298](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/298)
 
 * Fix bugsnag.sharedObjectPaths not uploading SO files
   [#295](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/295)
