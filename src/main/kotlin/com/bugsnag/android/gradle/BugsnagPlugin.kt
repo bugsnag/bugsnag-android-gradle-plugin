@@ -438,7 +438,18 @@ class BugsnagPlugin : Plugin<Project> {
         }
     }
 
-    private fun isNdkUploadEnabled(bugsnag: BugsnagPluginExtension,
+    /**
+     * Determines whether SO mapping files should be generated for the
+     * libunity.so file in Unity projects.
+     */
+    internal fun isUnityLibraryUploadEnabled(bugsnag: BugsnagPluginExtension,
+                                             android: AppExtension): Boolean {
+        val default = android.aaptOptions.noCompress.contains(".unity3d")
+        return bugsnag.uploadNdkUnityLibraryMappings.getOrElse(default)
+    }
+
+
+    internal fun isNdkUploadEnabled(bugsnag: BugsnagPluginExtension,
         android: AppExtension): Boolean {
         val usesCmake = android.externalNativeBuild.cmake.path != null
         val usesNdkBuild = android.externalNativeBuild.ndkBuild.path != null
