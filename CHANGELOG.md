@@ -1,3 +1,8 @@
+## TBD
+
+* Separate generation/upload of shared objects into two tasks
+  [#303](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/303)
+
 ## 5.1.0 (2020-09-17)
 
 * Remove uploadDebugBuildMappings flag in favour of variantFilter

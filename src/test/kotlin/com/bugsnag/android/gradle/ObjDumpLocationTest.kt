@@ -1,6 +1,6 @@
 package com.bugsnag.android.gradle
 
-import com.bugsnag.android.gradle.BugsnagUploadNdkTask.Companion.calculateObjDumpLocation
+import com.bugsnag.android.gradle.BugsnagGenerateNdkSoMappingTask.Companion.calculateObjDumpLocation
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
