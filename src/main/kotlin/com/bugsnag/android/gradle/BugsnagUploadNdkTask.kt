@@ -1,6 +1,6 @@
 package com.bugsnag.android.gradle
 
-import com.bugsnag.android.gradle.BugsnagGenerateNdkSoMappingTask.Companion.SO_MAPPING_DIR
+import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.bugsnag.android.gradle.internal.md5HashCode
