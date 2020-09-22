@@ -29,10 +29,19 @@ import javax.inject.Inject
 /**
  * Task that uploads shared object mapping files to Bugsnag.
  */
-internal open class BugsnagUploadNdkTask @Inject constructor(
+internal open class BugsnagUploadSharedObjectTask @Inject constructor(
     objects: ObjectFactory,
     projectLayout: ProjectLayout
 ) : DefaultTask(), AndroidManifestInfoReceiver, BugsnagFileUploadTask {
+
+    enum class UploadType(private val path: String, val uploadKey: String) {
+        NDK("so-symbol", "soSymbolFile"),
+        UNITY("so-symbol-table", "soSymbolTableFile");
+
+        fun endpoint(base: String): String {
+            return "${base}/${path}"
+        }
+    }
 
     companion object {
         private const val VALID_SO_FILE_THRESHOLD = 1024
@@ -40,8 +49,8 @@ internal open class BugsnagUploadNdkTask @Inject constructor(
         internal fun register(
             project: Project,
             name: String,
-            configurationAction: BugsnagUploadNdkTask.() -> Unit
-        ): TaskProvider<BugsnagUploadNdkTask> {
+            configurationAction: BugsnagUploadSharedObjectTask.() -> Unit
+        ): TaskProvider<BugsnagUploadSharedObjectTask> {
             return project.tasks.register(name, configurationAction)
         }
     }
@@ -86,6 +95,9 @@ internal open class BugsnagUploadNdkTask @Inject constructor(
     @get:Input
     override val timeoutMillis: Property<Long> = objects.property()
 
+    @get:Input
+    val uploadType: Property<UploadType> = objects.property()
+
     @TaskAction
     fun upload() {
         val rootDir = intermediateOutputDir.asFile.get()
@@ -115,14 +127,17 @@ internal open class BugsnagUploadNdkTask @Inject constructor(
             return
         }
         val sharedObjectName = mappingFile.nameWithoutExtension
-        val request = BugsnagMultiPartUploadRequest.from(this)
+        val requestEndpoint = uploadType.get().endpoint(endpoint.get())
+        val soUploadKey = uploadType.get().uploadKey
+
+        val request = BugsnagMultiPartUploadRequest.from(this, requestEndpoint)
         val manifestInfo = parseManifestInfo()
         val mappingFileHash = mappingFile.md5HashCode()
         val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileHash) {
             logger.lifecycle("Bugsnag: Uploading SO mapping file for " +
                 "$sharedObjectName ($arch) from $mappingFile")
             request.uploadMultipartEntity(parseManifestInfo(), retryCount.get()) { builder ->
-                builder.addFormDataPart("soSymbolFile", mappingFile.name, mappingFile.asRequestBody())
+                builder.addFormDataPart(soUploadKey, mappingFile.name, mappingFile.asRequestBody())
                 builder.addFormDataPart("arch", arch)
                 builder.addFormDataPart("sharedObjectName", sharedObjectName)
                 builder.addFormDataPart("projectRoot", projectRoot.get())

@@ -1,5 +1,8 @@
 ## TBD
 
+* Support Unity shared object files in upload task
+  [#307](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/307)
+
 * Generate shared object mapping files in separate class
   [#304](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/304)
 
