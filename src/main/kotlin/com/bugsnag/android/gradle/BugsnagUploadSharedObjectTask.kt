@@ -34,9 +34,13 @@ internal open class BugsnagUploadSharedObjectTask @Inject constructor(
     projectLayout: ProjectLayout
 ) : DefaultTask(), AndroidManifestInfoReceiver, BugsnagFileUploadTask {
 
-    enum class UploadType {
-        NDK,
-        UNITY
+    enum class UploadType(private val path: String, val uploadKey: String) {
+        NDK("so-symbol", "soSymbolFile"),
+        UNITY("so-symbol-table", "soSymbolTableFile");
+
+        fun endpoint(base: String): String {
+            return "${base}/${path}"
+        }
     }
 
     companion object {
@@ -123,14 +127,8 @@ internal open class BugsnagUploadSharedObjectTask @Inject constructor(
             return
         }
         val sharedObjectName = mappingFile.nameWithoutExtension
-        val requestEndpoint = when (uploadType.get()) {
-            UploadType.NDK -> "${endpoint.get()}/so-symbol"
-            UploadType.UNITY -> "${endpoint.get()}/so-symbol-table"
-        }
-        val soUploadKey = when (uploadType.get()) {
-            UploadType.NDK -> "soSymbolFile"
-            UploadType.UNITY -> "soSymbolTableFile"
-        }
+        val requestEndpoint = uploadType.get().endpoint(endpoint.get())
+        val soUploadKey = uploadType.get().uploadKey
 
         val request = BugsnagMultiPartUploadRequest.from(this, requestEndpoint)
         val manifestInfo = parseManifestInfo()
