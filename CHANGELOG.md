@@ -1,5 +1,8 @@
 ## TBD
 
+* Register unity shared object generation and upload tasks
+  [#311](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/311)
+
 * Support Unity shared object files in upload task
   [#307](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/307)
 

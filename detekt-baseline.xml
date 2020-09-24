@@ -6,6 +6,7 @@
     <ID>MagicNumber:BugsnagPluginExtension.kt$BugsnagPluginExtension$60000</ID>
     <ID>MagicNumber:BugsnagReleasesTask.kt$BugsnagReleasesTask$200</ID>
     <ID>MaxLineLength:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$private</ID>
+    <ID>ReturnCount:BugsnagPlugin.kt$BugsnagPlugin$ @Suppress("SENSELESS_COMPARISON") internal fun isUnityLibraryUploadEnabled(bugsnag: BugsnagPluginExtension, android: AppExtension): Boolean</ID>
     <ID>SpreadOperator:BugsnagReleasesTask.kt$BugsnagReleasesTask$(*cmd)</ID>
     <ID>TooGenericExceptionCaught:BugsnagHttpClientHelper.kt$exc: Throwable</ID>
     <ID>TooGenericExceptionCaught:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$exc: Throwable</ID>
