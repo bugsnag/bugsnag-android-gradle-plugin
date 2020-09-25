@@ -66,7 +66,7 @@ end
 
 def get_android_unity_ndk_mapping_requests
   Server.stored_requests.reject do |request|
-    value = read_key_path(request[:body], 'soSymbolTable')
+    value = read_key_path(request[:body], 'soSymbolTableFile')
     value.nil?
   end
 end

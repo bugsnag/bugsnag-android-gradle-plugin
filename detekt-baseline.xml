@@ -7,6 +7,7 @@
     <ID>MagicNumber:BugsnagReleasesTask.kt$BugsnagReleasesTask$200</ID>
     <ID>MaxLineLength:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$private</ID>
     <ID>ReturnCount:BugsnagPlugin.kt$BugsnagPlugin$ @Suppress("SENSELESS_COMPARISON") internal fun isUnityLibraryUploadEnabled(bugsnag: BugsnagPluginExtension, android: AppExtension): Boolean</ID>
+    <ID>ReturnCount:SharedObjectMappingFileFactory.kt$SharedObjectMappingFileFactory$ fun generateSoMappingFile(project: Project, params: Params): File?</ID>
     <ID>SpreadOperator:BugsnagReleasesTask.kt$BugsnagReleasesTask$(*cmd)</ID>
     <ID>TooGenericExceptionCaught:BugsnagHttpClientHelper.kt$exc: Throwable</ID>
     <ID>TooGenericExceptionCaught:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$exc: Throwable</ID>

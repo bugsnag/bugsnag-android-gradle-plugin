@@ -413,7 +413,7 @@ class BugsnagPlugin : Plugin<Project> {
             variantOutput = output
             objDumpPaths.set(bugsnag.objdumpPaths)
             manifestInfoFile.set(manifestInfoFileProvider)
-            // TODO update me
+            rootProjectDir.set(project.rootProject.projectDir)
         }
     }
 
