@@ -2,6 +2,7 @@
 
 * Generate shared object mapping files for libunity and libil2cpp
   [#312](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/312)
+  [#313](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/313)
 
 * Register unity shared object generation and upload tasks
   [#311](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/311)
