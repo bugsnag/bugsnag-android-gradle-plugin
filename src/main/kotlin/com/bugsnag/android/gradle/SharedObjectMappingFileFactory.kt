@@ -19,7 +19,8 @@ import java.io.Reader
  */
 internal object SharedObjectMappingFileFactory {
 
-    internal const val SO_MAPPING_DIR = "intermediates/bugsnag/soMappings"
+    internal const val NDK_SO_MAPPING_DIR = "intermediates/bugsnag/soMappings/ndk"
+    internal const val UNITY_SO_MAPPING_DIR = "intermediates/bugsnag/soMappings/unity"
 
     internal data class Params(
         val sharedObject: File,

@@ -1,6 +1,6 @@
 package com.bugsnag.android.gradle
 
-import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.SO_MAPPING_DIR
+import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.UNITY_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.bugsnag.android.gradle.internal.md5HashCode
@@ -57,7 +57,7 @@ internal open class BugsnagUploadSharedObjectTask @Inject constructor(
 
     init {
         group = BugsnagPlugin.GROUP_NAME
-        description = "Uploads NDK mapping files to Bugsnag"
+        description = "Uploads SO mapping files to Bugsnag"
     }
 
     @get:Internal
@@ -78,7 +78,7 @@ internal open class BugsnagUploadSharedObjectTask @Inject constructor(
 
     @get:InputDirectory
     val intermediateOutputDir: DirectoryProperty = objects.directoryProperty()
-        .convention(projectLayout.buildDirectory.dir(SO_MAPPING_DIR))
+        .convention(projectLayout.buildDirectory.dir(UNITY_SO_MAPPING_DIR))
 
     @get:Input
     override val failOnUploadError: Property<Boolean> = objects.property()

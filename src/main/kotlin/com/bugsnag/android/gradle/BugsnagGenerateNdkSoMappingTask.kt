@@ -2,7 +2,7 @@ package com.bugsnag.android.gradle
 
 import com.android.build.VariantOutput
 import com.android.build.gradle.api.ApkVariantOutput
-import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.SO_MAPPING_DIR
+import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.NDK_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.GradleVersions
 import com.bugsnag.android.gradle.internal.mapProperty
 import com.bugsnag.android.gradle.internal.register
@@ -28,7 +28,7 @@ import java.io.File
 import javax.inject.Inject
 
 /**
- * Task that generates shared object mapping files for upload to Bugsnag.
+ * Task that generates NDK shared object mapping files for upload to Bugsnag.
  */
 sealed class BugsnagGenerateNdkSoMappingTask(
     objects: ObjectFactory,
@@ -49,7 +49,7 @@ sealed class BugsnagGenerateNdkSoMappingTask(
 
     @get:OutputDirectory
     val intermediateOutputDir: DirectoryProperty = objects.directoryProperty()
-        .convention(projectLayout.buildDirectory.dir(SO_MAPPING_DIR))
+        .convention(projectLayout.buildDirectory.dir(NDK_SO_MAPPING_DIR))
 
     @get:Input
     val objDumpPaths: MapProperty<String, String> = objects.mapProperty()
