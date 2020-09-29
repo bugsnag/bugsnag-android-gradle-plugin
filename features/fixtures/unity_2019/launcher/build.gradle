@@ -75,5 +75,9 @@ if (!System.env.UPDATING_GRADLEW) {
     bugsnag {
         endpoint = "http://localhost:9339"
         releasesEndpoint = "http://localhost:9339"
+
+        if ("false" == System.env.UNITY_SO_UPLOAD) {
+            uploadNdkUnityLibraryMappings = false
+        }
     }
 }

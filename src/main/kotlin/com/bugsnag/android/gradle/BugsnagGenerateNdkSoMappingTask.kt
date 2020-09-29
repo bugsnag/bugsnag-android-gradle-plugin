@@ -4,6 +4,7 @@ import com.android.build.VariantOutput
 import com.android.build.gradle.api.ApkVariantOutput
 import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.NDK_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.GradleVersions
+import com.bugsnag.android.gradle.internal.includesAbi
 import com.bugsnag.android.gradle.internal.mapProperty
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.versionNumber
@@ -69,8 +70,7 @@ sealed class BugsnagGenerateNdkSoMappingTask(
         variantOutput: ApkVariantOutput,
         searchDirectories: List<File>
     ): Collection<File> {
-        val splitArch = variantOutput.getFilter(VariantOutput.FilterType.ABI)
-        return searchDirectories.flatMap { findSharedObjectFiles(it, splitArch) }
+        return searchDirectories.flatMap(this::findSharedObjectFiles)
             .toSortedSet(compareBy { it.absolutePath })
     }
 
@@ -85,13 +85,10 @@ sealed class BugsnagGenerateNdkSoMappingTask(
      * represent an architecture
      * @param abiArchitecture The architecture of the ABI split, or null if this is not an APK split.
      */
-    private fun findSharedObjectFiles(
-        searchDirectory: File,
-        abiArchitecture: String?
-    ): Collection<File> {
+    private fun findSharedObjectFiles(searchDirectory: File): Collection<File> {
         return if (searchDirectory.exists() && searchDirectory.isDirectory) {
             searchDirectory.walkTopDown()
-                .onEnter { archDir -> abiArchitecture == null || archDir.name == abiArchitecture }
+                .onEnter { archDir -> variantOutput.includesAbi(archDir.name) }
                 .filter { file -> file.extension == "so" }
                 .toSet()
         } else {

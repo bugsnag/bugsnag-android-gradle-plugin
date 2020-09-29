@@ -2,6 +2,7 @@ package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.ApkVariantOutput
 import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.UNITY_SO_MAPPING_DIR
+import com.bugsnag.android.gradle.internal.includesAbi
 import com.bugsnag.android.gradle.internal.mapProperty
 import com.bugsnag.android.gradle.internal.register
 import okio.buffer
@@ -88,15 +89,13 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
             // extract SO files from archive and generate mapping files for each
             entries.asSequence()
                 .filter(::isUnitySharedObjectFile)
-                .map { zipEntry ->
+                .mapNotNull { zipEntry ->
                     extractSoFileFromArchive(zipEntry, copyDir, zipFile)
                 }
                 .forEach { sharedObjectFile ->
                     generateUnitySoMappingFile(sharedObjectFile)
                 }
         }
-
-        // TODO check ABI and avoid unnecessary generation
     }
 
     private fun generateUnitySoMappingFile(sharedObjectFile: File) {
@@ -115,10 +114,16 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
         entry: ZipEntry,
         copyDir: File,
         zipFile: ZipFile
-    ): File {
+    ): File? {
         val entryFile = File(entry.name)
         val sharedObjectName = entryFile.name
         val arch = entryFile.parentFile.name
+
+        // avoid generating unnecessary symbols
+        if (!variantOutput.includesAbi(arch)) {
+            return null
+        }
+
         val archDir = File(copyDir, arch)
         archDir.mkdir()
         val dst = File(archDir, sharedObjectName)

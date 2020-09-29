@@ -1,5 +1,8 @@
 ## TBD
 
+* Create additional E2E scenarios for Unity SO file upload
+  [#314](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/314)
+
 * Generate shared object mapping files for libunity and libil2cpp
   [#312](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/312)
   [#313](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/313)
