@@ -21,7 +21,6 @@ plugins {
     id "groovy"
     id "com.gradle.plugin-publish" version "0.12.0"
     id "com.vanniktech.maven.publish" version "0.12.0"
-    id "com.jfrog.bintray" version "1.8.5"
 }
 apply plugin: "org.jetbrains.kotlin.jvm"
 apply plugin: "org.jetbrains.kotlin.kapt"
@@ -100,23 +99,14 @@ pluginBundle {
     }
 }
 
-// Bintray upload
-bintray {
-    user = project.hasProperty("bintray_user") ? "$bintray_user" : System.getenv("bintray_user")
-    key = project.hasProperty("bintray_api_key") ? "$bintray_api_key" : System.getenv("bintray_api_key")
-
-    publications = ["BintrayPublication"]
-    configurations = ["archives"]
-    pkg {
-        repo = "maven"
-        name = POM_ARTIFACT_ID
-        userOrg = "bugsnag"
-        licenses = ["MIT"]
-        vcsUrl = "https://github.com/bugsnag/bugsnag-android-gradle-plugin.git"
-        version {
-            name = VERSION_NAME
-            vcsTag = "v${VERSION_NAME}"
-            attributes = ["gradle-plugin": "com.bugsnag.android.gradle"]
+mavenPublish {
+    targets {
+        bintray {
+            String bintrayUser = project.hasProperty("bintray_user") ? "$bintray_user" : System.getenv("bintray_user")
+            releaseRepositoryUrl = "https://api.bintray.com/maven/$bintrayUser/artifact-sandbox/;publish=1"
+            snapshotRepositoryUrl = null
+            repositoryUsername = bintrayUser
+            repositoryPassword = project.hasProperty("bintray_api_key") ? "$bintray_api_key" : System.getenv("bintray_api_key")
         }
     }
 }
