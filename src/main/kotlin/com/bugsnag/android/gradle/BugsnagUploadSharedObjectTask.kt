@@ -1,6 +1,5 @@
 package com.bugsnag.android.gradle
 
-import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.UNITY_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.bugsnag.android.gradle.internal.md5HashCode
@@ -10,7 +9,6 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -30,8 +28,7 @@ import javax.inject.Inject
  * Task that uploads shared object mapping files to Bugsnag.
  */
 internal open class BugsnagUploadSharedObjectTask @Inject constructor(
-    objects: ObjectFactory,
-    projectLayout: ProjectLayout
+    objects: ObjectFactory
 ) : DefaultTask(), AndroidManifestInfoReceiver, BugsnagFileUploadTask {
 
     enum class UploadType(private val path: String, val uploadKey: String) {
@@ -78,7 +75,6 @@ internal open class BugsnagUploadSharedObjectTask @Inject constructor(
 
     @get:InputDirectory
     val intermediateOutputDir: DirectoryProperty = objects.directoryProperty()
-        .convention(projectLayout.buildDirectory.dir(UNITY_SO_MAPPING_DIR))
 
     @get:Input
     override val failOnUploadError: Property<Boolean> = objects.property()

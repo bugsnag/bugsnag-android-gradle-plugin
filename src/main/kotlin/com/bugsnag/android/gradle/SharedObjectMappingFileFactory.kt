@@ -1,6 +1,8 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.AppExtension
+import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.SharedObjectType.NDK
+import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.SharedObjectType.UNITY
 import okio.buffer
 import okio.gzip
 import okio.sink
@@ -9,7 +11,6 @@ import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Project
 import java.io.File
 import java.io.InputStream
-import java.io.Reader
 
 /**
  * Generates a mapping file for the supplied shared object file.
@@ -19,6 +20,11 @@ import java.io.Reader
  */
 internal object SharedObjectMappingFileFactory {
 
+    enum class SharedObjectType {
+        NDK,
+        UNITY
+    }
+
     internal const val NDK_SO_MAPPING_DIR = "intermediates/bugsnag/soMappings/ndk"
     internal const val UNITY_SO_MAPPING_DIR = "intermediates/bugsnag/soMappings/unity"
 
@@ -26,7 +32,8 @@ internal object SharedObjectMappingFileFactory {
         val sharedObject: File,
         val abi: Abi,
         val objDumpPaths: Map<String, String>,
-        val outputDirectory: File
+        val outputDirectory: File,
+        val sharedObjectType: SharedObjectType = NDK
     )
 
     /**
@@ -41,43 +48,63 @@ internal object SharedObjectMappingFileFactory {
         val arch = params.abi.abiName
         val objDumpPath = getObjDumpExecutable(project, params.objDumpPaths, arch)
         val logger = project.logger
-        if (objDumpPath != null) {
-            val outReader: Reader? = null
-            try {
-                val rootDir = params.outputDirectory
-                val archDir = File(rootDir, arch)
-                archDir.mkdir()
 
-                val outputName = params.sharedObject.name
-                val outputFile = File(archDir, "$outputName.gz")
-                val errorOutputFile = File(archDir, "$outputName.error.txt")
-                logger.info("Bugsnag: Creating symbol file for $outputName at $outputFile")
-
-                // Call objdump, redirecting output to the output file
-                val builder = ProcessBuilder(objDumpPath.toString(),
-                    "--dwarf=info", "--dwarf=rawline", params.sharedObject.toString())
-                builder.redirectError(errorOutputFile)
-                val process = builder.start()
-
-                // Output the file to a zip
-                val stdout = process.inputStream
-                outputZipFile(stdout, outputFile)
-                return if (process.waitFor() == 0) {
-                    outputFile
-                } else {
-                    logger.error("Bugsnag: failed to generate symbols for $arch " +
-                        "see $errorOutputFile for more details")
-                    null
-                }
-            } catch (e: Exception) {
-                logger.error("Bugsnag: failed to generate symbols for $arch ${e.message}", e)
-            } finally {
-                outReader?.close()
-            }
-        } else {
+        if (objDumpPath == null) {
             logger.error("Bugsnag: Unable to upload NDK symbols: Could not find objdump location for $arch")
+            return null
+        }
+
+        try {
+            val archDir = prepareArchDirectory(params, arch)
+            val sharedObjectName = params.sharedObject.name
+            val dst = File(archDir, "$sharedObjectName.gz")
+            val processBuilder = getObjDumpCommand(objDumpPath, params)
+            logger.info("Bugsnag: Creating symbol file for $sharedObjectName at $dst," +
+                "running ${processBuilder.command()}")
+            makeSoMappingFile(dst, processBuilder)
+            return dst
+        } catch (e: Exception) {
+            logger.error("Bugsnag: failed to generate symbols for $arch ${e.message}", e)
         }
         return null
+    }
+
+    /**
+     * Gets the command used to generate the SO mapping file with objdump.
+     * This differs for NDK and Unity SO files.
+     */
+    private fun getObjDumpCommand(objDumpPath: File, params: Params): ProcessBuilder {
+        val sharedObjectPath = params.sharedObject.path
+
+        return when (params.sharedObjectType) {
+            NDK -> {
+                ProcessBuilder(objDumpPath.path, "--dwarf=info", "--dwarf=rawline", sharedObjectPath)
+            }
+            UNITY -> {
+                // TODO add grep to reduce size of symbols
+                ProcessBuilder(objDumpPath.path, "--sym", sharedObjectPath)
+            }
+        }
+    }
+
+    private fun makeSoMappingFile(dst: File, processBuilder: ProcessBuilder) {
+        // ensure any errors are dumped to stderr
+        processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT)
+        val process = processBuilder.start()
+        outputZipFile(process.inputStream, dst)
+
+        val exitCode = process.waitFor()
+        if (exitCode != 0) {
+            throw IllegalStateException("Failed to generate symbols for $dst," +
+                " objdump exited with code $exitCode")
+        }
+    }
+
+    private fun prepareArchDirectory(params: Params, arch: String): File {
+        val rootDir = params.outputDirectory
+        return File(rootDir, arch).apply {
+            mkdir()
+        }
     }
 
     /**
@@ -100,9 +127,7 @@ internal object SharedObjectMappingFileFactory {
         return null
     }
 
-    private fun getObjDumpOverride(objDumpPaths: Map<String, String>, arch: String): String? {
-        return objDumpPaths[arch]
-    }
+    private fun getObjDumpOverride(objDumpPaths: Map<String, String>, arch: String) = objDumpPaths[arch]
 
     /**
      * Outputs the contents of stdout into the gzip file output file
@@ -140,7 +165,10 @@ internal object SharedObjectMappingFileFactory {
             Os.isFamily(Os.FAMILY_MAC) -> "darwin-x86_64"
             Os.isFamily(Os.FAMILY_UNIX) -> "linux-x86_64"
             Os.isFamily(Os.FAMILY_WINDOWS) -> {
-                if ("x86" == System.getProperty("os.arch")) "windows" else "windows-x86_64"
+                when {
+                    "x86" == System.getProperty("os.arch") -> "windows"
+                    else -> "windows-x86_64"
+                }
             }
             else -> null
         }

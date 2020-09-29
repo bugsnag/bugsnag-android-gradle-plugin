@@ -87,7 +87,7 @@ end
 
 Then('{int} requests are valid for the android unity NDK mapping API and match the following:') do |request_count, data_table|
   requests = get_android_unity_ndk_mapping_requests
-  assert_equal(request_count, requests.length, 'Wrong number of NDK mapping API requests')
+  assert_equal(request_count, requests.length, 'Wrong number of android unity NDK mapping API requests')
   RequestSetAssertions.assert_requests_match requests, data_table
 
   requests.each do |request|
@@ -120,7 +120,7 @@ end
 
 def valid_android_unity_ndk_mapping_api?(request_body)
   valid_mapping_api?(request_body)
-  assert_not_nil(request_body['soSymbolTable'])
+  assert_not_nil(request_body['soSymbolTableFile'])
 end
 
 def valid_mapping_api?(request_body)
