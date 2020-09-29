@@ -5,7 +5,6 @@ import com.bugsnag.android.gradle.BugsnagGenerateUnitySoMappingTask.Companion.is
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.util.zip.ZipEntry
 
 class BugsnagGenerateUnitySoMappingTaskTest {
 
@@ -22,13 +21,14 @@ class BugsnagGenerateUnitySoMappingTaskTest {
 
     @Test
     fun testIsUnitySharedObjectFile() {
-        assertFalse(isUnitySharedObjectFile(ZipEntry("")))
-        assertFalse(isUnitySharedObjectFile(ZipEntry("foo")))
-        assertFalse(isUnitySharedObjectFile(ZipEntry("armeabi-v7a")))
-        assertFalse(isUnitySharedObjectFile(ZipEntry("x86")))
-        assertFalse(isUnitySharedObjectFile(ZipEntry("libsomethingelse.sym")))
-        assertTrue(isUnitySharedObjectFile(ZipEntry("libil2cpp.sym")))
-        assertTrue(isUnitySharedObjectFile(ZipEntry("libunity.sym.so")))
-        assertTrue(isUnitySharedObjectFile(ZipEntry("unity_2019-1.0-v1.symbols/armeabi-v7a/libil2cpp.sym.so")))
+        assertFalse(isUnitySharedObjectFile(""))
+        assertFalse(isUnitySharedObjectFile("foo"))
+        assertFalse(isUnitySharedObjectFile("armeabi-v7a"))
+        assertFalse(isUnitySharedObjectFile("x86"))
+        assertFalse(isUnitySharedObjectFile("libsomethingelse.sym"))
+        assertFalse(isUnitySharedObjectFile("libunity.so"))
+        assertTrue(isUnitySharedObjectFile("libil2cpp.sym"))
+        assertTrue(isUnitySharedObjectFile("libunity.sym.so"))
+        assertTrue(isUnitySharedObjectFile("unity_2019-1.0-v1.symbols/armeabi-v7a/libil2cpp.sym.so"))
     }
 }
