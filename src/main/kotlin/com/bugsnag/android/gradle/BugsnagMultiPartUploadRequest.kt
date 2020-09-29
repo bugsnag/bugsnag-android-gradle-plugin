@@ -1,5 +1,6 @@
 package com.bugsnag.android.gradle
 
+import com.bugsnag.android.gradle.internal.runRequestWithRetries
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -28,6 +29,7 @@ class BugsnagMultiPartUploadRequest(
 
     fun uploadMultipartEntity(
         manifestInfo: AndroidManifestInfo,
+        retryCount: Int,
         action: (MultipartBody.Builder) -> Unit
     ): String {
         val builder = buildMultipartBody(manifestInfo, overwrite)
@@ -35,7 +37,9 @@ class BugsnagMultiPartUploadRequest(
         val body = builder.build()
 
         return try {
-            uploadToServer(body)!!
+            runRequestWithRetries(retryCount) {
+                uploadToServer(body)!!
+            }
         } catch (exc: Throwable) {
             when {
                 failOnUploadError -> throw exc

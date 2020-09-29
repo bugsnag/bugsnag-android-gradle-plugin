@@ -2,13 +2,11 @@
 package com.bugsnag.android.gradle.internal
 
 import com.android.build.gradle.AppExtension
+import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 // TODO use the new replacement when min AGP version is 4.0
 import com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION
-import com.android.build.gradle.internal.api.ApplicationVariantImpl
-import com.android.build.gradle.internal.scope.TaskContainer as AgpTaskContainer
-import com.android.build.gradle.internal.scope.MutableTaskContainer
 import okio.HashingSink
 import okio.blackholeSink
 import okio.buffer
@@ -21,6 +19,8 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
+import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
@@ -64,76 +64,30 @@ internal fun <T: Task> TaskProvider<out T>.dependsOn(vararg tasks: TaskProvider<
 }
 
 /** An alternative to [BaseVariant.register] that accepts a [TaskProvider] input. */
-internal fun BaseVariant.register(project: Project, provider: TaskProvider<out Task>) {
-    val success = when {
-        AgpVersions.CURRENT >= AgpVersions.VERSION_4_0 -> {
-            registerAgp4(provider)
-        }
-        AgpVersions.CURRENT >= AgpVersions.VERSION_3_4 -> {
-            registerAgp3(provider)
-        }
-        else -> false
-    }
-
-    if (!success) {
-        registerManual(project, provider)
-    }
-}
-
-@Suppress("TooGenericExceptionCaught")
-private fun BaseVariant.registerAgp4(provider: TaskProvider<out Task>): Boolean {
-    return try {
-        // This is of type ComponentPropertiesImpl
-        val componentProperties = javaClass.getField("componentProperties")
-            .apply { isAccessible = true }
-            .get(this)
-        val taskContainer = componentProperties.javaClass.getMethod("getTaskContainer")
-            .apply { isAccessible = true }
-            .invoke(componentProperties) as AgpTaskContainer
-        taskContainer.register(provider)
-        true
-    } catch (t: Throwable) {
-        false
-    }
-}
-
-@Suppress("TooGenericExceptionCaught")
-private fun BaseVariant.registerAgp3(provider: TaskProvider<out Task>): Boolean {
-    return try {
-        if (this is ApplicationVariantImpl) {
-            variantData.taskContainer.register(provider)
-        }
-        true
-    } catch (t: Throwable) {
-        false
-    }
-}
-
-private fun AgpTaskContainer.register(provider: TaskProvider<out Task>) {
-    assembleTask.dependsOn(provider)
-    bundleLibraryTask?.dependsOn(provider)
-    if (this is MutableTaskContainer) {
-        bundleTask?.dependsOn(provider)
-    }
-}
-
-private fun BaseVariant.registerManual(project: Project, provider: TaskProvider<out Task>) {
-    assembleProvider.dependsOn(provider)
-    val bundleName = "bundle" + assembleProvider.name.removePrefix("assemble")
-    project.tasks.matching { it.name == bundleName }
-        .configureEach {
-            it.dependsOn(provider)
-        }
-
-    if (AgpVersions.CURRENT.major == AgpVersions.VERSION_3_5.major
-        && AgpVersions.CURRENT.minor == AgpVersions.VERSION_3_5.minor) {
-        // workaround - AGP 3.5.0 executes upload tasks before the package tasks
-        // so we need to manually specify that it must run after the package task
-        // this stops config avoidance for AGP 3.5.0 only
-        project.tasks.matching { it.name.contains("package") }
-            .configureEach { packageTask ->
-                provider.get().mustRunAfter(packageTask)
+internal fun ApkVariant.register(project: Project, provider: TaskProvider<out Task>, autoRunTask: Boolean) {
+    if (autoRunTask) {
+        assembleProvider.dependsOn(provider)
+        val bundleName = "bundle" + assembleProvider.name.removePrefix("assemble")
+        project.tasks.matching { it.name == bundleName }
+            .configureEach { task ->
+                task.dependsOn(provider)
             }
+    }
+
+    provider.configure { task ->
+        // the upload task should always execute after the package task,
+        // but should only run automatically when specified
+        if (autoRunTask) {
+            task.dependsOn(packageApplicationProvider)
+        }
+        task.mustRunAfter(packageApplicationProvider)
+    }
+    packageApplicationProvider.configure {
+        // triggers configuration of the bugsnag upload task so that it runs
+        // automatically when an assemble/bundle task is invoked
+        if (autoRunTask) {
+            provider.get()
+        }
     }
 }
 
@@ -157,8 +111,20 @@ internal fun AppExtension.hasMultipleOutputs(): Boolean {
 /**
  * Returns true if the DexGuard plugin has been applied to the project
  */
-fun Project.hasDexguardPlugin(): Boolean {
+internal fun Project.hasDexguardPlugin(): Boolean {
     return pluginManager.hasPlugin("dexguard")
+}
+
+/** Returns a String provider for a system property. */
+internal fun ProviderFactory.systemPropertyCompat(
+    name: String,
+    gradleVersion: VersionNumber?
+): Provider<String> {
+    return if (gradleVersion != null && gradleVersion >= GradleVersions.VERSION_6_1) {
+        systemProperty(name)
+    } else {
+        provider { System.getProperty(name) }
+    }
 }
 
 /* Borrowed helper functions from the Gradle Kotlin DSL. */
@@ -173,7 +139,7 @@ fun Project.hasDexguardPlugin(): Boolean {
  * @see [ObjectFactory.newInstance]
  */
 @Suppress("SpreadOperator")
-inline fun <reified T : Any> ObjectFactory.newInstance(vararg parameters: Any): T =
+internal inline fun <reified T : Any> ObjectFactory.newInstance(vararg parameters: Any): T =
     newInstance(T::class.javaObjectType, *parameters)
 
 /**

@@ -1,11 +1,13 @@
 package com.bugsnag.android.gradle
 
+import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.GradleVersions
 import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.bugsnag.android.gradle.internal.mapProperty
-import com.bugsnag.android.gradle.internal.newClient
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
+import com.bugsnag.android.gradle.internal.runRequestWithRetries
+import com.bugsnag.android.gradle.internal.systemPropertyCompat
 import com.bugsnag.android.gradle.internal.versionNumber
 import com.squareup.moshi.JsonClass
 import okhttp3.OkHttpClient
@@ -60,6 +62,9 @@ sealed class BugsnagReleasesTask(
 
     @get:Internal
     internal val uploadRequestClient: Property<UploadRequestClient> = objects.property()
+
+    @get:Internal
+    internal val httpClientHelper: Property<BugsnagHttpClientHelper> = objects.property()
 
     @get:PathSensitive(NONE)
     @get:InputFile
@@ -143,7 +148,7 @@ sealed class BugsnagReleasesTask(
         val payload = generateJsonPayload(manifestInfo)
 
         val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, payload.hashCode()) {
-            logger.lifecycle("Bugsnag: Attempting upload to Releases API")
+            logger.lifecycle("Bugsnag: Uploading to Releases API")
             val response = try {
                 deliverPayload(payload, manifestInfo)
             } catch (exc: Throwable) {
@@ -155,26 +160,27 @@ sealed class BugsnagReleasesTask(
             response
         }
         requestOutputFile.asFile.get().writeText(response)
-        logger.lifecycle("Bugsnag: Releases request complete")
     }
 
     private fun deliverPayload(
         payload: ReleasePayload,
         manifestInfo: AndroidManifestInfo
     ): String {
-        val okHttpClient = newClient(timeoutMillis.get(), retryCount.get())
+        val okHttpClient = httpClientHelper.get().okHttpClient
         val bugsnagService = createService(okHttpClient)
 
-        val response = try {
-            bugsnagService.upload(
-                releasesEndpoint.get(),
-                apiKey = manifestInfo.apiKey,
-                payload = payload
-            ).execute()
+        return try {
+            runRequestWithRetries(retryCount.get()) {
+                val response = bugsnagService.upload(
+                    releasesEndpoint.get(),
+                    apiKey = manifestInfo.apiKey,
+                    payload = payload
+                )
+                readRequestResponse(response.execute())
+            }
         } catch (e: IOException) {
             throw IllegalStateException("Request to Bugsnag Releases API failed, aborting build.", e)
         }
-        return readRequestResponse(response)
     }
 
     private fun readRequestResponse(response: Response<String>): String {
@@ -272,17 +278,10 @@ sealed class BugsnagReleasesTask(
             VersionNumber.parse(it)
         }
         gitVersion.set(providerFactory.provider { runCmd(VCS_COMMAND, "--version") } )
-        if (gradleVersionNumber != null && gradleVersionNumber >= GradleVersions.VERSION_6_1)  {
-            osArch.set(providerFactory.systemProperty(MK_OS_ARCH) )
-            osName.set(providerFactory.systemProperty(MK_OS_NAME) )
-            osVersion.set(providerFactory.systemProperty(MK_OS_VERSION) )
-            javaVersion.set(providerFactory.systemProperty(MK_JAVA_VERSION))
-        } else {
-            osArch.set(providerFactory.provider { System.getProperty(MK_OS_ARCH) } )
-            osName.set(providerFactory.provider { System.getProperty(MK_OS_NAME) } )
-            osVersion.set(providerFactory.provider { System.getProperty(MK_OS_VERSION) } )
-            javaVersion.set(providerFactory.provider { System.getProperty(MK_JAVA_VERSION) })
-        }
+        osArch.set(providerFactory.systemPropertyCompat(MK_OS_ARCH, gradleVersionNumber) )
+        osName.set(providerFactory.systemPropertyCompat(MK_OS_NAME, gradleVersionNumber) )
+        osVersion.set(providerFactory.systemPropertyCompat(MK_OS_VERSION, gradleVersionNumber) )
+        javaVersion.set(providerFactory.systemPropertyCompat(MK_JAVA_VERSION, gradleVersionNumber))
     }
 
     companion object {

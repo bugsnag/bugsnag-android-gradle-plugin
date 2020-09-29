@@ -8,14 +8,10 @@ import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.bugsnag.android.gradle.BugsnagInstallJniLibsTask.Companion.resolveBugsnagArtifacts
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
-import com.bugsnag.android.gradle.internal.BuildServiceBugsnagHttpClientHelper
-import com.bugsnag.android.gradle.internal.GradleVersions
-import com.bugsnag.android.gradle.internal.LegacyBugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.bugsnag.android.gradle.internal.hasDexguardPlugin
 import com.bugsnag.android.gradle.internal.newUploadRequestClientProvider
 import com.bugsnag.android.gradle.internal.register
-import com.bugsnag.android.gradle.internal.versionNumber
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
@@ -58,20 +54,10 @@ class BugsnagPlugin : Plugin<Project> {
                 return@withPlugin
             }
 
-            val canUseBuildService = project.gradle.versionNumber() >= GradleVersions.VERSION_6_1
-            val httpClientHelperProvider = if (canUseBuildService) {
-                project.gradle.sharedServices.registerIfAbsent("bugsnagHttpClientHelper",
-                    BuildServiceBugsnagHttpClientHelper::class.java
-                ) { spec ->
-                    // Provide some parameters
-                    spec.parameters.timeoutMillis.set(bugsnag.requestTimeoutMs)
-                    spec.parameters.retryCount.set(bugsnag.retryCount)
-                }
-            } else {
-                // Reuse instance
-                val client = LegacyBugsnagHttpClientHelper(bugsnag.requestTimeoutMs, bugsnag.retryCount)
-                project.provider { client }
-            }
+            val httpClientHelperProvider = BugsnagHttpClientHelper.create(
+                project,
+                bugsnag
+            )
 
             val releasesUploadClientProvider = newUploadRequestClientProvider(project, "releases")
             val proguardUploadClientProvider = newUploadRequestClientProvider(project, "proguard")
@@ -136,7 +122,7 @@ class BugsnagPlugin : Plugin<Project> {
 
     private fun isVariantEnabled(bugsnag: BugsnagPluginExtension,
                                  variant: VariantFilterImpl): Boolean {
-        bugsnag.filter?.execute(variant)
+        bugsnag.filter.execute(variant)
         return variant.variantEnabled ?: true
     }
 
@@ -185,7 +171,7 @@ class BugsnagPlugin : Plugin<Project> {
             check(output is ApkVariantOutput) {
                 "Expected variant output to be ApkVariantOutput but found ${output.javaClass}"
             }
-            val jvmMinificationEnabled = variant.buildType.isMinifyEnabled || project.hasDexguardPlugin()
+            val jvmMinificationEnabled = project.isJvmMinificationEnabled(variant)
             val ndkEnabled = isNdkUploadEnabled(bugsnag,
                 project.extensions.getByType(AppExtension::class.java))
 
@@ -231,22 +217,26 @@ class BugsnagPlugin : Plugin<Project> {
                 manifestInfoFileProvider,
                 releasesUploadClientProvider,
                 mappingFilesProvider,
-                symbolFileTaskProvider != null
+                symbolFileTaskProvider != null,
+                httpClientHelperProvider
             )
 
-            if (shouldUploadMappings(output, bugsnag)) {
-                if (bugsnag.reportBuilds.get()) {
-                    variant.register(project, releaseUploadTask)
-                }
-                if (symbolFileTaskProvider != null && isNdkUploadEnabled(bugsnag, android)) {
-                    variant.register(project, symbolFileTaskProvider)
-                }
-                if (proguardTaskProvider != null && bugsnag.uploadJvmMappings.get()) {
-                    variant.register(project, proguardTaskProvider)
-                }
+            val releaseAutoUpload = bugsnag.reportBuilds.get()
+            variant.register(project, releaseUploadTask, releaseAutoUpload)
+
+            if (symbolFileTaskProvider != null) {
+                val ndkAutoUpload = isNdkUploadEnabled(bugsnag, android)
+                variant.register(project, symbolFileTaskProvider, ndkAutoUpload)
+            }
+            if (proguardTaskProvider != null) {
+                val jvmAutoUpload = bugsnag.uploadJvmMappings.get()
+                variant.register(project, proguardTaskProvider, jvmAutoUpload)
             }
         }
     }
+
+    private fun Project.isJvmMinificationEnabled(variant: ApkVariant) =
+        variant.buildType.isMinifyEnabled || hasDexguardPlugin()
 
     private fun registerManifestUuidTask(
         project: Project,
@@ -264,18 +254,35 @@ class BugsnagPlugin : Plugin<Project> {
             val taskName = computeManifestTaskNameFor(output.name)
             val manifestInfoOutputFile = project.computeManifestInfoOutputV1(output)
             val buildUuidProvider = project.newUuidProvider()
-            project.tasks.register(taskName, BugsnagManifestUuidTask::class.java) {
+
+            val manifestTask = project.tasks.register(taskName, BugsnagManifestUuidTask::class.java) {
                 it.buildUuid.set(buildUuidProvider)
                 it.variantOutput = output
                 it.variant = variant
                 it.manifestInfoProvider.set(manifestInfoOutputFile)
-                val processManifest = output.processManifestProvider.orNull
+                it.dependsOn(output.processManifestProvider)
+                it.mustRunAfter(output.processManifestProvider)
+            }
 
-                if (processManifest != null) {
-                    processManifest.finalizedBy(it)
-                    it.dependsOn(processManifest)
-                }
-            }.flatMap(BaseBugsnagManifestUuidTask::manifestInfoProvider)
+            // Enforces correct task ordering. The manifest can only be edited inbetween
+            // when the merged manifest is generated (processManifestProvider) and when
+            // the merged manifest is copied for use in packaging the artifact (processResourcesProvider).
+            // This ensures BugsnagManifestUuidTask runs at the correct time for both tasks.
+            //
+            // https://docs.gradle.org/current/userguide/more_about_tasks.html#sec:ordering_tasks
+            output.processResourcesProvider.configure {
+                it.mustRunAfter(manifestTask)
+            }
+            output.processManifestProvider.configure {
+                // Trigger eager configuration of the manifest task. This creates the task
+                // and ensures that it is configured whenever the manifest is processed
+                // and avoids mutating the task directly which should be avoided.
+                //
+                // https://docs.gradle.org/current/userguide/task_configuration_avoidance.html
+                // #sec:task_configuration_avoidance_general
+                manifestTask.get()
+            }
+            manifestTask.flatMap(BaseBugsnagManifestUuidTask::manifestInfoProvider)
         }
     }
 
@@ -337,6 +344,7 @@ class BugsnagPlugin : Plugin<Project> {
             variant.externalNativeBuildProviders.forEach { provider ->
                 searchDirectories.from(provider.map(ExternalNativeBuildTask::objFolder))
                 searchDirectories.from(provider.map(ExternalNativeBuildTask::soFolder))
+                searchDirectories.from(bugsnag.sharedObjectPaths)
             }
         }
     }
@@ -350,7 +358,8 @@ class BugsnagPlugin : Plugin<Project> {
         manifestInfoFileProvider: Provider<RegularFile>,
         releasesUploadClientProvider: Provider<out UploadRequestClient>,
         mappingFilesProvider: Provider<FileCollection>?,
-        checkSearchDirectories: Boolean
+        checkSearchDirectories: Boolean,
+        httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>
     ): TaskProvider<out BugsnagReleasesTask> {
         val outputName = taskNameForOutput(output)
         val taskName = "bugsnagRelease${outputName}Task"
@@ -358,6 +367,7 @@ class BugsnagPlugin : Plugin<Project> {
         val requestOutputFile = project.layout.buildDirectory.file(path)
         return BugsnagReleasesTask.register(project, taskName) {
             this.requestOutputFile.set(requestOutputFile)
+            httpClientHelper.set(httpClientHelperProvider)
             retryCount.set(bugsnag.retryCount)
             timeoutMillis.set(bugsnag.requestTimeoutMs)
             failOnUploadError.set(bugsnag.failOnUploadError)
@@ -370,8 +380,11 @@ class BugsnagPlugin : Plugin<Project> {
             gradleVersion.set(project.gradle.gradleVersion)
             manifestInfoFile.set(manifestInfoFileProvider)
             uploadRequestClient.set(releasesUploadClientProvider)
-            mappingFilesProvider?.let {
-                jvmMappingFileProperty.from(it)
+
+            if (project.isJvmMinificationEnabled(variant)) {
+                mappingFilesProvider?.let {
+                    jvmMappingFileProperty.from(it)
+                }
             }
             if (checkSearchDirectories) {
                 variant.externalNativeBuildProviders.forEach { task ->
@@ -381,14 +394,6 @@ class BugsnagPlugin : Plugin<Project> {
             }
             configureMetadata()
         }
-    }
-
-    private fun shouldUploadMappings(
-        output: ApkVariantOutput,
-        bugsnag: BugsnagPluginExtension
-    ): Boolean {
-        return !output.name.toLowerCase().endsWith(
-            "debug") || bugsnag.uploadDebugBuildMappings.get()
     }
 
     private fun isNdkUploadEnabled(bugsnag: BugsnagPluginExtension,
