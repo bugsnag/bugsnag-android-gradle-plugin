@@ -57,9 +57,13 @@ android {
         minSdkVersion 16
         targetSdkVersion 29
         applicationId 'com.bugsnag.example'
-        ndk {
-            abiFilters 'armeabi-v7a', 'x86'
+
+        if ("true" != System.env.UNITY_ABI_SPLITS) {
+            ndk {
+                abiFilters 'armeabi-v7a', 'x86'
+            }
         }
+
         versionCode 1
         versionName '1.0'
     }
@@ -101,6 +105,30 @@ android {
         }
         abi {
             enableSplit = true
+        }
+    }
+
+    // conditionally enable ABI splits
+    if ("true" == System.env.UNITY_ABI_SPLITS) {
+        splits {
+            abi {
+                reset()
+                include("armeabi-v7a", "x86_64")
+                universalApk false
+                enable true
+            }
+        }
+    }
+
+    // conditionally enable flavor splits
+    if ("true" == System.env.UNITY_FLAVORS) {
+        flavorDimensions "regular"
+
+        productFlavors {
+            foo {
+            }
+            bar {
+            }
         }
     }
 }
