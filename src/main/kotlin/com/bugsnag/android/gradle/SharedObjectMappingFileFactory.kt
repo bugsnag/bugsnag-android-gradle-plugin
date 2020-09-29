@@ -11,6 +11,7 @@ import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Project
 import java.io.File
 import java.io.InputStream
+import java.nio.charset.Charset
 
 /**
  * Generates a mapping file for the supplied shared object file.
@@ -61,7 +62,13 @@ internal object SharedObjectMappingFileFactory {
             val processBuilder = getObjDumpCommand(objDumpPath, params)
             logger.info("Bugsnag: Creating symbol file for $sharedObjectName at $dst," +
                 "running ${processBuilder.command()}")
-            makeSoMappingFile(dst, processBuilder)
+
+            makeSoMappingFile(dst, processBuilder) { line ->
+                when (params.sharedObjectType) {
+                    NDK -> true // no need to reduce NDK SO file size
+                    UNITY -> filterUnitySoLines(line) // filter out unnecessary sections in SO file
+                }
+            }
             return dst
         } catch (e: Exception) {
             logger.error("Bugsnag: failed to generate symbols for $arch ${e.message}", e)
@@ -70,28 +77,39 @@ internal object SharedObjectMappingFileFactory {
     }
 
     /**
+     * Removes redundant information from SO files. This discards anything which isn't
+     * a section header or function definition to reduce the mapping file size.
+     * Additionally any undefined symbols are removed.
+     */
+    internal fun filterUnitySoLines(line: String): Boolean {
+        val isSectionHeader = line.contains("SYMBOL TABLE:")
+        val isFunctionDef = line.contains(" F ")
+        val isFunctionDefined = !line.contains("*UND*")
+        return (isFunctionDef || isSectionHeader) && isFunctionDefined
+    }
+
+    /**
      * Gets the command used to generate the SO mapping file with objdump.
      * This differs for NDK and Unity SO files.
      */
     private fun getObjDumpCommand(objDumpPath: File, params: Params): ProcessBuilder {
-        val sharedObjectPath = params.sharedObject.path
-
+        val soPath = params.sharedObject.path
+        val objdump = objDumpPath.path
         return when (params.sharedObjectType) {
-            NDK -> {
-                ProcessBuilder(objDumpPath.path, "--dwarf=info", "--dwarf=rawline", sharedObjectPath)
-            }
-            UNITY -> {
-                // TODO add grep to reduce size of symbols
-                ProcessBuilder(objDumpPath.path, "--sym", sharedObjectPath)
-            }
+            NDK -> ProcessBuilder(objdump, "--dwarf=info", "--dwarf=rawline", soPath)
+            UNITY -> ProcessBuilder(objdump, "--sym", soPath)
         }
     }
 
-    private fun makeSoMappingFile(dst: File, processBuilder: ProcessBuilder) {
+    private fun makeSoMappingFile(
+        dst: File,
+        processBuilder: ProcessBuilder,
+        lineFilter: (String) -> Boolean
+    ) {
         // ensure any errors are dumped to stderr
         processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT)
         val process = processBuilder.start()
-        outputZipFile(process.inputStream, dst)
+        outputZipFile(process.inputStream, dst, lineFilter)
 
         val exitCode = process.waitFor()
         if (exitCode != 0) {
@@ -134,12 +152,23 @@ internal object SharedObjectMappingFileFactory {
      *
      * @param stdout The input stream
      * @param outputFile The output file
+     * @param lineFilter A predicate which determines whether a line should be
+     * included in the output file or not
      */
-    private fun outputZipFile(stdout: InputStream, outputFile: File) {
-        stdout.source().use { source ->
-            outputFile.sink().gzip().buffer().use { gzipSink ->
-                gzipSink.writeAll(source)
-            }
+    private fun outputZipFile(
+        stdout: InputStream,
+        outputFile: File,
+        lineFilter: (String) -> Boolean
+    ) {
+        val src = stdout.source().buffer()
+        val sink = outputFile.sink().gzip().buffer()
+        src.use { source ->
+            sink.use { gzipSink ->
+                // filter unnecessary lines from objdump here
+                generateSequence { source.readUtf8Line() }
+                    .filter(lineFilter)
+                    .forEach { line -> gzipSink.writeString("$line\n", Charset.defaultCharset()) }
+                }
         }
     }
 

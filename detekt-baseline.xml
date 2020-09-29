@@ -17,5 +17,6 @@
     <ID>TooGenericExceptionCaught:SharedObjectMappingFileFactory.kt$SharedObjectMappingFileFactory$e: Exception</ID>
     <ID>TooGenericExceptionCaught:SharedObjectMappingFileFactory.kt$SharedObjectMappingFileFactory$ex: Throwable</ID>
     <ID>TooManyFunctions:BugsnagPlugin.kt$BugsnagPlugin$BugsnagPlugin</ID>
+    <ID>TooManyFunctions:SharedObjectMappingFileFactory.kt$SharedObjectMappingFileFactory$SharedObjectMappingFileFactory</ID>
   </Whitelist>
 </SmellBaseline>
