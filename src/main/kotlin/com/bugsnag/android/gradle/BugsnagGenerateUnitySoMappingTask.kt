@@ -68,7 +68,6 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
 
         // TODO search Unity internal build too
         val symbolArchives = getUnitySymbolArchives(rootProjectDir)
-        logger.info("Found symbol archives: $symbolArchives")
 
         if (symbolArchives.isEmpty()) {
             logger.warn("Bugsnag did not find symbols.zip which is required to fully symbolicate " +
@@ -76,6 +75,8 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
                 "settings and that it hasn't been removed from the filesystem. See " +
                 "https://docs.unity3d.com/ScriptReference/EditorUserBuildSettings" +
                 "-androidCreateSymbolsZip.html")
+        } else {
+            logger.info("Found symbol archives: $symbolArchives")
         }
 
         symbolArchives.forEach { archive ->
