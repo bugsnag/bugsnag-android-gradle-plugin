@@ -1,5 +1,8 @@
 ## TBD
 
+* Automatically search for NDK shared object files in unity projects
+  [#316](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/316)
+
 * Create additional E2E scenarios for Unity SO file upload
   [#314](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/314)
 

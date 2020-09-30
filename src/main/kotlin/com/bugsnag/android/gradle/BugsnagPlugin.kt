@@ -23,6 +23,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
 import java.util.UUID
 
 /**
@@ -220,6 +221,7 @@ class BugsnagPlugin : Plugin<Project> {
                     variant,
                     output,
                     bugsnag,
+                    android,
                     manifestInfoFileProvider
                 )
                 else -> null
@@ -242,7 +244,6 @@ class BugsnagPlugin : Plugin<Project> {
             val generateUnityMappingProvider = when {
                 unityEnabled -> registerGenerateUnityMappingTask(
                     project,
-                    variant,
                     output,
                     bugsnag,
                     manifestInfoFileProvider
@@ -381,6 +382,7 @@ class BugsnagPlugin : Plugin<Project> {
         variant: ApkVariant,
         output: ApkVariantOutput,
         bugsnag: BugsnagPluginExtension,
+        android: AppExtension,
         manifestInfoFileProvider: Provider<RegularFile>
     ): TaskProvider<out BugsnagGenerateNdkSoMappingTask> {
         // Create a Bugsnag task to upload NDK mapping file(s)
@@ -390,10 +392,12 @@ class BugsnagPlugin : Plugin<Project> {
             variantOutput = output
             objDumpPaths.set(bugsnag.objdumpPaths)
             manifestInfoFile.set(manifestInfoFileProvider)
+
+            val searchPaths = getSharedObjectSearchPaths(project, bugsnag, android)
+            searchDirectories.from(searchPaths)
             variant.externalNativeBuildProviders.forEach { provider ->
                 searchDirectories.from(provider.map(ExternalNativeBuildTask::objFolder))
                 searchDirectories.from(provider.map(ExternalNativeBuildTask::soFolder))
-                searchDirectories.from(bugsnag.sharedObjectPaths)
             }
         }
     }
@@ -401,7 +405,6 @@ class BugsnagPlugin : Plugin<Project> {
     @Suppress("LongParameterList")
     private fun registerGenerateUnityMappingTask(
         project: Project,
-        variant: ApkVariant,
         output: ApkVariantOutput,
         bugsnag: BugsnagPluginExtension,
         manifestInfoFileProvider: Provider<RegularFile>
@@ -566,13 +569,43 @@ class BugsnagPlugin : Plugin<Project> {
         }
     }
 
-
-    internal fun isNdkUploadEnabled(bugsnag: BugsnagPluginExtension,
-        android: AppExtension): Boolean {
+    internal fun isNdkUploadEnabled(
+        bugsnag: BugsnagPluginExtension,
+        android: AppExtension
+    ): Boolean {
         val usesCmake = android.externalNativeBuild.cmake.path != null
         val usesNdkBuild = android.externalNativeBuild.ndkBuild.path != null
         val default = usesCmake || usesNdkBuild
-        return bugsnag.uploadNdkMappings.getOrElse(default)
+        val unityEnabled = isUnityLibraryUploadEnabled(bugsnag, android)
+        return bugsnag.uploadNdkMappings.getOrElse(default) || unityEnabled
+    }
+
+    /**
+     * Gets the directories which should be searched for NDK shared objects.
+     * By default this is set to an empty list, and paths set by the user
+     * via the Bugsnag plugin extension will be included.
+     *
+     * If the project is a Unity app then additional search paths are added
+     * which cover the default location of NDK SO files in Unity.
+     */
+    internal fun getSharedObjectSearchPaths(
+        project: Project,
+        bugsnag: BugsnagPluginExtension,
+        android: AppExtension
+    ): List<File> {
+        val searchPaths = bugsnag.sharedObjectPaths.get().toMutableList()
+        val unityEnabled = isUnityLibraryUploadEnabled(bugsnag, android)
+        val ndkEnabled = isNdkUploadEnabled(bugsnag, android)
+
+        if (unityEnabled && ndkEnabled) {
+            val unity2019ExportedDir = File(project.rootDir, "unityLibrary/src/main/jniLibs")
+            // this directory covers both Unity 2018 exported project structure,
+            // and projects built internally in Unity using Gradle.
+            val unityDefaultDir = File(project.projectDir, "src/main/jniLibs")
+            searchPaths.add(unityDefaultDir)
+            searchPaths.add(unity2019ExportedDir)
+        }
+        return searchPaths
     }
 
     fun taskNameForVariant(variant: ApkVariant): String {

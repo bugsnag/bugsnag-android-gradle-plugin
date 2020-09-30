@@ -2,7 +2,7 @@ Feature: Exported Unity project uploads mapping files
 
 Scenario: Unity 2018 exported gradle project uploads JVM/release/Unity information
     When I run the script "features/scripts/build_unity_2018.sh" synchronously
-    And I wait to receive 6 requests
+    And I wait to receive 8 requests
 
     Then 1 requests are valid for the build API and match the following:
       | appVersionCode | appVersion | buildTool      |
@@ -11,6 +11,11 @@ Scenario: Unity 2018 exported gradle project uploads JVM/release/Unity informati
     And 1 requests are valid for the android mapping API and match the following:
       | versionCode | versionName | appId               |
       | 1           | 1.0         | com.bugsnag.example |
+
+    And 2 requests are valid for the android NDK mapping API and match the following:
+        | arch        | projectRoot | sharedObjectName |
+        | armeabi-v7a | /\S+/       | libmonochrome.so |
+        | x86         | /\S+/       | libmonochrome.so |
 
     And 4 requests are valid for the android unity NDK mapping API and match the following:
         | arch        | projectRoot | sharedObjectName |
@@ -21,7 +26,7 @@ Scenario: Unity 2018 exported gradle project uploads JVM/release/Unity informati
 
 Scenario: Unity 2019 exported gradle project uploads JVM/release/Unity information
     When I run the script "features/scripts/build_unity_2019.sh" synchronously
-    And I wait to receive 4 requests
+    And I wait to receive 5 requests
 
     Then 1 requests are valid for the build API and match the following:
       | appVersionCode | appVersion | buildTool      |
@@ -30,6 +35,10 @@ Scenario: Unity 2019 exported gradle project uploads JVM/release/Unity informati
     And 1 requests are valid for the android mapping API and match the following:
       | versionCode | versionName | appId               |
       | 1           | 1.0         | com.bugsnag.example |
+
+    And 1 requests are valid for the android NDK mapping API and match the following:
+        | arch        | projectRoot | sharedObjectName |
+        | armeabi-v7a | /\S+/       | libmonochrome.so |
 
     # Unity 2019 doesn't contain symbols for x86
     And 2 requests are valid for the android unity NDK mapping API and match the following:
@@ -52,7 +61,7 @@ Scenario: Shared object files not uploaded when uploadNdkUnityLibraryMappings se
 
 Scenario: Bundling a Unity project uploads JVM/release/Unity information
     When I run the script "features/scripts/bundle_unity_2019.sh" synchronously
-    And I wait to receive 4 requests
+    And I wait to receive 5 requests
 
     Then 1 requests are valid for the build API and match the following:
         | appVersionCode | appVersion | buildTool      |
@@ -61,6 +70,10 @@ Scenario: Bundling a Unity project uploads JVM/release/Unity information
     And 1 requests are valid for the android mapping API and match the following:
         | versionCode | versionName | appId               |
         | 1           | 1.0         | com.bugsnag.example |
+
+    And 1 requests are valid for the android NDK mapping API and match the following:
+        | arch        | projectRoot | sharedObjectName |
+        | armeabi-v7a | /\S+/       | libmonochrome.so |
 
 # Unity 2019 doesn't contain symbols for x86
     And 2 requests are valid for the android unity NDK mapping API and match the following:
@@ -71,7 +84,7 @@ Scenario: Bundling a Unity project uploads JVM/release/Unity information
 Scenario: Building a Unity product flavor uploads Unity SO files
     When I set environment variable "UNITY_FLAVORS" to "true"
     When I run the script "features/scripts/build_unity_2018_flavors.sh" synchronously
-    And I wait to receive 6 requests
+    And I wait to receive 8 requests
 
     Then 1 requests are valid for the build API and match the following:
         | appVersionCode | appVersion | buildTool      |
@@ -80,6 +93,11 @@ Scenario: Building a Unity product flavor uploads Unity SO files
     And 1 requests are valid for the android mapping API and match the following:
         | versionCode | versionName | appId               |
         | 1           | 1.0         | com.bugsnag.example |
+
+    And 2 requests are valid for the android NDK mapping API and match the following:
+        | arch        | projectRoot | sharedObjectName |
+        | armeabi-v7a | /\S+/       | libmonochrome.so |
+        | x86         | /\S+/       | libmonochrome.so |
 
     And 4 requests are valid for the android unity NDK mapping API and match the following:
         | arch        | projectRoot | sharedObjectName |

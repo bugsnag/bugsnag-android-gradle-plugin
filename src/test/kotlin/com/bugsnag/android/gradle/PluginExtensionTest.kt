@@ -53,6 +53,7 @@ class PluginExtensionTest {
         val plugin = proj.plugins.findPlugin(BugsnagPlugin::class.java)!!
         assertFalse(plugin.isUnityLibraryUploadEnabled(bugsnag, android))
         assertFalse(plugin.isNdkUploadEnabled(bugsnag, android))
+        assertEquals(emptyList<File>(), plugin.getSharedObjectSearchPaths(proj, bugsnag, android))
     }
 
     /**
@@ -113,6 +114,12 @@ class PluginExtensionTest {
         val plugin = proj.plugins.findPlugin(BugsnagPlugin::class.java)!!
         assertTrue(plugin.isUnityLibraryUploadEnabled(bugsnag, android))
         assertTrue(plugin.isNdkUploadEnabled(bugsnag, android))
+        val expected = listOf(
+            File("/test/bar"),
+            File(proj.projectDir, "src/main/jniLibs"),
+            File(proj.rootDir, "unityLibrary/src/main/jniLibs")
+        )
+        assertEquals(expected, plugin.getSharedObjectSearchPaths(proj, bugsnag, android))
     }
 
     /**
@@ -131,5 +138,30 @@ class PluginExtensionTest {
         // ndk/unity upload overridden to true
         assertTrue(plugin.isUnityLibraryUploadEnabled(bugsnag, android))
         assertTrue(plugin.isNdkUploadEnabled(bugsnag, android))
+        val expected = listOf(
+            File(proj.projectDir, "src/main/jniLibs"),
+            File(proj.rootDir, "unityLibrary/src/main/jniLibs")
+        )
+        assertEquals(expected, plugin.getSharedObjectSearchPaths(proj, bugsnag, android))
+    }
+
+    /**
+     * Verifies that in a Unity app NDK/Unity uploads are enabled by default
+     */
+    @Test
+    fun unityEnablesNdkUpload() {
+        val bugsnag = proj.extensions.getByType(BugsnagPluginExtension::class.java)
+        val android = proj.extensions.findByType(AppExtension::class.java)!!
+        val plugin = proj.plugins.findPlugin(BugsnagPlugin::class.java)!!
+        android.aaptOptions.noCompress.add(".unity3d")
+
+        // ndk/unity uploads overridden to true
+        assertTrue(plugin.isUnityLibraryUploadEnabled(bugsnag, android))
+        assertTrue(plugin.isNdkUploadEnabled(bugsnag, android))
+        val expected = listOf(
+            File(proj.projectDir, "src/main/jniLibs"),
+            File(proj.rootDir, "unityLibrary/src/main/jniLibs")
+        )
+        assertEquals(expected, plugin.getSharedObjectSearchPaths(proj, bugsnag, android))
     }
 }

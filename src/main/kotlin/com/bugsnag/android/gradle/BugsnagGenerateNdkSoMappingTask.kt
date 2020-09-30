@@ -1,6 +1,5 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.VariantOutput
 import com.android.build.gradle.api.ApkVariantOutput
 import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.NDK_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.GradleVersions
@@ -62,12 +61,11 @@ sealed class BugsnagGenerateNdkSoMappingTask(
     fun generateMappingFiles() {
         logger.lifecycle("Generating NDK mapping files")
         val searchDirs = searchDirectories.files.toList()
-        val files = findSharedObjectMappingFiles(variantOutput, searchDirs)
+        val files = findSharedObjectMappingFiles(searchDirs)
         processFiles(files)
     }
 
     private fun findSharedObjectMappingFiles(
-        variantOutput: ApkVariantOutput,
         searchDirectories: List<File>
     ): Collection<File> {
         return searchDirectories.flatMap(this::findSharedObjectFiles)
@@ -83,7 +81,6 @@ sealed class BugsnagGenerateNdkSoMappingTask(
      *
      * @param searchDirectory The parent path to search. Each subdirectory should
      * represent an architecture
-     * @param abiArchitecture The architecture of the ABI split, or null if this is not an APK split.
      */
     private fun findSharedObjectFiles(searchDirectory: File): Collection<File> {
         return if (searchDirectory.exists() && searchDirectory.isDirectory) {
