@@ -5,6 +5,7 @@ import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.UNITY_SO_MAPPIN
 import com.bugsnag.android.gradle.internal.includesAbi
 import com.bugsnag.android.gradle.internal.mapProperty
 import com.bugsnag.android.gradle.internal.register
+import okio.BufferedSource
 import okio.buffer
 import okio.sink
 import okio.source
@@ -25,7 +26,6 @@ import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import javax.inject.Inject
 
@@ -66,36 +66,91 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
     @TaskAction
     fun generateMappingFiles() {
         logger.lifecycle("Generating Unity mapping files")
-
-        // TODO search Unity internal build too
+        // search the internal Gradle build + exported Gradle build locations
         val symbolArchives = getUnitySymbolArchives(rootProjectDir)
+        val copyDir = unitySharedObjectDir.asFile.get()
+        val sharedObjectFiles = copySoFilesFromBuildDir(copyDir).toMutableList()
 
-        if (symbolArchives.isEmpty()) {
-            logger.warn("Bugsnag did not find symbols.zip which is required to fully symbolicate " +
+        if (symbolArchives.isEmpty() && sharedObjectFiles.isEmpty()) {
+            logger.warn("Bugsnag did not find any Unity SO files in Temp/StagingArea/symbols," +
+                "or a symbols.zip. At least one of these options is required to fully symbolicate " +
                 "Unity stackframes. Please ensure that symbols.zip generation is enabled in build " +
                 "settings and that it hasn't been removed from the filesystem. See " +
                 "https://docs.unity3d.com/ScriptReference/EditorUserBuildSettings" +
                 "-androidCreateSymbolsZip.html")
-        } else {
-            logger.info("Found symbol archives: $symbolArchives")
+            return
         }
 
-        symbolArchives.forEach { archive ->
-            val copyDir = unitySharedObjectDir.asFile.get()
-            copyDir.mkdirs()
+        sharedObjectFiles.addAll(extractSoFilesFromGzipArchive(symbolArchives, copyDir))
+        logger.info("Extracted Unity SO files: $sharedObjectFiles")
+
+        // generate mapping files for each SO file
+        sharedObjectFiles.forEach { sharedObjectFile ->
+            generateUnitySoMappingFile(sharedObjectFile)
+        }
+    }
+
+    /**
+     * Extracts the libunity/libil2cpp SO files from inside a GZIP archive,
+     * which is where the files are located for exported Gradle projects
+     */
+    private fun extractSoFilesFromGzipArchive(symbolArchives: List<File>, copyDir: File): List<File> {
+        copyDir.mkdirs()
+        return symbolArchives.flatMap { archive ->
             val zipFile = ZipFile(archive)
             val entries = zipFile.entries()
 
-            // extract SO files from archive and generate mapping files for each
-            entries.asSequence()
-                .filter(::isUnitySharedObjectFile)
-                .mapNotNull { zipEntry ->
-                    extractSoFileFromArchive(zipEntry, copyDir, zipFile)
-                }
-                .forEach { sharedObjectFile ->
-                    generateUnitySoMappingFile(sharedObjectFile)
+            // extract SO files from archive
+            entries.toList()
+                .filter { isUnitySharedObjectFile(it.name) }
+                .mapNotNull { entry ->
+                    val src = zipFile.getInputStream(entry).source().buffer()
+                    copySoFile(File(entry.name), copyDir, src)
                 }
         }
+    }
+
+    /**
+     * Extracts the libunity/libil2cpp SO files from inside /Temp/StagingArea.
+     * Unity projects using Gradle output build artefacts to /Temp/gradleOut
+     * (when not exported), so the SO files can be found by traversing the filesystem.
+     */
+    private fun copySoFilesFromBuildDir(copyDir: File): List<File> {
+        val unityExportDir = rootProjectDir.asFile.get().parentFile
+        val stagingAreaDir = File(unityExportDir, "StagingArea")
+        val unity2018LibDir = File(stagingAreaDir, "symbols")
+
+        val soFiles = unity2018LibDir.walkTopDown()
+            .filter { isUnitySharedObjectFile(it.name) }
+            .toMutableList()
+
+        // copy file to intermediates/bugsnag
+        return soFiles.mapNotNull { sharedObjectFile ->
+            val src = sharedObjectFile.source().buffer()
+            copySoFile(sharedObjectFile, copyDir, src)
+        }
+    }
+
+    private fun copySoFile(sharedObjectFile: File, copyDir: File, src: BufferedSource): File? {
+        val sharedObjectName = sharedObjectFile.name
+        val arch = sharedObjectFile.parentFile.name
+
+        // avoid generating unnecessary symbols
+        if (!variantOutput.includesAbi(arch)) {
+            return null
+        }
+
+        val archDir = File(copyDir, arch)
+        archDir.mkdir()
+        val dst = File(archDir, sharedObjectName)
+        logger.info("Copying entry $sharedObjectName to $dst")
+
+        // copy entry to intermediate dir
+        src.use {
+            val sink = dst.sink()
+            it.readAll(sink)
+        }
+        return dst
     }
 
     private fun generateUnitySoMappingFile(sharedObjectFile: File) {
@@ -108,34 +163,6 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
             SharedObjectMappingFileFactory.SharedObjectType.UNITY
         )
         SharedObjectMappingFileFactory.generateSoMappingFile(project, params)
-    }
-
-    private fun extractSoFileFromArchive(
-        entry: ZipEntry,
-        copyDir: File,
-        zipFile: ZipFile
-    ): File? {
-        val entryFile = File(entry.name)
-        val sharedObjectName = entryFile.name
-        val arch = entryFile.parentFile.name
-
-        // avoid generating unnecessary symbols
-        if (!variantOutput.includesAbi(arch)) {
-            return null
-        }
-
-        val archDir = File(copyDir, arch)
-        archDir.mkdir()
-        val dst = File(archDir, sharedObjectName)
-        logger.lifecycle("Copying zip entry $entry to $dst")
-
-        // copy entry to intermediate dir
-        zipFile.getInputStream(entry).use { sharedObjectStream ->
-            val source = sharedObjectStream.source().buffer()
-            val sink = dst.sink()
-            source.readAll(sink)
-        }
-        return dst
     }
 
     /**
@@ -185,8 +212,7 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
             return name.endsWith("symbols.zip") && name.startsWith(projectName)
         }
 
-        internal fun isUnitySharedObjectFile(entry: ZipEntry): Boolean {
-            val name = entry.name
+        internal fun isUnitySharedObjectFile(name: String): Boolean {
             val extensionMatch = name.endsWith(".sym.so") || name.endsWith(".sym")
             val nameMatch = name.contains("libunity") || name.contains("libil2cpp")
             return extensionMatch && nameMatch
