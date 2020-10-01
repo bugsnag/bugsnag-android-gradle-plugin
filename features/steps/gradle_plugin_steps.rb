@@ -44,6 +44,12 @@ steps %Q{
 }
 end
 
+When("I set the fixture JVM arguments to {string}") do |jvm_args|
+steps %Q{
+  When I set environment variable "CUSTOM_JVM_ARGS" to "#{jvm_args}"
+}
+end
+
 When("I build the failing {string} using the {string} bugsnag config") do |module_config, bugsnag_config|
   Runner.environment["MODULE_CONFIG"] = module_config
   Runner.environment["BUGSNAG_CONFIG"] = bugsnag_config

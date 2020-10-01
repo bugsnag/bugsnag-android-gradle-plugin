@@ -8,14 +8,10 @@ import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.bugsnag.android.gradle.BugsnagInstallJniLibsTask.Companion.resolveBugsnagArtifacts
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
-import com.bugsnag.android.gradle.internal.BuildServiceBugsnagHttpClientHelper
-import com.bugsnag.android.gradle.internal.GradleVersions
-import com.bugsnag.android.gradle.internal.LegacyBugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.bugsnag.android.gradle.internal.hasDexguardPlugin
 import com.bugsnag.android.gradle.internal.newUploadRequestClientProvider
 import com.bugsnag.android.gradle.internal.register
-import com.bugsnag.android.gradle.internal.versionNumber
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -60,20 +56,10 @@ class BugsnagPlugin : Plugin<Project> {
                 return@withPlugin
             }
 
-            val canUseBuildService = project.gradle.versionNumber() >= GradleVersions.VERSION_6_1
-            val httpClientHelperProvider = if (canUseBuildService) {
-                project.gradle.sharedServices.registerIfAbsent("bugsnagHttpClientHelper",
-                    BuildServiceBugsnagHttpClientHelper::class.java
-                ) { spec ->
-                    // Provide some parameters
-                    spec.parameters.timeoutMillis.set(bugsnag.requestTimeoutMs)
-                    spec.parameters.retryCount.set(bugsnag.retryCount)
-                }
-            } else {
-                // Reuse instance
-                val client = LegacyBugsnagHttpClientHelper(bugsnag.requestTimeoutMs)
-                project.provider { client }
-            }
+            val httpClientHelperProvider = BugsnagHttpClientHelper.create(
+                project,
+                bugsnag
+            )
 
             val releasesUploadClientProvider = newUploadRequestClientProvider(project, "releases")
             val proguardUploadClientProvider = newUploadRequestClientProvider(project, "proguard")
@@ -273,7 +259,8 @@ class BugsnagPlugin : Plugin<Project> {
                 manifestInfoFileProvider,
                 releasesUploadClientProvider,
                 mappingFilesProvider,
-                generateNdkMappingProvider != null
+                generateNdkMappingProvider != null,
+                httpClientHelperProvider
             )
 
             val releaseAutoUpload = bugsnag.reportBuilds.get()
@@ -508,7 +495,8 @@ class BugsnagPlugin : Plugin<Project> {
         manifestInfoFileProvider: Provider<RegularFile>,
         releasesUploadClientProvider: Provider<out UploadRequestClient>,
         mappingFilesProvider: Provider<FileCollection>?,
-        checkSearchDirectories: Boolean
+        checkSearchDirectories: Boolean,
+        httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>
     ): TaskProvider<out BugsnagReleasesTask> {
         val outputName = taskNameForOutput(output)
         val taskName = "bugsnagRelease${outputName}Task"
@@ -516,6 +504,7 @@ class BugsnagPlugin : Plugin<Project> {
         val requestOutputFile = project.layout.buildDirectory.file(path)
         return BugsnagReleasesTask.register(project, taskName) {
             this.requestOutputFile.set(requestOutputFile)
+            httpClientHelper.set(httpClientHelperProvider)
             retryCount.set(bugsnag.retryCount)
             timeoutMillis.set(bugsnag.requestTimeoutMs)
             failOnUploadError.set(bugsnag.failOnUploadError)

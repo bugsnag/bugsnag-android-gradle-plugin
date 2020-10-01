@@ -13,4 +13,4 @@ trap resetGitConfig EXIT
 
 cd $APP_FIXTURE_DIR
 echo "Test fixture used: $APP_FIXTURE_DIR, AGP=$AGP_VERSION, Gradle=$GRADLE_WRAPPER_VERSION"
-./gradlew :module:clean :module:assemble -x lint --stacktrace
+./gradlew :module:clean :module:assemble -x lint --stacktrace $CUSTOM_JVM_ARGS
