@@ -575,9 +575,9 @@ class BugsnagPlugin : Plugin<Project> {
     ): Boolean {
         val usesCmake = android.externalNativeBuild.cmake.path != null
         val usesNdkBuild = android.externalNativeBuild.ndkBuild.path != null
-        val default = usesCmake || usesNdkBuild
         val unityEnabled = isUnityLibraryUploadEnabled(bugsnag, android)
-        return bugsnag.uploadNdkMappings.getOrElse(default) || unityEnabled
+        val default = usesCmake || usesNdkBuild || unityEnabled
+        return bugsnag.uploadNdkMappings.getOrElse(default)
     }
 
     /**
