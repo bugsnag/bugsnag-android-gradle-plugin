@@ -1,5 +1,8 @@
 ## TBD
 
+* Remove previous files from intermediate build directory
+  [#318](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/318)
+
 * Automatically search for NDK shared object files in unity projects
   [#316](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/316)
 

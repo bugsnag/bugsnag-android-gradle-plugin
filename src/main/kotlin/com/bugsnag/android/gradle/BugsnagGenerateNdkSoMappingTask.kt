@@ -88,6 +88,7 @@ sealed class BugsnagGenerateNdkSoMappingTask(
             searchDirectory.walkTopDown()
                 .onEnter { archDir -> variantOutput.includesAbi(archDir.name) }
                 .filter { file -> file.extension == "so" }
+                .filter { !IGNORED_SO_FILES.contains(it.name) }
                 .toSet()
         } else {
             emptySet()
@@ -115,6 +116,13 @@ sealed class BugsnagGenerateNdkSoMappingTask(
     }
 
     companion object {
+
+        /**
+         * SO files which should be ignored by the NDK upload task. These are Unity
+         * library SO files and are handled by the Unity upload task.
+         */
+        internal val IGNORED_SO_FILES = listOf("libunity.so", "libil2cpp.so", "libmain.so")
+
         internal fun register(
             project: Project,
             name: String,
