@@ -2,6 +2,7 @@ package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.ApkVariantOutput
 import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.UNITY_SO_MAPPING_DIR
+import com.bugsnag.android.gradle.internal.clearDir
 import com.bugsnag.android.gradle.internal.includesAbi
 import com.bugsnag.android.gradle.internal.mapProperty
 import com.bugsnag.android.gradle.internal.register
@@ -69,6 +70,10 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
         // search the internal Gradle build + exported Gradle build locations
         val symbolArchives = getUnitySymbolArchives(rootProjectDir)
         val copyDir = unitySharedObjectDir.asFile.get()
+        val outputDir = intermediateOutputDir.asFile.get()
+        copyDir.clearDir()
+        outputDir.clearDir()
+
         val sharedObjectFiles = copySoFilesFromBuildDir(copyDir).toMutableList()
 
         if (symbolArchives.isEmpty() && sharedObjectFiles.isEmpty()) {

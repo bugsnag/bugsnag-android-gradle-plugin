@@ -137,6 +137,14 @@ internal fun ProviderFactory.systemPropertyCompat(
     }
 }
 
+/**
+ * Clears a directory of any files it contains.
+ */
+internal fun File.clearDir() {
+    deleteRecursively()
+    mkdir()
+}
+
 /* Borrowed helper functions from the Gradle Kotlin DSL. */
 
 /**

@@ -3,6 +3,7 @@ package com.bugsnag.android.gradle
 import com.android.build.gradle.api.ApkVariantOutput
 import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.NDK_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.GradleVersions
+import com.bugsnag.android.gradle.internal.clearDir
 import com.bugsnag.android.gradle.internal.includesAbi
 import com.bugsnag.android.gradle.internal.mapProperty
 import com.bugsnag.android.gradle.internal.register
@@ -87,6 +88,7 @@ sealed class BugsnagGenerateNdkSoMappingTask(
             searchDirectory.walkTopDown()
                 .onEnter { archDir -> variantOutput.includesAbi(archDir.name) }
                 .filter { file -> file.extension == "so" }
+                .filter { !IGNORED_SO_FILES.contains(it.name) }
                 .toSet()
         } else {
             emptySet()
@@ -95,6 +97,8 @@ sealed class BugsnagGenerateNdkSoMappingTask(
 
     private fun processFiles(files: Collection<File>) {
         logger.info("Bugsnag: Found shared object files for upload: $files")
+        val outputDir = intermediateOutputDir.get().asFile
+        outputDir.clearDir()
 
         files.forEach { sharedObjectFile ->
             val arch = sharedObjectFile.parentFile.name
@@ -102,7 +106,7 @@ sealed class BugsnagGenerateNdkSoMappingTask(
                 sharedObjectFile,
                 requireNotNull(Abi.findByName(arch)),
                 objDumpPaths.get(),
-                intermediateOutputDir.get().asFile
+                outputDir
             )
             val outputFile = SharedObjectMappingFileFactory.generateSoMappingFile(project, params)
             if (outputFile != null) {
@@ -112,6 +116,13 @@ sealed class BugsnagGenerateNdkSoMappingTask(
     }
 
     companion object {
+
+        /**
+         * SO files which should be ignored by the NDK upload task. These are Unity
+         * library SO files and are handled by the Unity upload task.
+         */
+        internal val IGNORED_SO_FILES = listOf("libunity.so", "libil2cpp.so", "libmain.so")
+
         internal fun register(
             project: Project,
             name: String,
