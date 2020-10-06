@@ -1,4 +1,4 @@
-## TBD
+## 5.3.0-rc01 (2020-10-06)
 
 * Ensure libil2cpp has correct file extension
   [#320](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/320)
