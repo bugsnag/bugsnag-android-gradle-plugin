@@ -1,5 +1,8 @@
 ## TBD
 
+* Ensure libil2cpp has correct file extension
+  [#320](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/320)
+
 * Remove previous files from intermediate build directory
   [#318](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/318)
 

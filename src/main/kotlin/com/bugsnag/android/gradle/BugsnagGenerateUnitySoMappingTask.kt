@@ -137,7 +137,11 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
     }
 
     private fun copySoFile(sharedObjectFile: File, copyDir: File, src: BufferedSource): File? {
-        val sharedObjectName = sharedObjectFile.name
+        // append .so extension if not already present (required for pipeline symbolication)
+        val sharedObjectName = when (sharedObjectFile.extension) {
+            "so" -> sharedObjectFile.name
+            else -> "${sharedObjectFile.name}.so"
+        }
         val arch = sharedObjectFile.parentFile.name
 
         // avoid generating unnecessary symbols

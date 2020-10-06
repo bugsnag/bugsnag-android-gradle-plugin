@@ -19,9 +19,9 @@ Scenario: Unity 2018 exported gradle project uploads JVM/release/Unity informati
 
     And 4 requests are valid for the android unity NDK mapping API and match the following:
         | arch        | projectRoot | sharedObjectName |
-        | armeabi-v7a | /\S+/       | libil2cpp.sym    |
+        | armeabi-v7a | /\S+/       | libil2cpp.sym.so |
         | armeabi-v7a | /\S+/       | libunity.sym.so  |
-        | x86         | /\S+/       | libil2cpp.sym    |
+        | x86         | /\S+/       | libil2cpp.sym.so |
         | x86         | /\S+/       | libunity.sym.so  |
 
 Scenario: Unity 2019 exported gradle project uploads JVM/release/Unity information
@@ -101,9 +101,9 @@ Scenario: Building a Unity product flavor uploads Unity SO files
 
     And 4 requests are valid for the android unity NDK mapping API and match the following:
         | arch        | projectRoot | sharedObjectName |
-        | armeabi-v7a | /\S+/       | libil2cpp.sym    |
+        | armeabi-v7a | /\S+/       | libil2cpp.sym.so |
         | armeabi-v7a | /\S+/       | libunity.sym.so  |
-        | x86         | /\S+/       | libil2cpp.sym    |
+        | x86         | /\S+/       | libil2cpp.sym.so |
         | x86         | /\S+/       | libunity.sym.so  |
 
 Scenario: Building a Unity product flavor uploads Unity SO files
@@ -113,5 +113,5 @@ Scenario: Building a Unity product flavor uploads Unity SO files
 
     And 2 requests are valid for the android unity NDK mapping API and match the following:
         | arch        | projectRoot | sharedObjectName |
-        | armeabi-v7a | /\S+/       | libil2cpp.sym    |
+        | armeabi-v7a | /\S+/       | libil2cpp.sym.so |
         | armeabi-v7a | /\S+/       | libunity.sym.so  |
