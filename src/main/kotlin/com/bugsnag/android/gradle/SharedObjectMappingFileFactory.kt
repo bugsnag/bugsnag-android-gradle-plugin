@@ -133,14 +133,10 @@ internal object SharedObjectMappingFileFactory {
      * included in the output file or not
      */
     private fun outputZipFile(stdout: InputStream, outputFile: File) {
-        val src = stdout.source().buffer()
-        val sink = outputFile.sink().gzip().buffer()
-        src.use { source ->
-            sink.use { gzipSink ->
-                // filter unnecessary lines from objdump here
-                generateSequence { source.readUtf8Line() }
-                    .forEach { line -> gzipSink.writeString("$line\n", Charset.defaultCharset()) }
-                }
+        stdout.source().use { source ->
+            outputFile.sink().gzip().buffer().use { gzipSink ->
+                gzipSink.writeAll(source)
+            }
         }
     }
 
