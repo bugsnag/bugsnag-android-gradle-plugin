@@ -62,30 +62,12 @@ internal object SharedObjectMappingFileFactory {
             val processBuilder = getObjDumpCommand(objDumpPath, params)
             logger.info("Bugsnag: Creating symbol file for $sharedObjectName at $dst," +
                 "running ${processBuilder.command()}")
-
-            makeSoMappingFile(dst, processBuilder) { line ->
-                when (params.sharedObjectType) {
-                    NDK -> true // no need to reduce NDK SO file size
-                    UNITY -> filterUnitySoLines(line) // filter out unnecessary sections in SO file
-                }
-            }
+            makeSoMappingFile(dst, processBuilder)
             return dst
         } catch (e: Exception) {
             logger.error("Bugsnag: failed to generate symbols for $arch ${e.message}", e)
         }
         return null
-    }
-
-    /**
-     * Removes redundant information from SO files. This discards anything which isn't
-     * a section header or function definition to reduce the mapping file size.
-     * Additionally any undefined symbols are removed.
-     */
-    internal fun filterUnitySoLines(line: String): Boolean {
-        val isSectionHeader = line.contains("SYMBOL TABLE:")
-        val isFunctionDef = line.contains(" F ")
-        val isFunctionDefined = !line.contains("*UND*")
-        return (isFunctionDef || isSectionHeader) && isFunctionDefined
     }
 
     /**
@@ -101,15 +83,11 @@ internal object SharedObjectMappingFileFactory {
         }
     }
 
-    private fun makeSoMappingFile(
-        dst: File,
-        processBuilder: ProcessBuilder,
-        lineFilter: (String) -> Boolean
-    ) {
+    private fun makeSoMappingFile(dst: File, processBuilder: ProcessBuilder) {
         // ensure any errors are dumped to stderr
         processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT)
         val process = processBuilder.start()
-        outputZipFile(process.inputStream, dst, lineFilter)
+        outputZipFile(process.inputStream, dst)
 
         val exitCode = process.waitFor()
         if (exitCode != 0) {
@@ -152,23 +130,13 @@ internal object SharedObjectMappingFileFactory {
      *
      * @param stdout The input stream
      * @param outputFile The output file
-     * @param lineFilter A predicate which determines whether a line should be
      * included in the output file or not
      */
-    private fun outputZipFile(
-        stdout: InputStream,
-        outputFile: File,
-        lineFilter: (String) -> Boolean
-    ) {
-        val src = stdout.source().buffer()
-        val sink = outputFile.sink().gzip().buffer()
-        src.use { source ->
-            sink.use { gzipSink ->
-                // filter unnecessary lines from objdump here
-                generateSequence { source.readUtf8Line() }
-                    .filter(lineFilter)
-                    .forEach { line -> gzipSink.writeString("$line\n", Charset.defaultCharset()) }
-                }
+    private fun outputZipFile(stdout: InputStream, outputFile: File) {
+        stdout.source().use { source ->
+            outputFile.sink().gzip().buffer().use { gzipSink ->
+                gzipSink.writeAll(source)
+            }
         }
     }
 
