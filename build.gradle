@@ -134,6 +134,8 @@ detekt {
     }
 }
 
+sourceCompatibility = JavaVersion.VERSION_1_8
+
 // see https://github.com/asciidoctor/asciidoctorj/pull/862
 Signature.metaClass.getToSignArtifact = { ->
     return (delegate as Signature).source
