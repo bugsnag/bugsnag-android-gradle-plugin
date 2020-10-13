@@ -103,7 +103,7 @@ mavenPublish {
     targets {
         bintray {
             String bintrayUser = project.hasProperty("bintray_user") ? "$bintray_user" : System.getenv("bintray_user")
-            releaseRepositoryUrl = "https://api.bintray.com/maven/$bintrayUser/artifact-sandbox/;publish=1"
+            releaseRepositoryUrl = "https://api.bintray.com/maven/bugsnag/artifact-sandbox/;publish=0"
             snapshotRepositoryUrl = null
             repositoryUsername = bintrayUser
             repositoryPassword = project.hasProperty("bintray_api_key") ? "$bintray_api_key" : System.getenv("bintray_api_key")
