@@ -1,3 +1,8 @@
+## TBD
+
+* JNI install task should always takes place if NDK build enabled
+  [#323](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/323)
+
 ## 5.2.0 (2020-09-22)
 
 * Support mapping upload from Android Gradle Plugin through a proxy
