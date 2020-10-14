@@ -119,7 +119,7 @@ class BugsnagPlugin : Plugin<Project> {
                         unityUploadClientProvider
                     )
                 }
-                registerNdkLibInstallTask(project, bugsnag, android)
+                registerNdkLibInstallTask(project)
             }
         }
     }
@@ -130,11 +130,7 @@ class BugsnagPlugin : Plugin<Project> {
         return variant.variantEnabled ?: true
     }
 
-    private fun registerNdkLibInstallTask(
-        project: Project,
-        bugsnag: BugsnagPluginExtension,
-        android: AppExtension
-    ) {
+    private fun registerNdkLibInstallTask(project: Project) {
         val ndkTasks = project.tasks.withType(ExternalNativeBuildTask::class.java)
         val cleanTasks = ndkTasks.filter { it.name.contains(CLEAN_TASK) }.toSet()
         val buildTasks = ndkTasks.filter { !it.name.contains(CLEAN_TASK) }.toSet()
@@ -145,13 +141,8 @@ class BugsnagPlugin : Plugin<Project> {
                 val files = resolveBugsnagArtifacts(project)
                 bugsnagArtifacts.from(files)
             }
-
-            if (isNdkUploadEnabled(bugsnag, android)) {
-                ndkSetupTask.configure {
-                    it.mustRunAfter(cleanTasks)
-                }
-                buildTasks.forEach { it.dependsOn(ndkSetupTask) }
-            }
+            ndkSetupTask.configure { it.mustRunAfter(cleanTasks) }
+            buildTasks.forEach { it.dependsOn(ndkSetupTask) }
         }
     }
 
