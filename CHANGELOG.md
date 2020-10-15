@@ -1,3 +1,39 @@
+## 5.3.0 (2020-10-15)
+
+* Ensure libil2cpp has correct file extension
+  [#320](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/320)
+
+* Remove previous files from intermediate build directory
+  [#318](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/318)
+
+* Automatically search for NDK shared object files in unity projects
+  [#316](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/316)
+
+* Create additional E2E scenarios for Unity SO file upload
+  [#314](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/314)
+
+* Generate shared object mapping files for libunity and libil2cpp
+  [#312](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/312)
+  [#315](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/315)
+
+* Register unity shared object generation and upload tasks
+  [#311](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/311)
+
+* Support Unity shared object files in upload task
+  [#307](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/307)
+
+* Generate shared object mapping files in separate class
+  [#304](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/304)
+
+* Separate generation/upload of shared objects into two tasks
+  [#303](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/303)
+  
+* Add uploadNdkUnityLibraryMappings flag to bugsnag extension
+  [#306](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/306)
+
+* JNI install task should always takes place if NDK build enabled
+  [#323](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/323)
+
 ## 5.2.0 (2020-09-22)
 
 * Support mapping upload from Android Gradle Plugin through a proxy

@@ -11,7 +11,16 @@ echo "Updating gradle wrapper for: $NDK_FIXTURE_DIR"
 ./gradlew wrapper --gradle-version "$GRADLE_WRAPPER_VERSION"
 
 cd ../../../ && cd "$RN_FIXTURE_DIR"
-echo "Updating gradle wrapper for: RN_FIXTURE_DIR"
+echo "Updating gradle wrapper for: $RN_FIXTURE_DIR"
 npm i
 ./gradlew wrapper --gradle-version "$GRADLE_WRAPPER_VERSION"
+
+cd ../../../../ && cd "$UNITY_2018_FIXTURE_DIR"
+echo "Updating gradle wrapper for: $UNITY_2018_FIXTURE_DIR"
+./gradlew wrapper --gradle-version "$GRADLE_WRAPPER_VERSION"
+
+cd ../../../../ && cd "$UNITY_2019_FIXTURE_DIR"
+echo "Updating gradle wrapper for: $UNITY_2019_FIXTURE_DIR"
+./gradlew wrapper --gradle-version "$GRADLE_WRAPPER_VERSION"
+
 unset UPDATING_GRADLEW

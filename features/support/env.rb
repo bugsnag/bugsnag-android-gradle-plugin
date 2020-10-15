@@ -4,6 +4,8 @@
 ENV["APP_FIXTURE_DIR"] ||= "features/fixtures/app"
 ENV["NDK_FIXTURE_DIR"] ||= "features/fixtures/ndkapp"
 ENV["RN_FIXTURE_DIR"] ||= "features/fixtures/rnapp/android"
+ENV["UNITY_2018_FIXTURE_DIR"] ||= "features/fixtures/unity_2018/example"
+ENV["UNITY_2019_FIXTURE_DIR"] ||= "features/fixtures/unity_2019"
 
 # set defaults for versions
 ENV["AGP_VERSION"] ||= "4.1.0-beta04" # default to latest
@@ -58,6 +60,13 @@ end
 def get_android_ndk_mapping_requests
   Server.stored_requests.reject do |request|
     value = read_key_path(request[:body], 'soSymbolFile')
+    value.nil?
+  end
+end
+
+def get_android_unity_ndk_mapping_requests
+  Server.stored_requests.reject do |request|
+    value = read_key_path(request[:body], 'soSymbolTableFile')
     value.nil?
   end
 end
