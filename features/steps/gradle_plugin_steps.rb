@@ -65,18 +65,40 @@ Then('{int} requests are valid for the build API and match the following:') do |
   requests = get_build_requests
   assert_equal(request_count, requests.length, 'Wrong number of build API requests')
   RequestSetAssertions.assert_requests_match requests, data_table
+
+  requests.each do |request|
+    valid_build_api?(request[:body])
+  end
 end
 
 Then('{int} requests are valid for the android mapping API and match the following:') do |request_count, data_table|
   requests = get_android_mapping_requests
   assert_equal(request_count, requests.length, 'Wrong number of mapping API requests')
   RequestSetAssertions.assert_requests_match requests, data_table
+
+  requests.each do |request|
+    valid_android_mapping_api?(request[:body])
+  end
 end
 
 Then('{int} requests are valid for the android NDK mapping API and match the following:') do |request_count, data_table|
   requests = get_android_ndk_mapping_requests
   assert_equal(request_count, requests.length, 'Wrong number of NDK mapping API requests')
   RequestSetAssertions.assert_requests_match requests, data_table
+
+  requests.each do |request|
+    valid_android_ndk_mapping_api?(request[:body])
+  end
+end
+
+Then('{int} requests are valid for the android unity NDK mapping API and match the following:') do |request_count, data_table|
+  requests = get_android_unity_ndk_mapping_requests
+  assert_equal(request_count, requests.length, 'Wrong number of android unity NDK mapping API requests')
+  RequestSetAssertions.assert_requests_match requests, data_table
+
+  requests.each do |request|
+    valid_android_unity_ndk_mapping_api?(request[:body])
+  end
 end
 
 def valid_build_api?(request_body)
@@ -93,18 +115,22 @@ def valid_build_api?(request_body)
 end
 
 def valid_android_mapping_api?(request_body)
-  assert_equal($api_key, request_body['apiKey'])
+  valid_mapping_api?(request_body)
   assert_not_nil(request_body['proguard'])
-  assert_not_nil(request_body['appId'])
-  assert_not_nil(request_body['versionCode'])
-  assert_not_nil(request_body['buildUUID'])
-  assert_not_nil(request_body['versionName'])
 end
 
-# TODO can avoid duplication
 def valid_android_ndk_mapping_api?(request_body)
-  assert_equal($api_key, request_body['apiKey'])
+  valid_mapping_api?(request_body)
   assert_not_nil(request_body['soSymbolFile'])
+end
+
+def valid_android_unity_ndk_mapping_api?(request_body)
+  valid_mapping_api?(request_body)
+  assert_not_nil(request_body['soSymbolTableFile'])
+end
+
+def valid_mapping_api?(request_body)
+  assert_equal($api_key, request_body['apiKey'])
   assert_not_nil(request_body['appId'])
   assert_not_nil(request_body['versionCode'])
   assert_not_nil(request_body['buildUUID'])

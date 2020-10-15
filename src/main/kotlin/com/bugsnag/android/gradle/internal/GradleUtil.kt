@@ -1,8 +1,10 @@
 @file:Suppress("MatchingDeclarationName", "TooManyFunctions") // This file contains multiple top-level members
 package com.bugsnag.android.gradle.internal
 
+import com.android.build.VariantOutput
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApkVariant
+import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 // TODO use the new replacement when min AGP version is 4.0
@@ -115,6 +117,14 @@ internal fun Project.hasDexguardPlugin(): Boolean {
     return pluginManager.hasPlugin("dexguard")
 }
 
+/**
+ * Returns true if an APK variant output includes SO files for the given ABI.
+ */
+internal fun ApkVariantOutput.includesAbi(abi: String): Boolean {
+    val splitArch = getFilter(VariantOutput.FilterType.ABI)
+    return splitArch == null || abi == splitArch
+}
+
 /** Returns a String provider for a system property. */
 internal fun ProviderFactory.systemPropertyCompat(
     name: String,
@@ -125,6 +135,14 @@ internal fun ProviderFactory.systemPropertyCompat(
     } else {
         provider { System.getProperty(name) }
     }
+}
+
+/**
+ * Clears a directory of any files it contains.
+ */
+internal fun File.clearDir() {
+    deleteRecursively()
+    mkdir()
 }
 
 /* Borrowed helper functions from the Gradle Kotlin DSL. */
