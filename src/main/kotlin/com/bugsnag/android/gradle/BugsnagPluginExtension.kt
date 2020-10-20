@@ -37,6 +37,9 @@ open class BugsnagPluginExtension(objects: ObjectFactory) {
     val uploadNdkUnityLibraryMappings: Property<Boolean> = objects.property<Boolean>()
         .convention(NULL_BOOLEAN)
 
+    val uploadReactNativeMappings: Property<Boolean> = objects.property<Boolean>()
+        .convention(NULL_BOOLEAN)
+
     val reportBuilds: Property<Boolean> = objects.property<Boolean>()
         .convention(true)
 
