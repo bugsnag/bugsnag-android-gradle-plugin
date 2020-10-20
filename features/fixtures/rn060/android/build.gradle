@@ -11,6 +11,7 @@ buildscript {
     repositories {
         google()
         jcenter()
+        mavenLocal()
     }
     dependencies {
         def agpVersion = System.env.AGP_VERSION ?: "4.1.0-beta04"
