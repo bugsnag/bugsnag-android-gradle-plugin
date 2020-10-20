@@ -3,12 +3,12 @@
 # Set which test fixture should be used
 ENV["APP_FIXTURE_DIR"] ||= "features/fixtures/app"
 ENV["NDK_FIXTURE_DIR"] ||= "features/fixtures/ndkapp"
-ENV["RN_FIXTURE_DIR"] ||= "features/fixtures/rnapp/android"
+ENV["RN_FIXTURE_DIR"] ||= "features/fixtures/rn063/android"
 ENV["UNITY_2018_FIXTURE_DIR"] ||= "features/fixtures/unity_2018/example"
 ENV["UNITY_2019_FIXTURE_DIR"] ||= "features/fixtures/unity_2019"
 
 # set defaults for versions
-ENV["AGP_VERSION"] ||= "4.1.0-beta04" # default to latest
+ENV["AGP_VERSION"] ||= "4.1.0" # default to latest
 ENV["GRADLE_WRAPPER_VERSION"] ||= "6.5.1"
 
 `./features/scripts/clear_local_maven_repo.sh`

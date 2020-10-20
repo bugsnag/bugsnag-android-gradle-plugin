@@ -95,7 +95,7 @@ def enableSeparateBuildPerCPUArchitecture = false
 /**
  * Run Proguard to shrink the Java bytecode in release builds.
  */
-def enableProguardInReleaseBuilds = false
+def enableProguardInReleaseBuilds = true
 
 /**
  * The preferred build flavor of JavaScriptCore.
@@ -208,3 +208,12 @@ task copyDownloadableDepsToLibs(type: Copy) {
 }
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
+
+if (!System.env.UPDATING_GRADLEW) {
+    apply plugin: 'com.bugsnag.android.gradle'
+
+    bugsnag {
+        endpoint = "http://localhost:9339"
+        releasesEndpoint = "http://localhost:9339"
+    }
+}
