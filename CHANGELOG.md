@@ -1,3 +1,8 @@
+## TBD
+
+* Add uploadReactNativeMappings flag to plugin extension
+  [#327](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/327)
+
 ## 5.3.0 (2020-10-15)
 
 * Ensure libil2cpp has correct file extension

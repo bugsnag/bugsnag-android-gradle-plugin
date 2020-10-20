@@ -560,6 +560,14 @@ class BugsnagPlugin : Plugin<Project> {
         return bugsnag.uploadNdkMappings.getOrElse(default)
     }
 
+    internal fun isReactNativeUploadEnabled(
+        project: Project,
+        bugsnag: BugsnagPluginExtension
+    ): Boolean {
+        val hasReact = project.extensions.extraProperties.has("react")
+        return bugsnag.uploadReactNativeMappings.getOrElse(hasReact)
+    }
+
     /**
      * Gets the directories which should be searched for NDK shared objects.
      * By default this is set to an empty list, and paths set by the user
