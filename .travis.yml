@@ -42,7 +42,7 @@ jobs:
   include:
     # Unit test job
     - name: unit tests
-      script: ./gradlew check
+      script: ./gradlew detekt ktlintCheck check
 
     # Plugin install job
     - name: plugin install
