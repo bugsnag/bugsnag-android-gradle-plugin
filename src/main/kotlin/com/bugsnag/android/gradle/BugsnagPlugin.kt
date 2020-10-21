@@ -176,9 +176,11 @@ class BugsnagPlugin : Plugin<Project> {
             val jvmMinificationEnabled = project.isJvmMinificationEnabled(variant)
             val ndkEnabled = isNdkUploadEnabled(bugsnag, android)
             val unityEnabled = isUnityLibraryUploadEnabled(bugsnag, android)
+            // TODO check variant extras for RN defined tasks as well
+            val reactNativeEnabled = isReactNativeUploadEnabled(project, bugsnag)
 
             // skip tasks for variant if JVM/NDK/Unity minification not enabled
-            if (!jvmMinificationEnabled && !ndkEnabled && !unityEnabled) {
+            if (!jvmMinificationEnabled && !ndkEnabled && !unityEnabled && !reactNativeEnabled) {
                 return@configureEach
             }
 
@@ -248,6 +250,16 @@ class BugsnagPlugin : Plugin<Project> {
                 else -> null
             }
 
+            val uploadSourceMapProvider = when {
+                reactNativeEnabled -> registerUploadSourceMapTask(
+                    project,
+                    variant,
+                    output,
+                    manifestInfoFileProvider
+                )
+                else -> null
+            }
+
             val releaseUploadTask = registerReleasesUploadTask(
                 project,
                 variant,
@@ -274,6 +286,9 @@ class BugsnagPlugin : Plugin<Project> {
             if (proguardTaskProvider != null) {
                 val jvmAutoUpload = bugsnag.uploadJvmMappings.get()
                 variant.register(project, proguardTaskProvider, jvmAutoUpload)
+            }
+            if (uploadSourceMapProvider != null) {
+                variant.register(project, uploadSourceMapProvider, reactNativeEnabled)
             }
         }
     }
@@ -357,6 +372,31 @@ class BugsnagPlugin : Plugin<Project> {
                 mappingFileProperty.from(it)
             }
             configureWith(bugsnag)
+        }
+    }
+
+    /**
+     * Creates a bugsnag task to upload JS source maps
+     */
+    private fun registerUploadSourceMapTask(
+        project: Project,
+        variant: ApkVariant,
+        output: ApkVariantOutput,
+        manifestInfoFileProvider: Provider<RegularFile>
+    ): TaskProvider<out BugsnagUploadJsSourceMapTask> {
+        val outputName = taskNameForOutput(output)
+        val taskName = "uploadBugsnag${outputName}SourceMaps"
+        val path = "intermediates/bugsnag/requests/sourceMapFor${outputName}"
+        val requestOutputFileProvider = project.layout.buildDirectory.file(path)
+
+//        variant.
+
+        return project.tasks.register<BugsnagUploadJsSourceMapTask>(taskName) {
+            requestOutputFile.set(requestOutputFileProvider)
+            manifestInfoFile.set(manifestInfoFileProvider)
+            // TODO set properties from variant
+//            bundleJsFile.set()
+//            sourceMapFile.set()
         }
     }
 
@@ -572,7 +612,8 @@ class BugsnagPlugin : Plugin<Project> {
         project: Project,
         bugsnag: BugsnagPluginExtension
     ): Boolean {
-        val hasReact = project.extensions.extraProperties.has("react")
+        val props = project.extensions.extraProperties
+        val hasReact = props.has("react")
         return bugsnag.uploadReactNativeMappings.getOrElse(hasReact)
     }
 
