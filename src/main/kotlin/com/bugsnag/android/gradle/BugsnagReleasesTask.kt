@@ -277,16 +277,22 @@ sealed class BugsnagReleasesTask(
             gradleVersion.set(it)
             VersionNumber.parse(it)
         }
-        gitVersion.set(providerFactory.provider { runCmd(VCS_COMMAND, "--version") } )
-        osArch.set(providerFactory.systemPropertyCompat(MK_OS_ARCH, gradleVersionNumber) )
-        osName.set(providerFactory.systemPropertyCompat(MK_OS_NAME, gradleVersionNumber) )
-        osVersion.set(providerFactory.systemPropertyCompat(MK_OS_VERSION, gradleVersionNumber) )
+        gitVersion.set(providerFactory.provider { runCmd(VCS_COMMAND, "--version") })
+        osArch.set(providerFactory.systemPropertyCompat(MK_OS_ARCH, gradleVersionNumber))
+        osName.set(providerFactory.systemPropertyCompat(MK_OS_NAME, gradleVersionNumber))
+        osVersion.set(providerFactory.systemPropertyCompat(MK_OS_VERSION, gradleVersionNumber))
         javaVersion.set(providerFactory.systemPropertyCompat(MK_JAVA_VERSION, gradleVersionNumber))
     }
 
     companion object {
-        private val VALID_VCS_PROVIDERS: Collection<String> = listOf("github-enterprise",
-            "bitbucket-server", "gitlab-onpremise", "bitbucket", "github", "gitlab")
+        private val VALID_VCS_PROVIDERS: Collection<String> = listOf(
+            "github-enterprise",
+            "bitbucket-server",
+            "gitlab-onpremise",
+            "bitbucket",
+            "github",
+            "gitlab"
+        )
         private const val MK_OS_ARCH = "os.arch"
         private const val MK_OS_NAME = "os.name"
         private const val MK_OS_VERSION = "os.version"
@@ -334,15 +340,15 @@ sealed class BugsnagReleasesTask(
             configurationAction: BugsnagReleasesTask.() -> Unit
         ): TaskProvider<out BugsnagReleasesTask> {
             return when {
-              project.gradle.versionNumber() >= GradleVersions.VERSION_6 -> {
-                  project.tasks.register<BugsnagReleasesTaskGradle6Plus>(name, configurationAction)
-              }
-              project.gradle.versionNumber() >= GradleVersions.VERSION_5_3 -> {
-                  project.tasks.register<BugsnagReleasesTaskGradle53Plus>(name, configurationAction)
-              }
-              else -> {
-                  project.tasks.register<BugsnagReleasesTaskLegacy>(name, configurationAction)
-              }
+                project.gradle.versionNumber() >= GradleVersions.VERSION_6 -> {
+                    project.tasks.register<BugsnagReleasesTaskGradle6Plus>(name, configurationAction)
+                }
+                project.gradle.versionNumber() >= GradleVersions.VERSION_5_3 -> {
+                    project.tasks.register<BugsnagReleasesTaskGradle53Plus>(name, configurationAction)
+                }
+                else -> {
+                    project.tasks.register<BugsnagReleasesTaskLegacy>(name, configurationAction)
+                }
             }
         }
     }

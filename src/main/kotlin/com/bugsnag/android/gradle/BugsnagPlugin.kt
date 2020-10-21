@@ -81,8 +81,10 @@ class BugsnagPlugin : Plugin<Project> {
                     val taskName = computeManifestTaskNameFor(variantName)
                     val manifestInfoOutputFile = project.computeManifestInfoOutputV2(variantName)
                     val buildUuidProvider = project.newUuidProvider()
-                    val manifestUpdater = project.tasks.register(taskName,
-                        BugsnagManifestUuidTaskV2::class.java) {
+                    val manifestUpdater = project.tasks.register(
+                        taskName,
+                        BugsnagManifestUuidTaskV2::class.java
+                    ) {
                         it.buildUuid.set(buildUuidProvider)
                         it.manifestInfoProvider.set(manifestInfoOutputFile)
                     }
@@ -124,8 +126,10 @@ class BugsnagPlugin : Plugin<Project> {
         }
     }
 
-    private fun isVariantEnabled(bugsnag: BugsnagPluginExtension,
-                                 variant: VariantFilterImpl): Boolean {
+    private fun isVariantEnabled(
+        bugsnag: BugsnagPluginExtension,
+        variant: VariantFilterImpl
+    ): Boolean {
         bugsnag.filter.execute(variant)
         return variant.variantEnabled ?: true
     }
@@ -136,8 +140,10 @@ class BugsnagPlugin : Plugin<Project> {
         val buildTasks = ndkTasks.filter { !it.name.contains(CLEAN_TASK) }.toSet()
 
         if (buildTasks.isNotEmpty()) {
-            val ndkSetupTask = BugsnagInstallJniLibsTask.register(project,
-                "bugsnagInstallJniLibsTask") {
+            val ndkSetupTask = BugsnagInstallJniLibsTask.register(
+                project,
+                "bugsnagInstallJniLibsTask"
+            ) {
                 val files = resolveBugsnagArtifacts(project)
                 bugsnagArtifacts.from(files)
             }
@@ -338,7 +344,7 @@ class BugsnagPlugin : Plugin<Project> {
     ): TaskProvider<out BugsnagUploadProguardTask> {
         val outputName = taskNameForOutput(output)
         val taskName = "uploadBugsnag${outputName}Mapping"
-        val path = "intermediates/bugsnag/requests/proguardFor${outputName}.json"
+        val path = "intermediates/bugsnag/requests/proguardFor$outputName.json"
         val requestOutputFileProvider = project.layout.buildDirectory.file(path)
 
         return BugsnagUploadProguardTask.register(project, taskName) {
@@ -417,7 +423,7 @@ class BugsnagPlugin : Plugin<Project> {
             manifestInfoFileProvider,
             ndkUploadClientProvider,
             "uploadBugsnagNdk${outputName}Mapping",
-            "intermediates/bugsnag/requests/ndkFor${outputName}.json",
+            "intermediates/bugsnag/requests/ndkFor$outputName.json",
             BugsnagUploadSharedObjectTask.UploadType.NDK,
             SharedObjectMappingFileFactory.NDK_SO_MAPPING_DIR
         )
@@ -442,7 +448,7 @@ class BugsnagPlugin : Plugin<Project> {
             manifestInfoFileProvider,
             ndkUploadClientProvider,
             "uploadBugsnagUnity${outputName}Mapping",
-            "intermediates/bugsnag/requests/unityFor${outputName}.json",
+            "intermediates/bugsnag/requests/unityFor$outputName.json",
             BugsnagUploadSharedObjectTask.UploadType.UNITY,
             SharedObjectMappingFileFactory.UNITY_SO_MAPPING_DIR
         )
@@ -491,7 +497,7 @@ class BugsnagPlugin : Plugin<Project> {
     ): TaskProvider<out BugsnagReleasesTask> {
         val outputName = taskNameForOutput(output)
         val taskName = "bugsnagRelease${outputName}Task"
-        val path = "intermediates/bugsnag/requests/releasesFor${outputName}.json"
+        val path = "intermediates/bugsnag/requests/releasesFor$outputName.json"
         val requestOutputFile = project.layout.buildDirectory.file(path)
         return BugsnagReleasesTask.register(project, taskName) {
             this.requestOutputFile.set(requestOutputFile)
@@ -529,8 +535,10 @@ class BugsnagPlugin : Plugin<Project> {
      * libunity.so file in Unity projects.
      */
     @Suppress("SENSELESS_COMPARISON")
-    internal fun isUnityLibraryUploadEnabled(bugsnag: BugsnagPluginExtension,
-                                             android: AppExtension): Boolean {
+    internal fun isUnityLibraryUploadEnabled(
+        bugsnag: BugsnagPluginExtension,
+        android: AppExtension
+    ): Boolean {
         val enabled = bugsnag.uploadNdkUnityLibraryMappings.orNull
         return when {
             enabled != null -> enabled
@@ -614,7 +622,8 @@ class BugsnagPlugin : Plugin<Project> {
     }
 
     private fun Project.computeManifestInfoOutputV1(
-        output: ApkVariantOutput): Provider<RegularFile> {
+        output: ApkVariantOutput
+    ): Provider<RegularFile> {
         val path = "intermediates/bugsnag/manifestInfoFor${taskNameForOutput(output)}.json"
         return layout.buildDirectory.file(path)
     }
