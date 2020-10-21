@@ -57,8 +57,12 @@ sealed class BugsnagInstallJniLibsTask(
     }
 
     companion object {
-        private val sharedObjectAarIds = listOf("bugsnag-android", "bugsnag-android-ndk",
-            "bugsnag-plugin-android-anr", "bugsnag-plugin-android-ndk")
+        private val sharedObjectAarIds = listOf(
+            "bugsnag-android",
+            "bugsnag-android-ndk",
+            "bugsnag-plugin-android-anr",
+            "bugsnag-plugin-android-ndk"
+        )
 
         internal fun resolveBugsnagArtifacts(project: Project): FileCollection {
             val files = project.configurations
@@ -87,22 +91,22 @@ sealed class BugsnagInstallJniLibsTask(
         ): TaskProvider<out BugsnagInstallJniLibsTask> {
             val gradleVersion = project.gradle.versionNumber()
             return when {
-              gradleVersion >= GradleVersions.VERSION_6 -> {
-                  when {
-                      gradleVersion >= GradleVersions.VERSION_6_6 -> {
-                          project.tasks.register<BugsnagInstallJniLibsTaskGradle66Plus>(name, configurationAction)
-                      }
-                      else -> {
-                          project.tasks.register<BugsnagInstallJniLibsTaskGradle6Plus>(name, configurationAction)
-                      }
-                  }
-              }
-              gradleVersion >= GradleVersions.VERSION_5_3 -> {
-                  project.tasks.register<BugsnagInstallJniLibsTask53Plus>(name, configurationAction)
-              }
-              else -> {
-                  project.tasks.register<BugsnagInstallJniLibsTaskLegacy>(name, configurationAction)
-              }
+                gradleVersion >= GradleVersions.VERSION_6 -> {
+                    when {
+                        gradleVersion >= GradleVersions.VERSION_6_6 -> {
+                            project.tasks.register<BugsnagInstallJniLibsTaskGradle66Plus>(name, configurationAction)
+                        }
+                        else -> {
+                            project.tasks.register<BugsnagInstallJniLibsTaskGradle6Plus>(name, configurationAction)
+                        }
+                    }
+                }
+                gradleVersion >= GradleVersions.VERSION_5_3 -> {
+                    project.tasks.register<BugsnagInstallJniLibsTask53Plus>(name, configurationAction)
+                }
+                else -> {
+                    project.tasks.register<BugsnagInstallJniLibsTaskLegacy>(name, configurationAction)
+                }
             }
         }
     }

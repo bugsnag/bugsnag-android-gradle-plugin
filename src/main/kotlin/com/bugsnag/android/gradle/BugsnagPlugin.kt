@@ -99,8 +99,10 @@ class BugsnagPlugin : Plugin<Project> {
                     val taskName = taskNameForManifestUuid(variantName)
                     val manifestInfoOutputFile = project.computeManifestInfoOutputV2(variantName)
                     val buildUuidProvider = project.newUuidProvider()
-                    val manifestUpdater = project.tasks.register(taskName,
-                        BugsnagManifestUuidTaskV2::class.java) {
+                    val manifestUpdater = project.tasks.register(
+                        taskName,
+                        BugsnagManifestUuidTaskV2::class.java
+                    ) {
                         it.buildUuid.set(buildUuidProvider)
                         it.manifestInfoProvider.set(manifestInfoOutputFile)
                     }
@@ -142,8 +144,10 @@ class BugsnagPlugin : Plugin<Project> {
         }
     }
 
-    private fun isVariantEnabled(bugsnag: BugsnagPluginExtension,
-                                 variant: VariantFilterImpl): Boolean {
+    private fun isVariantEnabled(
+        bugsnag: BugsnagPluginExtension,
+        variant: VariantFilterImpl
+    ): Boolean {
         bugsnag.filter.execute(variant)
         return variant.variantEnabled ?: true
     }
@@ -576,8 +580,10 @@ class BugsnagPlugin : Plugin<Project> {
      * libunity.so file in Unity projects.
      */
     @Suppress("SENSELESS_COMPARISON")
-    internal fun isUnityLibraryUploadEnabled(bugsnag: BugsnagPluginExtension,
-                                             android: AppExtension): Boolean {
+    internal fun isUnityLibraryUploadEnabled(
+        bugsnag: BugsnagPluginExtension,
+        android: AppExtension
+    ): Boolean {
         val enabled = bugsnag.uploadNdkUnityLibraryMappings.orNull
         return when {
             enabled != null -> enabled

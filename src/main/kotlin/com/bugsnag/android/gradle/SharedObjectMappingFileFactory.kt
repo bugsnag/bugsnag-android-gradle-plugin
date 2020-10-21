@@ -12,7 +12,6 @@ import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Project
 import java.io.File
 import java.io.InputStream
-import java.nio.charset.Charset
 
 /**
  * Generates a mapping file for the supplied shared object file.
@@ -58,8 +57,10 @@ internal object SharedObjectMappingFileFactory {
             val sharedObjectName = params.sharedObject.name
             val dst = File(archDir, "$sharedObjectName.gz")
             val processBuilder = getObjDumpCommand(objDumpPath, params)
-            logger.info("Bugsnag: Creating symbol file for $sharedObjectName at $dst," +
-                "running ${processBuilder.command()}")
+            logger.info(
+                "Bugsnag: Creating symbol file for $sharedObjectName at $dst," +
+                    "running ${processBuilder.command()}"
+            )
             makeSoMappingFile(dst, processBuilder)
             return dst
         } catch (e: Exception) {
@@ -89,8 +90,10 @@ internal object SharedObjectMappingFileFactory {
 
         val exitCode = process.waitFor()
         if (exitCode != 0) {
-            throw IllegalStateException("Failed to generate symbols for $dst," +
-                " objdump exited with code $exitCode")
+            throw IllegalStateException(
+                "Failed to generate symbols for $dst," +
+                    " objdump exited with code $exitCode"
+            )
         }
     }
 
@@ -136,8 +139,10 @@ internal object SharedObjectMappingFileFactory {
     @JvmStatic
     fun calculateObjDumpLocation(ndkDir: String?, abi: Abi, osName: String): File {
         val executable = if (osName.startsWith("windows")) "objdump.exe" else "objdump"
-        return File("$ndkDir/toolchains/${abi.toolchainPrefix}-4.9/prebuilt/" +
-            "$osName/bin/${abi.objdumpPrefix}-$executable")
+        return File(
+            "$ndkDir/toolchains/${abi.toolchainPrefix}-4.9/prebuilt/" +
+                "$osName/bin/${abi.objdumpPrefix}-$executable"
+        )
     }
 
     private fun calculateOsName(): String? {

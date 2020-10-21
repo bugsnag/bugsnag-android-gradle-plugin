@@ -34,7 +34,8 @@ interface BugsnagHttpClientHelper : AutoCloseable {
         ): Provider<out BugsnagHttpClientHelper> {
             val canUseBuildService = project.gradle.versionNumber() >= GradleVersions.VERSION_6_1
             return if (canUseBuildService) {
-                project.gradle.sharedServices.registerIfAbsent("bugsnagHttpClientHelper",
+                project.gradle.sharedServices.registerIfAbsent(
+                    "bugsnagHttpClientHelper",
                     BuildServiceBugsnagHttpClientHelper::class.java
                 ) { spec ->
                     // Provide some parameters
@@ -50,8 +51,8 @@ interface BugsnagHttpClientHelper : AutoCloseable {
 }
 
 /** A [BuildService] implementation of [BugsnagHttpClientHelper]. */
-internal abstract class BuildServiceBugsnagHttpClientHelper
-    : BuildService<Params>, BugsnagHttpClientHelper {
+internal abstract class BuildServiceBugsnagHttpClientHelper :
+    BuildService<Params>, BugsnagHttpClientHelper {
 
     interface Params : BuildServiceParameters {
         val timeoutMillis: Property<Long>

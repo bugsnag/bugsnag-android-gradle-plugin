@@ -7,7 +7,6 @@ import com.bugsnag.android.gradle.internal.hasDexguardPlugin
 import com.bugsnag.android.gradle.internal.hasMultipleOutputs
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import java.io.File
 import java.nio.file.Paths
@@ -37,8 +36,10 @@ private fun findMappingFiles(
         if (mappingFile.exists()) {
             return project.provider { project.layout.files(mappingFile) }
         } else {
-            project.logger.warn("Bugsnag: Could not find DexGuard mapping file at: $mappingFile -" +
-                " falling back to AGP mapping file value")
+            project.logger.warn(
+                "Bugsnag: Could not find DexGuard mapping file at: $mappingFile -" +
+                    " falling back to AGP mapping file value"
+            )
         }
     }
 
@@ -58,9 +59,11 @@ private fun findMappingFiles(
  * variant.mappingFile cannot currently be overridden using the AGP DSL on a per-variantOutput basis, which
  * necessitates this workaround. https://issuetracker.google.com/issues/78921539
  */
-private fun findDexguardMappingFile(project: Project,
-                                    variant: ApkVariant,
-                                    variantOutput: ApkVariantOutput): File {
+private fun findDexguardMappingFile(
+    project: Project,
+    variant: ApkVariant,
+    variantOutput: ApkVariantOutput
+): File {
     val buildDir = project.buildDir.toString()
     var outputDir = variantOutput.dirName
     if (variantOutput.dirName.endsWith("dpi" + File.separator)) {
