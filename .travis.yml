@@ -46,7 +46,7 @@ jobs:
 
     # Plugin install job
     - name: plugin install
-      script: ./gradlew build install -x groovyDoc -x detekt --stacktrace
+      script: ./gradlew install
 
     # AGP 3.4.0 E2E tests
     - name: AGP 3.4.0 E2E tests
