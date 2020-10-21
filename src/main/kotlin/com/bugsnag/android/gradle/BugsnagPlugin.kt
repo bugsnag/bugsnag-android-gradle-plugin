@@ -288,6 +288,16 @@ class BugsnagPlugin : Plugin<Project> {
                 else -> null
             }
 
+            val uploadSourceMapProvider = when {
+                reactNativeEnabled -> registerUploadSourceMapTask(
+                    project,
+                    variant,
+                    output,
+                    manifestInfoFileProvider
+                )
+                else -> null
+            }
+
             val releaseUploadTask = registerReleasesUploadTask(
                 project,
                 variant,
@@ -337,6 +347,9 @@ class BugsnagPlugin : Plugin<Project> {
                 subProj.repositories.maven { repo ->
                     repo.setUrl("$rootDir/../node_modules/@bugsnag/react-native/android")
                 }
+            }
+            if (uploadSourceMapProvider != null) {
+                variant.register(project, uploadSourceMapProvider, reactNativeEnabled)
             }
         }
     }
@@ -487,6 +500,31 @@ class BugsnagPlugin : Plugin<Project> {
             val jsProjectRoot = project.rootProject.rootDir.parentFile
             projectRootFileProvider.from(jsProjectRoot)
             mustRunAfter(rnTask)
+        }
+    }
+
+    /**
+     * Creates a bugsnag task to upload JS source maps
+     */
+    private fun registerUploadSourceMapTask(
+        project: Project,
+        variant: ApkVariant,
+        output: ApkVariantOutput,
+        manifestInfoFileProvider: Provider<RegularFile>
+    ): TaskProvider<out BugsnagUploadJsSourceMapTask> {
+        val outputName = taskNameForOutput(output)
+        val taskName = "uploadBugsnag${outputName}SourceMaps"
+        val path = "intermediates/bugsnag/requests/sourceMapFor${outputName}"
+        val requestOutputFileProvider = project.layout.buildDirectory.file(path)
+
+//        variant.
+
+        return project.tasks.register<BugsnagUploadJsSourceMapTask>(taskName) {
+            requestOutputFile.set(requestOutputFileProvider)
+            manifestInfoFile.set(manifestInfoFileProvider)
+            // TODO set properties from variant
+//            bundleJsFile.set()
+//            sourceMapFile.set()
         }
     }
 
