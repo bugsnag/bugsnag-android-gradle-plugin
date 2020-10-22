@@ -1,5 +1,8 @@
 ## TBD
 
+* Populate task inputs for BugsnagUploadJsSourceMapTask
+  [#332](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/332)
+
 * Create BugsnagUploadJsSourceMapTask and register for build variants
   [#330](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/330)
 
