@@ -385,7 +385,7 @@ class BugsnagPlugin : Plugin<Project> {
     ): TaskProvider<out BugsnagUploadJsSourceMapTask>? {
         val outputName = taskNameForOutput(output)
         val taskName = "uploadBugsnag${outputName}SourceMaps"
-        val path = "intermediates/bugsnag/requests/sourceMapFor${outputName}"
+        val path = "intermediates/bugsnag/requests/sourceMapFor$outputName"
         val requestOutputFileProvider = project.layout.buildDirectory.file(path)
 
         // lookup the react-native task by its name
