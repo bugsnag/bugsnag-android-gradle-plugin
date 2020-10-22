@@ -1,5 +1,8 @@
 ## TBD
 
+* Create BugsnagUploadJsSourceMapTask and register for build variants
+  [#330](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/330)
+
 * Add uploadReactNativeMappings flag to plugin extension
   [#327](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/327)
 

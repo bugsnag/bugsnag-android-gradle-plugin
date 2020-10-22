@@ -191,7 +191,6 @@ class BugsnagPlugin : Plugin<Project> {
             val jvmMinificationEnabled = project.isJvmMinificationEnabled(variant)
             val ndkEnabled = isNdkUploadEnabled(bugsnag, android)
             val unityEnabled = isUnityLibraryUploadEnabled(bugsnag, android)
-            // TODO check variant extras for RN defined tasks as well
             val reactNativeEnabled = isReactNativeUploadEnabled(project, bugsnag)
 
             // skip tasks for variant if JVM/NDK/Unity minification not enabled
@@ -435,20 +434,30 @@ class BugsnagPlugin : Plugin<Project> {
         variant: ApkVariant,
         output: ApkVariantOutput,
         manifestInfoFileProvider: Provider<RegularFile>
-    ): TaskProvider<out BugsnagUploadJsSourceMapTask> {
+    ): TaskProvider<out BugsnagUploadJsSourceMapTask>? {
         val outputName = taskNameForOutput(output)
         val taskName = "uploadBugsnag${outputName}SourceMaps"
         val path = "intermediates/bugsnag/requests/sourceMapFor${outputName}"
         val requestOutputFileProvider = project.layout.buildDirectory.file(path)
 
-//        variant.
+        // lookup the react-native task by its name
+        // https://github.com/facebook/react-native/blob/master/react.gradle#L132
+        val rnTaskName = "bundle${variant.name.capitalize()}JsAndAssets"
+        val rnTask: Task = project.tasks.findByName(rnTaskName) ?: return null
+        val rnSourceMap = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--sourcemap-output")
+        val rnBundle = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--bundle-output")
+
+        if (rnSourceMap == null || rnBundle == null) {
+            project.logger.error("Bugsnag: unable to upload JS sourcemaps. Please enable sourcemap + bundle output.")
+            return null
+        }
 
         return project.tasks.register<BugsnagUploadJsSourceMapTask>(taskName) {
             requestOutputFile.set(requestOutputFileProvider)
             manifestInfoFile.set(manifestInfoFileProvider)
-            // TODO set properties from variant
-//            bundleJsFile.set()
-//            sourceMapFile.set()
+            mustRunAfter(rnTask)
+            bundleJsFile.set(File(rnBundle))
+            sourceMapFile.set(File(rnSourceMap))
         }
     }
 
