@@ -104,6 +104,17 @@ Then('{int} requests are valid for the android unity NDK mapping API and match t
   end
 end
 
+
+Then('{int} requests are valid for the JS source map API and match the following:') do |request_count, data_table|
+  requests = get_js_source_map_requests
+  assert_equal(request_count, requests.length, 'Wrong number of JS source map API requests')
+  RequestSetAssertions.assert_requests_match requests, data_table
+
+  requests.each do |request|
+    valid_js_source_map_api?(request[:body])
+  end
+end
+
 Then('{int} requests have an R8 mapping file with the following symbols:') do |request_count, data_table|
   requests = get_android_mapping_requests
   assert_equal(request_count, requests.length, 'Wrong number of mapping API requests')
@@ -164,4 +175,12 @@ def valid_mapping_api?(request_body)
   assert_not_nil(request_body['versionCode'])
   assert_not_nil(request_body['buildUUID'])
   assert_not_nil(request_body['versionName'])
+end
+
+def valid_js_source_map_api?(request_body)
+  assert_equal($api_key, request_body['apiKey'])
+  assert_equal("android", request_body['platform'])
+  assert_not_nil(request_body['minifiedUrl'])
+  assert_not_nil(request_body['sourceMap'])
+  assert_not_nil(request_body['projectRoot'])
 end

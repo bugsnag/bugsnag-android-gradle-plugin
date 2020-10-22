@@ -76,9 +76,8 @@ import com.android.build.OutputFile
  *   extraPackagerArgs: []
  * ]
  */
-
 project.ext.react = [
-    enableHermes: false,  // clean and rebuild if changing
+    enableHermes: System.env.RN_ENABLE_HERMES != null // clean and rebuild if changing
 ]
 
 apply from: "../../node_modules/react-native/react.gradle"
@@ -165,7 +164,20 @@ android {
         }
     }
 
-    // applicationVariants are e.g. debug, release
+    if (System.env.USE_RN_FLAVORS) {
+        flavorDimensions "regular"
+
+        productFlavors {
+            foo {
+                applicationIdSuffix ".foo"
+            }
+            bar {
+                applicationIdSuffix ".bar"
+            }
+        }
+    }
+
+        // applicationVariants are e.g. debug, release
     applicationVariants.all { variant ->
         variant.outputs.each { output ->
             // For each separate APK per architecture, set a unique version code as described here:
@@ -225,5 +237,8 @@ if (!System.env.UPDATING_GRADLEW) {
     bugsnag {
         endpoint = "http://localhost:9339"
         releasesEndpoint = "http://localhost:9339"
+    }
+    if (System.env.UPLOAD_RN_MAPPINGS == false) {
+        bugsnag.uploadReactNativeMappings = false
     }
 }

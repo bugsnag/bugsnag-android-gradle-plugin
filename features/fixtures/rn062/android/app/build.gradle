@@ -78,7 +78,7 @@ import com.android.build.OutputFile
  */
 
 project.ext.react = [
-    enableHermes: false,  // clean and rebuild if changing
+    enableHermes: System.env.RN_ENABLE_HERMES != null,  // clean and rebuild if changing
 ]
 
 apply from: "../../node_modules/react-native/react.gradle"
@@ -164,6 +164,18 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+    if (System.env.USE_RN_FLAVORS) {
+        flavorDimensions "regular"
+
+        productFlavors {
+            foo {
+                applicationIdSuffix ".foo"
+            }
+            bar {
+                applicationIdSuffix ".bar"
+            }
+        }
+    }
 
     packagingOptions {
         pickFirst "lib/armeabi-v7a/libc++_shared.so"
@@ -231,5 +243,9 @@ if (!System.env.UPDATING_GRADLEW) {
     bugsnag {
         endpoint = "http://localhost:9339"
         releasesEndpoint = "http://localhost:9339"
+
+        if (System.env.UPLOAD_RN_MAPPINGS == false) {
+            bugsnag.uploadReactNativeMappings = false
+        }
     }
 }

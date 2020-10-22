@@ -71,4 +71,11 @@ def get_android_unity_ndk_mapping_requests
   end
 end
 
+def get_js_source_map_requests
+  Server.stored_requests.reject do |request|
+    value = read_key_path(request[:body], 'sourceMap')
+    value.nil?
+  end
+end
+
 $api_key = "TEST_API_KEY"
