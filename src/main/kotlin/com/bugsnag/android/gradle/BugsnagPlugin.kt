@@ -280,6 +280,7 @@ class BugsnagPlugin : Plugin<Project> {
                     project,
                     variant,
                     output,
+                    bugsnag,
                     manifestInfoFileProvider
                 )
                 else -> null
@@ -433,6 +434,7 @@ class BugsnagPlugin : Plugin<Project> {
         project: Project,
         variant: ApkVariant,
         output: ApkVariantOutput,
+        bugsnag: BugsnagPluginExtension,
         manifestInfoFileProvider: Provider<RegularFile>
     ): TaskProvider<out BugsnagUploadJsSourceMapTask>? {
         val outputName = taskNameForOutput(output)
@@ -446,18 +448,26 @@ class BugsnagPlugin : Plugin<Project> {
         val rnTask: Task = project.tasks.findByName(rnTaskName) ?: return null
         val rnSourceMap = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--sourcemap-output")
         val rnBundle = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--bundle-output")
+        val dev = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--dev")
 
-        if (rnSourceMap == null || rnBundle == null) {
+        if (rnSourceMap == null || rnBundle == null || dev == null) {
             project.logger.error("Bugsnag: unable to upload JS sourcemaps. Please enable sourcemap + bundle output.")
             return null
         }
 
-        return project.tasks.register<BugsnagUploadJsSourceMapTask>(taskName) {
+        return BugsnagUploadJsSourceMapTask.register(project, taskName) {
             requestOutputFile.set(requestOutputFileProvider)
             manifestInfoFile.set(manifestInfoFileProvider)
+            bundleJsFileProvider.set(File(rnBundle))
+            sourceMapFileProvider.set(File(rnSourceMap))
+            overwrite.set(bugsnag.overwrite)
+            endpoint.set(bugsnag.endpoint)
+            devEnabled.set(dev)
+            failOnUploadError.set(bugsnag.failOnUploadError)
+
+            val jsProjectRoot = project.rootProject.rootDir.parentFile
+            projectRootFileProvider.from(jsProjectRoot)
             mustRunAfter(rnTask)
-            bundleJsFile.set(File(rnBundle))
-            sourceMapFile.set(File(rnSourceMap))
         }
     }
 
