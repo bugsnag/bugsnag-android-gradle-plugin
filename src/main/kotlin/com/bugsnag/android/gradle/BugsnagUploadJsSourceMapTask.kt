@@ -1,6 +1,7 @@
 package com.bugsnag.android.gradle
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.Task
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.InputFile
@@ -37,7 +38,23 @@ open class BugsnagUploadJsSourceMapTask @Inject constructor(
         // Construct a basic request
         val manifestInfo = parseManifestInfo()
         val cliResult = "success"
-        project.logger.lifecycle("Uploading sourcemap: $bundleJsFile, JS bundle: $bundleJsFile")
+        project.logger.lifecycle("Uploading sourcemap: ${bundleJsFile.get()}, JS bundle: ${bundleJsFile.get()}")
         requestOutputFile.asFile.get().writeText(cliResult)
+    }
+
+    companion object {
+
+        /**
+         * Introspects the command line arguments for the React Native Exec task
+         * and returns the value of the argument which matches the given key.
+         */
+        fun findReactNativeTaskArg(task: Task, key: String): String? {
+            val args = task.property("args") as List<*>
+            val index = args.indexOf(key)
+            if (index != -1 && index < args.size) {
+                return args[index + 1] as String?
+            }
+            return null
+        }
     }
 }
