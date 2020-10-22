@@ -54,7 +54,8 @@ class LegacyUploadRequestClient : UploadRequestClient()
 
 internal fun newUploadRequestClientProvider(project: Project, prefix: String): Provider<out UploadRequestClient> {
     return if (project.gradle.versionNumber() >= GradleVersions.VERSION_6_1) {
-        project.gradle.sharedServices.registerIfAbsent("bugsnag${prefix.capitalize()}UploadRequestClient",
+        project.gradle.sharedServices.registerIfAbsent(
+            "bugsnag${prefix.capitalize()}UploadRequestClient",
             BuildServiceUploadRequestClient::class.java
         ) {
             // No parameters!

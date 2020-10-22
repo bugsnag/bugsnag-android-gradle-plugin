@@ -130,7 +130,6 @@ sealed class BugsnagUploadProguardTask @Inject constructor(
             }
         }
     }
-
 }
 
 /**

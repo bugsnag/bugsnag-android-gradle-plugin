@@ -83,7 +83,7 @@ class BugsnagMultiPartUploadRequest(
         internal fun <T> from(
             task: T,
             endpoint: String = task.endpoint.get()
-        ): BugsnagMultiPartUploadRequest where T : DefaultTask, T: BugsnagFileUploadTask {
+        ): BugsnagMultiPartUploadRequest where T : DefaultTask, T : BugsnagFileUploadTask {
             return BugsnagMultiPartUploadRequest(
                 failOnUploadError = task.failOnUploadError.get(),
                 overwrite = task.overwrite.get(),
