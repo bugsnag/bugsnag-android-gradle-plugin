@@ -17,7 +17,7 @@ Scenario: Source maps are uploaded when assembling an app with the default proje
         | 1              | 1.0        | android  |
 
 Scenario: Source maps are uploaded when bundling an app with the default project structure
-    When I build the React Native app
+    And I run the script "features/scripts/bundle_react_native_app.sh" synchronously
     And I wait to receive 3 requests
 
     Then 1 requests are valid for the build API and match the following:

@@ -43,37 +43,9 @@ def is_above_or_equal_to_target(target)
   return version.to_i >= target
 end
 
-def get_build_requests
+def get_requests_with_field(name)
   Server.stored_requests.reject do |request|
-    value = read_key_path(request[:body], 'appVersionCode')
-    value.nil?
-  end
-end
-
-def get_android_mapping_requests
-  Server.stored_requests.reject do |request|
-    value = read_key_path(request[:body], 'proguard')
-    value.nil?
-  end
-end
-
-def get_android_ndk_mapping_requests
-  Server.stored_requests.reject do |request|
-    value = read_key_path(request[:body], 'soSymbolFile')
-    value.nil?
-  end
-end
-
-def get_android_unity_ndk_mapping_requests
-  Server.stored_requests.reject do |request|
-    value = read_key_path(request[:body], 'soSymbolTableFile')
-    value.nil?
-  end
-end
-
-def get_js_source_map_requests
-  Server.stored_requests.reject do |request|
-    value = read_key_path(request[:body], 'sourceMap')
+    value = read_key_path(request[:body], name)
     value.nil?
   end
 end
