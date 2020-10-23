@@ -290,6 +290,25 @@ class BugsnagPlugin : Plugin<Project> {
             if (uploadSourceMapProvider != null) {
                 variant.register(project, uploadSourceMapProvider, reactNativeEnabled)
             }
+            addReactNativeMavenRepo(project)
+        }
+    }
+
+    /**
+     * If the project uses react-native, this adds the node_module directory
+     * containing the Android AARs as a maven repository. This allows the
+     * project to compile without the user explicitly adding the maven repository.
+     */
+    private fun addReactNativeMavenRepo(project: Project) {
+        val props = project.extensions.extraProperties
+        val hasReact = props.has("react")
+        if (hasReact) {
+            project.rootProject.allprojects { subProj ->
+                val rootDir = subProj.rootDir
+                subProj.repositories.maven { repo ->
+                    repo.setUrl("$rootDir/../node_modules/@bugsnag/react-native/android")
+                }
+            }
         }
     }
 

@@ -1,5 +1,8 @@
 ## TBD
 
+* Automatically add maven repository for react-native AARs
+  [#334](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/334)
+
 * Populate task inputs for BugsnagUploadJsSourceMapTask
   [#332](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/332)
 
