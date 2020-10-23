@@ -7,6 +7,7 @@ import com.facebook.react.ReactApplication;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.soloader.SoLoader;
+import com.bugsnag.android.Bugsnag;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
@@ -42,6 +43,7 @@ public class MainApplication extends Application implements ReactApplication {
   @Override
   public void onCreate() {
     super.onCreate();
+    Bugsnag.start(this);
     SoLoader.init(this, /* native exopackage */ false);
     initializeFlipper(this); // Remove this line if you don't want Flipper enabled
   }
