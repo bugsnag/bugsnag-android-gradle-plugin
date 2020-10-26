@@ -1,3 +1,8 @@
+## TBD
+
+* Create separate task for generating JVM mapping file
+  [#335](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/335)
+
 ## 5.3.0 (2020-10-15)
 
 * Ensure libil2cpp has correct file extension

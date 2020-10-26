@@ -26,9 +26,6 @@ internal object SharedObjectMappingFileFactory {
         UNITY
     }
 
-    internal const val NDK_SO_MAPPING_DIR = "intermediates/bugsnag/soMappings/ndk"
-    internal const val UNITY_SO_MAPPING_DIR = "intermediates/bugsnag/soMappings/unity"
-
     internal data class Params(
         val sharedObject: File,
         val abi: Abi,
