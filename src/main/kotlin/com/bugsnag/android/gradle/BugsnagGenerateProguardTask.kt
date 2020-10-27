@@ -1,6 +1,7 @@
 package com.bugsnag.android.gradle
 
 import com.bugsnag.android.gradle.internal.GradleVersions
+import com.bugsnag.android.gradle.internal.outputZipFile
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.versionNumber
@@ -60,7 +61,9 @@ sealed class BugsnagGenerateProguardTask @Inject constructor(
             }
         }
         val archive = archiveOutputFile.asFile.get()
-        mappingFile.copyTo(archive)
+        mappingFile.inputStream().use { stream ->
+            outputZipFile(stream, archive)
+        }
     }
 
     companion object {

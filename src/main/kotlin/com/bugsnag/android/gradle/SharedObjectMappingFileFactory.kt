@@ -3,6 +3,7 @@ package com.bugsnag.android.gradle
 import com.android.build.gradle.AppExtension
 import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.SharedObjectType.NDK
 import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.SharedObjectType.UNITY
+import com.bugsnag.android.gradle.internal.outputZipFile
 import okio.buffer
 import okio.gzip
 import okio.sink
@@ -121,21 +122,6 @@ internal object SharedObjectMappingFileFactory {
     }
 
     private fun getObjDumpOverride(objDumpPaths: Map<String, String>, arch: String) = objDumpPaths[arch]
-
-    /**
-     * Outputs the contents of stdout into the gzip file output file
-     *
-     * @param stdout The input stream
-     * @param outputFile The output file
-     * included in the output file or not
-     */
-    private fun outputZipFile(stdout: InputStream, outputFile: File) {
-        stdout.source().use { source ->
-            outputFile.sink().gzip().buffer().use { gzipSink ->
-                gzipSink.writeAll(source)
-            }
-        }
-    }
 
     private fun findObjDump(project: Project, arch: String): File {
         val abi = Abi.findByName(arch)
