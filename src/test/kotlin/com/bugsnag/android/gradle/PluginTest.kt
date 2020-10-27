@@ -1,7 +1,7 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
+import com.bugsnag.android.gradle.internal.taskNameSuffix
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Assert.assertEquals
@@ -16,9 +16,6 @@ import org.mockito.junit.MockitoJUnitRunner
 class PluginTest {
 
     @Mock
-    lateinit var variant: ApkVariant
-
-    @Mock
     lateinit var variantOutput: ApkVariantOutput
 
     @Test
@@ -28,17 +25,9 @@ class PluginTest {
     }
 
     @Test
-    fun testVariantName() {
-        val plugin = proj.plugins.getPlugin(BugsnagPlugin::class.java)
-        `when`(variant.name).thenReturn("javaExample")
-        assertEquals("JavaExample", plugin.taskNameForVariant(variant))
-    }
-
-    @Test
     fun testOutputName() {
-        val plugin = proj.plugins.getPlugin(BugsnagPlugin::class.java)
         `when`(variantOutput.name).thenReturn("javaExample-hdpi")
-        assertEquals("JavaExample-hdpi", plugin.taskNameForOutput(variantOutput))
+        assertEquals("JavaExample-hdpi", variantOutput.taskNameSuffix())
     }
 
     companion object {

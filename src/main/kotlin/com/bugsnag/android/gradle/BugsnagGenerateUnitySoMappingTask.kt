@@ -1,7 +1,8 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.ApkVariantOutput
-import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.UNITY_SO_MAPPING_DIR
+import com.bugsnag.android.gradle.internal.UNITY_SO_COPY_DIR
+import com.bugsnag.android.gradle.internal.UNITY_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.clearDir
 import com.bugsnag.android.gradle.internal.includesAbi
 import com.bugsnag.android.gradle.internal.mapProperty
@@ -202,12 +203,6 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
     }
 
     companion object {
-
-        /**
-         * Intermediate path where libunity and other Unity SO files are copied
-         * after being extracted from the Gzip archive
-         */
-        private const val UNITY_SO_COPY_DIR = "intermediates/bugsnag/unitySoFiles"
 
         internal fun register(
             project: Project,

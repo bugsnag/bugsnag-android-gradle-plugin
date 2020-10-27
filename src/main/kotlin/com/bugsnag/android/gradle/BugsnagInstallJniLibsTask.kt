@@ -1,6 +1,7 @@
 package com.bugsnag.android.gradle
 
 import com.bugsnag.android.gradle.internal.GradleVersions
+import com.bugsnag.android.gradle.internal.JNI_LIBS_DIR
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.versionNumber
 import org.gradle.api.DefaultTask
@@ -33,7 +34,7 @@ sealed class BugsnagInstallJniLibsTask(
 
     @get:OutputDirectory
     val buildDirDestination: DirectoryProperty = objects.directoryProperty()
-        .convention(projectLayout.buildDirectory.dir("intermediates/bugsnag-libs"))
+        .convention(projectLayout.buildDirectory.dir(JNI_LIBS_DIR))
 
     @get:InputFiles
     abstract val bugsnagArtifacts: ConfigurableFileCollection
