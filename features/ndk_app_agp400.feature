@@ -30,7 +30,6 @@ Scenario: NDK apps send requests
     And 1 requests have an R8 mapping file with the following symbols:
       | jvmSymbols |
       | com.bugsnag.android.ndkapp.MainActivity |
-      | java.lang.String doSomething() |
 
 @requires_agp4_0_or_higher
 Scenario: Custom projectRoot is added to payload
