@@ -12,6 +12,11 @@ Scenario: Single-module default app bundles successfully
       | versionCode | versionName | appId                       | overwrite |
       | 1           | 1.0         | com.bugsnag.android.example | null      |
 
+    And 1 requests have an R8 mapping file with the following symbols:
+      | jvmSymbols |
+      | com.Bar |
+      | void doSomething() |
+
 Scenario: Bundling multiple flavors automatically
     When I bundle "flavors" using the "standard" bugsnag config
     And I wait to receive 4 requests
