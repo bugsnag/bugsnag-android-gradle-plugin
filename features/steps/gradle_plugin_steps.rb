@@ -116,7 +116,7 @@ Then('{int} requests are valid for the JS source map API and match the following
 end
 
 Then('{int} requests have an R8 mapping file with the following symbols:') do |request_count, data_table|
-  requests = get_android_mapping_requests
+  requests = get_requests_with_field('proguard')
   assert_equal(request_count, requests.length, 'Wrong number of mapping API requests')
 
   # inflate gzipped proguard mapping file & verify contents
