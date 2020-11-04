@@ -1,4 +1,7 @@
-## TBD
+## 5.4.0 (2020-11-04)
+
+This release improves performance by always compressing ProGuard/R8 mapping files before attempting upload.
+Depending on the contents of the mapping file, this can reduce the upload size by ~80%.
 
 * Create separate task for generating JVM mapping file
   [#335](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/335)
