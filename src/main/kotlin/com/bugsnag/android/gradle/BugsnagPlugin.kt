@@ -8,10 +8,28 @@ import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.bugsnag.android.gradle.BugsnagInstallJniLibsTask.Companion.resolveBugsnagArtifacts
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
+import com.bugsnag.android.gradle.internal.NDK_SO_MAPPING_DIR
+import com.bugsnag.android.gradle.internal.TASK_JNI_LIBS
+import com.bugsnag.android.gradle.internal.UNITY_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.UploadRequestClient
+import com.bugsnag.android.gradle.internal.computeManifestInfoOutputV1
+import com.bugsnag.android.gradle.internal.computeManifestInfoOutputV2
 import com.bugsnag.android.gradle.internal.hasDexguardPlugin
+import com.bugsnag.android.gradle.internal.intermediateForGenerateJvmMapping
+import com.bugsnag.android.gradle.internal.intermediateForMappingFileRequest
+import com.bugsnag.android.gradle.internal.intermediateForNdkSoRequest
+import com.bugsnag.android.gradle.internal.intermediateForReleaseRequest
+import com.bugsnag.android.gradle.internal.intermediateForUnitySoRequest
 import com.bugsnag.android.gradle.internal.newUploadRequestClientProvider
 import com.bugsnag.android.gradle.internal.register
+import com.bugsnag.android.gradle.internal.taskNameForGenerateJvmMapping
+import com.bugsnag.android.gradle.internal.taskNameForGenerateNdkMapping
+import com.bugsnag.android.gradle.internal.taskNameForGenerateUnityMapping
+import com.bugsnag.android.gradle.internal.taskNameForManifestUuid
+import com.bugsnag.android.gradle.internal.taskNameForUploadJvmMapping
+import com.bugsnag.android.gradle.internal.taskNameForUploadNdkMapping
+import com.bugsnag.android.gradle.internal.taskNameForUploadRelease
+import com.bugsnag.android.gradle.internal.taskNameForUploadUnityMapping
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -78,7 +96,7 @@ class BugsnagPlugin : Plugin<Project> {
                         return@onVariants
                     }
                     val variantName = name
-                    val taskName = computeManifestTaskNameFor(variantName)
+                    val taskName = taskNameForManifestUuid(variantName)
                     val manifestInfoOutputFile = project.computeManifestInfoOutputV2(variantName)
                     val buildUuidProvider = project.newUuidProvider()
                     val manifestUpdater = project.tasks.register(taskName,
@@ -136,8 +154,7 @@ class BugsnagPlugin : Plugin<Project> {
         val buildTasks = ndkTasks.filter { !it.name.contains(CLEAN_TASK) }.toSet()
 
         if (buildTasks.isNotEmpty()) {
-            val ndkSetupTask = BugsnagInstallJniLibsTask.register(project,
-                "bugsnagInstallJniLibsTask") {
+            val ndkSetupTask = BugsnagInstallJniLibsTask.register(project, TASK_JNI_LIBS) {
                 val files = resolveBugsnagArtifacts(project)
                 bugsnagArtifacts.from(files)
             }
@@ -180,15 +197,26 @@ class BugsnagPlugin : Plugin<Project> {
             val manifestInfoFileProvider = registerManifestUuidTask(project, variant, output)
             val mappingFilesProvider = createMappingFileProvider(project, variant, output, android)
 
-            val proguardTaskProvider = when {
-                jvmMinificationEnabled -> registerProguardUploadTask(
+            val generateProguardTaskProvider = when {
+                jvmMinificationEnabled -> registerGenerateProguardTask(
+                    project,
+                    output,
+                    bugsnag,
+                    manifestInfoFileProvider,
+                    mappingFilesProvider
+                )
+                else -> null
+            }
+
+            val uploadProguardTaskProvider = when {
+                jvmMinificationEnabled -> registerUploadProguardTask(
                     project,
                     output,
                     bugsnag,
                     httpClientHelperProvider,
                     manifestInfoFileProvider,
                     proguardUploadClientProvider,
-                    mappingFilesProvider
+                    generateProguardTaskProvider
                 )
                 else -> null
             }
@@ -265,9 +293,10 @@ class BugsnagPlugin : Plugin<Project> {
                 variant.register(project, generateUnityMappingProvider, unityEnabled)
                 variant.register(project, uploadUnityMappingProvider, unityEnabled)
             }
-            if (proguardTaskProvider != null) {
+            if (generateProguardTaskProvider != null && uploadProguardTaskProvider != null) {
                 val jvmAutoUpload = bugsnag.uploadJvmMappings.get()
-                variant.register(project, proguardTaskProvider, jvmAutoUpload)
+                variant.register(project, generateProguardTaskProvider, jvmAutoUpload)
+                variant.register(project, uploadProguardTaskProvider, jvmAutoUpload)
             }
         }
     }
@@ -281,14 +310,14 @@ class BugsnagPlugin : Plugin<Project> {
         output: ApkVariantOutput
     ): Provider<RegularFile> {
         return if (BugsnagManifestUuidTaskV2.isApplicable()) {
-            val taskName = computeManifestTaskNameFor(variant.name)
+            val taskName = taskNameForManifestUuid(variant.name)
             // This task will have already been created!
             val manifestUpdater = project.tasks
                 .withType(BugsnagManifestUuidTaskV2::class.java)
                 .named(taskName)
             return manifestUpdater.flatMap(BaseBugsnagManifestUuidTask::manifestInfoProvider)
         } else {
-            val taskName = computeManifestTaskNameFor(output.name)
+            val taskName = taskNameForManifestUuid(output.name)
             val manifestInfoOutputFile = project.computeManifestInfoOutputV1(output)
             val buildUuidProvider = project.newUuidProvider()
 
@@ -324,33 +353,58 @@ class BugsnagPlugin : Plugin<Project> {
     }
 
     /**
-     * Creates a bugsnag task to upload proguard mapping file
+     * Creates a bugsnag task to compress JVM mapping files
      */
     @Suppress("LongParameterList")
-    private fun registerProguardUploadTask(
+    private fun registerGenerateProguardTask(
+        project: Project,
+        output: ApkVariantOutput,
+        bugsnag: BugsnagPluginExtension,
+        manifestInfoFileProvider: Provider<RegularFile>,
+        mappingFilesProvider: Provider<FileCollection>
+    ): TaskProvider<out BugsnagGenerateProguardTask> {
+        val taskName = taskNameForGenerateJvmMapping(output)
+        val gzipOutputProvider = intermediateForGenerateJvmMapping(project, output)
+
+        return BugsnagGenerateProguardTask.register(project, taskName) {
+            manifestInfoFile.set(manifestInfoFileProvider)
+            archiveOutputFile.set(gzipOutputProvider)
+            failOnUploadError.set(bugsnag.failOnUploadError)
+
+            mappingFilesProvider.let {
+                mappingFileProperty.from(it)
+            }
+        }
+    }
+
+    /**
+     * Creates a bugsnag task to upload JVM mapping files
+     */
+    @Suppress("LongParameterList")
+    private fun registerUploadProguardTask(
         project: Project,
         output: ApkVariantOutput,
         bugsnag: BugsnagPluginExtension,
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
         manifestInfoFileProvider: Provider<RegularFile>,
         proguardUploadClientProvider: Provider<out UploadRequestClient>,
-        mappingFilesProvider: Provider<FileCollection>
+        generateProguardTaskProvider: TaskProvider<out BugsnagGenerateProguardTask>?
     ): TaskProvider<out BugsnagUploadProguardTask> {
-        val outputName = taskNameForOutput(output)
-        val taskName = "uploadBugsnag${outputName}Mapping"
-        val path = "intermediates/bugsnag/requests/proguardFor${outputName}.json"
-        val requestOutputFileProvider = project.layout.buildDirectory.file(path)
+        val taskName = taskNameForUploadJvmMapping(output)
+        val requestOutputFileProvider = intermediateForMappingFileRequest(project, output)
+        val gzipOutputProvider = intermediateForGenerateJvmMapping(project, output)
 
         return BugsnagUploadProguardTask.register(project, taskName) {
             requestOutputFile.set(requestOutputFileProvider)
             httpClientHelper.set(httpClientHelperProvider)
             manifestInfoFile.set(manifestInfoFileProvider)
             uploadRequestClient.set(proguardUploadClientProvider)
-
-            mappingFilesProvider.let {
-                mappingFileProperty.from(it)
-            }
+            mappingFileProperty.set(gzipOutputProvider)
             configureWith(bugsnag)
+
+            val task = generateProguardTaskProvider?.get()
+            mustRunAfter(task)
+            dependsOn(task)
         }
     }
 
@@ -364,8 +418,7 @@ class BugsnagPlugin : Plugin<Project> {
         manifestInfoFileProvider: Provider<RegularFile>
     ): TaskProvider<out BugsnagGenerateNdkSoMappingTask> {
         // Create a Bugsnag task to upload NDK mapping file(s)
-        val outputName = taskNameForOutput(output)
-        val taskName = "generateBugsnagNdk${outputName}Mapping"
+        val taskName = taskNameForGenerateNdkMapping(output)
         return BugsnagGenerateNdkSoMappingTask.register(project, taskName) {
             variantOutput = output
             objDumpPaths.set(bugsnag.objdumpPaths)
@@ -388,8 +441,7 @@ class BugsnagPlugin : Plugin<Project> {
         manifestInfoFileProvider: Provider<RegularFile>
     ): TaskProvider<out BugsnagGenerateUnitySoMappingTask> {
         // Create a Bugsnag task to upload Unity mapping file(s)
-        val outputName = taskNameForOutput(output)
-        val taskName = "generateBugsnagUnity${outputName}Mapping"
+        val taskName = taskNameForGenerateUnityMapping(output)
         return BugsnagGenerateUnitySoMappingTask.register(project, taskName) {
             variantOutput = output
             objDumpPaths.set(bugsnag.objdumpPaths)
@@ -408,7 +460,6 @@ class BugsnagPlugin : Plugin<Project> {
         ndkUploadClientProvider: Provider<out UploadRequestClient>,
         generateTaskProvider: TaskProvider<out BugsnagGenerateNdkSoMappingTask>
     ): TaskProvider<out BugsnagUploadSharedObjectTask> {
-        val outputName = taskNameForOutput(output)
         return registerSharedObjectUploadTask(
             project,
             generateTaskProvider,
@@ -416,10 +467,10 @@ class BugsnagPlugin : Plugin<Project> {
             httpClientHelperProvider,
             manifestInfoFileProvider,
             ndkUploadClientProvider,
-            "uploadBugsnagNdk${outputName}Mapping",
-            "intermediates/bugsnag/requests/ndkFor${outputName}.json",
+            taskNameForUploadNdkMapping(output),
+            intermediateForNdkSoRequest(project, output),
             BugsnagUploadSharedObjectTask.UploadType.NDK,
-            SharedObjectMappingFileFactory.NDK_SO_MAPPING_DIR
+            NDK_SO_MAPPING_DIR
         )
     }
 
@@ -433,7 +484,6 @@ class BugsnagPlugin : Plugin<Project> {
         ndkUploadClientProvider: Provider<out UploadRequestClient>,
         generateTaskProvider: TaskProvider<out BugsnagGenerateUnitySoMappingTask>
     ): TaskProvider<out BugsnagUploadSharedObjectTask> {
-        val outputName = taskNameForOutput(output)
         return registerSharedObjectUploadTask(
             project,
             generateTaskProvider,
@@ -441,10 +491,10 @@ class BugsnagPlugin : Plugin<Project> {
             httpClientHelperProvider,
             manifestInfoFileProvider,
             ndkUploadClientProvider,
-            "uploadBugsnagUnity${outputName}Mapping",
-            "intermediates/bugsnag/requests/unityFor${outputName}.json",
+            taskNameForUploadUnityMapping(output),
+            intermediateForUnitySoRequest(project, output),
             BugsnagUploadSharedObjectTask.UploadType.UNITY,
-            SharedObjectMappingFileFactory.UNITY_SO_MAPPING_DIR
+            UNITY_SO_MAPPING_DIR
         )
     }
 
@@ -457,12 +507,11 @@ class BugsnagPlugin : Plugin<Project> {
         manifestInfoFileProvider: Provider<RegularFile>,
         ndkUploadClientProvider: Provider<out UploadRequestClient>,
         taskName: String,
-        path: String,
+        requestOutputFile: Provider<RegularFile>,
         uploadType: BugsnagUploadSharedObjectTask.UploadType,
         intermediateOutputPath: String
     ): TaskProvider<BugsnagUploadSharedObjectTask> {
         // Create a Bugsnag task to upload NDK mapping file(s)
-        val requestOutputFile = project.layout.buildDirectory.file(path)
         return BugsnagUploadSharedObjectTask.register(project, taskName) {
             // upload task requires SO mapping generation to occur first
             this.dependsOn(generateTaskProvider)
@@ -489,10 +538,8 @@ class BugsnagPlugin : Plugin<Project> {
         checkSearchDirectories: Boolean,
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>
     ): TaskProvider<out BugsnagReleasesTask> {
-        val outputName = taskNameForOutput(output)
-        val taskName = "bugsnagRelease${outputName}Task"
-        val path = "intermediates/bugsnag/requests/releasesFor${outputName}.json"
-        val requestOutputFile = project.layout.buildDirectory.file(path)
+        val taskName = taskNameForUploadRelease(output)
+        val requestOutputFile = intermediateForReleaseRequest(project, output)
         return BugsnagReleasesTask.register(project, taskName) {
             this.requestOutputFile.set(requestOutputFile)
             httpClientHelper.set(httpClientHelperProvider)
@@ -586,29 +633,6 @@ class BugsnagPlugin : Plugin<Project> {
             searchPaths.add(unity2019ExportedDir)
         }
         return searchPaths
-    }
-
-    fun taskNameForVariant(variant: ApkVariant): String {
-        return variant.name.capitalize()
-    }
-
-    fun taskNameForOutput(output: ApkVariantOutput): String {
-        return output.name.capitalize()
-    }
-
-    private fun computeManifestTaskNameFor(variant: String): String {
-        return "processBugsnag${variant.capitalize()}Manifest"
-    }
-
-    private fun Project.computeManifestInfoOutputV2(variant: String): Provider<RegularFile> {
-        val path = "intermediates/bugsnag/manifestInfoFor${variant.capitalize()}.json"
-        return layout.buildDirectory.file(path)
-    }
-
-    private fun Project.computeManifestInfoOutputV1(
-        output: ApkVariantOutput): Provider<RegularFile> {
-        val path = "intermediates/bugsnag/manifestInfoFor${taskNameForOutput(output)}.json"
-        return layout.buildDirectory.file(path)
     }
 
     private fun Project.newUuidProvider(): Provider<String> {

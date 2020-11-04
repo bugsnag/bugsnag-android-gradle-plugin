@@ -1,17 +1,13 @@
 package com.bugsnag.android.gradle
 
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
-import com.bugsnag.android.gradle.internal.GradleVersions
 import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.bugsnag.android.gradle.internal.md5HashCode
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
-import com.bugsnag.android.gradle.internal.versionNumber
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
-import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -39,7 +35,7 @@ import javax.inject.Inject
  * it is usually safe to have this be the absolute last task executed during
  * a build.
  */
-sealed class BugsnagUploadProguardTask @Inject constructor(
+open class BugsnagUploadProguardTask @Inject constructor(
     objects: ObjectFactory
 ) : DefaultTask(), AndroidManifestInfoReceiver, BugsnagFileUploadTask {
 
@@ -55,7 +51,7 @@ sealed class BugsnagUploadProguardTask @Inject constructor(
     override val httpClientHelper: Property<BugsnagHttpClientHelper> = objects.property()
 
     @get:InputFiles
-    abstract val mappingFileProperty: ConfigurableFileCollection
+    val mappingFileProperty: RegularFileProperty = objects.fileProperty()
 
     @get:PathSensitive(NONE)
     @get:InputFile
@@ -81,17 +77,7 @@ sealed class BugsnagUploadProguardTask @Inject constructor(
 
     @TaskAction
     fun upload() {
-        val mappingFile = mappingFileProperty.singleFile
-        if (mappingFile.length() == 0L) { // proguard's -dontobfuscate generates an empty mapping file
-            logger.warn("Bugsnag: Ignoring empty proguard file")
-            return
-        }
-        if (!mappingFile.exists()) {
-            logger.warn("Bugsnag: Mapping file not found: $mappingFile")
-            if (failOnUploadError.get()) {
-                throw IllegalStateException("Mapping file not found: $mappingFile")
-            }
-        }
+        val mappingFile = mappingFileProperty.get().asFile
 
         // Read the API key and Build ID etc..
 
@@ -121,35 +107,8 @@ sealed class BugsnagUploadProguardTask @Inject constructor(
             name: String,
             configurationAction: BugsnagUploadProguardTask.() -> Unit
         ): TaskProvider<out BugsnagUploadProguardTask> {
-            return when {
-                project.gradle.versionNumber() >= GradleVersions.VERSION_5_3 -> {
-                    project.tasks.register<BugsnagUploadProguardTaskGradle53Plus>(name, configurationAction)
-                } else -> {
-                    project.tasks.register<BugsnagUploadProguardTaskLegacy>(name, configurationAction)
-                }
-            }
+            return project.tasks.register(name, configurationAction)
         }
     }
 
-}
-
-/**
- * Legacy [BugsnagUploadProguardTask] task that requires using [getProject] and
- * [ProjectLayout.configurableFiles].
- */
-internal open class BugsnagUploadProguardTaskLegacy @Inject constructor(
-    objects: ObjectFactory,
-    projectLayout: ProjectLayout
-) : BugsnagUploadProguardTask(objects) {
-
-    @get:InputFiles
-    override val mappingFileProperty: ConfigurableFileCollection = projectLayout.configurableFiles()
-}
-
-internal open class BugsnagUploadProguardTaskGradle53Plus @Inject constructor(
-    objects: ObjectFactory
-) : BugsnagUploadProguardTask(objects) {
-
-    @get:InputFiles
-    override val mappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
 }

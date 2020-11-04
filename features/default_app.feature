@@ -11,3 +11,8 @@ Scenario: Single-module default app builds successfully
     And 1 requests are valid for the android mapping API and match the following:
       | versionCode | versionName | appId                       | overwrite |
       | 1           | 1.0         | com.bugsnag.android.example | null      |
+
+    And 1 requests have an R8 mapping file with the following symbols:
+      | jvmSymbols |
+      | com.Bar |
+      | void doSomething() |

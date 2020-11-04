@@ -14,6 +14,11 @@ Scenario: Flavors automatic upload on build
       | 1           | 1.0         | com.bugsnag.android.example.bar |
       | 1           | 1.0         | com.bugsnag.android.example.foo |
 
+    And 2 requests have an R8 mapping file with the following symbols:
+      | jvmSymbols |
+      | com.Bar |
+      | void doSomething() |
+
 Scenario: Flavors automatic upload disabled
     When I build "flavors" using the "all_disabled" bugsnag config
     And I wait for 5 seconds

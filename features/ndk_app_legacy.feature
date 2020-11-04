@@ -20,6 +20,11 @@ Scenario: NDK apps send requests
         | appId                      |
         | com.bugsnag.android.ndkapp |
 
+    And 1 requests have an R8 mapping file with the following symbols:
+        | jvmSymbols |
+        | com.bugsnag.android.ndkapp.MainActivity |
+        | java.lang.String doSomething() |
+
 @skip_agp4_0_or_higher
 Scenario: Custom projectRoot is added to payload
     When I set environment variable "PROJECT_ROOT" to "/repos/custom/my-app"
