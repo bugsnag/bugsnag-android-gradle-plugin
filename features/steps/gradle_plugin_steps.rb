@@ -1,3 +1,6 @@
+require 'zlib'
+require 'stringio'
+
 When("I build {string} using the {string} bugsnag config") do |module_config, bugsnag_config|
 steps %Q{
   When I set environment variable "MODULE_CONFIG" to "#{module_config}"
@@ -98,6 +101,32 @@ Then('{int} requests are valid for the android unity NDK mapping API and match t
 
   requests.each do |request|
     valid_android_unity_ndk_mapping_api?(request[:body])
+  end
+end
+
+Then('{int} requests have an R8 mapping file with the following symbols:') do |request_count, data_table|
+  requests = get_android_mapping_requests
+  assert_equal(request_count, requests.length, 'Wrong number of mapping API requests')
+
+  # inflate gzipped proguard mapping file & verify contents
+  requests.each do |request|
+    valid_android_mapping_api?(request[:body])
+    gzipped_part = request[:body]['proguard']
+    archive = Zlib::GzipReader.new(StringIO.new(gzipped_part))
+    mapping_file_lines = archive.read.split("\n")
+    valid_r8_mapping_contents?(mapping_file_lines, data_table.rows)
+  end
+end
+
+def valid_r8_mapping_contents?(mapping_file_lines, expected_entries)
+  # validates that the mapping file key is present for each symbol,
+  # obfuscated values are not validated as they vary depending on AGP's implementation
+  expected_entries.each do |row|
+    expected_entry = row[0] + " ->"
+    has_mapping_entry = mapping_file_lines.one? { |line|
+      line.include? expected_entry
+    }
+    assert_true(has_mapping_entry, "No entry in mapping file for '#{row[0]}'.")
   end
 end
 

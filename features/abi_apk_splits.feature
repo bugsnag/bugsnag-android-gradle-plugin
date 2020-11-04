@@ -27,6 +27,11 @@ Scenario: ABI Splits project builds successfully
       | 7           | 1.0         | com.bugsnag.android.example |
       | 8           | 1.0         | com.bugsnag.android.example |
 
+    And 8 requests have an R8 mapping file with the following symbols:
+      | jvmSymbols |
+      | com.Bar |
+      | void doSomething() |
+
 @skip_agp4_1_or_higher
 Scenario: ABI Splits automatic upload disabled
     When I build "abi_splits" using the "all_disabled" bugsnag config
