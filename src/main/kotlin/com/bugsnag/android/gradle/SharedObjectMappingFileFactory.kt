@@ -4,14 +4,9 @@ import com.android.build.gradle.AppExtension
 import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.SharedObjectType.NDK
 import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.SharedObjectType.UNITY
 import com.bugsnag.android.gradle.internal.outputZipFile
-import okio.buffer
-import okio.gzip
-import okio.sink
-import okio.source
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Project
 import java.io.File
-import java.io.InputStream
 
 /**
  * Generates a mapping file for the supplied shared object file.

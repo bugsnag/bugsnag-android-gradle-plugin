@@ -20,6 +20,7 @@ import com.bugsnag.android.gradle.internal.intermediateForMappingFileRequest
 import com.bugsnag.android.gradle.internal.intermediateForNdkSoRequest
 import com.bugsnag.android.gradle.internal.intermediateForReleaseRequest
 import com.bugsnag.android.gradle.internal.intermediateForUnitySoRequest
+import com.bugsnag.android.gradle.internal.intermediateForUploadSourcemaps
 import com.bugsnag.android.gradle.internal.newUploadRequestClientProvider
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.taskNameForGenerateJvmMapping
@@ -29,6 +30,7 @@ import com.bugsnag.android.gradle.internal.taskNameForManifestUuid
 import com.bugsnag.android.gradle.internal.taskNameForUploadJvmMapping
 import com.bugsnag.android.gradle.internal.taskNameForUploadNdkMapping
 import com.bugsnag.android.gradle.internal.taskNameForUploadRelease
+import com.bugsnag.android.gradle.internal.taskNameForUploadSourcemaps
 import com.bugsnag.android.gradle.internal.taskNameForUploadUnityMapping
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -456,10 +458,8 @@ class BugsnagPlugin : Plugin<Project> {
         bugsnag: BugsnagPluginExtension,
         manifestInfoFileProvider: Provider<RegularFile>
     ): TaskProvider<out BugsnagUploadJsSourceMapTask>? {
-        val outputName = taskNameForOutput(output)
-        val taskName = "uploadBugsnag${outputName}SourceMaps"
-        val path = "intermediates/bugsnag/requests/sourceMapFor$outputName"
-        val requestOutputFileProvider = project.layout.buildDirectory.file(path)
+        val taskName = taskNameForUploadSourcemaps(output)
+        val path = intermediateForUploadSourcemaps(project, output)
 
         // lookup the react-native task by its name
         // https://github.com/facebook/react-native/blob/master/react.gradle#L132
@@ -475,7 +475,7 @@ class BugsnagPlugin : Plugin<Project> {
         }
 
         return BugsnagUploadJsSourceMapTask.register(project, taskName) {
-            requestOutputFile.set(requestOutputFileProvider)
+            requestOutputFile.set(path)
             manifestInfoFile.set(manifestInfoFileProvider)
             bundleJsFileProvider.set(File(rnBundle))
             sourceMapFileProvider.set(File(rnSourceMap))

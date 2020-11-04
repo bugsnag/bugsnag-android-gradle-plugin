@@ -2,9 +2,7 @@ package com.bugsnag.android.gradle.internal
 
 import com.android.build.gradle.api.ApkVariantOutput
 
-
 /** Names of bugsnag gradle tasks **/
-
 
 internal const val TASK_JNI_LIBS = "bugsnagInstallJniLibsTask"
 
@@ -31,3 +29,6 @@ internal fun taskNameForUploadRelease(output: ApkVariantOutput) =
 
 internal fun taskNameForManifestUuid(variant: String) =
     "processBugsnag${variant.capitalize()}Manifest"
+
+internal fun taskNameForUploadSourcemaps(output: ApkVariantOutput) =
+    "uploadBugsnag${output.taskNameSuffix()}SourceMaps"
