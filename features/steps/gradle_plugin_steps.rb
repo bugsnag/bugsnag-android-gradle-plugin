@@ -65,7 +65,7 @@ Then(/^the exit code equals (\d+)$/) do |exit_code|
 end
 
 Then('{int} requests are valid for the build API and match the following:') do |request_count, data_table|
-  requests = get_requests_with_field('appVersionCode')
+  requests = get_requests_with_field('builderName')
   assert_equal(request_count, requests.length, 'Wrong number of build API requests')
   RequestSetAssertions.assert_requests_match requests, data_table
 
@@ -180,7 +180,6 @@ end
 def valid_js_source_map_api?(request_body)
   assert_equal($api_key, request_body['apiKey'])
   assert_equal('android', request_body['platform'])
-  assert_not_nil(request_body['minifiedUrl'])
   assert_not_nil(request_body['sourceMap'])
-  assert_not_nil(request_body['projectRoot'])
+  assert_not_nil(request_body['bundle'])
 end

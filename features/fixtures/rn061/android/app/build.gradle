@@ -220,8 +220,8 @@ if (!System.env.UPDATING_GRADLEW) {
         endpoint = "http://localhost:9339"
         releasesEndpoint = "http://localhost:9339"
 
-        if (System.env.UPLOAD_RN_MAPPINGS == false) {
-            bugsnag.uploadReactNativeMappings = false
+        if (System.env.UPLOAD_RN_MAPPINGS == "false") {
+            uploadReactNativeMappings = false
         }
     }
 }

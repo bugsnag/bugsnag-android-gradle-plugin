@@ -36,6 +36,9 @@ sealed class BugsnagUploadJsSourceMapTask @Inject constructor(
     override val manifestInfoFile: RegularFileProperty = objects.fileProperty()
 
     @get:InputFile
+    val bugsnagSourceMaps: RegularFileProperty = objects.fileProperty()
+
+    @get:InputFile
     val bundleJsFileProvider: RegularFileProperty = objects.fileProperty()
 
     @get:InputFile
@@ -54,7 +57,7 @@ sealed class BugsnagUploadJsSourceMapTask @Inject constructor(
     val endpoint: Property<String> = objects.property()
 
     @get:Input
-    val devEnabled: Property<String> = objects.property()
+    val devEnabled: Property<Boolean> = objects.property()
 
     @get:Input
     val failOnUploadError: Property<Boolean> = objects.property()
@@ -63,9 +66,42 @@ sealed class BugsnagUploadJsSourceMapTask @Inject constructor(
     fun uploadJsSourceMap() {
         // Construct a basic request
         val manifestInfo = parseManifestInfo()
+        val executable = bugsnagSourceMaps.get().asFile
+        if (!executable.exists() && failOnUploadError.get()) {
+            throw IllegalStateException(
+                "Bugsnag: source map upload failed. Please ensure that bugsnag-source-maps is " +
+                    "installed at $executable."
+            )
+        }
+        val builder = generateUploadCommand(executable.absolutePath, manifestInfo)
+        project.logger.lifecycle("Bugsnag: uploading react native sourcemap: ${builder.command()}")
 
-        val builder = ProcessBuilder(
-            "echo", // TODO this is a placeholder until bugsnag-source-maps is ready
+        val process = builder.start()
+        val exitCode = process.waitFor()
+        val outputMsg = process.inputStream?.bufferedReader().use { it?.readText() }
+
+        outputMsg?.let {
+            project.logger.lifecycle("Bugsnag: uploaded react native sourcemap: $outputMsg")
+        }
+
+        if (exitCode != 0 && failOnUploadError.get()) {
+            val errMsg = process.errorStream.bufferedReader().use { it.readText() }
+            throw IllegalStateException(
+                "Bugsnag: source map upload failed. Exit code=$exitCode, msg=$errMsg."
+            )
+        }
+
+        val cliResult = when (exitCode) {
+            0 -> "success"
+            else -> "failure"
+        }
+        requestOutputFile.asFile.get().writeText(cliResult)
+    }
+
+    private fun generateUploadCommand(executable: String, manifestInfo: AndroidManifestInfo): ProcessBuilder {
+        val cmd = mutableListOf(
+            executable,
+            "upload-react-native",
 
             "--api-key",
             manifestInfo.apiKey,
@@ -76,9 +112,6 @@ sealed class BugsnagUploadJsSourceMapTask @Inject constructor(
             "--app-version-code",
             manifestInfo.versionCode,
 
-            "--dev",
-            devEnabled.get(),
-
             "--platform",
             "android",
 
@@ -88,34 +121,20 @@ sealed class BugsnagUploadJsSourceMapTask @Inject constructor(
             "--bundle",
             bundleJsFileProvider.asFile.get().absolutePath,
 
-            "--overwrite",
-            overwrite.get().toString(),
-
             "--endpoint",
             endpoint.get(),
 
             "--project-root",
             projectRootFileProvider.singleFile.absolutePath
         )
-        builder.redirectError(ProcessBuilder.Redirect.INHERIT)
 
-        project.logger.lifecycle("Bugsnag: uploading react native sourcemap: ${builder.command()}")
-
-        val process = builder.start()
-        val exitCode = process.waitFor()
-
-        if (exitCode != 0 && failOnUploadError.get()) {
-            throw IllegalStateException(
-                "Bugsnag: source map upload failed, $exitCode." +
-                    "Please ensure that bugsnag-source-maps is installed and source maps are enabled."
-            )
+        if (overwrite.get()) {
+            cmd.add("--overwrite")
         }
-
-        val cliResult = when (exitCode) {
-            0 -> "success"
-            else -> "failure"
+        if (devEnabled.get()) {
+            cmd.add("--dev")
         }
-        requestOutputFile.asFile.get().writeText(cliResult)
+        return ProcessBuilder(cmd)
     }
 
     companion object {

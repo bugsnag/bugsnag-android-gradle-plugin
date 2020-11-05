@@ -481,11 +481,15 @@ class BugsnagPlugin : Plugin<Project> {
             sourceMapFileProvider.set(File(rnSourceMap))
             overwrite.set(bugsnag.overwrite)
             endpoint.set(bugsnag.endpoint)
-            devEnabled.set(dev)
+            devEnabled.set("true" == dev)
             failOnUploadError.set(bugsnag.failOnUploadError)
 
             val jsProjectRoot = project.rootProject.rootDir.parentFile
             projectRootFileProvider.from(jsProjectRoot)
+
+            val cliPath = "../../node_modules/@bugsnag/source-maps/bin/cli"
+            val file = project.layout.projectDirectory.file(cliPath)
+            bugsnagSourceMaps.set(file)
             mustRunAfter(rnTask)
         }
     }
