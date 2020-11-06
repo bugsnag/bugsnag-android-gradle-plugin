@@ -1,9 +1,9 @@
 GIT
   remote: https://github.com/bugsnag/maze-runner
-  revision: e8a70972f802a48ecb661a9d4dba711927a7fc59
-  tag: v2.6.0
+  revision: 8cba7aa85e36f5c87821c93ea3cae119b3be61d7
+  branch: tms/clear-env-option
   specs:
-    bugsnag-maze-runner (2.6.0)
+    bugsnag-maze-runner (3.3.0)
       appium_lib (~> 10.2)
       cucumber (~> 3.1.2)
       cucumber-expressions (~> 6.0.0)
@@ -45,7 +45,7 @@ GEM
     cucumber-expressions (6.0.1)
     cucumber-tag_expressions (1.1.1)
     cucumber-wire (0.0.1)
-    curb (0.9.10)
+    curb (0.9.11)
     diff-lcs (1.4.4)
     eventmachine (1.2.7)
     faye-websocket (0.11.0)
