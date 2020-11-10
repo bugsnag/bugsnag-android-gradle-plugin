@@ -1,7 +1,7 @@
 GIT
   remote: https://github.com/bugsnag/maze-runner
-  revision: 8cba7aa85e36f5c87821c93ea3cae119b3be61d7
-  branch: tms/clear-env-option
+  revision: 2bc87663b66355a73d86bbe1b9159ac6b9387a9f
+  tag: v3.4.0
   specs:
     bugsnag-maze-runner (3.3.0)
       appium_lib (~> 10.2)
