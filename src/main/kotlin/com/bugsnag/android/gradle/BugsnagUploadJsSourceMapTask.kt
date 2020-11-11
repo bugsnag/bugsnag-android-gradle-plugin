@@ -84,11 +84,13 @@ sealed class BugsnagUploadJsSourceMapTask @Inject constructor(
             project.logger.lifecycle("Bugsnag: uploaded react native sourcemap: $outputMsg")
         }
 
-        if (exitCode != 0 && failOnUploadError.get()) {
+        if (exitCode != 0) {
             val errMsg = process.errorStream.bufferedReader().use { it.readText() }
-            throw IllegalStateException(
-                "Bugsnag: source map upload failed. Exit code=$exitCode, msg=$errMsg."
-            )
+            val msg = "Bugsnag: source map upload failed. Exit code=$exitCode, msg=$errMsg."
+            when {
+                failOnUploadError.get() -> throw IllegalStateException(msg)
+                else -> project.logger.error(msg)
+            }
         }
 
         val cliResult = when (exitCode) {
