@@ -16,6 +16,7 @@ import java.io.File
 // To make kotlin happy with gradle's nullability
 private val NULL_STRING: String? = null
 private val NULL_BOOLEAN: Boolean? = null
+private val NULL_FILE: File? = null
 
 /**
  * Defines configuration options (Gradle plugin extensions) for the BugsnagPlugin
@@ -60,6 +61,9 @@ open class BugsnagPluginExtension(objects: ObjectFactory) {
 
     val sharedObjectPaths: ListProperty<File> = objects.listProperty<File>()
         .convention(emptyList())
+
+    val nodeModulesDir: Property<File> = objects.property<File>()
+        .convention(NULL_FILE)
 
     val projectRoot: Property<String> = objects.property<String>().convention(NULL_STRING)
 

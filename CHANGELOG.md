@@ -1,5 +1,8 @@
 ## TBD
 
+* Add nodeModulesDir to bugsnag plugin extension
+  [#343](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/343)
+
 * Automatically add maven repository for react-native AARs
   [#334](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/334)
 
