@@ -78,7 +78,7 @@ import com.android.build.OutputFile
  */
 
 project.ext.react = [
-    enableHermes: false,  // clean and rebuild if changing
+    enableHermes: System.env.RN_ENABLE_HERMES == true,  // clean and rebuild if changing
 ]
 
 apply from: "../../node_modules/react-native/react.gradle"
@@ -133,8 +133,8 @@ android {
         applicationId "com.bugsnag.android.rnapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 5
+        versionName "2.45.beta"
     }
     splits {
         abi {
@@ -162,6 +162,18 @@ android {
             signingConfig signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }
+    }
+    if (System.env.USE_RN_FLAVORS) {
+        flavorDimensions "regular"
+
+        productFlavors {
+            foo {
+                applicationIdSuffix ".foo"
+            }
+            bar {
+                applicationIdSuffix ".bar"
+            }
         }
     }
 
@@ -231,5 +243,9 @@ if (!System.env.UPDATING_GRADLEW) {
     bugsnag {
         endpoint = "http://localhost:9339"
         releasesEndpoint = "http://localhost:9339"
+
+        if (System.env.UPLOAD_RN_MAPPINGS == "false") {
+            uploadReactNativeMappings = false
+        }
     }
 }
