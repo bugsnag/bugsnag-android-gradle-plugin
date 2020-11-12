@@ -10,7 +10,7 @@ Scenario: Source maps are uploaded when assembling an app with the default proje
 
     And 1 requests are valid for the android mapping API and match the following:
       | versionCode | versionName | appId                     |
-      | 5              | 2.45.beta  | com.bugsnag.android.rnapp |
+      | 5           | 2.45.beta  | com.bugsnag.android.rnapp |
 
     And 1 requests are valid for the JS source map API and match the following:
         | appVersionCode | appVersion | overwrite | dev   |
@@ -26,7 +26,7 @@ Scenario: Source maps are uploaded when bundling an app with the default project
 
     And 1 requests are valid for the android mapping API and match the following:
         | versionCode | versionName | appId                     |
-        | 5              | 2.45.beta  | com.bugsnag.android.rnapp |
+        | 5           | 2.45.beta  | com.bugsnag.android.rnapp |
 
     And 1 requests are valid for the JS source map API and match the following:
         | appVersionCode | appVersion | overwrite | dev   |
@@ -88,3 +88,16 @@ Scenario: Source maps are uploaded in an app using Hermes
     And 1 requests are valid for the JS source map API and match the following:
         | appVersionCode | appVersion | overwrite | dev   |
         | 5              | 2.45.beta  | false     | false |
+
+Scenario: Plugin handles server failure gracefully
+    When I set the HTTP status code to 500
+    And I run the script "features/scripts/manual_upload_react_native.sh" synchronously
+    And I wait to receive 5 requests
+    And 5 requests are valid for the JS source map API and match the following:
+        | appVersionCode | appVersion | overwrite | dev   |
+        | 5              | 2.45.beta  | false     | false |
+        | 5              | 2.45.beta  | false     | false |
+        | 5              | 2.45.beta  | false     | false |
+        | 5              | 2.45.beta  | false     | false |
+        | 5              | 2.45.beta  | false     | false |
+    And the exit code equals 0
