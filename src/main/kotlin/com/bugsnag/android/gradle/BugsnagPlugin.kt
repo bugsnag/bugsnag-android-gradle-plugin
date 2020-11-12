@@ -319,7 +319,7 @@ class BugsnagPlugin : Plugin<Project> {
             if (uploadSourceMapProvider != null) {
                 variant.register(project, uploadSourceMapProvider, reactNativeEnabled)
             }
-            addReactNativeMavenRepo(project)
+            addReactNativeMavenRepo(project, bugsnag)
         }
     }
 
@@ -328,14 +328,16 @@ class BugsnagPlugin : Plugin<Project> {
      * containing the Android AARs as a maven repository. This allows the
      * project to compile without the user explicitly adding the maven repository.
      */
-    private fun addReactNativeMavenRepo(project: Project) {
+    private fun addReactNativeMavenRepo(project: Project, bugsnag: BugsnagPluginExtension) {
         val props = project.extensions.extraProperties
         val hasReact = props.has("react")
         if (hasReact) {
             project.rootProject.allprojects { subProj ->
-                val rootDir = subProj.rootDir
+                val defaultNodeModulesDir = File("${subProj.rootDir}/../node_modules")
+                val nodeModulesDir = bugsnag.nodeModulesDir.getOrElse(defaultNodeModulesDir)
+
                 subProj.repositories.maven { repo ->
-                    repo.setUrl("$rootDir/../node_modules/@bugsnag/react-native/android")
+                    repo.setUrl("$nodeModulesDir/@bugsnag/react-native/android")
                 }
             }
         }
@@ -487,9 +489,10 @@ class BugsnagPlugin : Plugin<Project> {
             val jsProjectRoot = project.rootProject.rootDir.parentFile
             projectRootFileProvider.from(jsProjectRoot)
 
-            val cliPath = "../../node_modules/@bugsnag/source-maps/bin/cli"
-            val file = project.layout.projectDirectory.file(cliPath)
-            bugsnagSourceMaps.set(file)
+            val defaultLocation = File(project.projectDir.parentFile.parentFile, "node_modules")
+            val nodeModulesDir = bugsnag.nodeModulesDir.getOrElse(defaultLocation)
+            val cliPath = File(nodeModulesDir, "@bugsnag/source-maps/bin/cli")
+            bugsnagSourceMaps.set(cliPath)
             mustRunAfter(rnTask)
         }
     }

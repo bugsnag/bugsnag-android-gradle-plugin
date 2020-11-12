@@ -101,3 +101,20 @@ Scenario: Plugin handles server failure gracefully
         | 5              | 2.45.beta  | false     | false |
         | 5              | 2.45.beta  | false     | false |
     And the exit code equals 0
+
+Scenario: Source maps are uploaded when assembling an app with a custom nodeModulesDir
+    When I set environment variable "CUSTOM_NODE_MODULES_DIR" to "true"
+    When I build the React Native app
+    And I wait to receive 3 requests
+
+    Then 1 requests are valid for the build API and match the following:
+      | appVersionCode | appVersion | buildTool      |
+      | 5              | 2.45.beta  | gradle-android |
+
+    And 1 requests are valid for the android mapping API and match the following:
+      | versionCode | versionName | appId                     |
+      | 5              | 2.45.beta  | com.bugsnag.android.rnapp |
+
+    And 1 requests are valid for the JS source map API and match the following:
+        | appVersionCode | appVersion | overwrite | dev   |
+        | 5              | 2.45.beta  | false     | false |

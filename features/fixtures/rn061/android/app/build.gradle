@@ -223,5 +223,8 @@ if (!System.env.UPDATING_GRADLEW) {
         if (System.env.UPLOAD_RN_MAPPINGS == "false") {
             uploadReactNativeMappings = false
         }
+        if (System.env.CUSTOM_NODE_MODULES_DIR == "true") {
+            nodeModulesDir = new File(project.rootDir.parentFile, "node_modules")
+        }
     }
 }
