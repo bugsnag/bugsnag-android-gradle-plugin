@@ -1,3 +1,8 @@
+## TBD
+
+* Prevent windows crash when generating Unity mapping files
+  [#344](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/344)
+
 ## 5.4.0 (2020-11-04)
 
 This release improves performance by always compressing ProGuard/R8 mapping files before attempting upload.
