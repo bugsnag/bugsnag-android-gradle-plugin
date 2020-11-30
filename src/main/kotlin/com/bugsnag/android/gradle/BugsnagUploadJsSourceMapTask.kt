@@ -67,12 +67,6 @@ sealed class BugsnagUploadJsSourceMapTask @Inject constructor(
         // Construct a basic request
         val manifestInfo = parseManifestInfo()
         val executable = bugsnagSourceMaps.get().asFile
-        if (!executable.exists() && failOnUploadError.get()) {
-            throw IllegalStateException(
-                "Bugsnag: source map upload failed. Please ensure that bugsnag-source-maps is " +
-                    "installed at $executable."
-            )
-        }
         val builder = generateUploadCommand(executable.absolutePath, manifestInfo)
         project.logger.lifecycle("Bugsnag: uploading react native sourcemap: ${builder.command()}")
 
@@ -87,9 +81,19 @@ sealed class BugsnagUploadJsSourceMapTask @Inject constructor(
         if (exitCode != 0) {
             val errMsg = process.errorStream.bufferedReader().use { it.readText() }
             val msg = "Bugsnag: source map upload failed. Exit code=$exitCode, msg=$errMsg."
-            when {
-                failOnUploadError.get() -> throw IllegalStateException(msg)
-                else -> project.logger.error(msg)
+            if (!executable.exists()) {
+                project.logger.warn(
+                    "Bugsnag: automatic upload of source maps failed because " +
+                        "@bugsnag/source-maps could not be located.\n" +
+                        "Set `uploadReactNativeMappings=false` if you don't want to upload source maps," +
+                        "or install the `@bugsnag/source-maps` node module.\n" +
+                        "For further docs, see https://docs.bugsnag.com/platforms/react-native/" +
+                        "react-native/showing-full-stacktraces/#uploading-source-maps"
+                )
+            } else if (failOnUploadError.get()) {
+                throw IllegalStateException(msg)
+            } else {
+                project.logger.error(msg)
             }
         }
 
