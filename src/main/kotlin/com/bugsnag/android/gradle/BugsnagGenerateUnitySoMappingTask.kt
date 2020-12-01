@@ -62,7 +62,7 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
     val unitySharedObjectDir: DirectoryProperty = objects.directoryProperty()
         .convention(projectLayout.buildDirectory.dir(UNITY_SO_COPY_DIR))
 
-    @get:InputDirectory
+    @get:Internal
     val rootProjectDir: DirectoryProperty = objects.directoryProperty()
 
     @TaskAction
