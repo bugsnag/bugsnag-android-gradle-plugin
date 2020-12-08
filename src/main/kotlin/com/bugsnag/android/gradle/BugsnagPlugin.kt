@@ -193,7 +193,7 @@ class BugsnagPlugin : Plugin<Project> {
             val jvmMinificationEnabled = project.isJvmMinificationEnabled(variant)
             val ndkEnabled = isNdkUploadEnabled(bugsnag, android)
             val unityEnabled = isUnityLibraryUploadEnabled(bugsnag, android)
-            val reactNativeEnabled = isReactNativeUploadEnabled(project, bugsnag)
+            val reactNativeEnabled = isReactNativeUploadEnabled(bugsnag)
 
             // skip tasks for variant if JVM/NDK/Unity minification not enabled
             if (!jvmMinificationEnabled && !ndkEnabled && !unityEnabled && !reactNativeEnabled) {
@@ -699,12 +699,9 @@ class BugsnagPlugin : Plugin<Project> {
     }
 
     internal fun isReactNativeUploadEnabled(
-        project: Project,
         bugsnag: BugsnagPluginExtension
     ): Boolean {
-        val props = project.extensions.extraProperties
-        val hasReact = props.has("react")
-        return bugsnag.uploadReactNativeMappings.getOrElse(hasReact)
+        return bugsnag.uploadReactNativeMappings.getOrElse(false)
     }
 
     /**

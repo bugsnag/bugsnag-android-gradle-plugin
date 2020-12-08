@@ -228,10 +228,8 @@ if (!System.env.UPDATING_GRADLEW) {
     bugsnag {
         endpoint = "http://localhost:9339"
         releasesEndpoint = "http://localhost:9339"
+        uploadReactNativeMappings = "false" != System.env.UPLOAD_RN_MAPPINGS
 
-        if (System.env.UPLOAD_RN_MAPPINGS == "false") {
-            uploadReactNativeMappings = false
-        }
         if (System.env.CUSTOM_NODE_MODULES_DIR == "true") {
             nodeModulesDir = new File(project.rootDir.parentFile, "node_modules")
         }
