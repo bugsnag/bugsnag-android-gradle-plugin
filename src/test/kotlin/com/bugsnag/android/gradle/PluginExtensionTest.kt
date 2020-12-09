@@ -55,7 +55,7 @@ class PluginExtensionTest {
         val plugin = proj.plugins.findPlugin(BugsnagPlugin::class.java)!!
         assertFalse(plugin.isUnityLibraryUploadEnabled(bugsnag, android))
         assertFalse(plugin.isNdkUploadEnabled(bugsnag, android))
-        assertFalse(plugin.isReactNativeUploadEnabled(proj, bugsnag))
+        assertFalse(plugin.isReactNativeUploadEnabled(bugsnag))
         assertEquals(emptyList<File>(), plugin.getSharedObjectSearchPaths(proj, bugsnag, android))
     }
 
@@ -120,7 +120,7 @@ class PluginExtensionTest {
         val plugin = proj.plugins.findPlugin(BugsnagPlugin::class.java)!!
         assertTrue(plugin.isUnityLibraryUploadEnabled(bugsnag, android))
         assertTrue(plugin.isNdkUploadEnabled(bugsnag, android))
-        assertTrue(plugin.isReactNativeUploadEnabled(proj, bugsnag))
+        assertTrue(plugin.isReactNativeUploadEnabled(bugsnag))
         val expected = listOf(
             File("/test/bar"),
             File(proj.projectDir, "src/main/jniLibs"),
@@ -153,14 +153,14 @@ class PluginExtensionTest {
     }
 
     /**
-     * Verifies that the React Native heuristics control whether tasks are created
+     * Verifies that in a project with the React property extension upload is disabled by default
      */
     @Test
     fun reactNativeUploadHeuristics() {
         val bugsnag = proj.extensions.getByType(BugsnagPluginExtension::class.java)
         val plugin = proj.plugins.findPlugin(BugsnagPlugin::class.java)!!
         proj.extensions.extraProperties.set("react", "some value")
-        assertTrue(plugin.isReactNativeUploadEnabled(proj, bugsnag))
+        assertFalse(plugin.isReactNativeUploadEnabled(bugsnag))
     }
 
     /**

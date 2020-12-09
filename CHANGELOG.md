@@ -1,5 +1,8 @@
 ## TBD
 
+* Disable react native sourcemap upload by default
+  [#351](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/351)
+
 * Add nodeModulesDir to bugsnag plugin extension
   [#343](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/343)
 
