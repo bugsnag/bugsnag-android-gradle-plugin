@@ -18,6 +18,8 @@ private val NULL_STRING: String? = null
 private val NULL_BOOLEAN: Boolean? = null
 private val NULL_FILE: File? = null
 
+internal const val UPLOAD_ENDPOINT_DEFAULT: String = "https://upload.bugsnag.com"
+
 /**
  * Defines configuration options (Gradle plugin extensions) for the BugsnagPlugin
  */
@@ -48,7 +50,7 @@ open class BugsnagPluginExtension(objects: ObjectFactory) {
         .convention(false)
 
     val endpoint: Property<String> = objects.property<String>()
-        .convention("https://upload.bugsnag.com")
+        .convention(UPLOAD_ENDPOINT_DEFAULT)
 
     val releasesEndpoint = objects.property<String>()
         .convention("https://build.bugsnag.com")
