@@ -1,5 +1,8 @@
 ## TBD
 
+* Append sourcemap path to endpoint provided by plugin
+  [#352](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/352)
+
 * Disable react native sourcemap upload by default
   [#351](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/351)
 

@@ -127,12 +127,15 @@ sealed class BugsnagUploadJsSourceMapTask @Inject constructor(
             "--bundle",
             bundleJsFileProvider.asFile.get().absolutePath,
 
-            "--endpoint",
-            endpoint.get(),
-
             "--project-root",
             projectRootFileProvider.singleFile.absolutePath
         )
+
+        // only supply the endpoint if the user has overridden it (on-prem)
+        if (UPLOAD_ENDPOINT_DEFAULT != endpoint.get()) {
+            cmd.add("--endpoint")
+            cmd.add(endpoint.get())
+        }
 
         if (overwrite.get()) {
             cmd.add("--overwrite")
