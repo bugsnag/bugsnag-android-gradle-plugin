@@ -40,7 +40,6 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.net.URL
 import java.util.UUID
 
 /**
@@ -483,7 +482,7 @@ class BugsnagPlugin : Plugin<Project> {
             bundleJsFileProvider.set(File(rnBundle))
             sourceMapFileProvider.set(File(rnSourceMap))
             overwrite.set(bugsnag.overwrite)
-            endpoint.set(getSourcemapUploadEndpoint(bugsnag))
+            endpoint.set(bugsnag.endpoint.get())
             devEnabled.set("true" == dev)
             failOnUploadError.set(bugsnag.failOnUploadError)
 
@@ -495,16 +494,6 @@ class BugsnagPlugin : Plugin<Project> {
             val cliPath = File(nodeModulesDir, "@bugsnag/source-maps/bin/cli")
             bugsnagSourceMaps.set(cliPath)
             mustRunAfter(rnTask)
-        }
-    }
-
-    internal fun getSourcemapUploadEndpoint(bugsnag: BugsnagPluginExtension): String? {
-        return when (val endpoint = bugsnag.endpoint.get()) {
-            UPLOAD_ENDPOINT_DEFAULT -> endpoint
-            else -> {
-                val host = URL(endpoint)
-                return URL(host, "react-native-source-map").toString()
-            }
         }
     }
 

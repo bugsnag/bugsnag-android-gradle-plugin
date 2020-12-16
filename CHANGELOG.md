@@ -1,7 +1,8 @@
 ## TBD
 
-* Append sourcemap path to endpoint provided by plugin
+* Provide endpoint configuration to source map CLI
   [#352](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/352)
+  [#353](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/353)
 
 * Disable react native sourcemap upload by default
   [#351](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/351)
@@ -64,7 +65,7 @@ Depending on the contents of the mapping file, this can reduce the upload size b
 
 * Separate generation/upload of shared objects into two tasks
   [#303](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/303)
-  
+
 * Add uploadNdkUnityLibraryMappings flag to bugsnag extension
   [#306](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/306)
 
@@ -242,7 +243,7 @@ Skip uploading mapping files for shared objects which have no debug info
 
 ## 4.4.0 (2019-06-10)
 
-This release is companion update for bugsnag-android v4.15.0, which supports detecting and reporting C/C++ crashes without a separate library. 
+This release is companion update for bugsnag-android v4.15.0, which supports detecting and reporting C/C++ crashes without a separate library.
 
 Since `bugsnag-android` now contains native code, update shared object extraction to include libraries from there as well as `bugsnag-android-ndk`
 [#164](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/164)
