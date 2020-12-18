@@ -31,6 +31,10 @@ Before('@skip_agp4_1_or_higher') do |scenario|
   skip_this_scenario if is_above_or_equal_to_target(410)
 end
 
+Before('@skip_agp3_4_0') do |scenario|
+  skip_this_scenario if equals_target(340)
+end
+
 def equals_target(target)
   version = ENV["AGP_VERSION"].slice(0, 5)
   version = version.gsub(".", "")
