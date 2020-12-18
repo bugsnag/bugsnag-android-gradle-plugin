@@ -1,6 +1,7 @@
 Feature: Plugin integrated in NDK app
 
 @skip_agp4_0_or_higher
+@skip_agp3_4_0
 Scenario: NDK apps send requests
     When I build the NDK app
     And I wait to receive 6 requests
@@ -26,6 +27,7 @@ Scenario: NDK apps send requests
         | java.lang.String doSomething() |
 
 @skip_agp4_0_or_higher
+@skip_agp3_4_0
 Scenario: Custom projectRoot is added to payload
     When I set environment variable "PROJECT_ROOT" to "/repos/custom/my-app"
     And I build the NDK app
@@ -48,6 +50,7 @@ Scenario: Custom projectRoot is added to payload
 
 # Sets a non-existent objdump location for x86 and arm64-v8a, delivery should proceed as normal for other files
 @skip_agp4_0_or_higher
+@skip_agp3_4_0
 Scenario: Custom objdump location
     When I set environment variable "OBJDUMP_LOCATION" to "/fake/objdump"
     And I build the NDK app
@@ -67,6 +70,7 @@ Scenario: Custom objdump location
         | com.bugsnag.android.ndkapp |
 
 @skip_agp4_0_or_higher
+@skip_agp3_4_0
 Scenario: Mapping files uploaded for custom sharedObjectPaths
     When I set environment variable "USE_SHARED_OBJECT_PATH" to "true"
     When I build the NDK app
