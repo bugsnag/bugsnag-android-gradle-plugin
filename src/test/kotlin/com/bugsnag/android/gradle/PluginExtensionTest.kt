@@ -56,7 +56,6 @@ class PluginExtensionTest {
         assertFalse(plugin.isUnityLibraryUploadEnabled(bugsnag, android))
         assertFalse(plugin.isNdkUploadEnabled(bugsnag, android))
         assertFalse(plugin.isReactNativeUploadEnabled(bugsnag))
-        assertEquals("https://upload.bugsnag.com", plugin.getSourcemapUploadEndpoint(bugsnag))
         assertEquals(emptyList<File>(), plugin.getSharedObjectSearchPaths(proj, bugsnag, android))
     }
 
@@ -122,8 +121,7 @@ class PluginExtensionTest {
         assertTrue(plugin.isUnityLibraryUploadEnabled(bugsnag, android))
         assertTrue(plugin.isNdkUploadEnabled(bugsnag, android))
         assertTrue(plugin.isReactNativeUploadEnabled(bugsnag))
-        val uploadEndpoint = plugin.getSourcemapUploadEndpoint(bugsnag)
-        assertEquals("http://localhost:1234/react-native-source-map", uploadEndpoint)
+        assertEquals("http://localhost:1234", bugsnag.endpoint.get())
         val expected = listOf(
             File("/test/bar"),
             File(proj.projectDir, "src/main/jniLibs"),

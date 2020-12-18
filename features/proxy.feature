@@ -40,6 +40,7 @@ Scenario: Authenticated HTTP proxy without creds
     And I should receive no requests
 
 @skip_agp4_0_or_higher
+@skip_agp3_4_0
 Scenario: NDK request for basic HTTP proxy AGP < 4
     When I start an http proxy
     And I set the fixture JVM arguments to "-Dhttp.proxyHost=localhost -Dhttp.proxyPort=9000 -Dhttp.nonProxyHosts="
