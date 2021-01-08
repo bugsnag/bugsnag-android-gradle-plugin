@@ -75,6 +75,7 @@ class BugsnagPlugin : Plugin<Project> {
             if (!bugsnag.enabled.get()) {
                 return@withPlugin
             }
+            addReactNativeMavenRepo(project, bugsnag)
 
             val httpClientHelperProvider = BugsnagHttpClientHelper.create(
                 project,
@@ -319,7 +320,6 @@ class BugsnagPlugin : Plugin<Project> {
             if (uploadSourceMapProvider != null) {
                 variant.register(project, uploadSourceMapProvider, reactNativeEnabled)
             }
-            addReactNativeMavenRepo(project, bugsnag)
         }
     }
 
