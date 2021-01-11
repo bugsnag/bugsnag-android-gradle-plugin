@@ -1,6 +1,10 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.AppExtension
+import com.android.build.gradle.internal.dsl.AaptOptions
+import com.android.build.gradle.internal.dsl.CmakeOptions
+import com.android.build.gradle.internal.dsl.ExternalNativeBuild
+import com.android.build.gradle.internal.dsl.NdkBuildOptions
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Assert.assertEquals
@@ -9,17 +13,40 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.Mockito.`when`
+import org.mockito.junit.MockitoJUnitRunner
 import java.io.File
 
+@RunWith(MockitoJUnitRunner::class)
 class PluginExtensionTest {
 
     lateinit var proj: Project
+
+    @Mock
+    lateinit var android: AppExtension
+
+    @Mock
+    lateinit var externalNativeBuild: ExternalNativeBuild
+
+    @Mock
+    lateinit var aaptOptions: AaptOptions
+
+    @Mock
+    lateinit var cmake: CmakeOptions
+
+    @Mock
+    lateinit var ndkBuild: NdkBuildOptions
 
     @Before
     fun setUp() {
         proj = ProjectBuilder.builder().build()
         proj.pluginManager.apply("com.bugsnag.android.gradle")
-        proj.pluginManager.apply("android")
+        `when`(android.externalNativeBuild).thenReturn(externalNativeBuild)
+        `when`(android.aaptOptions).thenReturn(aaptOptions)
+        `when`(externalNativeBuild.ndkBuild).thenReturn(ndkBuild)
+        `when`(externalNativeBuild.cmake).thenReturn(cmake)
     }
 
     @Test
@@ -49,7 +76,6 @@ class PluginExtensionTest {
         }
 
         // ndk/unity upload defaults to false
-        val android = proj.extensions.findByType(AppExtension::class.java)!!
         val plugin = proj.plugins.findPlugin(BugsnagPlugin::class.java)!!
         assertFalse(plugin.isUnityLibraryUploadEnabled(bugsnag, android))
         assertFalse(plugin.isNdkUploadEnabled(bugsnag, android))
@@ -110,7 +136,6 @@ class PluginExtensionTest {
         }
 
         // ndk/unity upload overridden to true
-        val android = proj.extensions.findByType(AppExtension::class.java)!!
         val plugin = proj.plugins.findPlugin(BugsnagPlugin::class.java)!!
         assertTrue(plugin.isUnityLibraryUploadEnabled(bugsnag, android))
         assertTrue(plugin.isNdkUploadEnabled(bugsnag, android))
@@ -128,12 +153,11 @@ class PluginExtensionTest {
     @Test
     fun uploadHeuristics() {
         val bugsnag = proj.extensions.getByType(BugsnagPluginExtension::class.java)
-        val android = proj.extensions.findByType(AppExtension::class.java)!!
         val plugin = proj.plugins.findPlugin(BugsnagPlugin::class.java)!!
 
         // used to check
-        android.aaptOptions.noCompress.add(".unity3d")
-        android.externalNativeBuild.cmake.path = File("/users/sdk/cmake")
+        `when`(aaptOptions.noCompress).thenReturn(mutableListOf(".unity3d"))
+        `when`(cmake.path).thenReturn(File("/users/sdk/cmake"))
 
         // ndk/unity upload overridden to true
         assertTrue(plugin.isUnityLibraryUploadEnabled(bugsnag, android))
@@ -151,9 +175,8 @@ class PluginExtensionTest {
     @Test
     fun unityEnablesNdkUpload() {
         val bugsnag = proj.extensions.getByType(BugsnagPluginExtension::class.java)
-        val android = proj.extensions.findByType(AppExtension::class.java)!!
         val plugin = proj.plugins.findPlugin(BugsnagPlugin::class.java)!!
-        android.aaptOptions.noCompress.add(".unity3d")
+        `when`(aaptOptions.noCompress).thenReturn(mutableListOf(".unity3d"))
 
         // ndk/unity uploads overridden to true
         assertTrue(plugin.isUnityLibraryUploadEnabled(bugsnag, android))
