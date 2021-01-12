@@ -7,6 +7,7 @@
     <ID>MagicNumber:BugsnagReleasesTask.kt$BugsnagReleasesTask$200</ID>
     <ID>MaxLineLength:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$private</ID>
     <ID>ReturnCount:BugsnagPlugin.kt$BugsnagPlugin$ @Suppress("SENSELESS_COMPARISON") internal fun isUnityLibraryUploadEnabled(bugsnag: BugsnagPluginExtension, android: AppExtension): Boolean</ID>
+    <ID>ReturnCount:ManifestUuidTaskV2Compat.kt$internal fun createManifestUpdateTask( bugsnag: BugsnagPluginExtension, project: Project, variantName: String ): TaskProvider&lt;BugsnagManifestUuidTaskV2&gt;?</ID>
     <ID>ReturnCount:SharedObjectMappingFileFactory.kt$SharedObjectMappingFileFactory$ fun generateSoMappingFile(project: Project, params: Params): File?</ID>
     <ID>SpreadOperator:BugsnagReleasesTask.kt$BugsnagReleasesTask$(*cmd)</ID>
     <ID>TooGenericExceptionCaught:BugsnagHttpClientHelper.kt$exc: Throwable</ID>
@@ -17,6 +18,5 @@
     <ID>TooGenericExceptionCaught:SharedObjectMappingFileFactory.kt$SharedObjectMappingFileFactory$e: Exception</ID>
     <ID>TooGenericExceptionCaught:SharedObjectMappingFileFactory.kt$SharedObjectMappingFileFactory$ex: Throwable</ID>
     <ID>TooManyFunctions:BugsnagPlugin.kt$BugsnagPlugin$BugsnagPlugin</ID>
-    <ID>TooManyFunctions:SharedObjectMappingFileFactory.kt$SharedObjectMappingFileFactory$SharedObjectMappingFileFactory</ID>
   </Whitelist>
 </SmellBaseline>

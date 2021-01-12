@@ -1,5 +1,8 @@
 ## TBD
 
+* Support AGP 4.2
+  [#350](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/350)
+
 * Prevent windows crash when generating Unity mapping files
   [#344](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/344)
 
