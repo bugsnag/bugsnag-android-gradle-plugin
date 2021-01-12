@@ -3,30 +3,11 @@
 * Support AGP 4.2
   [#350](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/350)
 
-* Provide endpoint configuration to source map CLI
-  [#352](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/352)
-  [#353](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/353)
-
-* Disable react native sourcemap upload by default
-  [#351](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/351)
-
-* Add nodeModulesDir to bugsnag plugin extension
-  [#343](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/343)
-
-* Automatically add maven repository for react-native AARs
-  [#334](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/334)
-
-* Populate task inputs for BugsnagUploadJsSourceMapTask
-  [#332](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/332)
-
-* Create BugsnagUploadJsSourceMapTask and register for build variants
-  [#330](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/330)
-
-* Add uploadReactNativeMappings flag to plugin extension
-  [#327](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/327)
-
-* Prevent windows crash when generating Unity mapping files
+* Prevent Windows crash when generating Unity mapping files
   [#344](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/344)
+
+* Support uploading JS sourcemaps for React Native projects
+  [#346](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/346)
 
 ## 5.6.0 (2020-12-03)
 
