@@ -54,7 +54,7 @@ jobs:
         - AGP_VERSION=3.4.0
         - GRADLE_WRAPPER_VERSION=5.1.1
         - RN_FIXTURE_DIR=features/fixtures/rn060/android
-      script: bundle exec maze-runner -c --verbose
+      script: bundle exec maze-runner -c --verbose --fail-fast
 
       # AGP 3.5.0 E2E tests
     - name: AGP 3.5.0 E2E tests
@@ -62,7 +62,7 @@ jobs:
         - AGP_VERSION=3.5.0
         - GRADLE_WRAPPER_VERSION=5.4.1
         - RN_FIXTURE_DIR=features/fixtures/rn060/android
-      script: bundle exec maze-runner -c --verbose
+      script: bundle exec maze-runner -c --verbose --fail-fast
 
       # AGP 3.6.0 E2E tests
     - name: AGP 3.6.0 E2E tests
@@ -70,7 +70,7 @@ jobs:
         - AGP_VERSION=3.6.0
         - GRADLE_WRAPPER_VERSION=5.6.4
         - RN_FIXTURE_DIR=features/fixtures/rn061/android
-      script: bundle exec maze-runner -c --verbose
+      script: bundle exec maze-runner -c --verbose --fail-fast
 
       # AGP 4.0.0 E2E tests
     - name: AGP 4.0.0 E2E tests
@@ -78,20 +78,20 @@ jobs:
         - AGP_VERSION=4.0.0
         - GRADLE_WRAPPER_VERSION=6.1.1
         - RN_FIXTURE_DIR=features/fixtures/rn062/android
-      script: bundle exec maze-runner -c --verbose
+      script: bundle exec maze-runner -c --verbose --fail-fast
 
-    # AGP 4.1.0 E2E tests
+      # AGP 4.1.0 E2E tests
     - name: AGP 4.1.0 E2E tests
       env:
         - AGP_VERSION=4.1.0
         - GRADLE_WRAPPER_VERSION=6.5.1
         - RN_FIXTURE_DIR=features/fixtures/rn063/android
-      script: bundle exec maze-runner -c --verbose
+      script: bundle exec maze-runner -c --verbose --fail-fast
 
       # AGP 4.2.0 E2E tests
     - name: AGP 4.2.0 E2E tests
       env:
-        - AGP_VERSION=4.2.0-alpha07
-        - GRADLE_WRAPPER_VERSION=6.6-rc-6
+        - AGP_VERSION=4.2.0-beta03
+        - GRADLE_WRAPPER_VERSION=6.7.1
         - RN_FIXTURE_DIR=features/fixtures/rn063/android
-      script: bundle exec maze-runner -c --verbose
+      script: bundle exec maze-runner -c --verbose --fail-fast

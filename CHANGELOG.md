@@ -1,5 +1,8 @@
 ## TBD
 
+* Support AGP 4.2
+  [#350](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/350)
+
 * Provide endpoint configuration to source map CLI
   [#352](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/352)
   [#353](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/353)
@@ -24,6 +27,10 @@
 
 * Prevent windows crash when generating Unity mapping files
   [#344](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/344)
+
+## 5.6.0 (2020-12-03)
+
+Bump version to prevent v5.5.0-alpha01 being picked up by users with wildcard dependency versions.
 
 ## 5.4.0 (2020-11-04)
 

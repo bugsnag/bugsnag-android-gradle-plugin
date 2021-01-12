@@ -1,7 +1,5 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.dsl.CommonExtension
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
@@ -13,7 +11,6 @@ import com.bugsnag.android.gradle.internal.TASK_JNI_LIBS
 import com.bugsnag.android.gradle.internal.UNITY_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.bugsnag.android.gradle.internal.computeManifestInfoOutputV1
-import com.bugsnag.android.gradle.internal.computeManifestInfoOutputV2
 import com.bugsnag.android.gradle.internal.hasDexguardPlugin
 import com.bugsnag.android.gradle.internal.intermediateForGenerateJvmMapping
 import com.bugsnag.android.gradle.internal.intermediateForMappingFileRequest
@@ -21,8 +18,11 @@ import com.bugsnag.android.gradle.internal.intermediateForNdkSoRequest
 import com.bugsnag.android.gradle.internal.intermediateForReleaseRequest
 import com.bugsnag.android.gradle.internal.intermediateForUnitySoRequest
 import com.bugsnag.android.gradle.internal.intermediateForUploadSourcemaps
+import com.bugsnag.android.gradle.internal.isVariantEnabled
 import com.bugsnag.android.gradle.internal.newUploadRequestClientProvider
+import com.bugsnag.android.gradle.internal.newUuidProvider
 import com.bugsnag.android.gradle.internal.register
+import com.bugsnag.android.gradle.internal.registerV2ManifestUuidTask
 import com.bugsnag.android.gradle.internal.taskNameForGenerateJvmMapping
 import com.bugsnag.android.gradle.internal.taskNameForGenerateNdkMapping
 import com.bugsnag.android.gradle.internal.taskNameForGenerateUnityMapping
@@ -40,7 +40,6 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.util.UUID
 
 /**
  * Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.
@@ -89,36 +88,7 @@ class BugsnagPlugin : Plugin<Project> {
 
             val android = project.extensions.getByType(AppExtension::class.java)
             if (BugsnagManifestUuidTaskV2.isApplicable()) {
-                check(android is CommonExtension<*, *, *, *, *, *, *, *>)
-                android.onVariants {
-                    if (!bugsnag.enabled.get()) {
-                        return@onVariants
-                    }
-                    val variant = VariantFilterImpl(name)
-                    if (!isVariantEnabled(bugsnag, variant)) {
-                        return@onVariants
-                    }
-                    val variantName = name
-                    val taskName = taskNameForManifestUuid(variantName)
-                    val manifestInfoOutputFile = project.computeManifestInfoOutputV2(variantName)
-                    val buildUuidProvider = project.newUuidProvider()
-                    val manifestUpdater = project.tasks.register(
-                        taskName,
-                        BugsnagManifestUuidTaskV2::class.java
-                    ) {
-                        it.buildUuid.set(buildUuidProvider)
-                        it.manifestInfoProvider.set(manifestInfoOutputFile)
-                    }
-                    onProperties {
-                        artifacts
-                            .use(manifestUpdater)
-                            .wiredWithFiles(
-                                taskInput = BugsnagManifestUuidTaskV2::inputManifest,
-                                taskOutput = BugsnagManifestUuidTaskV2::outputManifest
-                            )
-                            .toTransform(ArtifactType.MERGED_MANIFEST)
-                    }
-                }
+                registerV2ManifestUuidTask(android, bugsnag, project)
             }
 
             project.afterEvaluate {
@@ -145,14 +115,6 @@ class BugsnagPlugin : Plugin<Project> {
                 registerNdkLibInstallTask(project)
             }
         }
-    }
-
-    private fun isVariantEnabled(
-        bugsnag: BugsnagPluginExtension,
-        variant: VariantFilterImpl
-    ): Boolean {
-        bugsnag.filter.execute(variant)
-        return variant.variantEnabled ?: true
     }
 
     private fun registerNdkLibInstallTask(project: Project) {
@@ -730,11 +692,5 @@ class BugsnagPlugin : Plugin<Project> {
             searchPaths.add(unity2019ExportedDir)
         }
         return searchPaths
-    }
-
-    private fun Project.newUuidProvider(): Provider<String> {
-        return provider {
-            UUID.randomUUID().toString()
-        }
     }
 }
