@@ -26,7 +26,7 @@ before_install:
   - ls $ANDROID_HOME
 
 install:
-  - curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+  - curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
   - sudo apt-get install -y nodejs
 
 before_cache:
@@ -42,17 +42,18 @@ jobs:
   include:
     # Unit test job
     - name: unit tests
-      script: ./gradlew check
+      script: ./gradlew detekt ktlintCheck check
 
     # Plugin install job
     - name: plugin install
-      script: ./gradlew build install -x groovyDoc -x detekt --stacktrace
+      script: ./gradlew install
 
     # AGP 3.4.0 E2E tests
     - name: AGP 3.4.0 E2E tests
       env:
         - AGP_VERSION=3.4.0
         - GRADLE_WRAPPER_VERSION=5.1.1
+        - RN_FIXTURE_DIR=features/fixtures/rn060/android
       script: bundle exec maze-runner -c --verbose --fail-fast
 
       # AGP 3.5.0 E2E tests
@@ -60,6 +61,7 @@ jobs:
       env:
         - AGP_VERSION=3.5.0
         - GRADLE_WRAPPER_VERSION=5.4.1
+        - RN_FIXTURE_DIR=features/fixtures/rn060/android
       script: bundle exec maze-runner -c --verbose --fail-fast
 
       # AGP 3.6.0 E2E tests
@@ -67,6 +69,7 @@ jobs:
       env:
         - AGP_VERSION=3.6.0
         - GRADLE_WRAPPER_VERSION=5.6.4
+        - RN_FIXTURE_DIR=features/fixtures/rn061/android
       script: bundle exec maze-runner -c --verbose --fail-fast
 
       # AGP 4.0.0 E2E tests
@@ -74,13 +77,15 @@ jobs:
       env:
         - AGP_VERSION=4.0.0
         - GRADLE_WRAPPER_VERSION=6.1.1
+        - RN_FIXTURE_DIR=features/fixtures/rn062/android
       script: bundle exec maze-runner -c --verbose --fail-fast
 
-    # AGP 4.1.0 E2E tests
+      # AGP 4.1.0 E2E tests
     - name: AGP 4.1.0 E2E tests
       env:
-        - AGP_VERSION=4.1.0-beta04
+        - AGP_VERSION=4.1.0
         - GRADLE_WRAPPER_VERSION=6.5.1
+        - RN_FIXTURE_DIR=features/fixtures/rn063/android
       script: bundle exec maze-runner -c --verbose --fail-fast
 
       # AGP 4.2.0 E2E tests
@@ -88,4 +93,5 @@ jobs:
       env:
         - AGP_VERSION=4.2.0-beta03
         - GRADLE_WRAPPER_VERSION=6.7.1
+        - RN_FIXTURE_DIR=features/fixtures/rn063/android
       script: bundle exec maze-runner -c --verbose --fail-fast

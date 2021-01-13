@@ -31,12 +31,10 @@ internal const val UNITY_SO_MAPPING_DIR = "intermediates/bugsnag/soMappings/unit
  */
 internal fun ApkVariantOutput.taskNameSuffix() = name.capitalize()
 
-
 /** Intermediate locations for task outputs/inputs **/
 
-
 internal fun intermediateForUnitySoRequest(project: Project, output: ApkVariantOutput): Provider<RegularFile> {
-    val path =  "intermediates/bugsnag/requests/unityFor${output.taskNameSuffix()}.json"
+    val path = "intermediates/bugsnag/requests/unityFor${output.taskNameSuffix()}.json"
     return project.layout.buildDirectory.file(path)
 }
 
@@ -60,14 +58,19 @@ internal fun intermediateForGenerateJvmMapping(project: Project, output: ApkVari
     return project.layout.buildDirectory.file(path)
 }
 
+internal fun intermediateForUploadSourcemaps(project: Project, output: ApkVariantOutput): Provider<RegularFile> {
+    val path = "intermediates/bugsnag/requests/sourceMapFor${output.taskNameSuffix()}"
+    return project.layout.buildDirectory.file(path)
+}
+
 internal fun Project.computeManifestInfoOutputV2(variant: String): Provider<RegularFile> {
     val path = "intermediates/bugsnag/manifestInfoFor${variant.capitalize()}.json"
     return layout.buildDirectory.file(path)
 }
 
 internal fun Project.computeManifestInfoOutputV1(
-    output: ApkVariantOutput): Provider<RegularFile> {
+    output: ApkVariantOutput
+): Provider<RegularFile> {
     val path = "intermediates/bugsnag/manifestInfoFor${output.taskNameSuffix()}.json"
     return layout.buildDirectory.file(path)
 }
-

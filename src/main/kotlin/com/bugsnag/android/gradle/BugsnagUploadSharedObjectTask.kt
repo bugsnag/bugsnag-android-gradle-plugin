@@ -36,7 +36,7 @@ internal open class BugsnagUploadSharedObjectTask @Inject constructor(
         UNITY("so-symbol-table", "soSymbolTableFile");
 
         fun endpoint(base: String): String {
-            return "${base}/${path}"
+            return "$base/$path"
         }
     }
 
@@ -105,8 +105,8 @@ internal open class BugsnagUploadSharedObjectTask @Inject constructor(
             abiDir.listFiles()
                 .filter { it.extension == "gz" }
                 .forEach { sharedObjectFile ->
-                uploadSymbols(sharedObjectFile, arch)
-            }
+                    uploadSymbols(sharedObjectFile, arch)
+                }
         }
     }
 
@@ -130,8 +130,10 @@ internal open class BugsnagUploadSharedObjectTask @Inject constructor(
         val manifestInfo = parseManifestInfo()
         val mappingFileHash = mappingFile.md5HashCode()
         val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileHash) {
-            logger.lifecycle("Bugsnag: Uploading SO mapping file for " +
-                "$sharedObjectName ($arch) from $mappingFile")
+            logger.lifecycle(
+                "Bugsnag: Uploading SO mapping file for " +
+                    "$sharedObjectName ($arch) from $mappingFile"
+            )
             request.uploadMultipartEntity(parseManifestInfo(), retryCount.get()) { builder ->
                 builder.addFormDataPart(soUploadKey, mappingFile.name, mappingFile.asRequestBody())
                 builder.addFormDataPart("arch", arch)

@@ -26,8 +26,10 @@ internal class AndroidManifestParser {
         // Get the Bugsnag API key
         val apiKey = getManifestMetaData(metadataTags, TAG_API_KEY)
         if (apiKey == null) {
-            logger.warn("Bugsnag: Could not find apiKey in '$TAG_API_KEY' " +
-                "<meta-data> tag in your AndroidManifest.xml")
+            logger.warn(
+                "Bugsnag: Could not find apiKey in '$TAG_API_KEY' " +
+                    "<meta-data> tag in your AndroidManifest.xml"
+            )
         }
 
         // Get the build version
@@ -39,8 +41,10 @@ internal class AndroidManifestParser {
         // Uniquely identify the build so that we can identify the proguard file.
         val buildUUID = getManifestMetaData(metadataTags, TAG_BUILD_UUID)
         if (buildUUID == null) {
-            logger.warn("Bugsnag: Could not find '$TAG_BUILD_UUID'" +
-                " <meta-data> tag in your AndroidManifest.xml")
+            logger.warn(
+                "Bugsnag: Could not find '$TAG_BUILD_UUID'" +
+                    " <meta-data> tag in your AndroidManifest.xml"
+            )
         }
 
         // Get the version name
@@ -56,7 +60,8 @@ internal class AndroidManifestParser {
         }
 
         if (apiKey == null || "" == apiKey || versionCode == null ||
-            buildUUID == null || versionName == null || applicationId == null) {
+            buildUUID == null || versionName == null || applicationId == null
+        ) {
             throw IllegalStateException(
                 """Bugsnag: Missing apiKey/versionCode/buildUuid/versionName/package, required to upload to bugsnag.
                     |apiKey=$apiKey
@@ -65,7 +70,8 @@ internal class AndroidManifestParser {
                     |versionName=$versionName
                     |applicationId=$applicationId
                     |Manifest file = $manifestPath
-                """.trimMargin())
+                """.trimMargin()
+            )
         }
         return AndroidManifestInfo(apiKey, versionCode, buildUUID, versionName, applicationId)
     }
@@ -83,10 +89,13 @@ internal class AndroidManifestParser {
 
         // Add the new BUILD_UUID_TAG element
         if (!hasBuildUuid(metadataTags)) {
-            application.appendNode(TAG_META_DATA, hashMapOf(
-                namespace.get(ATTR_NAME) to TAG_BUILD_UUID,
-                namespace.get(ATTR_VALUE) to buildUuid
-            ))
+            application.appendNode(
+                TAG_META_DATA,
+                hashMapOf(
+                    namespace.get(ATTR_NAME) to TAG_BUILD_UUID,
+                    namespace.get(ATTR_VALUE) to buildUuid
+                )
+            )
         }
 
         // Write the manifest file

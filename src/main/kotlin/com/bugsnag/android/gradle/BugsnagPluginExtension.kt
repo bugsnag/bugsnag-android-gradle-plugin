@@ -16,6 +16,9 @@ import java.io.File
 // To make kotlin happy with gradle's nullability
 private val NULL_STRING: String? = null
 private val NULL_BOOLEAN: Boolean? = null
+private val NULL_FILE: File? = null
+
+internal const val UPLOAD_ENDPOINT_DEFAULT: String = "https://upload.bugsnag.com"
 
 /**
  * Defines configuration options (Gradle plugin extensions) for the BugsnagPlugin
@@ -37,6 +40,9 @@ open class BugsnagPluginExtension(objects: ObjectFactory) {
     val uploadNdkUnityLibraryMappings: Property<Boolean> = objects.property<Boolean>()
         .convention(NULL_BOOLEAN)
 
+    val uploadReactNativeMappings: Property<Boolean> = objects.property<Boolean>()
+        .convention(NULL_BOOLEAN)
+
     val reportBuilds: Property<Boolean> = objects.property<Boolean>()
         .convention(true)
 
@@ -44,7 +50,7 @@ open class BugsnagPluginExtension(objects: ObjectFactory) {
         .convention(false)
 
     val endpoint: Property<String> = objects.property<String>()
-        .convention("https://upload.bugsnag.com")
+        .convention(UPLOAD_ENDPOINT_DEFAULT)
 
     val releasesEndpoint = objects.property<String>()
         .convention("https://build.bugsnag.com")
@@ -57,6 +63,9 @@ open class BugsnagPluginExtension(objects: ObjectFactory) {
 
     val sharedObjectPaths: ListProperty<File> = objects.listProperty<File>()
         .convention(emptyList())
+
+    val nodeModulesDir: Property<File> = objects.property<File>()
+        .convention(NULL_FILE)
 
     val projectRoot: Property<String> = objects.property<String>().convention(NULL_STRING)
 

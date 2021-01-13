@@ -30,5 +30,4 @@ enum class Abi(val abiName: String, val toolchainPrefix: String, val objdumpPref
     companion object {
         fun findByName(abiName: String) = values().firstOrNull { it.abiName == abiName }
     }
-
 }

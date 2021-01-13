@@ -4,9 +4,9 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.Artifacts
 import com.android.build.api.extension.AndroidComponentsExtension
 import com.android.build.gradle.AppExtension
-import com.bugsnag.android.gradle.GroovyCompat
 import com.bugsnag.android.gradle.BugsnagManifestUuidTaskV2
 import com.bugsnag.android.gradle.BugsnagPluginExtension
+import com.bugsnag.android.gradle.GroovyCompat
 import com.bugsnag.android.gradle.VariantFilterImpl
 import org.gradle.api.Action
 import org.gradle.api.Project

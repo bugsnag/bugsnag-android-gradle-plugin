@@ -3,12 +3,12 @@
 # Set which test fixture should be used
 ENV["APP_FIXTURE_DIR"] ||= "features/fixtures/app"
 ENV["NDK_FIXTURE_DIR"] ||= "features/fixtures/ndkapp"
-ENV["RN_FIXTURE_DIR"] ||= "features/fixtures/rnapp/android"
+ENV["RN_FIXTURE_DIR"] ||= "features/fixtures/rn063/android"
 ENV["UNITY_2018_FIXTURE_DIR"] ||= "features/fixtures/unity_2018/example"
 ENV["UNITY_2019_FIXTURE_DIR"] ||= "features/fixtures/unity_2019"
 
 # set defaults for versions
-ENV["AGP_VERSION"] ||= "4.1.0-beta04" # default to latest
+ENV["AGP_VERSION"] ||= "4.1.0" # default to latest
 ENV["GRADLE_WRAPPER_VERSION"] ||= "6.5.1"
 
 `./features/scripts/clear_local_maven_repo.sh`
@@ -47,30 +47,9 @@ def is_above_or_equal_to_target(target)
   return version.to_i >= target
 end
 
-def get_build_requests
+def get_requests_with_field(name)
   Server.stored_requests.reject do |request|
-    value = read_key_path(request[:body], 'appVersionCode')
-    value.nil?
-  end
-end
-
-def get_android_mapping_requests
-  Server.stored_requests.reject do |request|
-    value = read_key_path(request[:body], 'proguard')
-    value.nil?
-  end
-end
-
-def get_android_ndk_mapping_requests
-  Server.stored_requests.reject do |request|
-    value = read_key_path(request[:body], 'soSymbolFile')
-    value.nil?
-  end
-end
-
-def get_android_unity_ndk_mapping_requests
-  Server.stored_requests.reject do |request|
-    value = read_key_path(request[:body], 'soSymbolTableFile')
+    value = read_key_path(request[:body], name)
     value.nil?
   end
 end

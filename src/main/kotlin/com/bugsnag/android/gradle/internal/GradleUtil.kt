@@ -59,7 +59,7 @@ internal fun File.md5HashCode(): Int {
 }
 
 @Suppress("SpreadOperator")
-internal fun <T: Task> TaskProvider<out T>.dependsOn(vararg tasks: TaskProvider<out Task>): TaskProvider<out T> {
+internal fun <T : Task> TaskProvider<out T>.dependsOn(vararg tasks: TaskProvider<out Task>): TaskProvider<out T> {
     if (tasks.isEmpty().not()) {
         configure { it.dependsOn(*tasks) }
     }
