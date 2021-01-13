@@ -110,5 +110,4 @@ open class BugsnagUploadProguardTask @Inject constructor(
             return project.tasks.register(name, configurationAction)
         }
     }
-
 }

@@ -1,7 +1,5 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.dsl.CommonExtension
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
@@ -13,15 +11,18 @@ import com.bugsnag.android.gradle.internal.TASK_JNI_LIBS
 import com.bugsnag.android.gradle.internal.UNITY_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.bugsnag.android.gradle.internal.computeManifestInfoOutputV1
-import com.bugsnag.android.gradle.internal.computeManifestInfoOutputV2
 import com.bugsnag.android.gradle.internal.hasDexguardPlugin
 import com.bugsnag.android.gradle.internal.intermediateForGenerateJvmMapping
 import com.bugsnag.android.gradle.internal.intermediateForMappingFileRequest
 import com.bugsnag.android.gradle.internal.intermediateForNdkSoRequest
 import com.bugsnag.android.gradle.internal.intermediateForReleaseRequest
 import com.bugsnag.android.gradle.internal.intermediateForUnitySoRequest
+import com.bugsnag.android.gradle.internal.intermediateForUploadSourcemaps
+import com.bugsnag.android.gradle.internal.isVariantEnabled
 import com.bugsnag.android.gradle.internal.newUploadRequestClientProvider
+import com.bugsnag.android.gradle.internal.newUuidProvider
 import com.bugsnag.android.gradle.internal.register
+import com.bugsnag.android.gradle.internal.registerV2ManifestUuidTask
 import com.bugsnag.android.gradle.internal.taskNameForGenerateJvmMapping
 import com.bugsnag.android.gradle.internal.taskNameForGenerateNdkMapping
 import com.bugsnag.android.gradle.internal.taskNameForGenerateUnityMapping
@@ -29,6 +30,7 @@ import com.bugsnag.android.gradle.internal.taskNameForManifestUuid
 import com.bugsnag.android.gradle.internal.taskNameForUploadJvmMapping
 import com.bugsnag.android.gradle.internal.taskNameForUploadNdkMapping
 import com.bugsnag.android.gradle.internal.taskNameForUploadRelease
+import com.bugsnag.android.gradle.internal.taskNameForUploadSourcemaps
 import com.bugsnag.android.gradle.internal.taskNameForUploadUnityMapping
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -38,7 +40,6 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.util.UUID
 
 /**
  * Gradle plugin to automatically upload ProGuard mapping files to Bugsnag.
@@ -73,6 +74,7 @@ class BugsnagPlugin : Plugin<Project> {
             if (!bugsnag.enabled.get()) {
                 return@withPlugin
             }
+            addReactNativeMavenRepo(project, bugsnag)
 
             val httpClientHelperProvider = BugsnagHttpClientHelper.create(
                 project,
@@ -86,34 +88,7 @@ class BugsnagPlugin : Plugin<Project> {
 
             val android = project.extensions.getByType(AppExtension::class.java)
             if (BugsnagManifestUuidTaskV2.isApplicable()) {
-                check(android is CommonExtension<*, *, *, *, *, *, *, *>)
-                android.onVariants {
-                    if (!bugsnag.enabled.get()) {
-                        return@onVariants
-                    }
-                    val variant = VariantFilterImpl(name)
-                    if (!isVariantEnabled(bugsnag, variant)) {
-                        return@onVariants
-                    }
-                    val variantName = name
-                    val taskName = taskNameForManifestUuid(variantName)
-                    val manifestInfoOutputFile = project.computeManifestInfoOutputV2(variantName)
-                    val buildUuidProvider = project.newUuidProvider()
-                    val manifestUpdater = project.tasks.register(taskName,
-                        BugsnagManifestUuidTaskV2::class.java) {
-                        it.buildUuid.set(buildUuidProvider)
-                        it.manifestInfoProvider.set(manifestInfoOutputFile)
-                    }
-                    onProperties {
-                        artifacts
-                            .use(manifestUpdater)
-                            .wiredWithFiles(
-                                taskInput = BugsnagManifestUuidTaskV2::inputManifest,
-                                taskOutput = BugsnagManifestUuidTaskV2::outputManifest
-                            )
-                            .toTransform(ArtifactType.MERGED_MANIFEST)
-                    }
-                }
+                registerV2ManifestUuidTask(android, bugsnag, project)
             }
 
             project.afterEvaluate {
@@ -140,12 +115,6 @@ class BugsnagPlugin : Plugin<Project> {
                 registerNdkLibInstallTask(project)
             }
         }
-    }
-
-    private fun isVariantEnabled(bugsnag: BugsnagPluginExtension,
-                                 variant: VariantFilterImpl): Boolean {
-        bugsnag.filter.execute(variant)
-        return variant.variantEnabled ?: true
     }
 
     private fun registerNdkLibInstallTask(project: Project) {
@@ -187,9 +156,10 @@ class BugsnagPlugin : Plugin<Project> {
             val jvmMinificationEnabled = project.isJvmMinificationEnabled(variant)
             val ndkEnabled = isNdkUploadEnabled(bugsnag, android)
             val unityEnabled = isUnityLibraryUploadEnabled(bugsnag, android)
+            val reactNativeEnabled = isReactNativeUploadEnabled(bugsnag)
 
             // skip tasks for variant if JVM/NDK/Unity minification not enabled
-            if (!jvmMinificationEnabled && !ndkEnabled && !unityEnabled) {
+            if (!jvmMinificationEnabled && !ndkEnabled && !unityEnabled && !reactNativeEnabled) {
                 return@configureEach
             }
 
@@ -270,6 +240,17 @@ class BugsnagPlugin : Plugin<Project> {
                 else -> null
             }
 
+            val uploadSourceMapProvider = when {
+                reactNativeEnabled -> registerUploadSourceMapTask(
+                    project,
+                    variant,
+                    output,
+                    bugsnag,
+                    manifestInfoFileProvider
+                )
+                else -> null
+            }
+
             val releaseUploadTask = registerReleasesUploadTask(
                 project,
                 variant,
@@ -297,6 +278,29 @@ class BugsnagPlugin : Plugin<Project> {
                 val jvmAutoUpload = bugsnag.uploadJvmMappings.get()
                 variant.register(project, generateProguardTaskProvider, jvmAutoUpload)
                 variant.register(project, uploadProguardTaskProvider, jvmAutoUpload)
+            }
+            if (uploadSourceMapProvider != null) {
+                variant.register(project, uploadSourceMapProvider, reactNativeEnabled)
+            }
+        }
+    }
+
+    /**
+     * If the project uses react-native, this adds the node_module directory
+     * containing the Android AARs as a maven repository. This allows the
+     * project to compile without the user explicitly adding the maven repository.
+     */
+    private fun addReactNativeMavenRepo(project: Project, bugsnag: BugsnagPluginExtension) {
+        val props = project.extensions.extraProperties
+        val hasReact = props.has("react")
+        if (hasReact) {
+            project.rootProject.allprojects { subProj ->
+                val defaultNodeModulesDir = File("${subProj.rootDir}/../node_modules")
+                val nodeModulesDir = bugsnag.nodeModulesDir.getOrElse(defaultNodeModulesDir)
+
+                subProj.repositories.maven { repo ->
+                    repo.setUrl("$nodeModulesDir/@bugsnag/react-native/android")
+                }
             }
         }
     }
@@ -405,6 +409,53 @@ class BugsnagPlugin : Plugin<Project> {
             val task = generateProguardTaskProvider?.get()
             mustRunAfter(task)
             dependsOn(task)
+        }
+    }
+
+    /**
+     * Creates a bugsnag task to upload JS source maps
+     */
+    private fun registerUploadSourceMapTask(
+        project: Project,
+        variant: ApkVariant,
+        output: ApkVariantOutput,
+        bugsnag: BugsnagPluginExtension,
+        manifestInfoFileProvider: Provider<RegularFile>
+    ): TaskProvider<out BugsnagUploadJsSourceMapTask>? {
+        val taskName = taskNameForUploadSourcemaps(output)
+        val path = intermediateForUploadSourcemaps(project, output)
+
+        // lookup the react-native task by its name
+        // https://github.com/facebook/react-native/blob/master/react.gradle#L132
+        val rnTaskName = "bundle${variant.name.capitalize()}JsAndAssets"
+        val rnTask: Task = project.tasks.findByName(rnTaskName) ?: return null
+        val rnSourceMap = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--sourcemap-output")
+        val rnBundle = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--bundle-output")
+        val dev = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--dev")
+
+        if (rnSourceMap == null || rnBundle == null || dev == null) {
+            project.logger.error("Bugsnag: unable to upload JS sourcemaps. Please enable sourcemap + bundle output.")
+            return null
+        }
+
+        return BugsnagUploadJsSourceMapTask.register(project, taskName) {
+            requestOutputFile.set(path)
+            manifestInfoFile.set(manifestInfoFileProvider)
+            bundleJsFileProvider.set(File(rnBundle))
+            sourceMapFileProvider.set(File(rnSourceMap))
+            overwrite.set(bugsnag.overwrite)
+            endpoint.set(bugsnag.endpoint.get())
+            devEnabled.set("true" == dev)
+            failOnUploadError.set(bugsnag.failOnUploadError)
+
+            val jsProjectRoot = project.rootProject.rootDir.parentFile
+            projectRootFileProvider.from(jsProjectRoot)
+
+            val defaultLocation = File(project.projectDir.parentFile.parentFile, "node_modules")
+            val nodeModulesDir = bugsnag.nodeModulesDir.getOrElse(defaultLocation)
+            val cliPath = File(nodeModulesDir, "@bugsnag/source-maps/bin/cli")
+            bugsnagSourceMaps.set(cliPath)
+            mustRunAfter(rnTask)
         }
     }
 
@@ -576,8 +627,10 @@ class BugsnagPlugin : Plugin<Project> {
      * libunity.so file in Unity projects.
      */
     @Suppress("SENSELESS_COMPARISON")
-    internal fun isUnityLibraryUploadEnabled(bugsnag: BugsnagPluginExtension,
-                                             android: AppExtension): Boolean {
+    internal fun isUnityLibraryUploadEnabled(
+        bugsnag: BugsnagPluginExtension,
+        android: AppExtension
+    ): Boolean {
         val enabled = bugsnag.uploadNdkUnityLibraryMappings.orNull
         return when {
             enabled != null -> enabled
@@ -607,6 +660,12 @@ class BugsnagPlugin : Plugin<Project> {
         return bugsnag.uploadNdkMappings.getOrElse(default)
     }
 
+    internal fun isReactNativeUploadEnabled(
+        bugsnag: BugsnagPluginExtension
+    ): Boolean {
+        return bugsnag.uploadReactNativeMappings.getOrElse(false)
+    }
+
     /**
      * Gets the directories which should be searched for NDK shared objects.
      * By default this is set to an empty list, and paths set by the user
@@ -633,11 +692,5 @@ class BugsnagPlugin : Plugin<Project> {
             searchPaths.add(unity2019ExportedDir)
         }
         return searchPaths
-    }
-
-    private fun Project.newUuidProvider(): Provider<String> {
-        return provider {
-            UUID.randomUUID().toString()
-        }
     }
 }

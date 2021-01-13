@@ -32,9 +32,12 @@ class AndroidManifestInfoTest {
     fun testManifestReadWrite() {
         info.write(jsonFile)
         val json = jsonFile.readText()
-        assertEquals(json, """
+        assertEquals(
+            json,
+            """
             {"apiKey":"api-key","versionCode":"12","buildUUID":"build-123","versionName":"5.2","applicationId":"com.example"}
-        """.trimIndent())
+            """.trimIndent()
+        )
 
         val copy = AndroidManifestInfo.read(jsonFile)
         assertEquals(info, copy)

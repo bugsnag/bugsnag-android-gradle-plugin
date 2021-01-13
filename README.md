@@ -38,5 +38,5 @@ and release `bugsnag-android-gradle-plugin`, see our
 ## License
 
 The Bugsnag Android Gradle Plugin is free software released under the MIT License.
-See [LICENSE.txt](https://github.com/bugsnag/bugsnag-android/blob/master/LICENSE.txt)
+See [LICENSE](https://github.com/bugsnag/bugsnag-android-gradle-plugin/blob/master/LICENSE)
 for details.

@@ -19,7 +19,6 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
@@ -62,7 +61,7 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
     val unitySharedObjectDir: DirectoryProperty = objects.directoryProperty()
         .convention(projectLayout.buildDirectory.dir(UNITY_SO_COPY_DIR))
 
-    @get:InputDirectory
+    @get:Internal
     val rootProjectDir: DirectoryProperty = objects.directoryProperty()
 
     @TaskAction
@@ -78,12 +77,14 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
         val sharedObjectFiles = copySoFilesFromBuildDir(copyDir).toMutableList()
 
         if (symbolArchives.isEmpty() && sharedObjectFiles.isEmpty()) {
-            logger.warn("Bugsnag did not find any Unity SO files in Temp/StagingArea/symbols," +
-                "or a symbols.zip. At least one of these options is required to fully symbolicate " +
-                "Unity stackframes. Please ensure that symbols.zip generation is enabled in build " +
-                "settings and that it hasn't been removed from the filesystem. See " +
-                "https://docs.unity3d.com/ScriptReference/EditorUserBuildSettings" +
-                "-androidCreateSymbolsZip.html")
+            logger.warn(
+                "Bugsnag did not find any Unity SO files in Temp/StagingArea/symbols," +
+                    "or a symbols.zip. At least one of these options is required to fully symbolicate " +
+                    "Unity stackframes. Please ensure that symbols.zip generation is enabled in build " +
+                    "settings and that it hasn't been removed from the filesystem. See " +
+                    "https://docs.unity3d.com/ScriptReference/EditorUserBuildSettings" +
+                    "-androidCreateSymbolsZip.html"
+            )
             return
         }
 

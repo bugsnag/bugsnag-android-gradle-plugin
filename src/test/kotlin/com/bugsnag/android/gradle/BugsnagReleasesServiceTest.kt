@@ -27,10 +27,12 @@ class BugsnagReleasesServiceTest {
 
     @Test
     fun simplePayload() {
-        val url  = server.url("/")
-        server.enqueue(MockResponse()
-            .setResponseCode(200)
-            .setBody("Response!"))
+        val url = server.url("/")
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setBody("Response!")
+        )
         val call = service.upload(
             endpoint = url.toString(),
             apiKey = "testKey",
@@ -56,8 +58,10 @@ class BugsnagReleasesServiceTest {
         val recordedBody = server.takeRequest().body.readUtf8()
         assertThat(recordedBody)
             //language=JSON
-            .isEqualTo("""
+            .isEqualTo(
+                """
                 {"buildTool":"gradle","apiKey":"testKey","appVersion":"1.0","appVersionCode":"1","metadata":{"metaKey":"value"},"sourceControl":{"sourceControlKey":"value"},"builderName":"builder"}
-            """.trimIndent())
+                """.trimIndent()
+            )
     }
 }

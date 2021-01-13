@@ -13,8 +13,14 @@ class BugsnagReleasesTest {
     @Test
     fun ensureProviderValidation() {
         assertTrue(isValidVcsProvider(null))
-        val valid: Collection<String> = listOf("github", "github-enterprise",
-            "bitbucket", "bitbucket-server", "gitlab", "gitlab-onpremise")
+        val valid: Collection<String> = listOf(
+            "github",
+            "github-enterprise",
+            "bitbucket",
+            "bitbucket-server",
+            "gitlab",
+            "gitlab-onpremise"
+        )
         valid.forEach { provider ->
             assertTrue(isValidVcsProvider(provider))
         }

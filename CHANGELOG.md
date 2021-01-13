@@ -1,3 +1,14 @@
+## 5.7.0 (2021-01-13)
+
+* Support AGP 4.2
+  [#350](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/350)
+
+* Prevent Windows crash when generating Unity mapping files
+  [#344](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/344)
+
+* Support uploading JS sourcemaps for React Native projects
+  [#346](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/346)
+
 ## 5.6.0 (2020-12-03)
 
 Bump version to prevent v5.5.0-alpha01 being picked up by users with wildcard dependency versions.
@@ -42,7 +53,7 @@ Depending on the contents of the mapping file, this can reduce the upload size b
 
 * Separate generation/upload of shared objects into two tasks
   [#303](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/303)
-  
+
 * Add uploadNdkUnityLibraryMappings flag to bugsnag extension
   [#306](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/306)
 
@@ -220,7 +231,7 @@ Skip uploading mapping files for shared objects which have no debug info
 
 ## 4.4.0 (2019-06-10)
 
-This release is companion update for bugsnag-android v4.15.0, which supports detecting and reporting C/C++ crashes without a separate library. 
+This release is companion update for bugsnag-android v4.15.0, which supports detecting and reporting C/C++ crashes without a separate library.
 
 Since `bugsnag-android` now contains native code, update shared object extraction to include libraries from there as well as `bugsnag-android-ndk`
 [#164](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/164)
