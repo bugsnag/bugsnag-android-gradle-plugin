@@ -1,4 +1,4 @@
-## TBD
+## 5.7.0 (2021-01-13)
 
 * Support AGP 4.2
   [#350](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/350)
