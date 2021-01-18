@@ -1,4 +1,4 @@
-## TBD
+## 5.7.1 (2021-01-18)
 
 * Add warning in BAGP for React Native when running via react-native CLI
   [#357](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/357)
