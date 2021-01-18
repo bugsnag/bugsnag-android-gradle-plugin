@@ -35,6 +35,7 @@ import com.bugsnag.android.gradle.internal.taskNameForUploadUnityMapping
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.UnknownTaskException
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
@@ -281,6 +282,21 @@ class BugsnagPlugin : Plugin<Project> {
             }
             if (uploadSourceMapProvider != null) {
                 variant.register(project, uploadSourceMapProvider, reactNativeEnabled)
+            }
+
+            try {
+                project.tasks.named("installRelease").configure {
+                    if (reactNativeEnabled) {
+                        project.logger.warn(
+                            "Bugsnag: JS sourcemaps and JVM/NDK mapping files are not uploaded when " +
+                                "using the react-native CLI (e.g. react-native run-android --variant=release). " +
+                                "You should generate a release APK using ./gradlew assembleRelease or " +
+                                "./gradlew bundleRelease instead. See the React Native docs for further info: " +
+                                "https://reactnative.dev/docs/signed-apk-android#generating-the-release-apk"
+                        )
+                    }
+                }
+            } catch (ignored: UnknownTaskException) {
             }
         }
     }
