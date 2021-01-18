@@ -1,3 +1,8 @@
+## TBD
+
+* Add support for DexGuard 9
+  [#359](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/359)
+
 ## 5.7.1 (2021-01-18)
 
 * Add warning in BAGP for React Native when running via react-native CLI

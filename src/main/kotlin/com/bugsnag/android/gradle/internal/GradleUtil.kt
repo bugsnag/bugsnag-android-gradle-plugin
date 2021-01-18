@@ -113,13 +113,6 @@ internal fun AppExtension.hasMultipleOutputs(): Boolean {
 }
 
 /**
- * Returns true if the DexGuard plugin has been applied to the project
- */
-internal fun Project.hasDexguardPlugin(): Boolean {
-    return pluginManager.hasPlugin("dexguard")
-}
-
-/**
  * Returns true if an APK variant output includes SO files for the given ABI.
  */
 internal fun ApkVariantOutput.includesAbi(abi: String): Boolean {
