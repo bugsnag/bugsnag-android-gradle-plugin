@@ -11,6 +11,7 @@ import com.bugsnag.android.gradle.internal.TASK_JNI_LIBS
 import com.bugsnag.android.gradle.internal.UNITY_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.bugsnag.android.gradle.internal.computeManifestInfoOutputV1
+import com.bugsnag.android.gradle.internal.getDexguardAabTaskName
 import com.bugsnag.android.gradle.internal.hasDexguardPlugin
 import com.bugsnag.android.gradle.internal.intermediateForGenerateJvmMapping
 import com.bugsnag.android.gradle.internal.intermediateForMappingFileRequest
@@ -166,7 +167,7 @@ class BugsnagPlugin : Plugin<Project> {
 
             // register bugsnag tasks
             val manifestInfoFileProvider = registerManifestUuidTask(project, variant, output)
-            val mappingFilesProvider = createMappingFileProvider(project, variant, output, android)
+            val mappingFilesProvider = createMappingFileProvider(project, variant, output)
 
             val generateProguardTaskProvider = when {
                 jvmMinificationEnabled -> registerGenerateProguardTask(
@@ -279,6 +280,18 @@ class BugsnagPlugin : Plugin<Project> {
                 val jvmAutoUpload = bugsnag.uploadJvmMappings.get()
                 variant.register(project, generateProguardTaskProvider, jvmAutoUpload)
                 variant.register(project, uploadProguardTaskProvider, jvmAutoUpload)
+
+                // DexGuard 9 runs as part of the bundle task supplied by AGP,
+                // so need to alter task dependency so that BAGP always runs
+                // after DexGuard
+                if (project.hasDexguardPlugin()) {
+                    generateProguardTaskProvider.configure { bagpTask ->
+                        val taskName = getDexguardAabTaskName(variant)
+                        project.tasks.findByName(taskName)?.let { dexguardTask ->
+                            bagpTask.mustRunAfter(dexguardTask)
+                        }
+                    }
+                }
             }
             if (uploadSourceMapProvider != null) {
                 variant.register(project, uploadSourceMapProvider, reactNativeEnabled)

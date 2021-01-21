@@ -20,6 +20,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
 import javax.inject.Inject
 
 /**
@@ -49,21 +50,26 @@ sealed class BugsnagGenerateProguardTask @Inject constructor(
 
     @TaskAction
     fun upload() {
-        val mappingFile = mappingFileProperty.singleFile
+        val mappingFile = resolveMappingFile()
         if (mappingFile.length() == 0L) { // proguard's -dontobfuscate generates an empty mapping file
             logger.warn("Bugsnag: Ignoring empty proguard file")
             return
         }
+        val archive = archiveOutputFile.asFile.get()
+        mappingFile.inputStream().use { stream ->
+            outputZipFile(stream, archive)
+        }
+    }
+
+    private fun resolveMappingFile(): File {
+        val mappingFile = mappingFileProperty.filter(File::exists).singleFile
         if (!mappingFile.exists()) {
             logger.warn("Bugsnag: Mapping file not found: $mappingFile")
             if (failOnUploadError.get()) {
                 throw IllegalStateException("Mapping file not found: $mappingFile")
             }
         }
-        val archive = archiveOutputFile.asFile.get()
-        mappingFile.inputStream().use { stream ->
-            outputZipFile(stream, archive)
-        }
+        return mappingFile
     }
 
     companion object {
