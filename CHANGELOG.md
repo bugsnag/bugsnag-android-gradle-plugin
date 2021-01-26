@@ -1,4 +1,4 @@
-## TBD
+## 5.7.2 (2021-01-27)
 
 * Add support for DexGuard 9
   [#359](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/359)
