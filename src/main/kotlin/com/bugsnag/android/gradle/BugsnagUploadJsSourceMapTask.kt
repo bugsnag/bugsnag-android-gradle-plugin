@@ -1,5 +1,6 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.gradle.api.ApkVariant
 import com.bugsnag.android.gradle.internal.GradleVersions
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
@@ -173,12 +174,28 @@ sealed class BugsnagUploadJsSourceMapTask @Inject constructor(
             return when {
                 project.gradle.versionNumber() >= GradleVersions.VERSION_5_3 -> {
                     project.tasks.register<BugsnagUploadJsSourceMapTaskGradle53Plus>(name, configurationAction)
-                } else -> {
+                }
+                else -> {
                     project.tasks.register<BugsnagUploadJsSourceMapTaskLegacy>(name, configurationAction)
                 }
             }
         }
     }
+}
+
+/**
+ * Finds the sourcemap output file for the variant.
+ *
+ * This should always be jsOutputSourceMapFile - for Hermes this is overridden
+ * in the RN gradle script, so we calculate the location ourselves.
+ *
+ * https://github.com/facebook/react-native/blob/master/react.gradle#L116
+ */
+internal fun findReactNativeSourcemapFile(project: Project, variant: ApkVariant): String {
+    val react = project.property("react") as Map<*, *>?
+    val bundleAssetName = react?.get("bundleAssetName") as String? ?: "index.android.bundle"
+    val jsSourceMapsDir = "${project.buildDir}/generated/sourcemaps/react/${variant.dirName}"
+    return "$jsSourceMapsDir/$bundleAssetName.map"
 }
 
 /**
