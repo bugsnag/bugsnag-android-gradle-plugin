@@ -1,4 +1,4 @@
-## TBD
+## 5.7.3 (2021-02-02)
 
 * Support uploading JS sourcemaps generated with Hermes
   [#362](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/362)
