@@ -458,11 +458,11 @@ class BugsnagPlugin : Plugin<Project> {
         // https://github.com/facebook/react-native/blob/master/react.gradle#L132
         val rnTaskName = "bundle${variant.name.capitalize()}JsAndAssets"
         val rnTask: Task = project.tasks.findByName(rnTaskName) ?: return null
-        val rnSourceMap = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--sourcemap-output")
+        val rnSourceMap = findReactNativeSourcemapFile(project, variant)
         val rnBundle = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--bundle-output")
         val dev = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--dev")
 
-        if (rnSourceMap == null || rnBundle == null || dev == null) {
+        if (rnBundle == null || dev == null) {
             project.logger.error("Bugsnag: unable to upload JS sourcemaps. Please enable sourcemap + bundle output.")
             return null
         }
