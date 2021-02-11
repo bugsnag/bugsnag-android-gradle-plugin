@@ -52,6 +52,22 @@ Scenario: Source maps are uploaded when assembling an app which uses productFlav
         | 5              | 2.45.beta  | false     | false |
         | 5              | 2.45.beta  | false     | false |
 
+Scenario: Source maps are uploaded when assembling an app within a monorepo
+    When I run the script "features/scripts/build_react_native_monorepo_app.sh" synchronously
+    And I wait to receive 3 requests
+
+    Then 1 requests are valid for the build API and match the following:
+      | appVersionCode | appVersion | buildTool      |
+      | 5              | 2.45.beta  | gradle-android |
+
+    And 1 requests are valid for the android mapping API and match the following:
+      | versionCode | versionName | appId                     |
+      | 5           | 2.45.beta   | com.bugsnag.android.rnapp |
+
+    And 1 requests are valid for the JS source map API and match the following:
+      | appVersionCode | appVersion | overwrite | dev   |
+      | 5              | 2.45.beta  | true      | false |
+
 Scenario: Setting uploadReactNativeMappings to false will prevent any source map upload
     When I set environment variable "UPLOAD_RN_MAPPINGS" to "false"
     When I build the React Native app
