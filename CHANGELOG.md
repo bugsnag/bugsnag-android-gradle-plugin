@@ -1,3 +1,8 @@
+## TBD
+
+* Fix `nodeModulesDir` option not being applied
+  [#366](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/366)
+
 ## 5.7.3 (2021-02-02)
 
 * Support uploading JS sourcemaps generated with Hermes
