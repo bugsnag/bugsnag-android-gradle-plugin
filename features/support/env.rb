@@ -4,6 +4,7 @@
 ENV["APP_FIXTURE_DIR"] ||= "features/fixtures/app"
 ENV["NDK_FIXTURE_DIR"] ||= "features/fixtures/ndkapp"
 ENV["RN_FIXTURE_DIR"] ||= "features/fixtures/rn063/android"
+ENV["RN_MONOREPO_FIXTURE_DIR"] ||= "features/fixtures/rn-monorepo/abc/android"
 ENV["UNITY_2018_FIXTURE_DIR"] ||= "features/fixtures/unity_2018/example"
 ENV["UNITY_2019_FIXTURE_DIR"] ||= "features/fixtures/unity_2019"
 

@@ -1,26 +1,39 @@
 #!/usr/bin/env bash
-set -e
+set -ex
 
 export UPDATING_GRADLEW=true
-cd "$APP_FIXTURE_DIR"
+
+pushd "$APP_FIXTURE_DIR"
 echo "Updating gradle wrapper for: $APP_FIXTURE_DIR"
 ./gradlew wrapper --gradle-version "$GRADLE_WRAPPER_VERSION"
+popd
 
-cd ../../../ && cd "$NDK_FIXTURE_DIR"
+pushd "$NDK_FIXTURE_DIR"
 echo "Updating gradle wrapper for: $NDK_FIXTURE_DIR"
 ./gradlew wrapper --gradle-version "$GRADLE_WRAPPER_VERSION"
+popd
 
-cd ../../../ && cd "$RN_FIXTURE_DIR"
+pushd "$RN_FIXTURE_DIR"
 echo "Updating gradle wrapper for: $RN_FIXTURE_DIR"
-npm i
+npm i --silent
 ./gradlew wrapper --gradle-version "$GRADLE_WRAPPER_VERSION"
+popd
 
-cd ../../../../ && cd "$UNITY_2018_FIXTURE_DIR"
+pushd "$RN_MONOREPO_FIXTURE_DIR"
+echo "Updating gradle wrapper for: $RN_MONOREPO_FIXTURE_DIR"
+# The monorepo setup uses Yarn workspaces so we use Yarn over NPM here
+yarn install --silent
+./gradlew wrapper --gradle-version "$GRADLE_WRAPPER_VERSION"
+popd
+
+pushd "$UNITY_2018_FIXTURE_DIR"
 echo "Updating gradle wrapper for: $UNITY_2018_FIXTURE_DIR"
 ./gradlew wrapper --gradle-version "$GRADLE_WRAPPER_VERSION"
+popd
 
-cd ../../../../ && cd "$UNITY_2019_FIXTURE_DIR"
+pushd "$UNITY_2019_FIXTURE_DIR"
 echo "Updating gradle wrapper for: $UNITY_2019_FIXTURE_DIR"
 ./gradlew wrapper --gradle-version "$GRADLE_WRAPPER_VERSION"
+popd
 
 unset UPDATING_GRADLEW
