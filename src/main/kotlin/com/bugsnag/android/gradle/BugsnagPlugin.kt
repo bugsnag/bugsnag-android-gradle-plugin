@@ -76,7 +76,6 @@ class BugsnagPlugin : Plugin<Project> {
             if (!bugsnag.enabled.get()) {
                 return@withPlugin
             }
-            addReactNativeMavenRepo(project, bugsnag)
 
             val httpClientHelperProvider = BugsnagHttpClientHelper.create(
                 project,
@@ -94,9 +93,12 @@ class BugsnagPlugin : Plugin<Project> {
             }
 
             project.afterEvaluate {
+                addReactNativeMavenRepo(project, bugsnag)
+
                 if (!bugsnag.enabled.get()) {
                     return@afterEvaluate
                 }
+
                 android.applicationVariants.configureEach { variant ->
                     val filterImpl = VariantFilterImpl(variant.name)
                     if (!isVariantEnabled(bugsnag, filterImpl)) {
