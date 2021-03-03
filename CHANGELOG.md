@@ -1,4 +1,4 @@
-## TBD
+## 5.7.4 (2021-03-04)
 
 * Fix `nodeModulesDir` option not being applied
   [#366](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/366)
