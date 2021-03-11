@@ -433,6 +433,7 @@ class BugsnagPlugin : Plugin<Project> {
             requestOutputFile.set(requestOutputFileProvider)
             httpClientHelper.set(httpClientHelperProvider)
             manifestInfoFile.set(manifestInfoFileProvider)
+            versionCode.set(output.versionCode)
             uploadRequestClient.set(proguardUploadClientProvider)
             mappingFileProperty.set(gzipOutputProvider)
             configureWith(bugsnag)

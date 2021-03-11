@@ -15,6 +15,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
@@ -41,6 +42,10 @@ sealed class BugsnagGenerateProguardTask @Inject constructor(
     @get:PathSensitive(NONE)
     @get:InputFile
     override val manifestInfoFile: RegularFileProperty = objects.fileProperty()
+
+    @get:Optional
+    @get:Input
+    override val versionCode: Property<Int> = objects.property()
 
     @get:OutputFile
     val archiveOutputFile: RegularFileProperty = objects.fileProperty()

@@ -39,7 +39,10 @@ class AndroidManifestInfoTest {
             """.trimIndent()
         )
 
-        val copy = AndroidManifestInfo.read(jsonFile)
+        val copy = AndroidManifestInfo.read(jsonFile, null)
         assertEquals(info, copy)
+
+        val customCode = AndroidManifestInfo.read(jsonFile, 2)
+        assertEquals(info.copy(versionCode = "2"), customCode)
     }
 }
