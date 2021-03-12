@@ -1,10 +1,9 @@
 package com.bugsnag.android.gradle
 
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
-import org.gradle.api.Task
 import org.gradle.api.provider.Property
 
-interface BugsnagFileUploadTask : Task {
+interface BugsnagFileUploadTask {
     val failOnUploadError: Property<Boolean>
     val overwrite: Property<Boolean>
     val endpoint: Property<String>
