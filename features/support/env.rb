@@ -32,6 +32,14 @@ Before('@skip_agp4_1_or_higher') do |scenario|
   skip_this_scenario if is_above_or_equal_to_target(410)
 end
 
+Before('@skip_agp4_2_or_higher') do |scenario|
+  skip_this_scenario if is_above_or_equal_to_target(420)
+end
+
+Before('@agp_4_1_only') do |scenario|
+  skip_this_scenario if !equals_target(410)
+end
+
 Before('@skip_agp3_4_0') do |scenario|
   skip_this_scenario if equals_target(340)
 end

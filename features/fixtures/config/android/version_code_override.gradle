@@ -1,0 +1,21 @@
+apply plugin: 'com.android.application'
+apply from: "../../config/android/common.gradle"
+
+android {
+    flavorDimensions "regular"
+
+    productFlavors {
+        foo {
+            applicationIdSuffix ".foo"
+        }
+        bar {
+            applicationIdSuffix ".bar"
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            output.versionCodeOverride = 9000
+        }
+    }
+}
