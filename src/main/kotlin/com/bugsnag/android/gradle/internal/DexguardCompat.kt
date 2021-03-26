@@ -52,8 +52,9 @@ private fun findDexguardMappingFile(
     val buildDir = project.buildDir.toString()
     var outputDir = variantOutput.dirName
     // Don't account for splits in bundles
-    if (path[path.size - 1] == "bundle")
+    if (path[path.size - 1] == "bundle") {
         outputDir = ""
+    }
     return Paths.get(buildDir, *path, variant.dirName, outputDir, "mapping.txt").toFile()
 }
 
