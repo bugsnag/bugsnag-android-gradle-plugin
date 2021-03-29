@@ -18,8 +18,8 @@ internal fun findMappingFileDexguard9(
     variantOutput: ApkVariantOutput
 ): List<File> {
     return listOf(
-        findDexguardMappingFile(project, variant, variantOutput, "outputs", "dexguard", "mapping", "apk"),
-        findDexguardMappingFile(project, variant, variantOutput, "outputs", "dexguard", "mapping", "bundle")
+        findDexguardMappingFile(project, variant, variantOutput, arrayOf("outputs", "dexguard", "mapping", "apk")),
+        findDexguardMappingFile(project, variant, variantOutput, arrayOf("outputs", "dexguard", "mapping", "bundle"))
     )
 }
 
@@ -31,7 +31,7 @@ internal fun findMappingFileDexguardLegacy(
     variant: ApkVariant,
     variantOutput: ApkVariantOutput
 ): File {
-    return findDexguardMappingFile(project, variant, variantOutput, "outputs", "mapping")
+    return findDexguardMappingFile(project, variant, variantOutput, arrayOf("outputs", "mapping"))
 }
 
 /**
@@ -47,15 +47,13 @@ private fun findDexguardMappingFile(
     project: Project,
     variant: ApkVariant,
     variantOutput: ApkVariantOutput,
-    vararg path: String
+    path: Array<String>
 ): File {
     val buildDir = project.buildDir.toString()
     var outputDir = variantOutput.dirName
-    if (variantOutput.dirName.endsWith("dpi" + File.separator)) {
-        outputDir = File(variantOutput.dirName).parent
-        if (outputDir == null) { // if only density splits enabled
-            outputDir = ""
-        }
+    // Don't account for splits in bundles
+    if (path[path.size - 1] == "bundle") {
+        outputDir = ""
     }
     return Paths.get(buildDir, *path, variant.dirName, outputDir, "mapping.txt").toFile()
 }

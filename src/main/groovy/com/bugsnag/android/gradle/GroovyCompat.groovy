@@ -6,6 +6,8 @@ import org.gradle.api.Action
 import org.gradle.api.Project
 
 import java.nio.file.Paths
+import java.util.jar.Attributes
+import java.util.jar.Manifest
 
 /**
  * Contains functions which exploit Groovy's metaprogramming to provide backwards
@@ -44,9 +46,15 @@ class GroovyCompat {
                 if (dexguard.path == null) {
                     return null
                 }
+
                 File dexguardDir = Paths.get(dexguard.path).toFile()
-                String normalizedDir = dexguardDir.canonicalFile.name
-                return normalizedDir.replace("DexGuard-", "")
+
+                // Get the version from the dexguard.jar manifest
+                URL url = new URL("jar:file:$dexguardDir/lib/dexguard.jar!/")
+                URLConnection jarURLConnection = url.openConnection() as JarURLConnection
+                Manifest manifest = jarURLConnection.manifest
+                Attributes attrs = manifest.mainAttributes
+                return attrs.getValue("Implementation-Version")
             }
         } catch (MissingPropertyException ignored) {
             // running earlier version of DexGuard, ignore missing property

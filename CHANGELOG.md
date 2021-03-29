@@ -1,3 +1,8 @@
+## TBD
+
+* Improve DexGuard support
+  [#377](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/377)
+
 ## 5.7.4 (2021-03-04)
 
 * Fix `nodeModulesDir` option not being applied
