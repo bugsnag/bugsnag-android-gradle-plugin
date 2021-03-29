@@ -1,6 +1,5 @@
 Feature: Plugin integrated in project with Density + ABI APK splits
 
-@skip_agp4_1_or_higher
 Scenario: Density ABI Splits project builds successfully
     When I build "density_abi_splits" using the "standard" bugsnag config
     And I wait to receive 26 requests
@@ -37,13 +36,11 @@ Scenario: Density ABI Splits project builds successfully
       | 43          |
       | 53          |
 
-@skip_agp4_1_or_higher
 Scenario: Density ABI Splits automatic upload disabled
     When I build "density_abi_splits" using the "all_disabled" bugsnag config
     And I wait for 3 seconds
     Then I should receive no requests
 
-@skip_agp4_1_or_higher
 Scenario: Density ABI Splits manual upload of build API
     When I build the "XxxhdpiArmeabi-release" variantOutput for "density_abi_splits" using the "all_disabled" bugsnag config
     And I wait to receive a request

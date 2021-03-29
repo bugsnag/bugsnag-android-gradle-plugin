@@ -1,6 +1,5 @@
 Feature: Plugin integrated in project with Density APK splits
 
-@skip_agp4_1_or_higher
 Scenario: Density Splits project builds successfully
     When I build "density_splits" using the "standard" bugsnag config
     And I wait to receive 14 requests
@@ -25,13 +24,11 @@ Scenario: Density Splits project builds successfully
       | 6           | 1.0         |
       | 7           | 1.0         |
 
-@skip_agp4_1_or_higher
 Scenario: Density Splits automatic upload disabled
     When I build "density_splits" using the "all_disabled" bugsnag config
     And I wait for 3 seconds
     Then I should receive no requests
 
-@skip_agp4_1_or_higher
 Scenario: Density Splits manual upload of build API
     When I build the "Hdpi-release" variantOutput for "density_splits" using the "all_disabled" bugsnag config
     And I wait to receive a request
