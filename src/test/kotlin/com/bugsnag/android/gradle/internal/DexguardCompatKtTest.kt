@@ -72,13 +72,6 @@ class DexguardCompatKtTest {
     }
 
     @Test
-    fun dexguardGetFromPath() {
-        // dexguard.path set
-        `when`(extensions.findByName("dexguard")).thenReturn(mapOf(Pair("path", "DexGuard-9.0.07")))
-        assertEquals("9.0.07", GroovyCompat.getDexguardVersionString(proj))
-    }
-
-    @Test
     fun dexguardMajorVersionNull() {
         // handles when dexguard is not applied
         `when`(extensions.findByName("dexguard")).thenReturn(null)
@@ -90,13 +83,6 @@ class DexguardCompatKtTest {
         // dexguard.version set
         `when`(extensions.findByName("dexguard")).thenReturn(mapOf(Pair("version", "8.7.02")))
         assertEquals(8, getDexguardMajorVersionInt(proj))
-    }
-
-    @Test
-    fun dexguardMajorFromPath() {
-        // dexguard.path set
-        `when`(extensions.findByName("dexguard")).thenReturn(mapOf(Pair("path", "DexGuard-9.0.07")))
-        assertEquals(9, getDexguardMajorVersionInt(proj))
     }
 
     @Test
