@@ -405,6 +405,7 @@ class BugsnagPlugin : Plugin<Project> {
             manifestInfoFile.set(manifestInfoFileProvider)
             archiveOutputFile.set(gzipOutputProvider)
             failOnUploadError.set(bugsnag.failOnUploadError)
+            versionCode.set(output.versionCode)
 
             mappingFilesProvider.let {
                 mappingFileProperty.from(it)
@@ -435,6 +436,7 @@ class BugsnagPlugin : Plugin<Project> {
             manifestInfoFile.set(manifestInfoFileProvider)
             uploadRequestClient.set(proguardUploadClientProvider)
             mappingFileProperty.set(gzipOutputProvider)
+            versionCode.set(output.versionCode)
             configureWith(bugsnag)
 
             val task = generateProguardTaskProvider?.get()
@@ -478,6 +480,7 @@ class BugsnagPlugin : Plugin<Project> {
             endpoint.set(bugsnag.endpoint.get())
             devEnabled.set("true" == dev)
             failOnUploadError.set(bugsnag.failOnUploadError)
+            versionCode.set(output.versionCode)
 
             val jsProjectRoot = project.rootProject.rootDir.parentFile
             projectRootFileProvider.from(jsProjectRoot)
@@ -505,6 +508,7 @@ class BugsnagPlugin : Plugin<Project> {
             variantOutput = output
             objDumpPaths.set(bugsnag.objdumpPaths)
             manifestInfoFile.set(manifestInfoFileProvider)
+            versionCode.set(output.versionCode)
 
             val searchPaths = getSharedObjectSearchPaths(project, bugsnag, android)
             searchDirectories.from(searchPaths)
@@ -529,6 +533,7 @@ class BugsnagPlugin : Plugin<Project> {
             objDumpPaths.set(bugsnag.objdumpPaths)
             manifestInfoFile.set(manifestInfoFileProvider)
             rootProjectDir.set(project.rootProject.projectDir)
+            versionCode.set(output.versionCode)
         }
     }
 
@@ -544,6 +549,7 @@ class BugsnagPlugin : Plugin<Project> {
     ): TaskProvider<out BugsnagUploadSharedObjectTask> {
         return registerSharedObjectUploadTask(
             project,
+            output,
             generateTaskProvider,
             bugsnag,
             httpClientHelperProvider,
@@ -568,6 +574,7 @@ class BugsnagPlugin : Plugin<Project> {
     ): TaskProvider<out BugsnagUploadSharedObjectTask> {
         return registerSharedObjectUploadTask(
             project,
+            output,
             generateTaskProvider,
             bugsnag,
             httpClientHelperProvider,
@@ -583,6 +590,7 @@ class BugsnagPlugin : Plugin<Project> {
     @Suppress("LongParameterList")
     private fun registerSharedObjectUploadTask(
         project: Project,
+        output: ApkVariantOutput,
         generateTaskProvider: TaskProvider<out Task>,
         bugsnag: BugsnagPluginExtension,
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
@@ -604,6 +612,7 @@ class BugsnagPlugin : Plugin<Project> {
             manifestInfoFile.set(manifestInfoFileProvider)
             uploadRequestClient.set(ndkUploadClientProvider)
             intermediateOutputDir.set(project.layout.buildDirectory.dir(intermediateOutputPath))
+            versionCode.set(output.versionCode)
             configureWith(bugsnag)
         }
     }
@@ -637,6 +646,7 @@ class BugsnagPlugin : Plugin<Project> {
             gradleVersion.set(project.gradle.gradleVersion)
             manifestInfoFile.set(manifestInfoFileProvider)
             uploadRequestClient.set(releasesUploadClientProvider)
+            versionCode.set(output.versionCode)
 
             if (project.isJvmMinificationEnabled(variant)) {
                 mappingFilesProvider?.let {

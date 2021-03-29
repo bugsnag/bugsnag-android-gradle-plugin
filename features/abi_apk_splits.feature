@@ -1,6 +1,5 @@
 Feature: Plugin integrated in project with ABI APK splits
 
-@skip_agp4_1_or_higher
 Scenario: ABI Splits project builds successfully
     When I build "abi_splits" using the "standard" bugsnag config
     And I wait to receive 16 requests
@@ -32,13 +31,11 @@ Scenario: ABI Splits project builds successfully
       | com.Bar |
       | void doSomething() |
 
-@skip_agp4_1_or_higher
 Scenario: ABI Splits automatic upload disabled
     When I build "abi_splits" using the "all_disabled" bugsnag config
     And I wait for 3 seconds
     Then I should receive no requests
 
-@skip_agp4_1_or_higher
 Scenario: ABI Splits manual upload of build API
     When I build the "Armeabi-release" variantOutput for "abi_splits" using the "all_disabled" bugsnag config
     And I wait to receive a request

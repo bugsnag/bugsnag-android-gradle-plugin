@@ -14,6 +14,8 @@ interface AndroidManifestInfoReceiver : Task {
     @get:InputFile
     val manifestInfoFile: RegularFileProperty
 
+    // versionCode needs to be read separately as the manifestInfoFile is not the final merged
+    // manifest, and does not contain the final versionCode on AGP 4.1+.
     @get:Optional
     @get:Input
     val versionCode: Property<Int>
