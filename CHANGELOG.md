@@ -1,3 +1,11 @@
+## 5.7.5 (2021-03-30)
+
+* Improve DexGuard support
+  [#377](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/377)
+
+* Respect versionCodeOverride when using AGP 4.1+ and APK splits
+  [#375](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/375)
+
 ## 5.7.4 (2021-03-04)
 
 * Fix `nodeModulesDir` option not being applied

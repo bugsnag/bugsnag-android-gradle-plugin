@@ -6,6 +6,7 @@ import com.bugsnag.android.gradle.internal.NDK_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.clearDir
 import com.bugsnag.android.gradle.internal.includesAbi
 import com.bugsnag.android.gradle.internal.mapProperty
+import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.versionNumber
 import org.gradle.api.DefaultTask
@@ -16,10 +17,12 @@ import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity.NONE
@@ -44,6 +47,10 @@ sealed class BugsnagGenerateNdkSoMappingTask(
     @get:PathSensitive(NONE)
     @get:InputFile
     override val manifestInfoFile: RegularFileProperty = objects.fileProperty()
+
+    @get:Optional
+    @get:Input
+    override val versionCode: Property<Int> = objects.property()
 
     @get:Internal
     internal lateinit var variantOutput: ApkVariantOutput

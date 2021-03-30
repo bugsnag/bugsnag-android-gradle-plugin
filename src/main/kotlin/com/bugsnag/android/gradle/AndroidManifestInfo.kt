@@ -24,9 +24,14 @@ data class AndroidManifestInfo(
     internal companion object {
         private val ADAPTER = Moshi.Builder().build().adapter(AndroidManifestInfo::class.java)
 
-        fun read(file: File): AndroidManifestInfo {
-            return file.source().buffer().use {
+        fun read(file: File, versionCode: Int?): AndroidManifestInfo {
+            val info = file.source().buffer().use {
                 ADAPTER.fromJson(it) ?: error("Failed to parse manifest info.")
+            }
+            return if (versionCode == null) {
+                info
+            } else {
+                info.copy(versionCode = versionCode.toString())
             }
         }
     }

@@ -70,6 +70,10 @@ sealed class BugsnagReleasesTask(
     @get:InputFile
     override val manifestInfoFile: RegularFileProperty = objects.fileProperty()
 
+    @get:Optional
+    @get:Input
+    override val versionCode: Property<Int> = objects.property()
+
     @get:OutputFile
     val requestOutputFile: RegularFileProperty = objects.fileProperty()
 
