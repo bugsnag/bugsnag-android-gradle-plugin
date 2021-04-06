@@ -2,7 +2,7 @@
 <SmellBaseline>
   <Blacklist></Blacklist>
   <Whitelist>
-    <ID>ComplexCondition:AndroidManifestParser.kt$AndroidManifestParser$apiKey == null || "" == apiKey || versionCode == null || buildUUID == null || versionName == null || applicationId == null</ID>
+    <ID>ComplexCondition:AndroidManifestParser.kt$AndroidManifestParser$apiKey == null || "" == apiKey || versionCode == null || buildUuid == null || versionName == null || applicationId == null</ID>
     <ID>ComplexCondition:BugsnagPlugin.kt$BugsnagPlugin$!jvmMinificationEnabled &amp;&amp; !ndkEnabled &amp;&amp; !unityEnabled &amp;&amp; !reactNativeEnabled</ID>
     <ID>MagicNumber:BugsnagPluginExtension.kt$BugsnagPluginExtension$60000</ID>
     <ID>MagicNumber:BugsnagReleasesTask.kt$BugsnagReleasesTask$200</ID>

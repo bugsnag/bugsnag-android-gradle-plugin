@@ -1,0 +1,3 @@
+<manifest package="com.example" android:versionCode="12" xmlns:android="http://schemas.android.com/apk/res/android" android:versionName="5.2">
+  <application android:name="com.example.android.gradle.plugin.FooApp"/>
+</manifest>

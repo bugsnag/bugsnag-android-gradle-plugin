@@ -1,3 +1,8 @@
+## TBD
+
+* Replace Groovy XML library used for parsing AndroidManifest.xml
+  [#379](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/379)
+
 ## 5.7.5 (2021-03-30)
 
 * Improve DexGuard support
