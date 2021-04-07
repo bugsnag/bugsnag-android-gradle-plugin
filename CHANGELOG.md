@@ -1,4 +1,4 @@
-## TBD
+## 5.7.6 (2021-04-08)
 
 * Replace Groovy XML library used for parsing AndroidManifest.xml
   [#379](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/379)
