@@ -94,6 +94,6 @@ jobs:
     - name: AGP 4.2.0 E2E tests
       env:
         - AGP_VERSION=4.2.0-beta03
-        - GRADLE_WRAPPER_VERSION=6.7.1
+        - GRADLE_WRAPPER_VERSION=7.0-rc-1
         - RN_FIXTURE_DIR=features/fixtures/rn063/android
       script: bundle exec maze-runner -c --verbose --fail-fast

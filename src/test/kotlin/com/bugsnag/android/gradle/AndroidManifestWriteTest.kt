@@ -30,8 +30,8 @@ class AndroidManifestWriteTest {
     @Test
     fun writeBuildUuid() {
         AndroidManifestParser().writeBuildUuid(manifestFile, outputFile, "build-uuid-123")
-        val obs = outputFile.readText()
-        val expected = classLoader.getResource("AndroidManifest.xml")!!.readText()
+        val obs = outputFile.readText().replace("\\s".toRegex(), "")
+        val expected = classLoader.getResource("AndroidManifest.xml")!!.readText().replace("\\s".toRegex(), "")
         assertEquals(expected, obs)
     }
 }
