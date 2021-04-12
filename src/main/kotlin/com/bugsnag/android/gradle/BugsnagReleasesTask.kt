@@ -156,10 +156,7 @@ sealed class BugsnagReleasesTask(
             val response = try {
                 deliverPayload(payload, manifestInfo)
             } catch (exc: Throwable) {
-                when {
-                    failOnUploadError.get() -> throw exc
-                    else -> "Failure"
-                }
+                "Failure"
             }
             response
         }

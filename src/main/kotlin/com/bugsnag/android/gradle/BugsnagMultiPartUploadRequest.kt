@@ -41,10 +41,7 @@ class BugsnagMultiPartUploadRequest(
                 uploadToServer(body)!!
             }
         } catch (exc: Throwable) {
-            when {
-                failOnUploadError -> throw exc
-                else -> "Failure"
-            }
+            "Failure"
         }
     }
 
