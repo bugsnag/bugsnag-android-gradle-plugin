@@ -20,3 +20,4 @@ Scenario: Upload failure due to connectivity failure
     When I build the failing "default_app" using the "wrong_endpoint" bugsnag config
     And I wait for 3 seconds
     Then I should receive no requests
+    Then the exit code equals 0
