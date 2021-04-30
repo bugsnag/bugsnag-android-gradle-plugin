@@ -72,23 +72,25 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
     }
 }
 
+// Several of these need to be kept as 'compile' for license checking to work
+// as otherwise the downloadLicenses task misses these deps
 // Build dependencies
 dependencies {
     kapt "com.squareup.moshi:moshi-kotlin-codegen:1.9.3"
     compileOnly "com.android.tools.build:gradle:$agpVersion"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
 
     // For uploading proguard/ndk files
-    implementation "com.squareup.okhttp3:okhttp:4.8.0"
-    implementation "com.squareup.retrofit2:retrofit:2.9.0"
-    implementation "com.squareup.retrofit2:converter-moshi:2.9.0"
-    implementation "com.squareup.retrofit2:converter-scalars:2.9.0"
+    compile "com.squareup.okhttp3:okhttp:4.8.0"
+    compile "com.squareup.retrofit2:retrofit:2.9.0"
+    compile "com.squareup.retrofit2:converter-moshi:2.9.0"
+    compile "com.squareup.retrofit2:converter-scalars:2.9.0"
 
     // For serialization of shared data
-    implementation "com.squareup.moshi:moshi:1.9.3"
+    compile "com.squareup.moshi:moshi:1.9.3"
 
     // For multiple I/O use cases
-    implementation "com.squareup.okio:okio:2.7.0"
+    compile "com.squareup.okio:okio:2.7.0"
 
     testImplementation "com.android.tools.build:gradle:$agpVersion"
     testImplementation "junit:junit:4.12"
