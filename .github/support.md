@@ -10,7 +10,8 @@ When contacting support, please include as much information as necessary, includ
 - expected/actual behaviour 
 
 * Android Studio version:
-* Android Gradle version:
+* Android Gradle Plugin version:
+* Bugsnag Android Gradle Plugin version: 
 * Bugsnag manifest section (if modified):
 
 ## Bug or Feature Requests
