@@ -20,14 +20,12 @@ plugins {
     id "java-gradle-plugin"
     id "groovy"
     id "com.gradle.plugin-publish" version "0.12.0"
-    id "com.bmuschko.nexus" version "2.3.1"
-    id "com.jfrog.bintray" version "1.8.5"
+    id "com.vanniktech.maven.publish" version "0.12.0"
     id "com.github.hierynomus.license" version "0.15.0"
 }
 
 apply plugin: "org.jetbrains.kotlin.jvm"
 apply plugin: "org.jetbrains.kotlin.kapt"
-apply plugin: "maven-publish"
 apply plugin: "io.gitlab.arturbosch.detekt"
 apply plugin: "org.jlleitschuh.gradle.ktlint"
 
@@ -62,6 +60,7 @@ compileGroovy {
 tasks.named("compileGroovy") {
     classpath = sourceSets.main.compileClasspath
 }
+
 tasks.named("compileKotlin") {
     classpath += files(sourceSets.main.groovy.classesDirectory)
 }
@@ -100,130 +99,34 @@ dependencies {
     testImplementation "com.google.truth:truth:1.0.1"
 }
 
-// Maven publishing settings (nexus-maven-plugins)
-modifyPom {
-    project {
-        name "Bugsnag Android Gradle Plugin"
-        description "Gradle plugin to automatically upload ProGuard mapping files to Bugsnag."
-        url "https://github.com/bugsnag/bugsnag-android-gradle-plugin"
-
-        scm {
-            url "https://github.com/bugsnag/bugsnag-android-gradle-plugin"
-            connection "scm:git:git://github.com/bugsnag/bugsnag-android-gradle-plugin.git"
-            developerConnection "scm:git:ssh://git@github.com/bugsnag/bugsnag-android-gradle-plugin.git"
-        }
-
-        licenses {
-            license {
-                name "MIT"
-                url "http://opensource.org/licenses/MIT"
-                distribution "repo"
-            }
-        }
-
-        organization {
-            name "Bugsnag"
-            url "https://bugsnag.com"
-        }
-
-        developers {
-            developer {
-                id "loopj"
-                name "James Smith"
-                email "james@bugsnag.com"
-            }
-        }
-    }
-}
-
 // Gradle plugin publishing settings (plugins.gradle.com)
 pluginBundle {
-    website = "https://github.com/bugsnag/bugsnag-android-gradle-plugin"
-    vcsUrl = "https://github.com/bugsnag/bugsnag-android-gradle-plugin.git"
+    website = POM_URL
+    vcsUrl = POM_SCM_CONNECTION
 
     plugins {
         androidGradlePlugin {
             id = "com.bugsnag.android.gradle"
-            displayName = "Bugsnag Android Gradle Plugin"
-            description = "Gradle plugin to automatically upload ProGuard mapping files to Bugsnag."
+            displayName = POM_NAME
+            description = POM_DESCRIPTION
             tags = ["bugsnag", "proguard", "android", "upload"]
         }
     }
 
     mavenCoordinates {
-        groupId = "com.bugsnag"
-        artifactId = "bugsnag-android-gradle-plugin"
+        groupId = GROUP
+        artifactId = POM_ARTIFACT_ID
     }
 }
 
-install {
-    version = project.hasProperty("localVersion") ? project.getProperty("localVersion") : project.version
-}
-
-publishing {
-    publications {
-        Publication(MavenPublication) {
-            artifact jar
-            groupId "com.bugsnag"
-            artifactId "bugsnag-android-gradle-plugin"
-            version project.version
-        }
-
-        BintrayPublication(MavenPublication) {
-            artifact jar
-            groupId "com.bugsnag"
-            artifactId "bugsnag-android-gradle-plugin"
-            version project.version
-
-            pom.withXml {
-                def dependenciesNode = asNode().getAt('dependencies')[0] ?: asNode().appendNode('dependencies')
-
-                // Iterate over the implementation dependencies and add a <dependency> node for each
-                configurations.implementation.allDependencies.each {
-                    // Ensure dependencies such as fileTree are not included in the pom
-                    if (it.name != 'unspecified') {
-                        def dependencyNode = dependenciesNode.appendNode('dependency')
-
-                        dependencyNode.appendNode('groupId', it.group)
-                        dependencyNode.appendNode('artifactId', it.name)
-                        dependencyNode.appendNode('version', it.version)
-                        dependencyNode.appendNode('scope', 'runtime')
-                    }
-                }
-
-                configurations.testImplementation.allDependencies.each {
-                    // Ensure we don't add the same dependency twice
-                    if (it.name != 'unspecified' && !configurations.implementation.allDependencies.contains(it)) {
-                        def dependencyNode = dependenciesNode.appendNode('dependency')
-
-                        dependencyNode.appendNode('groupId', it.group)
-                        dependencyNode.appendNode('artifactId', it.name)
-                        dependencyNode.appendNode('version', it.version)
-                        dependencyNode.appendNode('scope', 'test')
-                    }
-                }
-            }
-        }
-    }
-}
-
-// Bintray upload
-bintray {
-    user = project.hasProperty("bintray_user") ? "$bintray_user" : System.getenv("bintray_user")
-    key = project.hasProperty("bintray_api_key") ? "$bintray_api_key" : System.getenv("bintray_api_key")
-
-    publications = ["BintrayPublication"]
-    configurations = ["archives"]
-    pkg {
-        repo = "maven"
-        name = "bugsnag-android-gradle-plugin"
-        userOrg = "bugsnag"
-        licenses = ["MIT"]
-        vcsUrl = "https://github.com/bugsnag/bugsnag-android-gradle-plugin.git"
-        version {
-            name = project.version
-            vcsTag = "v${project.version}"
-            attributes = ["gradle-plugin": "com.bugsnag.android.gradle"]
+mavenPublish {
+    targets {
+        bintray {
+            String bintrayUser = project.hasProperty("bintray_user") ? "$bintray_user" : System.getenv("bintray_user")
+            releaseRepositoryUrl = "https://api.bintray.com/maven/bugsnag/artifact-sandbox/;publish=0"
+            snapshotRepositoryUrl = null
+            repositoryUsername = bintrayUser
+            repositoryPassword = project.hasProperty("bintray_api_key") ? "$bintray_api_key" : System.getenv("bintray_api_key")
         }
     }
 }
@@ -250,6 +153,8 @@ detekt {
         }
     }
 }
+
+sourceCompatibility = JavaVersion.VERSION_1_8
 
 // see https://github.com/asciidoctor/asciidoctorj/pull/862
 Signature.metaClass.getToSignArtifact = { ->
