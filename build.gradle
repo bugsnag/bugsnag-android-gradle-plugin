@@ -121,12 +121,11 @@ pluginBundle {
 
 mavenPublish {
     targets {
-        bintray {
-            String bintrayUser = project.hasProperty("bintray_user") ? "$bintray_user" : System.getenv("bintray_user")
-            releaseRepositoryUrl = "https://api.bintray.com/maven/bugsnag/artifact-sandbox/;publish=0"
-            snapshotRepositoryUrl = null
-            repositoryUsername = bintrayUser
-            repositoryPassword = project.hasProperty("bintray_api_key") ? "$bintray_api_key" : System.getenv("bintray_api_key")
+        sonatype {
+            releaseRepositoryUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            snapshotRepositoryUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+            repositoryUsername = project.hasProperty("NEXUS_USERNAME") ? "$NEXUS_USERNAME" : System.getenv("NEXUS_USERNAME")
+            repositoryPassword = project.hasProperty("NEXUS_PASSWORD") ? "$NEXUS_PASSWORD" : System.getenv("NEXUS_PASSWORD")
         }
     }
 }
@@ -136,8 +135,9 @@ license {
     header rootProject.file("LICENSE")
     ignoreFailures true
 }
+
 downloadLicenses {
-  dependencyConfiguration "compile"
+    dependencyConfiguration "compile"
 }
 
 sourceSets {
