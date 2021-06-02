@@ -1,3 +1,7 @@
+## TBD
+
+* Upgraded test fixtures to build on Gradle 7.0.2 and AGP 7.0.0-alpha15
+
 ## 5.7.6 (2021-04-08)
 
 * Replace Groovy XML library used for parsing AndroidManifest.xml

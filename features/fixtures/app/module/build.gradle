@@ -4,8 +4,5 @@ def bugsnagConfig = System.env.BUGSNAG_CONFIG ?: "standard"
 // apply android module configuration (e.g. APK splits enabled)
 apply from: "../../config/android/${moduleConfig}.gradle"
 
-if (!System.env.UPDATING_GRADLEW) {
-
-    // apply bugsnag plugin configuration (e.g. custom sourceControl info)
-    apply from: "../../config/bugsnag/${bugsnagConfig}.gradle"
-}
+// apply bugsnag plugin configuration (e.g. custom sourceControl info)
+apply from: "../../config/bugsnag/${bugsnagConfig}.gradle"
