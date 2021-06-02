@@ -13,7 +13,6 @@ ENV["AGP_VERSION"] ||= "4.1.0" # default to latest
 ENV["GRADLE_WRAPPER_VERSION"] ||= "6.5.1"
 
 `./features/scripts/clear_local_maven_repo.sh`
-`./features/scripts/setup_gradle_wrapper.sh`
 `./features/scripts/install_gradle_plugin.sh`
 
 Before('@requires_agp4_0_or_higher') do |scenario|
