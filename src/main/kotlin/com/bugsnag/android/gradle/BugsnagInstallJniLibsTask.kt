@@ -1,9 +1,7 @@
 package com.bugsnag.android.gradle
 
-import com.bugsnag.android.gradle.internal.GradleVersions
 import com.bugsnag.android.gradle.internal.JNI_LIBS_DIR
 import com.bugsnag.android.gradle.internal.register
-import com.bugsnag.android.gradle.internal.versionNumber
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.ArchiveOperations
@@ -23,12 +21,15 @@ import org.gradle.api.tasks.WorkResult
 import java.io.File
 import javax.inject.Inject
 
-sealed class BugsnagInstallJniLibsTask(
+open class BugsnagInstallJniLibsTask @Inject constructor(
     objects: ObjectFactory,
-    projectLayout: ProjectLayout
+    projectLayout: ProjectLayout,
+    private val fsOperations: FileSystemOperations,
+    private val archiveOperations: ArchiveOperations
 ) : DefaultTask() {
     init {
-        description = "Copies shared object files from the bugsnag-android AAR to the required build directory"
+        description =
+            "Copies shared object files from the bugsnag-android AAR to the required build directory"
         group = BugsnagPlugin.GROUP_NAME
     }
 
@@ -37,10 +38,10 @@ sealed class BugsnagInstallJniLibsTask(
         .convention(projectLayout.buildDirectory.dir(JNI_LIBS_DIR))
 
     @get:InputFiles
-    abstract val bugsnagArtifacts: ConfigurableFileCollection
+    val bugsnagArtifacts: ConfigurableFileCollection = objects.fileCollection()
 
-    internal abstract fun copy(action: (CopySpec) -> Unit): WorkResult
-    internal abstract fun zipTree(file: File): FileTree
+    fun copy(action: (CopySpec) -> Unit): WorkResult = fsOperations.copy(action)
+    fun zipTree(file: File): FileTree = archiveOperations.zipTree(file)
 
     /**
      * Looks at all the dependencies and their dependencies and finds the `com.bugsnag` artifacts with SO files.
@@ -89,83 +90,7 @@ sealed class BugsnagInstallJniLibsTask(
             name: String,
             configurationAction: BugsnagInstallJniLibsTask.() -> Unit
         ): TaskProvider<out BugsnagInstallJniLibsTask> {
-            val gradleVersion = project.gradle.versionNumber()
-            return when {
-                gradleVersion >= GradleVersions.VERSION_6 -> {
-                    when {
-                        gradleVersion >= GradleVersions.VERSION_6_6 -> {
-                            project.tasks.register<BugsnagInstallJniLibsTaskGradle66Plus>(name, configurationAction)
-                        }
-                        else -> {
-                            project.tasks.register<BugsnagInstallJniLibsTaskGradle6Plus>(name, configurationAction)
-                        }
-                    }
-                }
-                gradleVersion >= GradleVersions.VERSION_5_3 -> {
-                    project.tasks.register<BugsnagInstallJniLibsTask53Plus>(name, configurationAction)
-                }
-                else -> {
-                    project.tasks.register<BugsnagInstallJniLibsTaskLegacy>(name, configurationAction)
-                }
-            }
+            return project.tasks.register(name, configurationAction)
         }
     }
-}
-
-/**
- * Legacy [BugsnagInstallJniLibsTask] task that requires using [getProject] and
- * [ProjectLayout.configurableFiles].
- */
-internal open class BugsnagInstallJniLibsTaskLegacy @Inject constructor(
-    objects: ObjectFactory,
-    projectLayout: ProjectLayout
-) : BugsnagInstallJniLibsTask(objects, projectLayout) {
-    @Suppress("DEPRECATION") // Here for backward compatibility
-    @get:InputFiles
-    override val bugsnagArtifacts: ConfigurableFileCollection = projectLayout.configurableFiles()
-
-    override fun copy(action: (CopySpec) -> Unit): WorkResult = project.copy(action)
-    override fun zipTree(file: File): FileTree = project.zipTree(file)
-}
-
-/** Legacy [BugsnagInstallJniLibsTask] task that requires using [getProject]. */
-internal open class BugsnagInstallJniLibsTask53Plus @Inject constructor(
-    objects: ObjectFactory,
-    projectLayout: ProjectLayout
-) : BugsnagInstallJniLibsTask(objects, projectLayout) {
-    @get:InputFiles
-    override val bugsnagArtifacts: ConfigurableFileCollection = objects.fileCollection()
-
-    override fun copy(action: (CopySpec) -> Unit): WorkResult = project.copy(action)
-    override fun zipTree(file: File): FileTree = project.zipTree(file)
-}
-
-/** A Gradle 6+ compatible [BugsnagInstallJniLibsTask], which uses [FileSystemOperations]. */
-internal open class BugsnagInstallJniLibsTaskGradle6Plus @Inject constructor(
-    objects: ObjectFactory,
-    projectLayout: ProjectLayout,
-    private val fsOperations: FileSystemOperations
-) : BugsnagInstallJniLibsTask(objects, projectLayout) {
-    @get:InputFiles
-    override val bugsnagArtifacts: ConfigurableFileCollection = objects.fileCollection()
-
-    override fun copy(action: (CopySpec) -> Unit): WorkResult = fsOperations.copy(action)
-    override fun zipTree(file: File): FileTree = project.zipTree(file)
-}
-
-/**
- * A Gradle 6.6+ compatible [BugsnagInstallJniLibsTask], which uses [FileSystemOperations]
- * and [ArchiveOperations] to support configuration caching.
- */
-internal open class BugsnagInstallJniLibsTaskGradle66Plus @Inject constructor(
-    objects: ObjectFactory,
-    projectLayout: ProjectLayout,
-    private val fsOperations: FileSystemOperations,
-    private val archiveOperations: ArchiveOperations
-) : BugsnagInstallJniLibsTask(objects, projectLayout) {
-    @get:InputFiles
-    override val bugsnagArtifacts: ConfigurableFileCollection = objects.fileCollection()
-
-    override fun copy(action: (CopySpec) -> Unit): WorkResult = fsOperations.copy(action)
-    override fun zipTree(file: File): FileTree = archiveOperations.zipTree(file)
 }
