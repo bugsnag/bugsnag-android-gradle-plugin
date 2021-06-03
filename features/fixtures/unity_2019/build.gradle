@@ -9,7 +9,7 @@ allprojects {
         }
 
         dependencies {
-            def agpVersion = System.env.AGP_VERSION ?: "3.4.0"
+            def agpVersion = System.env.AGP_VERSION ?: "7.0.0-beta03"
             classpath "com.android.tools.build:gradle:${agpVersion}"
 
             if (!System.env.UPDATING_GRADLEW) {
