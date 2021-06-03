@@ -1,7 +1,7 @@
 package com.bugsnag.android.gradle.internal
 
-import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.Artifacts
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.extension.AndroidComponentsExtension
 import com.android.build.gradle.AppExtension
 import com.bugsnag.android.gradle.BugsnagManifestUuidTaskV2
@@ -109,7 +109,7 @@ internal fun wireManifestUpdaterTask(
             taskInput = BugsnagManifestUuidTaskV2::inputManifest,
             taskOutput = BugsnagManifestUuidTaskV2::outputManifest
         )
-        .toTransform(ArtifactType.MERGED_MANIFEST)
+        .toTransform(SingleArtifact.MERGED_MANIFEST)
 }
 
 internal fun isVariantEnabled(

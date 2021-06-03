@@ -10,7 +10,6 @@ import com.bugsnag.android.gradle.internal.NDK_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.TASK_JNI_LIBS
 import com.bugsnag.android.gradle.internal.UNITY_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.UploadRequestClient
-import com.bugsnag.android.gradle.internal.computeManifestInfoOutputV1
 import com.bugsnag.android.gradle.internal.getDexguardAabTaskName
 import com.bugsnag.android.gradle.internal.hasDexguardPlugin
 import com.bugsnag.android.gradle.internal.intermediateForGenerateJvmMapping
@@ -21,7 +20,6 @@ import com.bugsnag.android.gradle.internal.intermediateForUnitySoRequest
 import com.bugsnag.android.gradle.internal.intermediateForUploadSourcemaps
 import com.bugsnag.android.gradle.internal.isVariantEnabled
 import com.bugsnag.android.gradle.internal.newUploadRequestClientProvider
-import com.bugsnag.android.gradle.internal.newUuidProvider
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.registerV2ManifestUuidTask
 import com.bugsnag.android.gradle.internal.taskNameForGenerateJvmMapping
@@ -88,9 +86,7 @@ class BugsnagPlugin : Plugin<Project> {
             val unityUploadClientProvider = newUploadRequestClientProvider(project, "unity")
 
             val android = project.extensions.getByType(AppExtension::class.java)
-            if (BugsnagManifestUuidTaskV2.isApplicable()) {
-                registerV2ManifestUuidTask(android, bugsnag, project)
-            }
+            registerV2ManifestUuidTask(android, bugsnag, project)
 
             project.afterEvaluate {
                 addReactNativeMavenRepo(project, bugsnag)
@@ -168,7 +164,7 @@ class BugsnagPlugin : Plugin<Project> {
             }
 
             // register bugsnag tasks
-            val manifestInfoFileProvider = registerManifestUuidTask(project, variant, output)
+            val manifestInfoFileProvider = registerManifestUuidTask(project, variant)
             val mappingFilesProvider = createMappingFileProvider(project, variant, output)
 
             val generateProguardTaskProvider = when {
@@ -341,50 +337,14 @@ class BugsnagPlugin : Plugin<Project> {
 
     private fun registerManifestUuidTask(
         project: Project,
-        variant: ApkVariant,
-        output: ApkVariantOutput
+        variant: ApkVariant
     ): Provider<RegularFile> {
-        return if (BugsnagManifestUuidTaskV2.isApplicable()) {
-            val taskName = taskNameForManifestUuid(variant.name)
-            // This task will have already been created!
-            val manifestUpdater = project.tasks
-                .withType(BugsnagManifestUuidTaskV2::class.java)
-                .named(taskName)
-            return manifestUpdater.flatMap(BaseBugsnagManifestUuidTask::manifestInfoProvider)
-        } else {
-            val taskName = taskNameForManifestUuid(output.name)
-            val manifestInfoOutputFile = project.computeManifestInfoOutputV1(output)
-            val buildUuidProvider = project.newUuidProvider()
-
-            val manifestTask = project.tasks.register(taskName, BugsnagManifestUuidTask::class.java) {
-                it.buildUuid.set(buildUuidProvider)
-                it.variantOutput = output
-                it.variant = variant
-                it.manifestInfoProvider.set(manifestInfoOutputFile)
-                it.dependsOn(output.processManifestProvider)
-                it.mustRunAfter(output.processManifestProvider)
-            }
-
-            // Enforces correct task ordering. The manifest can only be edited inbetween
-            // when the merged manifest is generated (processManifestProvider) and when
-            // the merged manifest is copied for use in packaging the artifact (processResourcesProvider).
-            // This ensures BugsnagManifestUuidTask runs at the correct time for both tasks.
-            //
-            // https://docs.gradle.org/current/userguide/more_about_tasks.html#sec:ordering_tasks
-            output.processResourcesProvider.configure {
-                it.mustRunAfter(manifestTask)
-            }
-            output.processManifestProvider.configure {
-                // Trigger eager configuration of the manifest task. This creates the task
-                // and ensures that it is configured whenever the manifest is processed
-                // and avoids mutating the task directly which should be avoided.
-                //
-                // https://docs.gradle.org/current/userguide/task_configuration_avoidance.html
-                // #sec:task_configuration_avoidance_general
-                manifestTask.get()
-            }
-            manifestTask.flatMap(BaseBugsnagManifestUuidTask::manifestInfoProvider)
-        }
+        val taskName = taskNameForManifestUuid(variant.name)
+        // This task will have already been created!
+        val manifestUpdater = project.tasks
+            .withType(BugsnagManifestUuidTaskV2::class.java)
+            .named(taskName)
+        return manifestUpdater.flatMap(BaseBugsnagManifestUuidTask::manifestInfoProvider)
     }
 
     /**
@@ -463,7 +423,8 @@ class BugsnagPlugin : Plugin<Project> {
         val rnTaskName = "bundle${variant.name.capitalize()}JsAndAssets"
         val rnTask: Task = project.tasks.findByName(rnTaskName) ?: return null
         val rnSourceMap = findReactNativeSourcemapFile(project, variant)
-        val rnBundle = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--bundle-output")
+        val rnBundle =
+            BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--bundle-output")
         val dev = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--dev")
 
         if (rnBundle == null || dev == null) {
