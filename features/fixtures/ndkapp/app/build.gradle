@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.bugsnag.android.gradle'
 
 ext.abiCodes = ['arm64-v8a':2, 'armeabi-v7a':3, 'x86':4, 'x86_64':5]
 
@@ -63,32 +64,28 @@ dependencies {
     implementation 'com.bugsnag:bugsnag-android:5.0.0'
 }
 
-if (!System.env.UPDATING_GRADLEW) {
-    apply plugin: 'com.bugsnag.android.gradle'
+bugsnag {
+    uploadNdkMappings = true
+    endpoint = "http://localhost:9339"
+    releasesEndpoint = "http://localhost:9339"
 
-    bugsnag {
-        uploadNdkMappings = true
-        endpoint = "http://localhost:9339"
-        releasesEndpoint = "http://localhost:9339"
+    def customPath = System.env.PROJECT_ROOT
+    def objdumpLocation = System.env.OBJDUMP_LOCATION
 
-        def customPath = System.env.PROJECT_ROOT
-        def objdumpLocation = System.env.OBJDUMP_LOCATION
+    if (customPath != null) {
+        projectRoot = customPath
+    }
 
-        if (customPath != null) {
-            projectRoot = customPath
-        }
+    if (objdumpLocation != null) {
+        objdumpPaths = [
+            "x86": objdumpLocation,
+            "arm64-v8a": objdumpLocation
+        ]
+    }
 
-        if (objdumpLocation != null) {
-            objdumpPaths = [
-                "x86": objdumpLocation,
-                "arm64-v8a": objdumpLocation
-            ]
-        }
-
-        if (System.env.USE_SHARED_OBJECT_PATH != null) {
-            sharedObjectPaths = [
-                new File("customLibs")
-            ]
-        }
+    if (System.env.USE_SHARED_OBJECT_PATH != null) {
+        sharedObjectPaths = [
+            new File("customLibs")
+        ]
     }
 }
