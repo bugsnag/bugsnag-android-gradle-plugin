@@ -9,8 +9,8 @@ ENV["UNITY_2018_FIXTURE_DIR"] ||= "features/fixtures/unity_2018/example"
 ENV["UNITY_2019_FIXTURE_DIR"] ||= "features/fixtures/unity_2019"
 
 # set defaults for versions
-ENV["AGP_VERSION"] ||= "4.1.0" # default to latest
-ENV["GRADLE_WRAPPER_VERSION"] ||= "6.5.1"
+ENV["AGP_VERSION"] ||= "7.0.0-beta03" # default to latest
+ENV["GRADLE_WRAPPER_VERSION"] ||= "7.0.2"
 
 `./features/scripts/clear_local_maven_repo.sh`
 `./features/scripts/setup_rn.sh`
