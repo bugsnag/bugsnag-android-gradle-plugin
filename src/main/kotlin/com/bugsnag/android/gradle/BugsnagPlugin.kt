@@ -73,7 +73,7 @@ class BugsnagPlugin : Plugin<Project> {
                 "Using com.bugsnag.android.gradle with Android Gradle Plugin 7+ " +
                     "requires an upgrade to com.bugsnag.android.gradle:7.0.0. " +
                     "For more information about this change, see " +
-                    "https://docs.bugsnag.com/platforms/android/"
+                    "https://docs.bugsnag.com/build-integrations/gradle/"
             )
         }
 
