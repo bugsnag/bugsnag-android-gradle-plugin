@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <SmellBaseline>
-  <Blacklist></Blacklist>
-  <Whitelist>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
     <ID>ComplexCondition:AndroidManifestParser.kt$AndroidManifestParser$apiKey == null || "" == apiKey || versionCode == null || buildUuid == null || versionName == null || applicationId == null</ID>
     <ID>ComplexCondition:BugsnagPlugin.kt$BugsnagPlugin$!jvmMinificationEnabled &amp;&amp; !ndkEnabled &amp;&amp; !unityEnabled &amp;&amp; !reactNativeEnabled</ID>
     <ID>MagicNumber:BugsnagPluginExtension.kt$BugsnagPluginExtension$60000</ID>
@@ -12,8 +12,9 @@
     <ID>ReturnCount:BugsnagPlugin.kt$BugsnagPlugin$ private fun registerUploadSourceMapTask( project: Project, variant: ApkVariant, output: ApkVariantOutput, bugsnag: BugsnagPluginExtension, manifestInfoFileProvider: Provider&lt;RegularFile&gt; ): TaskProvider&lt;out BugsnagUploadJsSourceMapTask&gt;?</ID>
     <ID>ReturnCount:ManifestUuidTaskV2Compat.kt$internal fun createManifestUpdateTask( bugsnag: BugsnagPluginExtension, project: Project, variantName: String ): TaskProvider&lt;BugsnagManifestUuidTaskV2&gt;?</ID>
     <ID>ReturnCount:SharedObjectMappingFileFactory.kt$SharedObjectMappingFileFactory$ fun generateSoMappingFile(project: Project, params: Params): File?</ID>
-    <ID>SpreadOperator:BugsnagReleasesTask.kt$BugsnagReleasesTask$(*cmd)</ID>
     <ID>SpreadOperator:DexguardCompat.kt$(buildDir, *path, variant.dirName, outputDir, "mapping.txt")</ID>
+    <ID>SwallowedException:MappingFileProvider.kt$catch (exc: Throwable) { project.provider { project.layout.files(variant.mappingFile) } }</ID>
+    <ID>ThrowingExceptionsWithoutMessageOrCause:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$IllegalStateException()</ID>
     <ID>TooGenericExceptionCaught:BugsnagHttpClientHelper.kt$exc: Throwable</ID>
     <ID>TooGenericExceptionCaught:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$exc: Throwable</ID>
     <ID>TooGenericExceptionCaught:BugsnagMultiPartUploadRequest.kt$BugsnagMultiPartUploadRequest$exc: Throwable</ID>
@@ -21,6 +22,6 @@
     <ID>TooGenericExceptionCaught:MappingFileProvider.kt$exc: Throwable</ID>
     <ID>TooGenericExceptionCaught:SharedObjectMappingFileFactory.kt$SharedObjectMappingFileFactory$e: Exception</ID>
     <ID>TooGenericExceptionCaught:SharedObjectMappingFileFactory.kt$SharedObjectMappingFileFactory$ex: Throwable</ID>
-    <ID>TooManyFunctions:BugsnagPlugin.kt$BugsnagPlugin$BugsnagPlugin</ID>
-  </Whitelist>
+    <ID>TooManyFunctions:BugsnagPlugin.kt$BugsnagPlugin : Plugin</ID>
+  </CurrentIssues>
 </SmellBaseline>

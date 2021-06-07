@@ -3,7 +3,7 @@ ifeq ($(VERSION),)
 	@$(error VERSION is not defined. Run with `make VERSION=number bump`)
 endif
 	@echo Bumping the version number to $(VERSION)
-	@sed -i '' "s/version = .*/version = $(VERSION)/" gradle.properties
+	@sed -i '' "s/VERSION_NAME=.*/VERSION_NAME=$(VERSION)/" gradle.properties
 	@sed -i '' "s/## TBD/## $(VERSION) ($(shell date '+%Y-%m-%d'))/" CHANGELOG.md
 
 

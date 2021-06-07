@@ -1,7 +1,7 @@
 buildscript {
     repositories {
         maven { url "https://plugins.gradle.org/m2/" }
-        jcenter()
+        mavenCentral()
         google()
     }
 
@@ -11,7 +11,7 @@ buildscript {
     dependencies {
         classpath "com.android.tools.build:gradle:$agpVersion"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-        classpath "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.9.1"
+        classpath "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.17.1"
         classpath "org.jlleitschuh.gradle:ktlint-gradle:9.4.1"
     }
 }
@@ -20,20 +20,18 @@ plugins {
     id "java-gradle-plugin"
     id "groovy"
     id "com.gradle.plugin-publish" version "0.12.0"
-    id "com.bmuschko.nexus" version "2.3.1"
-    id "com.jfrog.bintray" version "1.8.5"
+    id "com.vanniktech.maven.publish" version "0.12.0"
     id "com.github.hierynomus.license" version "0.15.0"
 }
 
 apply plugin: "org.jetbrains.kotlin.jvm"
 apply plugin: "org.jetbrains.kotlin.kapt"
-apply plugin: "maven-publish"
 apply plugin: "io.gitlab.arturbosch.detekt"
 apply plugin: "org.jlleitschuh.gradle.ktlint"
 
 allprojects {
     repositories {
-        jcenter()
+        mavenCentral()
         google()
     }
 }
@@ -48,7 +46,7 @@ sourceSets {
 
 // Repositories for dependencies
 repositories {
-    jcenter()
+    mavenCentral()
     google()
 }
 
@@ -62,6 +60,7 @@ compileGroovy {
 tasks.named("compileGroovy") {
     classpath = sourceSets.main.compileClasspath
 }
+
 tasks.named("compileKotlin") {
     classpath += files(sourceSets.main.groovy.classesDirectory)
 }
@@ -72,23 +71,25 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
     }
 }
 
+// Several of these need to be kept as 'compile' for license checking to work
+// as otherwise the downloadLicenses task misses these deps
 // Build dependencies
 dependencies {
     kapt "com.squareup.moshi:moshi-kotlin-codegen:1.9.3"
     compileOnly "com.android.tools.build:gradle:$agpVersion"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
 
     // For uploading proguard/ndk files
-    implementation "com.squareup.okhttp3:okhttp:4.8.0"
-    implementation "com.squareup.retrofit2:retrofit:2.9.0"
-    implementation "com.squareup.retrofit2:converter-moshi:2.9.0"
-    implementation "com.squareup.retrofit2:converter-scalars:2.9.0"
+    compile "com.squareup.okhttp3:okhttp:4.8.0"
+    compile "com.squareup.retrofit2:retrofit:2.9.0"
+    compile "com.squareup.retrofit2:converter-moshi:2.9.0"
+    compile "com.squareup.retrofit2:converter-scalars:2.9.0"
 
     // For serialization of shared data
-    implementation "com.squareup.moshi:moshi:1.9.3"
+    compile "com.squareup.moshi:moshi:1.9.3"
 
     // For multiple I/O use cases
-    implementation "com.squareup.okio:okio:2.7.0"
+    compile "com.squareup.okio:okio:2.7.0"
 
     testImplementation "com.android.tools.build:gradle:$agpVersion"
     testImplementation "junit:junit:4.12"
@@ -98,130 +99,33 @@ dependencies {
     testImplementation "com.google.truth:truth:1.0.1"
 }
 
-// Maven publishing settings (nexus-maven-plugins)
-modifyPom {
-    project {
-        name "Bugsnag Android Gradle Plugin"
-        description "Gradle plugin to automatically upload ProGuard mapping files to Bugsnag."
-        url "https://github.com/bugsnag/bugsnag-android-gradle-plugin"
-
-        scm {
-            url "https://github.com/bugsnag/bugsnag-android-gradle-plugin"
-            connection "scm:git:git://github.com/bugsnag/bugsnag-android-gradle-plugin.git"
-            developerConnection "scm:git:ssh://git@github.com/bugsnag/bugsnag-android-gradle-plugin.git"
-        }
-
-        licenses {
-            license {
-                name "MIT"
-                url "http://opensource.org/licenses/MIT"
-                distribution "repo"
-            }
-        }
-
-        organization {
-            name "Bugsnag"
-            url "https://bugsnag.com"
-        }
-
-        developers {
-            developer {
-                id "loopj"
-                name "James Smith"
-                email "james@bugsnag.com"
-            }
-        }
-    }
-}
-
 // Gradle plugin publishing settings (plugins.gradle.com)
 pluginBundle {
-    website = "https://github.com/bugsnag/bugsnag-android-gradle-plugin"
-    vcsUrl = "https://github.com/bugsnag/bugsnag-android-gradle-plugin.git"
+    website = POM_URL
+    vcsUrl = POM_SCM_CONNECTION
 
     plugins {
         androidGradlePlugin {
             id = "com.bugsnag.android.gradle"
-            displayName = "Bugsnag Android Gradle Plugin"
-            description = "Gradle plugin to automatically upload ProGuard mapping files to Bugsnag."
+            displayName = POM_NAME
+            description = POM_DESCRIPTION
             tags = ["bugsnag", "proguard", "android", "upload"]
         }
     }
 
     mavenCoordinates {
-        groupId = "com.bugsnag"
-        artifactId = "bugsnag-android-gradle-plugin"
+        groupId = GROUP
+        artifactId = POM_ARTIFACT_ID
     }
 }
 
-install {
-    version = project.hasProperty("localVersion") ? project.getProperty("localVersion") : project.version
-}
-
-publishing {
-    publications {
-        Publication(MavenPublication) {
-            artifact jar
-            groupId "com.bugsnag"
-            artifactId "bugsnag-android-gradle-plugin"
-            version project.version
-        }
-
-        BintrayPublication(MavenPublication) {
-            artifact jar
-            groupId "com.bugsnag"
-            artifactId "bugsnag-android-gradle-plugin"
-            version project.version
-
-            pom.withXml {
-                def dependenciesNode = asNode().getAt('dependencies')[0] ?: asNode().appendNode('dependencies')
-
-                // Iterate over the implementation dependencies and add a <dependency> node for each
-                configurations.implementation.allDependencies.each {
-                    // Ensure dependencies such as fileTree are not included in the pom
-                    if (it.name != 'unspecified') {
-                        def dependencyNode = dependenciesNode.appendNode('dependency')
-
-                        dependencyNode.appendNode('groupId', it.group)
-                        dependencyNode.appendNode('artifactId', it.name)
-                        dependencyNode.appendNode('version', it.version)
-                        dependencyNode.appendNode('scope', 'runtime')
-                    }
-                }
-
-                configurations.testImplementation.allDependencies.each {
-                    // Ensure we don't add the same dependency twice
-                    if (it.name != 'unspecified' && !configurations.implementation.allDependencies.contains(it)) {
-                        def dependencyNode = dependenciesNode.appendNode('dependency')
-
-                        dependencyNode.appendNode('groupId', it.group)
-                        dependencyNode.appendNode('artifactId', it.name)
-                        dependencyNode.appendNode('version', it.version)
-                        dependencyNode.appendNode('scope', 'test')
-                    }
-                }
-            }
-        }
-    }
-}
-
-// Bintray upload
-bintray {
-    user = project.hasProperty("bintray_user") ? "$bintray_user" : System.getenv("bintray_user")
-    key = project.hasProperty("bintray_api_key") ? "$bintray_api_key" : System.getenv("bintray_api_key")
-
-    publications = ["BintrayPublication"]
-    configurations = ["archives"]
-    pkg {
-        repo = "maven"
-        name = "bugsnag-android-gradle-plugin"
-        userOrg = "bugsnag"
-        licenses = ["MIT"]
-        vcsUrl = "https://github.com/bugsnag/bugsnag-android-gradle-plugin.git"
-        version {
-            name = project.version
-            vcsTag = "v${project.version}"
-            attributes = ["gradle-plugin": "com.bugsnag.android.gradle"]
+mavenPublish {
+    targets {
+        sonatype {
+            releaseRepositoryUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            snapshotRepositoryUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+            repositoryUsername = project.hasProperty("NEXUS_USERNAME") ? "$NEXUS_USERNAME" : System.getenv("NEXUS_USERNAME")
+            repositoryPassword = project.hasProperty("NEXUS_PASSWORD") ? "$NEXUS_PASSWORD" : System.getenv("NEXUS_PASSWORD")
         }
     }
 }
@@ -231,8 +135,9 @@ license {
     header rootProject.file("LICENSE")
     ignoreFailures true
 }
+
 downloadLicenses {
-  dependencyConfiguration "compile"
+    dependencyConfiguration "compile"
 }
 
 sourceSets {
@@ -248,6 +153,8 @@ detekt {
         }
     }
 }
+
+sourceCompatibility = JavaVersion.VERSION_1_8
 
 // see https://github.com/asciidoctor/asciidoctorj/pull/862
 Signature.metaClass.getToSignArtifact = { ->
