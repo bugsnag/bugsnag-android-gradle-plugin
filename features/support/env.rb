@@ -61,3 +61,7 @@ def get_requests_with_field(name)
 end
 
 $api_key = "TEST_API_KEY"
+
+AfterConfiguration do |_config|
+  MazeRunner.config.enforce_bugsnag_integrity = false
+end
