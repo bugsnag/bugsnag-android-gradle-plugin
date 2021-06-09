@@ -52,11 +52,12 @@ private fun findMappingFiles(
  * Use AGP supplied value, preferring the new "getMappingFileProvider" API but falling back
  * to the old "mappingFile" API if necessary
  */
+@Suppress("SwallowedException")
 internal fun findMappingFileAgp(
     variant: ApkVariant,
     project: Project
 ) = try {
     variant.mappingFileProvider
 } catch (exc: Throwable) {
-    project.provider { project.layout.files(variant.mappingFile) }
+    project.provider { project.layout.files(variant.mappingFileProvider.orNull) }
 }

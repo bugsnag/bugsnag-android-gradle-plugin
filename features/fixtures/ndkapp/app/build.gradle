@@ -60,7 +60,7 @@ android {
 }
 
 dependencies {
-    compile 'com.bugsnag:bugsnag-android:5.0.0'
+    implementation 'com.bugsnag:bugsnag-android:5.0.0'
 }
 
 if (!System.env.UPDATING_GRADLEW) {

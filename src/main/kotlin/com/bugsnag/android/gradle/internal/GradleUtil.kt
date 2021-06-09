@@ -46,6 +46,7 @@ internal object AgpVersions {
     val VERSION_4_0: VersionNumber = VersionNumber.parse("4.0.0")
     val VERSION_4_1: VersionNumber = VersionNumber.parse("4.1.0")
     val VERSION_4_2: VersionNumber = VersionNumber.parse("4.2.0")
+    val VERSION_7_0: VersionNumber = VersionNumber.parse("7.0.0")
 }
 
 /** A fast file hash that don't load the entire file contents into memory at once. */

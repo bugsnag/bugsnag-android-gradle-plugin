@@ -1,8 +1,9 @@
 package com.bugsnag.android.gradle
 
-import com.android.utils.forEach
 import org.gradle.api.logging.Logger
 import org.w3c.dom.Document
+import org.w3c.dom.Node
+import org.w3c.dom.NodeList
 import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.transform.OutputKeys
@@ -161,5 +162,11 @@ internal class AndroidManifestParser {
             }
         }
         return false
+    }
+
+    private inline fun NodeList.forEach(action: (Node) -> Unit) {
+        for (index in 0 until length) {
+            action(item(index))
+        }
     }
 }
