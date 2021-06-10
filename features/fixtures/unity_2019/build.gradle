@@ -11,12 +11,7 @@ allprojects {
         dependencies {
             def agpVersion = System.env.AGP_VERSION ?: "7.0.0-beta03"
             classpath "com.android.tools.build:gradle:${agpVersion}"
-
-            if (!System.env.UPDATING_GRADLEW) {
-                dependencies {
-                    classpath "com.bugsnag:bugsnag-android-gradle-plugin:9000.0.0-test"
-                }
-            }
+            classpath "com.bugsnag:bugsnag-android-gradle-plugin:9000.0.0-test"
         }
     }
 
