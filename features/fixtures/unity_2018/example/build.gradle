@@ -67,13 +67,15 @@ android {
     buildTypes {
         debug {
             minifyEnabled false
-//            useProguard false
+            // useProguard is not compatible with Android Gradle Plugin 7+
+            // useProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-unity.txt'
             jniDebuggable true
         }
         release {
             minifyEnabled true
-//            useProguard false
+            // useProguard is not compatible with Android Gradle Plugin 7+
+            // useProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-unity.txt'
             signingConfig signingConfigs.debug
         }
