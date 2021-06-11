@@ -20,7 +20,9 @@ A clear and concise description of what the bug is.
 
 ### Environment
 * Android Studio version:
-* Android Gradle version:
+* Gradle version: 
+* Android Gradle Plugin (AGP) version:
+* Bugsnag Android Gradle Plugin version: 
 * Bugsnag manifest section (if modified):
 
 <!--
