@@ -39,27 +39,23 @@ Scenario: Authenticated HTTP proxy without creds
     Then I wait for 5 seconds
     And I should receive no requests
 
-#Scenario: NDK request for basic HTTP proxy AGP >= 4
-#    When I start an http proxy
-#    And I set the fixture JVM arguments to "-Dhttp.proxyHost=localhost -Dhttp.proxyPort=9000 -Dhttp.nonProxyHosts="
-#    When I build the NDK app
-#    And I wait to receive 10 requests
-#
-#    Then 1 requests are valid for the build API and match the following:
-#        | appVersionCode | appVersion | buildTool      |
-#        | 1              | 1.0        | gradle-android |
-#
-#    And 8 requests are valid for the android NDK mapping API and match the following:
-#        | arch        |
-#        | arm64-v8a   |
-#        | arm64-v8a   |
-#        | armeabi-v7a |
-#        | armeabi-v7a |
-#        | x86         |
-#        | x86         |
-#        | x86_64      |
-#        | x86_64      |
-#
-#    And 1 requests are valid for the android mapping API and match the following:
-#        | appId                      |
-#        | com.bugsnag.android.ndkapp |
+Scenario: NDK request for basic HTTP proxy
+    When I start an http proxy
+    And I set the fixture JVM arguments to "-Dhttp.proxyHost=localhost -Dhttp.proxyPort=9000 -Dhttp.nonProxyHosts="
+    When I build the NDK app
+    And I wait to receive 6 requests
+
+    Then 1 requests are valid for the build API and match the following:
+        | appVersionCode | appVersion | buildTool      |
+        | 1              | 1.0        | gradle-android |
+
+    And 4 requests are valid for the android NDK mapping API and match the following:
+        | arch        |
+        | arm64-v8a   |
+        | armeabi-v7a |
+        | x86         |
+        | x86_64      |
+
+    And 1 requests are valid for the android mapping API and match the following:
+        | appId                      |
+        | com.bugsnag.android.ndkapp |

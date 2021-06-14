@@ -5,53 +5,41 @@ buildscript {
         mavenLocal()
         mavenCentral()
         google()
-        jcenter()
     }
 
     dependencies {
         def agpVersion = System.env.AGP_VERSION ?: "7.0.0-beta03"
         classpath "com.android.tools.build:gradle:${agpVersion}"
-
-        if (!System.env.UPDATING_GRADLEW) {
-            dependencies {
-                classpath "com.bugsnag:bugsnag-android-gradle-plugin:9000.0.0-test"
-            }
-        }
+        classpath "com.bugsnag:bugsnag-android-gradle-plugin:9000.0.0-test"
     }
 }
+
+apply plugin: 'com.android.application'
+apply plugin: 'com.bugsnag.android.gradle'
 
 allprojects {
     repositories {
         mavenCentral()
         google()
-        jcenter()
         flatDir {
             dirs 'libs'
         }
     }
 }
 
-apply plugin: 'com.android.application'
-
-
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation(name: 'android-lib-release', ext:'aar')
-    implementation(name: 'bugsnag-android-ndk-release', ext:'aar')
-    implementation(name: 'bugsnag-android-release', ext:'aar')
-    implementation(name: 'bugsnag-android-unity-release', ext:'aar')
-    implementation(name: 'bugsnag-plugin-android-anr-release', ext:'aar')
+    implementation(name: 'android-lib-release', ext: 'aar')
+    implementation(name: 'bugsnag-android-ndk-release', ext: 'aar')
+    implementation(name: 'bugsnag-android-release', ext: 'aar')
+    implementation(name: 'bugsnag-android-unity-release', ext: 'aar')
+    implementation(name: 'bugsnag-plugin-android-anr-release', ext: 'aar')
 }
 
 android {
     compileSdkVersion 29
     ndkVersion "16.1.4479499"
     buildToolsVersion '30.0.2'
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
 
     defaultConfig {
         minSdkVersion 16
@@ -79,13 +67,11 @@ android {
     buildTypes {
         debug {
             minifyEnabled false
-            useProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-unity.txt'
             jniDebuggable true
         }
         release {
             minifyEnabled true
-            useProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-unity.txt'
             signingConfig signingConfigs.debug
         }
@@ -133,11 +119,7 @@ android {
     }
 }
 
-if (!System.env.UPDATING_GRADLEW) {
-    apply plugin: 'com.bugsnag.android.gradle'
-
-    bugsnag {
-        endpoint = "http://localhost:9339"
-        releasesEndpoint = "http://localhost:9339"
-    }
+bugsnag {
+    endpoint = "http://localhost:9339"
+    releasesEndpoint = "http://localhost:9339"
 }

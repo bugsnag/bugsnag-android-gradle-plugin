@@ -493,10 +493,14 @@ class BugsnagPlugin : Plugin<Project> {
             val searchPaths = getSharedObjectSearchPaths(project, bugsnag, android)
             searchDirectories.from(searchPaths)
             variant.externalNativeBuildProviders.forEach { provider ->
-                searchDirectories.from(provider.map(ExternalNativeBuildTask::objFolder))
-                searchDirectories.from(provider.map(ExternalNativeBuildTask::soFolder))
+                searchDirectories.from(provider.map { fixNativeOutputPath(it.objFolder) })
+                searchDirectories.from(provider.map { fixNativeOutputPath(it.soFolder) })
             }
         }
+    }
+
+    private fun fixNativeOutputPath(taskFolder: File): File {
+        return taskFolder.parentFile.parentFile.takeIf { it.parentFile.name == "cxx" } ?: taskFolder
     }
 
     @Suppress("LongParameterList")
@@ -635,8 +639,8 @@ class BugsnagPlugin : Plugin<Project> {
             }
             if (checkSearchDirectories) {
                 variant.externalNativeBuildProviders.forEach { task ->
-                    ndkMappingFileProperty.from(task.map { it.objFolder })
-                    ndkMappingFileProperty.from(task.map { it.soFolder })
+                    ndkMappingFileProperty.from(task.map { fixNativeOutputPath(it.objFolder) })
+                    ndkMappingFileProperty.from(task.map { fixNativeOutputPath(it.soFolder) })
                 }
             }
             configureMetadata()
