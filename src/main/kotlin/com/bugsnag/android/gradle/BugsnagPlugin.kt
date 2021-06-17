@@ -71,7 +71,7 @@ class BugsnagPlugin : Plugin<Project> {
         if (AgpVersions.CURRENT >= AgpVersions.VERSION_7_0) {
             throw StopExecutionException(
                 "Using com.bugsnag.android.gradle with Android Gradle Plugin 7+ " +
-                    "requires an upgrade to com.bugsnag.android.gradle:7.0.0. " +
+                    "requires an upgrade to com.bugsnag.android.gradle:7.+. " +
                     "For more information about this change, see " +
                     "https://docs.bugsnag.com/build-integrations/gradle/"
             )
