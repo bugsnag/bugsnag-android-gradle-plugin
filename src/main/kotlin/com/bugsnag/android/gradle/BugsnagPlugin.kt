@@ -105,7 +105,7 @@ class BugsnagPlugin : Plugin<Project> {
             val unityUploadClientProvider = newUploadRequestClientProvider(project, "unity")
 
             val android = project.extensions.getByType(AppExtension::class.java)
-            registerV2ManifestUuidTask(android, bugsnag, project)
+            registerV2ManifestUuidTask(bugsnag, project)
 
             project.afterEvaluate {
                 addReactNativeMavenRepo(project, bugsnag)
