@@ -137,7 +137,7 @@ if (!System.env.UPDATING_GRADLEW) {
     apply plugin: 'com.bugsnag.android.gradle'
 
     bugsnag {
-        endpoint = "http://localhost:9339"
-        releasesEndpoint = "http://localhost:9339"
+        endpoint = "http://localhost:9339/notify"
+        releasesEndpoint = "http://localhost:9339/builds"
     }
 }

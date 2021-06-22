@@ -235,8 +235,8 @@ if (!System.env.UPDATING_GRADLEW) {
     apply plugin: 'com.bugsnag.android.gradle'
 
     bugsnag {
-        endpoint = "http://localhost:9339"
-        releasesEndpoint = "http://localhost:9339"
+        endpoint = "http://localhost:9339/notify"
+        releasesEndpoint = "http://localhost:9339/builds"
         uploadReactNativeMappings = "false" != System.env.UPLOAD_RN_MAPPINGS
 
         if (System.env.CUSTOM_NODE_MODULES_DIR == "true") {
