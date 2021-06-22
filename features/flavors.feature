@@ -2,7 +2,7 @@ Feature: Plugin integrated in project with productFlavors
 
 Scenario: Flavors automatic upload on build
     When I build "flavors" using the "standard" bugsnag config
-    And I wait to receive 4 requests
+    And I wait to receive 4 builds
 
     Then 2 requests are valid for the build API and match the following:
       | appVersionCode | appVersion |
@@ -22,11 +22,11 @@ Scenario: Flavors automatic upload on build
 Scenario: Flavors automatic upload disabled
     When I build "flavors" using the "all_disabled" bugsnag config
     And I wait for 5 seconds
-    Then I should receive no requests
+    Then I should receive no builds
 
 Scenario: Flavors manual upload of build API
     When I build the "Foo-release" variantOutput for "flavors" using the "all_disabled" bugsnag config
-    And I wait to receive 1 requests
+    And I wait to receive 1 build
     Then the request is valid for the Android Mapping API
     And the field "apiKey" for multipart request equals "TEST_API_KEY"
     And the field "versionCode" for multipart request equals "1"

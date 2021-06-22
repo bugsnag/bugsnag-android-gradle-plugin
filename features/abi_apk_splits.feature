@@ -2,7 +2,7 @@ Feature: Plugin integrated in project with ABI APK splits
 
 Scenario: ABI Splits project builds successfully
     When I build "abi_splits" using the "standard" bugsnag config
-    And I wait to receive 16 requests
+    And I wait to receive 16 builds
 
     Then 8 requests are valid for the build API and match the following:
       | appVersionCode | appVersion |
@@ -34,12 +34,12 @@ Scenario: ABI Splits project builds successfully
 Scenario: ABI Splits automatic upload disabled
     When I build "abi_splits" using the "all_disabled" bugsnag config
     And I wait for 3 seconds
-    Then I should receive no requests
+    Then I should receive no builds
 
 Scenario: ABI Splits manual upload of build API
     When I build the "Armeabi-release" variantOutput for "abi_splits" using the "all_disabled" bugsnag config
-    And I wait to receive a request
-    Then the request is valid for the Android Mapping API
+    And I wait to receive a build
+    Then the build request is valid for the Android Mapping API
     And the field "apiKey" for multipart request equals "TEST_API_KEY"
     And the field "versionCode" for multipart request equals "3"
     And the field "versionName" for multipart request equals "1.0"

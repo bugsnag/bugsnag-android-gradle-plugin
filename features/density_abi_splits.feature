@@ -2,7 +2,7 @@ Feature: Plugin integrated in project with Density + ABI APK splits
 
 Scenario: Density ABI Splits project builds successfully
     When I build "density_abi_splits" using the "standard" bugsnag config
-    And I wait to receive 26 requests
+    And I wait to receive 26 builds
 
     Then 13 requests are valid for the build API and match the following:
       | appVersionCode |
@@ -39,10 +39,10 @@ Scenario: Density ABI Splits project builds successfully
 Scenario: Density ABI Splits automatic upload disabled
     When I build "density_abi_splits" using the "all_disabled" bugsnag config
     And I wait for 3 seconds
-    Then I should receive no requests
+    Then I should receive no builds
 
 Scenario: Density ABI Splits manual upload of build API
     When I build the "XxxhdpiArmeabi-release" variantOutput for "density_abi_splits" using the "all_disabled" bugsnag config
-    And I wait to receive a request
+    And I wait to receive a build
     Then the request is valid for the Android Mapping API
     And the field "versionCode" for multipart request equals "33"
