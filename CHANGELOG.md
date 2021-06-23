@@ -1,3 +1,7 @@
+## TBD
+
+* Emit a helpful compatibility error when Android Gradle Plugin 7 or higher is detected
+
 ## 5.7.6 (2021-04-08)
 
 * Replace Groovy XML library used for parsing AndroidManifest.xml
