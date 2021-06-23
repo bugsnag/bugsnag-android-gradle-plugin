@@ -40,7 +40,7 @@ Scenario: ABI Splits manual upload of build API
     When I build the "Armeabi-release" variantOutput for "abi_splits" using the "all_disabled" bugsnag config
     And I wait to receive a build
     Then the build request is valid for the Android Mapping API
-    And the field "apiKey" for multipart request equals "TEST_API_KEY"
-    And the field "versionCode" for multipart request equals "3"
-    And the field "versionName" for multipart request equals "1.0"
-    And the field "appId" for multipart request equals "com.bugsnag.android.example"
+    And the build payload field "apiKey" equals "TEST_API_KEY"
+    And the build payload field "versionCode" equals "3"
+    And the build payload field "versionName" equals "1.0"
+    And the build payload field "appId" equals "com.bugsnag.android.example"

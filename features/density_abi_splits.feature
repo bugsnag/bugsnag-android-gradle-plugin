@@ -44,5 +44,5 @@ Scenario: Density ABI Splits automatic upload disabled
 Scenario: Density ABI Splits manual upload of build API
     When I build the "XxxhdpiArmeabi-release" variantOutput for "density_abi_splits" using the "all_disabled" bugsnag config
     And I wait to receive a build
-    Then the request is valid for the Android Mapping API
-    And the field "versionCode" for multipart request equals "33"
+    Then the build request is valid for the Android Mapping API
+    And the build payload field "versionCode" equals "33"

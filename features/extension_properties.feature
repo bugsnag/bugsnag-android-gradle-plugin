@@ -3,7 +3,7 @@ Feature: Extension properties control plugin behaviour
 Scenario: Disable autoReportBuilds
     When I build "default_app" using the "auto_report_builds_disabled" bugsnag config
     And I wait to receive a build
-    Then the request is valid for the Android Mapping API
+    Then the build request is valid for the Android Mapping API
 
 Scenario: Enable debug mapping upload
     When I build "debug_proguard" using the "upload_debug_enabled" bugsnag config
@@ -22,8 +22,8 @@ Scenario: Enable debug mapping upload
 Scenario: Enable overwrite
     When I build "default_app" using the "overwrite_enabled" bugsnag config
     And I wait to receive a build
-    Then the request is valid for the Android Mapping API
-    And the field "overwrite" for multipart request equals "true"
+    Then the build request is valid for the Android Mapping API
+    And the build payload field "overwrite" equals "true"
 
 Scenario: Alter build API values
     When I build "default_app" using the "custom_build_info" bugsnag config
