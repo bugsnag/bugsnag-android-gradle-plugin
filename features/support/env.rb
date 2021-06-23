@@ -14,9 +14,13 @@ ENV['UNITY_2019_FIXTURE_DIR'] ||= 'features/fixtures/unity_2019'
 ENV['AGP_VERSION'] ||= '4.1.0' # default to latest
 ENV['GRADLE_WRAPPER_VERSION'] ||= '6.5.1'
 
-`./features/scripts/clear_local_maven_repo.sh`
-`./features/scripts/setup_gradle_wrapper.sh`
-`./features/scripts/install_gradle_plugin.sh`
+AfterConfiguration do |_config|
+  Maze.config.enforce_bugsnag_integrity = false
+
+  Maze::Runner.run_command('./features/scripts/clear_local_maven_repo.sh')
+  Maze::Runner.run_command('./features/scripts/setup_gradle_wrapper.sh')
+  Maze::Runner.run_command('./features/scripts/install_gradle_plugin.sh')
+end
 
 Before('@requires_agp4_0_or_higher') do |scenario|
   skip_this_scenario unless is_above_or_equal_to_target(400)
