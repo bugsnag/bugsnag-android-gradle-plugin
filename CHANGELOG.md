@@ -1,6 +1,8 @@
-## TBD
+## 7.0.0-beta01 (2021-06-23)
 
-* Upgraded test fixtures to build on Gradle 7.0.2 and AGP 7.0.0-alpha15
+Support for Android Gradle Plugin 7.0.0-beta04 added. This version introduces no new features and
+should only be used along-side Android Gradle Plugin 7.0.0-beta04 and higher. For more information
+see the [upgrading guide](UPGRADING.md).
 
 ## 5.7.6 (2021-04-08)
 
