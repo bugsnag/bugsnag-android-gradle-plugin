@@ -1,7 +1,7 @@
 apply plugin: 'com.bugsnag.android.gradle'
 
 bugsnag {
-    endpoint = "http://localhost:9339/notify"
+    endpoint = "http://localhost:9339/builds"
     releasesEndpoint = "http://localhost:9339/builds"
     reportBuilds = false
 }

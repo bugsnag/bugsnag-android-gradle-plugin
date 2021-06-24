@@ -227,7 +227,7 @@ if (!System.env.UPDATING_GRADLEW) {
     bugsnag {
         uploadReactNativeMappings = true
         nodeModulesDir = project.layout.projectDirectory.dir("../../../node_modules/").asFile
-        endpoint = "http://localhost:9339/notify"
+        endpoint = "http://localhost:9339/builds"
         releasesEndpoint = "http://localhost:9339/builds"
     }
 }

@@ -68,7 +68,7 @@ if (!System.env.UPDATING_GRADLEW) {
 
     bugsnag {
         uploadNdkMappings = true
-        endpoint = "http://localhost:9339/notify"
+        endpoint = "http://localhost:9339/builds"
         releasesEndpoint = "http://localhost:9339/builds"
 
         def customPath = System.env.PROJECT_ROOT
