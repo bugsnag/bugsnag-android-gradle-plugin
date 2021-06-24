@@ -61,7 +61,9 @@ When('I build the failing {string} using the {string} bugsnag config') do |modul
 end
 
 Then(/^the exit code equals (\d+)$/) do |exit_code|
-  assert_equal(exit_code, $?.exitstatus.to_i)
+  assert_not_nil($?, 'The last process status is not available')
+  exit_status = $?.exitstatus
+  assert_equal(exit_code, exit_status.to_i)
 end
 
 Then('{int} requests are valid for the build API and match the following:') do |request_count, data_table|
