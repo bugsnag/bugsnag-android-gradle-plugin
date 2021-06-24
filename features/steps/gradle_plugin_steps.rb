@@ -53,6 +53,13 @@ steps %Q{
 }
 end
 
+When("I build the failing {string} on AGP7 using the {string} bugsnag config") do |module_config, bugsnag_config|
+steps %Q{
+    When I set environment variable "AGP_VERSION" to "7.0.0-alpha15"
+    And I build the failing "#{module_config}" using the "#{bugsnag_config}" bugsnag config
+}
+end
+
 When("I build the failing {string} using the {string} bugsnag config") do |module_config, bugsnag_config|
   Runner.environment["MODULE_CONFIG"] = module_config
   Runner.environment["BUGSNAG_CONFIG"] = bugsnag_config
