@@ -208,7 +208,7 @@ end
 
 def get_requests_with_field(request_type, name)
   all_requests = Maze::Server.list_for(request_type).clone
-  all_requests.reject do |request|
+  all_requests.all.reject do |request|
     value = Maze::Helper.read_key_path(request[:body], name)
     value.nil?
   end
