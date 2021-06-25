@@ -21,7 +21,7 @@ def setup_and_run_script(module_config, bugsnag_config, script_path, variant = n
   Maze::Runner.environment['MODULE_CONFIG'] = module_config
   Maze::Runner.environment['BUGSNAG_CONFIG'] = bugsnag_config
   Maze::Runner.environment['VARIANT_OUTPUT_NAME'] = variant unless variant.nil?
-  _, exit_code = Maze::Runner.run_script(script_path, true)
+  _, exit_code = Maze::Runner.run_script(script_path, blocking: true)
   assert(exit_code.zero?, "Expected script to complete with 0 exit code, got #{exit_code}")
 end
 
