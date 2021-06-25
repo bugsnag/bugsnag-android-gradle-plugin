@@ -2,37 +2,27 @@ require 'zlib'
 require 'stringio'
 
 When('I build {string} using the {string} bugsnag config') do |module_config, bugsnag_config|
-  steps %(
-    When I set environment variable "MODULE_CONFIG" to "#{module_config}"
-    When I set environment variable "BUGSNAG_CONFIG" to "#{bugsnag_config}"
-    And I run the script "features/scripts/build_project_module.sh" synchronously
-  )
+  setup_and_run_script(module_config, bugsnag_config, 'features/scripts/build_project_module.sh')
 end
 
 When('I build the {string} variantOutput for {string} using the {string} bugsnag config') do |variant, module_config, bugsnag_config|
-  steps %(
-    When I set environment variable "VARIANT_OUTPUT_NAME" to "#{variant}"
-    When I set environment variable "MODULE_CONFIG" to "#{module_config}"
-    When I set environment variable "BUGSNAG_CONFIG" to "#{bugsnag_config}"
-    And I run the script "features/scripts/upload_variant_mapping.sh" synchronously
-  )
+  setup_and_run_script(module_config, bugsnag_config, 'features/scripts/upload_variant_mapping.sh', variant)
 end
 
 When('I bundle {string} using the {string} bugsnag config') do |module_config, bugsnag_config|
-  steps %(
-    When I set environment variable "MODULE_CONFIG" to "#{module_config}"
-    When I set environment variable "BUGSNAG_CONFIG" to "#{bugsnag_config}"
-    And I run the script "features/scripts/bundle_project_module.sh" synchronously
-  )
+  setup_and_run_script(module_config, bugsnag_config, 'features/scripts/bundle_project_module.sh')
 end
 
 When('I bundle the {string} variantOutput for {string} using the {string} bugsnag config') do |variant, module_config, bugsnag_config|
-  steps %(
-    When I set environment variable "VARIANT_OUTPUT_NAME" to "#{variant}"
-    When I set environment variable "MODULE_CONFIG" to "#{module_config}"
-    When I set environment variable "BUGSNAG_CONFIG" to "#{bugsnag_config}"
-    And I run the script "features/scripts/bundle_one_flavor.sh" synchronously
-  )
+  setup_and_run_script(module_config, bugsnag_config, 'features/scripts/bundle_one_flavor.sh', variant)
+end
+
+def setup_and_run_script(module_config, bugsnag_config, script_path, variant = nil)
+  Maze::Runner.environment['MODULE_CONFIG'] = module_config
+  Maze::Runner.environment['BUGSNAG_CONFIG'] = bugsnag_config
+  Maze::Runner.environment['VARIANT_OUTPUT_NAME'] = variant unless variant.nil?
+  _, exit_code = Maze::Runner.run_script(script_path, true)
+  assert(exit_code.zero?, "Expected script to complete with 0 exit code, got #{exit_code}")
 end
 
 When('I build the React Native app') do
@@ -58,12 +48,6 @@ When('I build the failing {string} using the {string} bugsnag config') do |modul
   Maze::Runner.environment['BUGSNAG_CONFIG'] = bugsnag_config
   _, exit_code = Runner.run_script('features/scripts/bundle_project_module.sh', blocking: true)
   assert(exit_code != 0, "Expected script to fail with non-zero exit code, got #{exit_code}")
-end
-
-Then(/^the exit code equals (\d+)$/) do |exit_code|
-  assert_not_nil($?, 'The last process status is not available')
-  exit_status = $?.exitstatus
-  assert_equal(exit_code, exit_status.to_i)
 end
 
 Then('{int} requests are valid for the build API and match the following:') do |request_count, data_table|

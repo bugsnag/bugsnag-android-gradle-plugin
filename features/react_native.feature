@@ -134,7 +134,6 @@ Scenario: Plugin handles server failure gracefully
         | 5              | 2.45.beta  | false     | false |
         | 5              | 2.45.beta  | false     | false |
         | 5              | 2.45.beta  | false     | false |
-    And the exit code equals 0
 
 # blocked by PLAT-6305
 @skip_gradle_7_or_higher
