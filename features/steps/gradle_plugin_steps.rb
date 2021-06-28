@@ -46,7 +46,7 @@ end
 When('I build the failing {string} using the {string} bugsnag config') do |module_config, bugsnag_config|
   Maze::Runner.environment['MODULE_CONFIG'] = module_config
   Maze::Runner.environment['BUGSNAG_CONFIG'] = bugsnag_config
-  _, exit_code = Runner.run_script('features/scripts/bundle_project_module.sh', blocking: true)
+  _, exit_code = Maze::Runner.run_script('features/scripts/bundle_project_module.sh', blocking: true)
   assert(exit_code != 0, "Expected script to fail with non-zero exit code, got #{exit_code}")
 end
 
