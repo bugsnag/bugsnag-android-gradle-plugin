@@ -41,6 +41,10 @@ Before('@skip_agp3_4_0') do |scenario|
   skip_this_scenario if equals_target(340)
 end
 
+Before('@skip_rn60_fixture') do |scenario|
+  skip_this_scenario if equals_rn_fixture('rn060')
+end
+
 def equals_target(target)
   version = ENV["AGP_VERSION"].slice(0, 5)
   version = version.gsub(".", "")
@@ -51,6 +55,11 @@ def is_above_or_equal_to_target(target)
   version = ENV["AGP_VERSION"].slice(0, 5)
   version = version.gsub(".", "")
   return version.to_i >= target
+end
+
+def equals_rn_fixture(target)
+    fixture_name = ENV["RN_FIXTURE_DIR"].split('/')[-2]
+    return fixture_name == target
 end
 
 def get_requests_with_field(name)

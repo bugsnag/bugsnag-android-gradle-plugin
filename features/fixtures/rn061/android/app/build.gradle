@@ -77,7 +77,7 @@ import com.android.build.OutputFile
 
 project.ext.react = [
     entryFile: "index.js",
-    enableHermes: System.env.RN_ENABLE_HERMES == true,  // clean and rebuild if changing
+    enableHermes: !!System.env.RN_ENABLE_HERMES // clean and rebuild if changing
 ]
 
 apply from: "../../node_modules/react-native/react.gradle"

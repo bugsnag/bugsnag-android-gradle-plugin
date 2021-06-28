@@ -1,3 +1,8 @@
+## TBD
+
+* Upload correct bundle when Hermes is enabled
+  [404](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/404)
+
 ## 5.7.7 (2021-06-23)
 
 * Emit a helpful compatibility error when Android Gradle Plugin 7 or higher is detected

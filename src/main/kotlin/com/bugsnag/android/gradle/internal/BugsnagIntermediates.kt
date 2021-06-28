@@ -4,6 +4,7 @@ import com.android.build.gradle.api.ApkVariantOutput
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
+import java.io.File
 
 /**
  * Intermediate path where libunity and other Unity SO files are copied
@@ -61,6 +62,11 @@ internal fun intermediateForGenerateJvmMapping(project: Project, output: ApkVari
 internal fun intermediateForUploadSourcemaps(project: Project, output: ApkVariantOutput): Provider<RegularFile> {
     val path = "intermediates/bugsnag/requests/sourceMapFor${output.taskNameSuffix()}"
     return project.layout.buildDirectory.file(path)
+}
+
+internal fun intermediateForRescuedReactNativeBundle(project: Project, output: ApkVariantOutput): File {
+    val path = "intermediates/bugsnag/rescued/${output.taskNameSuffix()}.android.bundle"
+    return project.layout.buildDirectory.file(path).get().asFile
 }
 
 internal fun Project.computeManifestInfoOutputV2(variant: String): Provider<RegularFile> {
