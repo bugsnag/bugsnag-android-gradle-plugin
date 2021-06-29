@@ -23,19 +23,19 @@ AfterConfiguration do |_config|
 end
 
 Before('@requires_agp4_0_or_higher') do |scenario|
-  skip_this_scenario unless is_above_or_equal_to_target(400)
+  skip_this_scenario unless above_or_equal_to_target(400)
 end
 
 Before('@requires_agp4_1_or_higher') do |scenario|
-  skip_this_scenario unless is_above_or_equal_to_target(410)
+  skip_this_scenario unless above_or_equal_to_target(410)
 end
 
 Before('@skip_agp4_0_or_higher') do |scenario|
-  skip_this_scenario if is_above_or_equal_to_target(400)
+  skip_this_scenario if above_or_equal_to_target(400)
 end
 
 Before('@skip_agp4_1_or_higher') do |scenario|
-  skip_this_scenario if is_above_or_equal_to_target(410)
+  skip_this_scenario if above_or_equal_to_target(410)
 end
 
 Before('@skip_gradle_7_or_higher') do |scenario|
@@ -45,4 +45,16 @@ end
 
 Before('@skip_agp3_4_0') do |scenario|
   skip_this_scenario if equals_target(340)
+end
+
+def equals_target(target)
+  version = ENV['AGP_VERSION'].slice(0, 5)
+  version = version.gsub('.', '')
+  version.to_i == target
+end
+
+def above_or_equal_to_target(target)
+  version = ENV['AGP_VERSION'].slice(0, 5)
+  version = version.gsub('.', '')
+  version.to_i >= target
 end

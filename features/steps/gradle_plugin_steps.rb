@@ -180,18 +180,6 @@ def valid_js_source_map_api?(request_body)
   assert_not_nil(request_body['bundle'])
 end
 
-def equals_target(target)
-  version = ENV['AGP_VERSION'].slice(0, 5)
-  version = version.gsub('.', '')
-  version.to_i == target
-end
-
-def above_or_equal_to_target(target)
-  version = ENV['AGP_VERSION'].slice(0, 5)
-  version = version.gsub('.', '')
-  version.to_i >= target
-end
-
 def get_requests_with_field(request_type, name)
   all_requests = Maze::Server.list_for(request_type).clone
   all_requests.all.reject do |request|
