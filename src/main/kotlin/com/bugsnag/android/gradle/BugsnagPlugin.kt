@@ -475,12 +475,22 @@ class BugsnagPlugin : Plugin<Project> {
         val rnTaskName = "bundle${variant.name.capitalize()}JsAndAssets"
         val rnTask: Task = project.tasks.findByName(rnTaskName) ?: return null
         val rnSourceMap = findReactNativeSourcemapFile(project, variant)
-        val rnBundle = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--bundle-output")
+        var rnBundle = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--bundle-output")
         val dev = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--dev")
 
         if (rnBundle == null || dev == null) {
             project.logger.error("Bugsnag: unable to upload JS sourcemaps. Please enable sourcemap + bundle output.")
             return null
+        }
+
+        val enabledHermes = BugsnagUploadJsSourceMapTask.isHermesEnabled(project)
+        if (enabledHermes) {
+            rnBundle = BugsnagUploadJsSourceMapTask.rescueReactNativeSourceBundle(
+                rnTask,
+                rnBundle,
+                project,
+                output
+            )
         }
 
         return BugsnagUploadJsSourceMapTask.register(project, taskName) {

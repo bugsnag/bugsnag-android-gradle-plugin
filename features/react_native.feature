@@ -102,6 +102,8 @@ Scenario: Manually invoking source map upload task
 
 # blocked by PLAT-6305
 @skip_gradle_7_or_higher
+# Hermes driver cannot build rn_60 fixture
+@skip_rn60_fixture
 Scenario: Source maps are uploaded in an app using Hermes
     When I set environment variable "RN_ENABLE_HERMES" to "true"
     When I build the React Native app
