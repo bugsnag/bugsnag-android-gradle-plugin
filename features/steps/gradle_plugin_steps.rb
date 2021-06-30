@@ -2,19 +2,28 @@ require 'zlib'
 require 'stringio'
 
 When('I build {string} using the {string} bugsnag config') do |module_config, bugsnag_config|
-  setup_and_run_script(module_config, bugsnag_config, 'features/scripts/build_project_module.sh')
+  exit_code = setup_and_run_script(module_config, bugsnag_config, 'features/scripts/build_project_module.sh')
+  assert(exit_code.zero?, "Expected script to complete with 0 exit code, got #{exit_code}")
 end
 
 When('I build the {string} variantOutput for {string} using the {string} bugsnag config') do |variant, module_config, bugsnag_config|
-  setup_and_run_script(module_config, bugsnag_config, 'features/scripts/upload_variant_mapping.sh', variant)
+  exit_code = setup_and_run_script(module_config, bugsnag_config, 'features/scripts/upload_variant_mapping.sh', variant)
+  assert(exit_code.zero?, "Expected script to complete with 0 exit code, got #{exit_code}")
 end
 
 When('I bundle {string} using the {string} bugsnag config') do |module_config, bugsnag_config|
-  setup_and_run_script(module_config, bugsnag_config, 'features/scripts/bundle_project_module.sh')
+  exit_code = setup_and_run_script(module_config, bugsnag_config, 'features/scripts/bundle_project_module.sh')
+  assert(exit_code.zero?, "Expected script to complete with 0 exit code, got #{exit_code}")
 end
 
 When('I bundle the {string} variantOutput for {string} using the {string} bugsnag config') do |variant, module_config, bugsnag_config|
-  setup_and_run_script(module_config, bugsnag_config, 'features/scripts/bundle_one_flavor.sh', variant)
+  exit_code = setup_and_run_script(module_config, bugsnag_config, 'features/scripts/bundle_one_flavor.sh', variant)
+  assert(exit_code.zero?, "Expected script to complete with 0 exit code, got #{exit_code}")
+end
+
+When('I build the failing {string} using the {string} bugsnag config') do |module_config, bugsnag_config|
+  exit_code = setup_and_run_script(module_config, bugsnag_config, 'features/scripts/bundle_project_module.sh')
+  assert(exit_code != 0, "Expected script to fail with non-zero exit code, got #{exit_code}")
 end
 
 def setup_and_run_script(module_config, bugsnag_config, script_path, variant = nil)
@@ -22,7 +31,7 @@ def setup_and_run_script(module_config, bugsnag_config, script_path, variant = n
   Maze::Runner.environment['BUGSNAG_CONFIG'] = bugsnag_config
   Maze::Runner.environment['VARIANT_OUTPUT_NAME'] = variant unless variant.nil?
   _, exit_code = Maze::Runner.run_script(script_path, blocking: true)
-  assert(exit_code.zero?, "Expected script to complete with 0 exit code, got #{exit_code}")
+  exit_code
 end
 
 When('I build the React Native app') do
@@ -43,12 +52,7 @@ When('I set the fixture JVM arguments to {string}') do |jvm_args|
   )
 end
 
-When('I build the failing {string} using the {string} bugsnag config') do |module_config, bugsnag_config|
-  Maze::Runner.environment['MODULE_CONFIG'] = module_config
-  Maze::Runner.environment['BUGSNAG_CONFIG'] = bugsnag_config
-  _, exit_code = Maze::Runner.run_script('features/scripts/bundle_project_module.sh', blocking: true)
-  assert(exit_code != 0, "Expected script to fail with non-zero exit code, got #{exit_code}")
-end
+
 
 Then('{int} requests are valid for the build API and match the following:') do |request_count, data_table|
   requests = get_requests_with_field('build', 'builderName')
