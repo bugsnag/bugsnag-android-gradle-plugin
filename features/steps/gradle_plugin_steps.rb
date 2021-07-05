@@ -26,6 +26,12 @@ When('I build the failing {string} using the {string} bugsnag config') do |modul
   assert(exit_code != 0, "Expected script to fail with non-zero exit code, got #{exit_code}")
 end
 
+When('I build the failing {string} on AGP7 using the {string} bugsnag config') do |module_config, bugsnag_config|
+  Maze::Runner.environment['AGP_VERSION'] = '7.0.0-alpha15'
+  exit_code = setup_and_run_script(module_config, bugsnag_config, 'features/scripts/build_project_module.sh')
+  assert(exit_code != 0, "Expected script to fail with non-zero exit code, got #{exit_code}")
+end
+
 def setup_and_run_script(module_config, bugsnag_config, script_path, variant = nil)
   Maze::Runner.environment['MODULE_CONFIG'] = module_config
   Maze::Runner.environment['BUGSNAG_CONFIG'] = bugsnag_config
