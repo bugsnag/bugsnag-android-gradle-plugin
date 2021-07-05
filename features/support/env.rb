@@ -4,12 +4,13 @@
 ENV["APP_FIXTURE_DIR"] ||= "features/fixtures/app"
 ENV["NDK_FIXTURE_DIR"] ||= "features/fixtures/ndkapp"
 ENV["RN_FIXTURE_DIR"] ||= "features/fixtures/rn063/android"
+ENV["LIB_FIXTURE_DIR"] ||= "features/fixtures/mylib"
 ENV["RN_MONOREPO_FIXTURE_DIR"] ||= "features/fixtures/rn-monorepo/abc/android"
 ENV["UNITY_2018_FIXTURE_DIR"] ||= "features/fixtures/unity_2018/example"
 ENV["UNITY_2019_FIXTURE_DIR"] ||= "features/fixtures/unity_2019"
 
 # set defaults for versions
-ENV["AGP_VERSION"] ||= "7.0.0-beta03" # default to latest
+ENV["AGP_VERSION"] ||= "7.0.0" # default to latest
 ENV["GRADLE_WRAPPER_VERSION"] ||= "7.0.2"
 
 `./features/scripts/clear_local_maven_repo.sh`
