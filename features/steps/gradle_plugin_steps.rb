@@ -22,7 +22,7 @@ When('I bundle the {string} variantOutput for {string} using the {string} bugsna
 end
 
 When('I build the failing {string} using the {string} bugsnag config') do |module_config, bugsnag_config|
-  exit_code = setup_and_run_script(module_config, bugsnag_config, 'features/scripts/bundle_project_module.sh')
+  exit_code = setup_and_run_script(module_config, bugsnag_config, 'features/scripts/build_project_module.sh')
   assert(exit_code != 0, "Expected script to fail with non-zero exit code, got #{exit_code}")
 end
 
