@@ -4,7 +4,7 @@
 
 extern "C"
 JNIEXPORT jstring JNICALL
-Java_com_bugsnag_android_ndkapp_MainActivity_stringFromJNI(
+Java_com_example_bugsnag_mylib_bar(
         JNIEnv *env,
         jobject /* this */) {
     std::string hello = "Hello from C++";
