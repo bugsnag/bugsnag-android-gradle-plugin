@@ -52,8 +52,6 @@ When('I set the fixture JVM arguments to {string}') do |jvm_args|
   )
 end
 
-
-
 Then('{int} requests are valid for the build API and match the following:') do |request_count, data_table|
   requests = get_requests_with_field('build', 'builderName')
   assert_equal(request_count, requests.length, 'Wrong number of build API requests')

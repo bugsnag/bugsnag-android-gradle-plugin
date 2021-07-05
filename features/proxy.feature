@@ -35,7 +35,7 @@ Scenario: Authenticated HTTP proxy with creds
 Scenario: Authenticated HTTP proxy without creds
     When I start an authenticated http proxy
     And I set the fixture JVM arguments to "-Dhttp.proxyHost=localhost -Dhttp.proxyPort=9000 -Dhttp.nonProxyHosts="
-    And I build the failing "default_app" using the "standard" bugsnag config
+    And I build "default_app" using the "standard" bugsnag config
     Then I wait for 5 seconds
     And I should receive no builds
 
