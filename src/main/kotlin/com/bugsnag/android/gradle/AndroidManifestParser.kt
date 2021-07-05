@@ -62,6 +62,14 @@ internal class AndroidManifestParser {
             }
         }
 
+        // FIXME these aren't set for library variants
+        if (versionCode == null) {
+            versionCode = "-1"
+        }
+        if (versionName == null) {
+            versionName = "unknown"
+        }
+
         if (apiKey == null || "" == apiKey || versionCode == null ||
             buildUuid == null || versionName == null || applicationId == null
         ) {

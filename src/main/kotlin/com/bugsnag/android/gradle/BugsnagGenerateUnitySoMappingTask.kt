@@ -1,6 +1,6 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.gradle.api.ApkVariantOutput
+import com.android.build.gradle.api.BaseVariantOutput
 import com.bugsnag.android.gradle.internal.UNITY_SO_COPY_DIR
 import com.bugsnag.android.gradle.internal.UNITY_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.clearDir
@@ -55,7 +55,7 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
     override val versionCode: Property<Int> = objects.property()
 
     @get:Internal
-    internal lateinit var variantOutput: ApkVariantOutput
+    internal lateinit var variantOutput: BaseVariantOutput
 
     @get:Input
     val objDumpPaths: MapProperty<String, String> = objects.mapProperty()

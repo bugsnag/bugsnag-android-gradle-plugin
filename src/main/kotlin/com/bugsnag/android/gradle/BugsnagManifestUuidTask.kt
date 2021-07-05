@@ -1,7 +1,7 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.gradle.api.ApkVariant
-import com.android.build.gradle.api.ApkVariantOutput
+import com.android.build.gradle.api.BaseVariant
+import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.tasks.ManifestProcessorTask
 import com.bugsnag.android.gradle.internal.property
 import org.gradle.api.DefaultTask
@@ -56,10 +56,10 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
     }
 
     @get:Internal
-    internal lateinit var variantOutput: ApkVariantOutput
+    internal lateinit var variantOutput: BaseVariantOutput
 
     @get:Internal
-    internal lateinit var variant: ApkVariant
+    internal lateinit var variant: BaseVariant
 
     @TaskAction
     fun updateManifest() {
@@ -90,7 +90,7 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
      * See: https://developer.android.com/studio/build/configure-apk-splits.html#build-apks-filename
      * https://issuetracker.google.com/issues/37085185
      */
-    private fun getManifestPaths(project: Project, variant: ApkVariant, variantOutput: ApkVariantOutput): File? {
+    private fun getManifestPaths(project: Project, variant: BaseVariant, variantOutput: BaseVariantOutput): File? {
         val directoryMerged: File?
         val directoryBundle: File
         val manifestPaths = mutableListOf<File?>()
@@ -118,7 +118,7 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
         return manifestPaths[0]
     }
 
-    private fun addManifestPath(manifestPaths: MutableList<File?>, directory: File, logger: Logger, variantOutput: ApkVariantOutput) {
+    private fun addManifestPath(manifestPaths: MutableList<File?>, directory: File, logger: Logger, variantOutput: BaseVariantOutput) {
         val manifestFile = Paths.get(directory.toString(), variantOutput.dirName, "AndroidManifest.xml").toFile()
         if (manifestFile.exists()) {
             logger.info("Bugsnag: Found manifest at $manifestFile")
@@ -161,8 +161,8 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
      */
     private fun isRunningAssembleTask(
         project: Project,
-        variant: ApkVariant,
-        output: ApkVariantOutput
+        variant: BaseVariant,
+        output: BaseVariantOutput
     ): Boolean {
         return isRunningTaskWithPrefix(project, variant, output, ASSEMBLE_TASK)
     }
@@ -172,8 +172,8 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
      */
     private fun isRunningBundleTask(
         project: Project,
-        variant: ApkVariant,
-        output: ApkVariantOutput
+        variant: BaseVariant,
+        output: BaseVariantOutput
     ): Boolean {
         return isRunningTaskWithPrefix(project, variant, output, BUNDLE_TASK)
     }
@@ -184,8 +184,8 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
      */
     private fun isRunningTaskWithPrefix(
         project: Project,
-        variant: ApkVariant,
-        output: ApkVariantOutput,
+        variant: BaseVariant,
+        output: BaseVariantOutput,
         prefix: String
     ): Boolean {
         val taskNames = HashSet<String>()
@@ -205,8 +205,8 @@ open class BugsnagManifestUuidTask @Inject constructor(objects: ObjectFactory) :
      * E.g. [bundle, bundleRelease, bundleFooRelease]
      */
     internal fun findTaskNamesForPrefix(
-        variant: ApkVariant,
-        output: ApkVariantOutput,
+        variant: BaseVariant,
+        output: BaseVariantOutput,
         prefix: String
     ): Set<String> {
         val variantName = output.name.split("-")[0].capitalize()

@@ -1,6 +1,6 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.gradle.api.ApkVariantOutput
+import com.android.build.gradle.api.BaseVariantOutput
 import com.bugsnag.android.gradle.internal.NDK_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.clearDir
 import com.bugsnag.android.gradle.internal.includesAbi
@@ -51,7 +51,7 @@ open class BugsnagGenerateNdkSoMappingTask @Inject constructor(
     override val versionCode: Property<Int> = objects.property()
 
     @get:Internal
-    internal lateinit var variantOutput: ApkVariantOutput
+    internal lateinit var variantOutput: BaseVariantOutput
 
     @get:OutputDirectory
     val intermediateOutputDir: DirectoryProperty = objects.directoryProperty()

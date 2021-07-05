@@ -1,7 +1,7 @@
 package com.bugsnag.android.gradle.internal
 
-import com.android.build.gradle.api.ApkVariant
-import com.android.build.gradle.api.ApkVariantOutput
+import com.android.build.gradle.api.BaseVariant
+import com.android.build.gradle.api.BaseVariantOutput
 import com.bugsnag.android.gradle.GroovyCompat
 import org.gradle.api.Project
 import org.gradle.util.VersionNumber
@@ -14,8 +14,8 @@ import java.nio.file.Paths
  */
 internal fun findMappingFileDexguard9(
     project: Project,
-    variant: ApkVariant,
-    variantOutput: ApkVariantOutput
+    variant: BaseVariant,
+    variantOutput: BaseVariantOutput
 ): List<File> {
     return listOf(
         findDexguardMappingFile(project, variant, variantOutput, arrayOf("outputs", "dexguard", "mapping", "apk")),
@@ -28,8 +28,8 @@ internal fun findMappingFileDexguard9(
  */
 internal fun findMappingFileDexguardLegacy(
     project: Project,
-    variant: ApkVariant,
-    variantOutput: ApkVariantOutput
+    variant: BaseVariant,
+    variantOutput: BaseVariantOutput
 ): File {
     return findDexguardMappingFile(project, variant, variantOutput, arrayOf("outputs", "mapping"))
 }
@@ -45,8 +45,8 @@ internal fun findMappingFileDexguardLegacy(
  */
 private fun findDexguardMappingFile(
     project: Project,
-    variant: ApkVariant,
-    variantOutput: ApkVariantOutput,
+    variant: BaseVariant,
+    variantOutput: BaseVariantOutput,
     path: Array<String>
 ): File {
     val buildDir = project.buildDir.toString()
@@ -77,7 +77,7 @@ internal fun getDexguardMajorVersionInt(project: Project): Int {
 /**
  * Gets the task name for the Dexguard App Bundle task for this variant.
  */
-internal fun getDexguardAabTaskName(variant: ApkVariant): String {
+internal fun getDexguardAabTaskName(variant: BaseVariant): String {
     val buildType = variant.buildType.name.capitalize()
     val flavor = variant.flavorName.capitalize()
     return "dexguardAab$flavor$buildType"

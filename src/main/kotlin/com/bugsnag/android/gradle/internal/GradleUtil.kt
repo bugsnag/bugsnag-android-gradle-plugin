@@ -7,6 +7,8 @@ import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
+import com.android.build.gradle.api.BaseVariantOutput
+import com.android.build.gradle.api.LibraryVariant
 // TODO use the new replacement when min AGP version is 4.0
 import com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import okio.HashingSink
@@ -70,7 +72,7 @@ internal fun <T : Task> TaskProvider<out T>.dependsOn(vararg tasks: TaskProvider
 }
 
 /** An alternative to [BaseVariant.register] that accepts a [TaskProvider] input. */
-internal fun ApkVariant.register(project: Project, provider: TaskProvider<out Task>, autoRunTask: Boolean) {
+internal fun BaseVariant.register(project: Project, provider: TaskProvider<out Task>, autoRunTask: Boolean) {
     if (autoRunTask) {
         assembleProvider.dependsOn(provider)
         val bundleName = "bundle" + assembleProvider.name.removePrefix("assemble")
@@ -80,15 +82,21 @@ internal fun ApkVariant.register(project: Project, provider: TaskProvider<out Ta
             }
     }
 
+    val packageProvider = when (this) {
+        is LibraryVariant -> packageLibraryProvider
+        is ApkVariant -> packageApplicationProvider
+        else -> throw IllegalStateException("Unexpected variant type $this")
+    }
+
     provider.configure { task ->
         // the upload task should always execute after the package task,
         // but should only run automatically when specified
         if (autoRunTask) {
-            task.dependsOn(packageApplicationProvider)
+            task.dependsOn(packageProvider)
         }
-        task.mustRunAfter(packageApplicationProvider)
+        task.mustRunAfter(packageProvider)
     }
-    packageApplicationProvider.configure {
+    packageProvider.configure {
         // triggers configuration of the bugsnag upload task so that it runs
         // automatically when an assemble/bundle task is invoked
         if (autoRunTask) {
@@ -117,9 +125,13 @@ internal fun AppExtension.hasMultipleOutputs(): Boolean {
 /**
  * Returns true if an APK variant output includes SO files for the given ABI.
  */
-internal fun ApkVariantOutput.includesAbi(abi: String): Boolean {
-    val splitArch = getFilter(VariantOutput.FilterType.ABI)
-    return splitArch == null || abi == splitArch
+internal fun BaseVariantOutput.includesAbi(abi: String): Boolean {
+    if (this is ApkVariantOutput) {
+        val splitArch = getFilter(VariantOutput.FilterType.ABI)
+        return splitArch == null || abi == splitArch
+    } else { // FIXME library variant needs a different way of calculating this
+        return true
+    }
 }
 
 /** Returns a String provider for a system property. */

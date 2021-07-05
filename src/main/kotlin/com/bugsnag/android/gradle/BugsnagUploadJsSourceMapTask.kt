@@ -1,6 +1,6 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.gradle.api.ApkVariant
+import com.android.build.gradle.api.BaseVariant
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
 import org.gradle.api.DefaultTask
@@ -189,7 +189,7 @@ open class BugsnagUploadJsSourceMapTask @Inject constructor(
  *
  * https://github.com/facebook/react-native/blob/master/react.gradle#L116
  */
-internal fun findReactNativeSourcemapFile(project: Project, variant: ApkVariant): String {
+internal fun findReactNativeSourcemapFile(project: Project, variant: BaseVariant): String {
     val react = project.property("react") as Map<*, *>?
     val bundleAssetName = react?.get("bundleAssetName") as String? ?: "index.android.bundle"
     val jsSourceMapsDir = "${project.buildDir}/generated/sourcemaps/react/${variant.dirName}"
