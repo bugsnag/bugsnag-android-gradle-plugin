@@ -1,4 +1,4 @@
 source "https://rubygems.org"
 
-gem "bugsnag-maze-runner", git: 'https://github.com/bugsnag/maze-runner', branch: 'cawl/update-multipart-requests'
+gem "bugsnag-maze-runner", git: 'https://github.com/bugsnag/maze-runner', tag: 'v5.5.0'
 
