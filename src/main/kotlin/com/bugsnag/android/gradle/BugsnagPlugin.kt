@@ -5,6 +5,7 @@ import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.bugsnag.android.gradle.BugsnagInstallJniLibsTask.Companion.resolveBugsnagArtifacts
+import com.bugsnag.android.gradle.internal.AgpVersions
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.NDK_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.TASK_JNI_LIBS
@@ -40,6 +41,7 @@ import org.gradle.api.UnknownTaskException
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.StopExecutionException
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
@@ -66,12 +68,22 @@ class BugsnagPlugin : Plugin<Project> {
 
     @Suppress("LongMethod")
     override fun apply(project: Project) {
+        if (AgpVersions.CURRENT >= AgpVersions.VERSION_7_0) {
+            throw StopExecutionException(
+                "Using com.bugsnag.android.gradle with Android Gradle Plugin 7+ " +
+                    "requires an upgrade to com.bugsnag.android.gradle:7.+. " +
+                    "For more information about this change, see " +
+                    "https://docs.bugsnag.com/build-integrations/gradle/"
+            )
+        }
+
         // After Gradle 5.2, this can use service injection for injecting ObjectFactory
         val bugsnag = project.extensions.create(
             "bugsnag",
             BugsnagPluginExtension::class.java,
             project.objects
         )
+
         project.pluginManager.withPlugin("com.android.application") {
             if (!bugsnag.enabled.get()) {
                 return@withPlugin
