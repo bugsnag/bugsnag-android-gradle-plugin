@@ -41,15 +41,13 @@ def setup_and_run_script(module_config, bugsnag_config, script_path, variant = n
 end
 
 When('I build the React Native app') do
-  steps %(
-    And I run the script "features/scripts/build_react_native_app.sh" synchronously
-  )
+  _, exit_code = Maze::Runner.run_script('features/scripts/build_react_native_app.sh', blocking: true)
+  assert(exit_code.zero?, "Expected script to complete with 0 exit code, got #{exit_code}")
 end
 
 When('I build the NDK app') do
-  steps %(
-    And I run the script "features/scripts/build_ndk_app.sh" synchronously
-  )
+  _, exit_code = Maze::Runner.run_script('features/scripts/build_ndk_app.sh', blocking: true)
+  assert(exit_code.zero?, "Expected script to complete with 0 exit code, got #{exit_code}")
 end
 
 When('I set the fixture JVM arguments to {string}') do |jvm_args|
