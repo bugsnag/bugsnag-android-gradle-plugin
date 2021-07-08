@@ -1,9 +1,9 @@
 GIT
   remote: https://github.com/bugsnag/maze-runner
-  revision: eea928bc06926bbe8e647c6981959c3c86807bd5
-  tag: v5.5.0
+  revision: 4f3d0a5818942abb6727a3fee4b2c4223f5705fa
+  branch: tms/uploads-endpoint
   specs:
-    bugsnag-maze-runner (5.5.0)
+    bugsnag-maze-runner (5.5.1)
       appium_lib (~> 11.2.0)
       cucumber (~> 3.1.2)
       cucumber-expressions (~> 6.0.0)
@@ -82,4 +82,4 @@ DEPENDENCIES
   bugsnag-maze-runner!
 
 BUNDLED WITH
-   2.1.4
+   2.2.20
