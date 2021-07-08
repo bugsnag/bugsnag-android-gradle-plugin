@@ -65,7 +65,7 @@ Scenario: Shared object files not uploaded when uploadNdkUnityLibraryMappings se
 Scenario: Bundling a Unity project uploads JVM/release/Unity information
     When I run the script "features/scripts/bundle_unity_2019.sh" synchronously
     And I wait to receive a build
-    And I wait to receive 2 uploads
+    And I wait to receive 4 uploads
 
     Then 1 builds are valid for the build API and match the following:
         | appVersionCode | appVersion | buildTool      |
