@@ -58,8 +58,8 @@ When('I set the fixture JVM arguments to {string}') do |jvm_args|
   )
 end
 
-Then('{int} requests are valid for the build API and match the following:') do |request_count, data_table|
-  requests = get_requests_with_field('build', 'builderName')
+Then('{int} builds are valid for the build API and match the following:') do |request_count, data_table|
+  requests = get_requests_with_field('builds', 'builderName')
   assert_equal(request_count, requests.length, 'Wrong number of build API requests')
   Maze::Assertions::RequestSetAssertions.assert_requests_match requests, data_table
 
@@ -68,8 +68,8 @@ Then('{int} requests are valid for the build API and match the following:') do |
   end
 end
 
-Then('{int} requests are valid for the android mapping API and match the following:') do |request_count, data_table|
-  requests = get_requests_with_field('build', 'proguard')
+Then('{int} uploads are valid for the android mapping API and match the following:') do |request_count, data_table|
+  requests = get_requests_with_field('uploads', 'proguard')
   assert_equal(request_count, requests.length, 'Wrong number of mapping API requests')
   Maze::Assertions::RequestSetAssertions.assert_requests_match requests, data_table
 
@@ -78,8 +78,8 @@ Then('{int} requests are valid for the android mapping API and match the followi
   end
 end
 
-Then('{int} requests are valid for the android NDK mapping API and match the following:') do |request_count, data_table|
-  requests = get_requests_with_field('build', 'soSymbolFile')
+Then('{int} uploads are valid for the android NDK mapping API and match the following:') do |request_count, data_table|
+  requests = get_requests_with_field('uploads', 'soSymbolFile')
   assert_equal(request_count, requests.length, 'Wrong number of NDK mapping API requests')
   Maze::Assertions::RequestSetAssertions.assert_requests_match requests, data_table
 
@@ -88,8 +88,8 @@ Then('{int} requests are valid for the android NDK mapping API and match the fol
   end
 end
 
-Then('{int} requests are valid for the android unity NDK mapping API and match the following:') do |request_count, data_table|
-  requests = get_requests_with_field('build', 'soSymbolTableFile')
+Then('{int} uploads are valid for the android unity NDK mapping API and match the following:') do |request_count, data_table|
+  requests = get_requests_with_field('uploads', 'soSymbolTableFile')
   assert_equal(request_count, requests.length, 'Wrong number of android unity NDK mapping API requests')
   Maze::Assertions::RequestSetAssertions.assert_requests_match requests, data_table
 
@@ -98,8 +98,8 @@ Then('{int} requests are valid for the android unity NDK mapping API and match t
   end
 end
 
-Then('{int} requests are valid for the JS source map API and match the following:') do |request_count, data_table|
-  requests = get_requests_with_field('build', 'sourceMap')
+Then('{int} uploads are valid for the JS source map API and match the following:') do |request_count, data_table|
+  requests = get_requests_with_field('uploads', 'sourceMap')
   assert_equal(request_count, requests.length, 'Wrong number of JS source map API requests')
   Maze::Assertions::RequestSetAssertions.assert_requests_match requests, data_table
 
@@ -108,8 +108,8 @@ Then('{int} requests are valid for the JS source map API and match the following
   end
 end
 
-Then('{int} requests have an R8 mapping file with the following symbols:') do |request_count, data_table|
-  requests = get_requests_with_field('build', 'proguard')
+Then('{int} uploads have an R8 mapping file with the following symbols:') do |request_count, data_table|
+  requests = get_requests_with_field('uploads', 'proguard')
   assert_equal(request_count, requests.length, 'Wrong number of mapping API requests')
 
   # inflate gzipped proguard mapping file & verify contents
@@ -122,14 +122,14 @@ Then('{int} requests have an R8 mapping file with the following symbols:') do |r
   end
 end
 
-Then('the build request is valid for the Android Mapping API') do
+Then('the upload is valid for the Android Mapping API') do
   steps %(
-    And the build payload field "apiKey" equals "#{$api_key}"
-    And the build payload field "proguard" is not null
-    And the build payload field "appId" is not null
-    And the build payload field "versionCode" is not null
-    And the build payload field "buildUUID" is not null
-    And the build payload field "versionName" is not null
+    And the upload payload field "apiKey" equals "#{$api_key}"
+    And the upload payload field "proguard" is not null
+    And the upload payload field "appId" is not null
+    And the upload payload field "versionCode" is not null
+    And the upload payload field "buildUUID" is not null
+    And the upload payload field "versionName" is not null
   )
 end
 
