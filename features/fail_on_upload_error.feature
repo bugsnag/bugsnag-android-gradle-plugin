@@ -2,7 +2,8 @@ Feature: Build stops when mapping file upload fails
 
 Scenario: Upload successfully with API key, mapping file, and correct endpoint
     When I build "default_app" using the "standard" bugsnag config
-    And I wait to receive 2 builds
+    And I wait to receive a build
+    And I wait to receive an upload
 
 Scenario: No uploads or build failures when obfuscation is disabled
     When I build "disabled_obfuscation" using the "standard" bugsnag config
