@@ -1,9 +1,9 @@
 GIT
   remote: https://github.com/bugsnag/maze-runner
-  revision: 4f3d0a5818942abb6727a3fee4b2c4223f5705fa
-  branch: tms/uploads-endpoint
+  revision: 626bbe9d8e72e46fc8cae757a032bea88b6e3829
+  tag: v5.6.0
   specs:
-    bugsnag-maze-runner (5.5.1)
+    bugsnag-maze-runner (5.6.0)
       appium_lib (~> 11.2.0)
       cucumber (~> 3.1.2)
       cucumber-expressions (~> 6.0.0)
