@@ -1,8 +1,8 @@
 apply plugin: 'com.bugsnag.android.gradle'
 
 bugsnag {
-    endpoint = "http://localhost:9339"
-    releasesEndpoint = "http://localhost:9339"
+    endpoint = "http://localhost:9339/uploads"
+    releasesEndpoint = "http://localhost:9339/builds"
     uploadJvmMappings = false
 
     builderName = "Mark Twain"

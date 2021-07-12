@@ -6,13 +6,14 @@ Feature: Plugin integrated in NDK app
 @requires_agp4_0_or_higher
 Scenario: NDK apps send requests
     When I build the NDK app
-    And I wait to receive 10 requests
+    And I wait to receive a build
+    And I wait to receive 9 uploads
 
-    Then 1 requests are valid for the build API and match the following:
+    Then 1 builds are valid for the build API and match the following:
       | appVersionCode | appVersion | buildTool      |
       | 1              | 1.0        | gradle-android |
 
-    And 8 requests are valid for the android NDK mapping API and match the following:
+    And 8 uploads are valid for the android NDK mapping API and match the following:
       | arch        | projectRoot | sharedObjectName |
       | arm64-v8a   | /\S+/       | liblog.so        |
       | arm64-v8a   | /\S+/       | libnative-lib.so |
@@ -23,11 +24,11 @@ Scenario: NDK apps send requests
       | x86_64      | /\S+/       | liblog.so        |
       | x86_64      | /\S+/       | libnative-lib.so |
 
-    And 1 requests are valid for the android mapping API and match the following:
+    And 1 uploads are valid for the android mapping API and match the following:
       | appId                      |
       | com.bugsnag.android.ndkapp |
 
-    And 1 requests have an R8 mapping file with the following symbols:
+    And 1 uploads have an R8 mapping file with the following symbols:
       | jvmSymbols |
       | com.bugsnag.android.ndkapp.MainActivity |
 
@@ -35,13 +36,14 @@ Scenario: NDK apps send requests
 Scenario: Custom projectRoot is added to payload
     When I set environment variable "PROJECT_ROOT" to "/repos/custom/my-app"
     And I build the NDK app
-    And I wait to receive 10 requests
+    And I wait to receive a build
+    And I wait to receive 9 uploads
 
-    Then 1 requests are valid for the build API and match the following:
+    Then 1 builds are valid for the build API and match the following:
       | appVersionCode | appVersion | buildTool      |
       | 1              | 1.0        | gradle-android |
 
-    And 8 requests are valid for the android NDK mapping API and match the following:
+    And 8 uploads are valid for the android NDK mapping API and match the following:
       | arch        | projectRoot          |
       | arm64-v8a   | /repos/custom/my-app |
       | armeabi-v7a | /repos/custom/my-app |
@@ -52,7 +54,7 @@ Scenario: Custom projectRoot is added to payload
       | x86         | /repos/custom/my-app |
       | x86_64      | /repos/custom/my-app |
 
-    And 1 requests are valid for the android mapping API and match the following:
+    And 1 uploads are valid for the android mapping API and match the following:
         | appId                      |
         | com.bugsnag.android.ndkapp |
 
@@ -61,20 +63,21 @@ Scenario: Custom projectRoot is added to payload
 Scenario: Custom objdump location
     When I set environment variable "OBJDUMP_LOCATION" to "/fake/objdump"
     And I build the NDK app
-    And I wait to receive 6 requests
+    And I wait to receive a build
+    And I wait to receive 5 uploads
 
-    Then 1 requests are valid for the build API and match the following:
+    Then 1 builds are valid for the build API and match the following:
       | appVersionCode | appVersion | buildTool      |
       | 1              | 1.0        | gradle-android |
 
-    And 4 requests are valid for the android NDK mapping API and match the following:
+    And 4 uploads are valid for the android NDK mapping API and match the following:
       | arch           |
       | armeabi-v7a    |
       | armeabi-v7a    |
       | x86_64         |
       | x86_64         |
 
-    And 1 requests are valid for the android mapping API and match the following:
+    And 1 uploads are valid for the android mapping API and match the following:
         | appId                      |
         | com.bugsnag.android.ndkapp |
 
@@ -82,13 +85,14 @@ Scenario: Custom objdump location
 Scenario: Mapping files uploaded for custom sharedObjectPaths
     When I set environment variable "USE_SHARED_OBJECT_PATH" to "true"
     When I build the NDK app
-    And I wait to receive 14 requests
+    And I wait to receive a build
+    And I wait to receive 13 uploads
 
-    Then 1 requests are valid for the build API and match the following:
+    Then 1 builds are valid for the build API and match the following:
         | appVersionCode | appVersion | buildTool      |
         | 1              | 1.0        | gradle-android |
 
-    And 12 requests are valid for the android NDK mapping API and match the following:
+    And 12 uploads are valid for the android NDK mapping API and match the following:
         | arch        | projectRoot | sharedObjectName |
         | arm64-v8a   | /\S+/       | liblog.so        |
         | arm64-v8a   | /\S+/       | libnative-lib.so |
@@ -103,6 +107,6 @@ Scenario: Mapping files uploaded for custom sharedObjectPaths
         | x86_64      | /\S+/       | libnative-lib.so |
         | x86_64      | /\S+/       | libmonochrome.so |
 
-    And 1 requests are valid for the android mapping API and match the following:
+    And 1 uploads are valid for the android mapping API and match the following:
         | appId                      |
         | com.bugsnag.android.ndkapp |
