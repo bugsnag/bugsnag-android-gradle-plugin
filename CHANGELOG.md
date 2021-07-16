@@ -4,7 +4,7 @@
   [404](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/404)
 
 * Address task dependency warning when using APK splits
-  [#407](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/407)
+  [#408](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/408)
 
 ## 5.7.7 (2021-06-23)
 
