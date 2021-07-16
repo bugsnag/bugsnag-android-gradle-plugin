@@ -1,8 +1,6 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.ApkVariantOutput
-import com.bugsnag.android.gradle.internal.UNITY_SO_COPY_DIR
-import com.bugsnag.android.gradle.internal.UNITY_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.clearDir
 import com.bugsnag.android.gradle.internal.includesAbi
 import com.bugsnag.android.gradle.internal.mapProperty
@@ -15,7 +13,6 @@ import okio.source
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
@@ -37,8 +34,7 @@ import javax.inject.Inject
  * Task that generates Unity shared object mapping files for upload to Bugsnag.
  */
 internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
-    objects: ObjectFactory,
-    projectLayout: ProjectLayout
+    objects: ObjectFactory
 ) : DefaultTask(), AndroidManifestInfoReceiver {
 
     init {
@@ -62,11 +58,9 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
 
     @get:OutputDirectory
     val intermediateOutputDir: DirectoryProperty = objects.directoryProperty()
-        .convention(projectLayout.buildDirectory.dir(UNITY_SO_MAPPING_DIR))
 
     @get:OutputDirectory
     val unitySharedObjectDir: DirectoryProperty = objects.directoryProperty()
-        .convention(projectLayout.buildDirectory.dir(UNITY_SO_COPY_DIR))
 
     @get:Internal
     val rootProjectDir: DirectoryProperty = objects.directoryProperty()

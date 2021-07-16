@@ -3,6 +3,9 @@
 * Upload correct bundle when Hermes is enabled
   [404](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/404)
 
+* Address task dependency warning when using APK splits
+  [#407](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/407)
+
 ## 5.7.7 (2021-06-23)
 
 * Emit a helpful compatibility error when Android Gradle Plugin 7 or higher is detected
