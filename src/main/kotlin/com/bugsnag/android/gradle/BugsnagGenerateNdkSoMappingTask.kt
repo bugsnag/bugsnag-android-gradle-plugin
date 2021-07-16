@@ -1,7 +1,6 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.ApkVariantOutput
-import com.bugsnag.android.gradle.internal.NDK_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.clearDir
 import com.bugsnag.android.gradle.internal.includesAbi
 import com.bugsnag.android.gradle.internal.mapProperty
@@ -11,7 +10,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
@@ -33,8 +31,7 @@ import javax.inject.Inject
  * Task that generates NDK shared object mapping files for upload to Bugsnag.
  */
 open class BugsnagGenerateNdkSoMappingTask @Inject constructor(
-    objects: ObjectFactory,
-    projectLayout: ProjectLayout
+    objects: ObjectFactory
 ) : DefaultTask(), AndroidManifestInfoReceiver {
 
     init {
@@ -55,7 +52,6 @@ open class BugsnagGenerateNdkSoMappingTask @Inject constructor(
 
     @get:OutputDirectory
     val intermediateOutputDir: DirectoryProperty = objects.directoryProperty()
-        .convention(projectLayout.buildDirectory.dir(NDK_SO_MAPPING_DIR))
 
     @get:Input
     val objDumpPaths: MapProperty<String, String> = objects.mapProperty()
