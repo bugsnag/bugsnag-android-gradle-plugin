@@ -9,6 +9,7 @@ import com.bugsnag.android.gradle.internal.AgpVersions
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.NDK_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.TASK_JNI_LIBS
+import com.bugsnag.android.gradle.internal.UNITY_SO_COPY_DIR
 import com.bugsnag.android.gradle.internal.UNITY_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.bugsnag.android.gradle.internal.getDexguardAabTaskName
@@ -209,6 +210,7 @@ class BugsnagPlugin : Plugin<Project> {
                 )
                 else -> null
             }
+            val ndkSoMappingOutput = "$NDK_SO_MAPPING_DIR/${output.name}"
             val generateNdkMappingProvider = when {
                 ndkEnabled -> registerGenerateSoMappingTask(
                     project,
@@ -216,7 +218,8 @@ class BugsnagPlugin : Plugin<Project> {
                     output,
                     bugsnag,
                     android,
-                    manifestInfoFileProvider
+                    manifestInfoFileProvider,
+                    ndkSoMappingOutput
                 )
                 else -> null
             }
@@ -229,18 +232,22 @@ class BugsnagPlugin : Plugin<Project> {
                         httpClientHelperProvider,
                         manifestInfoFileProvider,
                         ndkUploadClientProvider,
-                        generateNdkMappingProvider
+                        generateNdkMappingProvider,
+                        ndkSoMappingOutput
                     )
                 }
                 else -> null
             }
 
+            val unityMappingDir = "$UNITY_SO_MAPPING_DIR/${output.name}"
             val generateUnityMappingProvider = when {
                 unityEnabled -> registerGenerateUnityMappingTask(
                     project,
                     output,
                     bugsnag,
-                    manifestInfoFileProvider
+                    manifestInfoFileProvider,
+                    unityMappingDir,
+                    "$UNITY_SO_COPY_DIR/${output.name}"
                 )
                 else -> null
             }
@@ -253,7 +260,8 @@ class BugsnagPlugin : Plugin<Project> {
                         httpClientHelperProvider,
                         manifestInfoFileProvider,
                         unityUploadClientProvider,
-                        generateUnityMappingProvider
+                        generateUnityMappingProvider,
+                        unityMappingDir
                     )
                 }
                 else -> null
@@ -480,7 +488,8 @@ class BugsnagPlugin : Plugin<Project> {
         output: ApkVariantOutput,
         bugsnag: BugsnagPluginExtension,
         android: AppExtension,
-        manifestInfoFileProvider: Provider<RegularFile>
+        manifestInfoFileProvider: Provider<RegularFile>,
+        soMappingOutputPath: String
     ): TaskProvider<out BugsnagGenerateNdkSoMappingTask> {
         // Create a Bugsnag task to upload NDK mapping file(s)
         val taskName = taskNameForGenerateNdkMapping(output)
@@ -496,6 +505,7 @@ class BugsnagPlugin : Plugin<Project> {
                 searchDirectories.from(provider.map { fixNativeOutputPath(it.objFolder) })
                 searchDirectories.from(provider.map { fixNativeOutputPath(it.soFolder) })
             }
+            intermediateOutputDir.set(project.layout.buildDirectory.dir(soMappingOutputPath))
         }
     }
 
@@ -508,7 +518,9 @@ class BugsnagPlugin : Plugin<Project> {
         project: Project,
         output: ApkVariantOutput,
         bugsnag: BugsnagPluginExtension,
-        manifestInfoFileProvider: Provider<RegularFile>
+        manifestInfoFileProvider: Provider<RegularFile>,
+        mappingFileOutputDir: String,
+        copyOutputDir: String
     ): TaskProvider<out BugsnagGenerateUnitySoMappingTask> {
         // Create a Bugsnag task to upload Unity mapping file(s)
         val taskName = taskNameForGenerateUnityMapping(output)
@@ -518,6 +530,8 @@ class BugsnagPlugin : Plugin<Project> {
             manifestInfoFile.set(manifestInfoFileProvider)
             rootProjectDir.set(project.rootProject.projectDir)
             versionCode.set(output.versionCode)
+            intermediateOutputDir.set(project.layout.buildDirectory.dir(mappingFileOutputDir))
+            unitySharedObjectDir.set(project.layout.buildDirectory.dir(copyOutputDir))
         }
     }
 
@@ -529,7 +543,8 @@ class BugsnagPlugin : Plugin<Project> {
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
         manifestInfoFileProvider: Provider<RegularFile>,
         ndkUploadClientProvider: Provider<out UploadRequestClient>,
-        generateTaskProvider: TaskProvider<out BugsnagGenerateNdkSoMappingTask>
+        generateTaskProvider: TaskProvider<out BugsnagGenerateNdkSoMappingTask>,
+        soMappingOutputDir: String
     ): TaskProvider<out BugsnagUploadSharedObjectTask> {
         return registerSharedObjectUploadTask(
             project,
@@ -542,7 +557,7 @@ class BugsnagPlugin : Plugin<Project> {
             taskNameForUploadNdkMapping(output),
             intermediateForNdkSoRequest(project, output),
             BugsnagUploadSharedObjectTask.UploadType.NDK,
-            NDK_SO_MAPPING_DIR
+            soMappingOutputDir
         )
     }
 
@@ -554,7 +569,8 @@ class BugsnagPlugin : Plugin<Project> {
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
         manifestInfoFileProvider: Provider<RegularFile>,
         ndkUploadClientProvider: Provider<out UploadRequestClient>,
-        generateTaskProvider: TaskProvider<out BugsnagGenerateUnitySoMappingTask>
+        generateTaskProvider: TaskProvider<out BugsnagGenerateUnitySoMappingTask>,
+        mappingFileOutputDir: String
     ): TaskProvider<out BugsnagUploadSharedObjectTask> {
         return registerSharedObjectUploadTask(
             project,
@@ -567,7 +583,7 @@ class BugsnagPlugin : Plugin<Project> {
             taskNameForUploadUnityMapping(output),
             intermediateForUnitySoRequest(project, output),
             BugsnagUploadSharedObjectTask.UploadType.UNITY,
-            UNITY_SO_MAPPING_DIR
+            mappingFileOutputDir
         )
     }
 
