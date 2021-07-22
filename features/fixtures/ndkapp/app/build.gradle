@@ -68,8 +68,8 @@ if (!System.env.UPDATING_GRADLEW) {
 
     bugsnag {
         uploadNdkMappings = true
-        endpoint = "http://localhost:9339"
-        releasesEndpoint = "http://localhost:9339"
+        endpoint = "http://localhost:9339/uploads"
+        releasesEndpoint = "http://localhost:9339/builds"
 
         def customPath = System.env.PROJECT_ROOT
         def objdumpLocation = System.env.OBJDUMP_LOCATION

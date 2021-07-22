@@ -1,3 +1,11 @@
+## 5.7.8 (2021-07-22)
+
+* Upload correct bundle when Hermes is enabled
+  [404](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/404)
+
+* Added clear error messages when node_modules cannot be located in ReactNative projects
+  [409](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/409)
+
 ## 5.7.7 (2021-06-23)
 
 * Emit a helpful compatibility error when Android Gradle Plugin 7 or higher is detected
