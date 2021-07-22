@@ -1,4 +1,4 @@
-## TBD
+## 5.7.8 (2021-07-22)
 
 * Upload correct bundle when Hermes is enabled
   [404](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/404)
