@@ -348,9 +348,25 @@ class BugsnagPlugin : Plugin<Project> {
             project.rootProject.allprojects { subProj ->
                 val defaultNodeModulesDir = File("${subProj.rootDir}/../node_modules")
                 val nodeModulesDir = bugsnag.nodeModulesDir.getOrElse(defaultNodeModulesDir)
+                if (!nodeModulesDir.exists()) {
+                    throw StopExecutionException(
+                        "Cannot find node_modules directory at: ${nodeModulesDir.absolutePath} " +
+                            "To set this to the correct path manually, please see: " +
+                            "https://docs.bugsnag.com/build-integrations/gradle/#custom-node_modules-directory"
+                    )
+                }
+
+                val bugsnagModuleDir = File(nodeModulesDir, "@bugsnag/react-native/android")
+                if (!bugsnagModuleDir.exists()) {
+                    throw StopExecutionException(
+                        "Cannot find the @bugsnag/react-native module in your node_modules directory. " +
+                            "Manual installation instructions can be found here: " +
+                            "https://docs.bugsnag.com/platforms/react-native/react-native/manual-setup/#installation"
+                    )
+                }
 
                 subProj.repositories.maven { repo ->
-                    repo.setUrl("$nodeModulesDir/@bugsnag/react-native/android")
+                    repo.setUrl(bugsnagModuleDir.toString())
                 }
             }
         }
