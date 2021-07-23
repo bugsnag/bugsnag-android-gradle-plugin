@@ -2,7 +2,6 @@ package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.ApkVariantOutput
 import com.bugsnag.android.gradle.internal.GradleVersions
-import com.bugsnag.android.gradle.internal.NDK_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.clearDir
 import com.bugsnag.android.gradle.internal.includesAbi
 import com.bugsnag.android.gradle.internal.mapProperty
@@ -35,8 +34,7 @@ import javax.inject.Inject
  * Task that generates NDK shared object mapping files for upload to Bugsnag.
  */
 sealed class BugsnagGenerateNdkSoMappingTask(
-    objects: ObjectFactory,
-    projectLayout: ProjectLayout
+    objects: ObjectFactory
 ) : DefaultTask(), AndroidManifestInfoReceiver {
 
     init {
@@ -57,7 +55,6 @@ sealed class BugsnagGenerateNdkSoMappingTask(
 
     @get:OutputDirectory
     val intermediateOutputDir: DirectoryProperty = objects.directoryProperty()
-        .convention(projectLayout.buildDirectory.dir(NDK_SO_MAPPING_DIR))
 
     @get:Input
     val objDumpPaths: MapProperty<String, String> = objects.mapProperty()
@@ -152,16 +149,15 @@ sealed class BugsnagGenerateNdkSoMappingTask(
 internal open class BugsnagGenerateNdkSoMappingTaskLegacy @Inject constructor(
     objects: ObjectFactory,
     projectLayout: ProjectLayout
-) : BugsnagGenerateNdkSoMappingTask(objects, projectLayout) {
+) : BugsnagGenerateNdkSoMappingTask(objects) {
     @Suppress("DEPRECATION") // Here for backward compat
     @get:InputFiles
     override val searchDirectories: ConfigurableFileCollection = projectLayout.configurableFiles()
 }
 
 internal open class BugsnagGenerateNdkSoMappingTask53Plus @Inject constructor(
-    objects: ObjectFactory,
-    projectLayout: ProjectLayout
-) : BugsnagGenerateNdkSoMappingTask(objects, projectLayout) {
+    objects: ObjectFactory
+) : BugsnagGenerateNdkSoMappingTask(objects) {
     @get:InputFiles
     override val searchDirectories: ConfigurableFileCollection = objects.fileCollection()
 }

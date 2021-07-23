@@ -4,6 +4,7 @@
   <CurrentIssues>
     <ID>ComplexCondition:AndroidManifestParser.kt$AndroidManifestParser$apiKey == null || "" == apiKey || versionCode == null || buildUuid == null || versionName == null || applicationId == null</ID>
     <ID>ComplexCondition:BugsnagPlugin.kt$BugsnagPlugin$!jvmMinificationEnabled &amp;&amp; !ndkEnabled &amp;&amp; !unityEnabled &amp;&amp; !reactNativeEnabled</ID>
+    <ID>LargeClass:BugsnagPlugin.kt$BugsnagPlugin : Plugin</ID>
     <ID>MagicNumber:BugsnagPluginExtension.kt$BugsnagPluginExtension$60000</ID>
     <ID>MagicNumber:BugsnagReleasesTask.kt$BugsnagReleasesTask$200</ID>
     <ID>MagicNumber:MappingFileProvider.kt$9</ID>
