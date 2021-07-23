@@ -3,6 +3,8 @@
 * Address task dependency warning when using APK splits
   [#407](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/407)
 
+* Added clear error messages when node_modules cannot be located in ReactNative projects
+
 ## 7.0.0-beta01 (2021-06-23)
 
 Support for Android Gradle Plugin 7.0.0-beta04 added. This version introduces no new features and
