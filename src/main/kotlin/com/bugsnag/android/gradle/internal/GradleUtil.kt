@@ -71,18 +71,17 @@ internal fun <T : Task> TaskProvider<out T>.dependsOn(vararg tasks: TaskProvider
 /** An alternative to [BaseVariant.register] that accepts a [TaskProvider] input. */
 internal fun ApkVariant.register(project: Project, provider: TaskProvider<out Task>, autoRunTask: Boolean) {
     if (autoRunTask) {
-        assembleProvider.dependsOn(provider)
-        val bundleName = "bundle" + assembleProvider.name.removePrefix("assemble")
-        project.tasks.matching { it.name == bundleName }
-            .configureEach { task ->
-                task.dependsOn(provider)
-            }
+        assembleProvider.configure { task ->
+            task.dependsOn(provider)
+        }
+        getBundleProvider(project)?.configure { task ->
+            task.dependsOn(provider)
+        }
     }
 
     provider.configure { task ->
-        // the upload task should always execute after the package task,
-        // but should only run automatically when specified
-        if (autoRunTask) {
+        // backwards compatibility - older AGP versions require a dependsOn relationship
+        if (autoRunTask && AgpVersions.CURRENT <= AgpVersions.VERSION_3_5) {
             task.dependsOn(packageApplicationProvider)
         }
         task.mustRunAfter(packageApplicationProvider)
@@ -95,6 +94,14 @@ internal fun ApkVariant.register(project: Project, provider: TaskProvider<out Ta
         }
     }
 }
+
+/**
+ * Fetches the [TaskProvider] for the variant's bundle task, or null if it cannot be found
+ */
+private fun ApkVariant.getBundleProvider(project: Project) = runCatching {
+    val bundleName = "bundle" + assembleProvider.name.removePrefix("assemble")
+    project.tasks.named(bundleName)
+}.getOrNull()
 
 /**
  * Returns true if a project has configured multiple variant outputs.
