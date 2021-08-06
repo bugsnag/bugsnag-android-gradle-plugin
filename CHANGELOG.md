@@ -1,3 +1,8 @@
+## TBD
+
+* Address task dependency warning when using APK splits
+  [#408](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/408)
+
 ## 5.7.8 (2021-07-22)
 
 * Upload correct bundle when Hermes is enabled
