@@ -5,7 +5,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        def agpVersion = System.env.AGP_VERSION ?: "7.0.0-beta04"
+        def agpVersion = System.env.AGP_VERSION ?: "7.0.0"
         classpath "com.android.tools.build:gradle:${agpVersion}"
 
         if (!System.env.UPDATING_GRADLEW) {
