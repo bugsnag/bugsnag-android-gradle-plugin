@@ -187,7 +187,7 @@ class BugsnagPlugin : Plugin<Project> {
             val manifestInfoFileProvider = registerManifestUuidTask(project, variant)
             val mappingFilesProvider = createMappingFileProvider(project, variant, output)
 
-            val versionCodeProvider = DefaultProvider { output.versionCode }
+            val versionCodeProvider = project.providers.provider { output.versionCode }
 
             val generateProguardTaskProvider = when {
                 jvmMinificationEnabled -> registerGenerateProguardTask(
