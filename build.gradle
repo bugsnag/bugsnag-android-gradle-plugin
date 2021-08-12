@@ -5,7 +5,7 @@ buildscript {
         google()
     }
 
-    ext.agpVersion = "7.0.0-beta04"
+    ext.agpVersion = "7.0.0"
     ext.kotlinVersion = "1.4.31"
 
     dependencies {

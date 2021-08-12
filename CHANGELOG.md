@@ -1,7 +1,13 @@
-## TBD
+## 7.0.0 (2021-08-12)
 
 * Address task dependency warning when using APK splits
   [#407](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/407)
+
+* Added clear error messages when node_modules cannot be located in ReactNative projects
+  [#410](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/410)
+
+* Upgrade AGP dependency to 7.0.0
+  [#415](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/415)
 
 ## 7.0.0-beta01 (2021-06-23)
 
