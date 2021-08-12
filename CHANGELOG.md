@@ -1,4 +1,4 @@
-## TBD
+## 7.0.0 (2021-08-12)
 
 * Address task dependency warning when using APK splits
   [#407](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/407)
