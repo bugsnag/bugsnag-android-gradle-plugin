@@ -3,15 +3,20 @@
 allprojects {
     buildscript {
         repositories {
+            mavenLocal()
             google()
             jcenter()
         }
 
         dependencies {
-            classpath 'com.android.tools.build:gradle:4.0.1'
-            classpath "com.bugsnag:bugsnag-android-gradle-plugin:5.+"
+            def agpVersion = System.env.AGP_VERSION ?: "3.4.0"
+            classpath "com.android.tools.build:gradle:${agpVersion}"
 
-            
+            if (!System.env.UPDATING_GRADLEW) {
+                dependencies {
+                    classpath "com.bugsnag:bugsnag-android-gradle-plugin:9000.0.0-test"
+                }
+            }
         }
     }
 

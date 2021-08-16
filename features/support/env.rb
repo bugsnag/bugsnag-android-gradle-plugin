@@ -17,6 +17,9 @@ ENV['GRADLE_WRAPPER_VERSION'] ||= '6.5.1'
 AfterConfiguration do |_config|
   Maze.config.enforce_bugsnag_integrity = false
 
+  # Some of the builds are pretty slow, so we wait longer to avoid flakes
+  Maze.config.receive_requests_wait = 90
+
   Maze::Runner.run_command('./features/scripts/clear_local_maven_repo.sh')
   Maze::Runner.run_command('./features/scripts/setup_gradle_wrapper.sh')
   Maze::Runner.run_command('./features/scripts/install_gradle_plugin.sh')

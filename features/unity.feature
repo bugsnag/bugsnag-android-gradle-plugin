@@ -48,6 +48,24 @@ Scenario: Unity 2019 exported gradle project uploads JVM/release/Unity informati
         | armeabi-v7a | /\S+/       | libil2cpp.sym.so |
         | armeabi-v7a | /\S+/       | libunity.sym.so  |
 
+Scenario: Unity 2021 exported gradle project uploads JVM/release/Unity information
+    When I run the script "features/scripts/build_unity_2021.sh" synchronously
+    And I wait to receive a build
+    And I wait to receive 3 uploads
+
+    Then 1 builds are valid for the build API and match the following:
+        | appVersionCode | appVersion | buildTool      |
+        | 1              | 1.0        | gradle-android |
+
+    And 1 uploads are valid for the android mapping API and match the following:
+        | versionCode | versionName | appId               |
+        | 1           | 1.0         | com.bugsnag.example |
+
+    And 2 uploads are valid for the android unity NDK mapping API and match the following:
+        | arch        | projectRoot | sharedObjectName |
+        | armeabi-v7a | /\S+/       | libmain.so |
+        | armeabi-v7a | /\S+/       | libunity.so  |
+
 Scenario: Shared object files not uploaded when uploadNdkUnityLibraryMappings set to false
     When I set environment variable "UNITY_SO_UPLOAD" to "false"
     And I run the script "features/scripts/build_unity_2019.sh" synchronously

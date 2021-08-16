@@ -27,6 +27,7 @@ import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
+import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import javax.inject.Inject
 
@@ -89,7 +90,7 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
             return
         }
 
-        sharedObjectFiles.addAll(extractSoFilesFromGzipArchive(symbolArchives, copyDir))
+        sharedObjectFiles.addAll(extractSoFilesFromArchives(symbolArchives, copyDir))
         logger.info("Extracted Unity SO files: $sharedObjectFiles")
 
         // generate mapping files for each SO file
@@ -99,23 +100,28 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
     }
 
     /**
-     * Extracts the libunity/libil2cpp SO files from inside a GZIP archive,
+     * Extracts the libunity/libil2cpp/libmain SO files from inside a list of archive files,
      * which is where the files are located for exported Gradle projects
      */
-    private fun extractSoFilesFromGzipArchive(symbolArchives: List<File>, copyDir: File): List<File> {
+    private fun extractSoFilesFromArchives(symbolArchives: List<File>, copyDir: File): List<File> {
         copyDir.mkdirs()
         return symbolArchives.flatMap { archive ->
             val zipFile = ZipFile(archive)
-            val entries = zipFile.entries()
+
+            val soFileFilter =
+                if (isUnity2021SymbolsArchive(zipFile)) Companion::isUnity2021SharedObjectFile
+                else Companion::isUnitySharedObjectFile
 
             // extract SO files from archive
-            entries.toList()
-                .filter { isUnitySharedObjectFile(it.name) }
-                .mapNotNull { entry ->
-                    val src = zipFile.getInputStream(entry).source().buffer()
-                    copySoFile(File(entry.name), copyDir, src)
-                }
+            zipFile.entries().toList()
+                .filter { soFileFilter(it.name) }
+                .mapNotNull { entry -> extractSoFile(zipFile, entry, copyDir) }
         }
+    }
+
+    private fun extractSoFile(zipFile: ZipFile, entry: ZipEntry, copyDir: File): File? {
+        val src = zipFile.getInputStream(entry).source().buffer()
+        return copySoFile(File(entry.name), copyDir, src)
     }
 
     /**
@@ -214,8 +220,20 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
             return project.tasks.register(name, configurationAction)
         }
 
+        internal fun isUnity2021SymbolsArchive(zipFile: ZipFile): Boolean {
+            return zipFile.entries()
+                .asSequence()
+                .none { isUnitySharedObjectFile(it.name) }
+        }
+
         internal fun isUnitySymbolsArchive(name: String, projectName: String): Boolean {
             return name.endsWith("symbols.zip") && name.startsWith(projectName)
+        }
+
+        internal fun isUnity2021SharedObjectFile(name: String): Boolean {
+            val extensionMatch = name.endsWith(".so") && !name.endsWith(".sym.so")
+            val nameMatch = name.contains("libunity") || name.contains("libil2cpp") || name.contains("libmain")
+            return extensionMatch && nameMatch
         }
 
         internal fun isUnitySharedObjectFile(name: String): Boolean {
