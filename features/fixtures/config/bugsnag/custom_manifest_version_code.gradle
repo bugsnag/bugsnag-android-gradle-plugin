@@ -1,0 +1,17 @@
+android.defaultConfig.manifestPlaceholders = [
+    BUGSNAG_API_KEY: "TEST_API_KEY",
+    BUGSNAG_VERSION_CODE: 9000
+]
+
+android.sourceSets {
+    main {
+        manifest.srcFile "src/main/AndroidManifestVersionCode.xml"
+    }
+}
+
+apply plugin: 'com.bugsnag.android.gradle'
+
+bugsnag {
+    endpoint = "http://localhost:9339/uploads"
+    releasesEndpoint = "http://localhost:9339/builds"
+}
