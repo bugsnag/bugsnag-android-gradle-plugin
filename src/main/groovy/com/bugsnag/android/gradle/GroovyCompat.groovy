@@ -47,7 +47,7 @@ class GroovyCompat {
                     return null
                 }
 
-                File dexguardDir = Paths.get(dexguard.path).toFile()
+                File dexguardDir = project.file(dexguard.path).getCanonicalFile()
 
                 // Get the version from the dexguard.jar manifest
                 URL url = new URL("jar:file:$dexguardDir/lib/dexguard.jar!/")
