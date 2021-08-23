@@ -1,3 +1,8 @@
+## TBD
+
+* Custom Dexguard paths are resolved correctly (relative to the project)
+  [#421](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/421)
+
 ## 7.0.0 (2021-08-12)
 
 * Address task dependency warning when using APK splits
