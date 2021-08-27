@@ -6,7 +6,7 @@ bugsnag {
 
     // disable bugsnag plugin for 'foo' productFlavor
     variantFilter { variant ->
-        if (variant.name.toLowerCase().contains("foo")) {
+        if (variant.name.toLowerCase().contains("debug") || variant.name.toLowerCase().contains("foo")) {
             enabled = false
         }
     }
