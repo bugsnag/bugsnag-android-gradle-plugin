@@ -175,14 +175,29 @@ class BugsnagPlugin : Plugin<Project> {
             val unityEnabled = isUnityLibraryUploadEnabled(bugsnag, android)
             val reactNativeEnabled = isReactNativeUploadEnabled(bugsnag)
 
+            // register bugsnag tasks
+            val mappingFilesProvider = createMappingFileProvider(project, variant, output)
+            val manifestInfoFileProvider = registerManifestUuidTask(project, variant, output)
+
+            val releaseUploadTask = registerReleasesUploadTask(
+                project,
+                variant,
+                output,
+                bugsnag,
+                manifestInfoFileProvider,
+                releasesUploadClientProvider,
+                mappingFilesProvider,
+                ndkEnabled,
+                httpClientHelperProvider
+            )
+
+            val releaseAutoUpload = bugsnag.reportBuilds.get()
+            variant.register(project, releaseUploadTask, releaseAutoUpload)
+
             // skip tasks for variant if JVM/NDK/Unity minification not enabled
             if (!jvmMinificationEnabled && !ndkEnabled && !unityEnabled && !reactNativeEnabled) {
                 return@configureEach
             }
-
-            // register bugsnag tasks
-            val manifestInfoFileProvider = registerManifestUuidTask(project, variant, output)
-            val mappingFilesProvider = createMappingFileProvider(project, variant, output)
 
             val generateProguardTaskProvider = when {
                 jvmMinificationEnabled -> registerGenerateProguardTask(
@@ -274,21 +289,6 @@ class BugsnagPlugin : Plugin<Project> {
                 )
                 else -> null
             }
-
-            val releaseUploadTask = registerReleasesUploadTask(
-                project,
-                variant,
-                output,
-                bugsnag,
-                manifestInfoFileProvider,
-                releasesUploadClientProvider,
-                mappingFilesProvider,
-                generateNdkMappingProvider != null,
-                httpClientHelperProvider
-            )
-
-            val releaseAutoUpload = bugsnag.reportBuilds.get()
-            variant.register(project, releaseUploadTask, releaseAutoUpload)
 
             if (generateNdkMappingProvider != null && uploadNdkMappingProvider != null) {
                 variant.register(project, generateNdkMappingProvider, ndkEnabled)
