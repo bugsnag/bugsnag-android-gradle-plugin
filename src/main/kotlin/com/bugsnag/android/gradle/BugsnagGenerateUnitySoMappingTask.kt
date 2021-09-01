@@ -13,17 +13,12 @@ import okio.source
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
@@ -42,13 +37,8 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
         description = "Generates Unity mapping files for upload to Bugsnag"
     }
 
-    @get:PathSensitive(NONE)
-    @get:InputFile
-    override val manifestInfoFile: RegularFileProperty = objects.fileProperty()
-
-    @get:Optional
     @get:Input
-    override val versionCode: Property<Int> = objects.property()
+    override val manifestInfo: Property<AndroidManifestInfo> = objects.property()
 
     @get:Internal
     internal lateinit var variantOutput: ApkVariantOutput

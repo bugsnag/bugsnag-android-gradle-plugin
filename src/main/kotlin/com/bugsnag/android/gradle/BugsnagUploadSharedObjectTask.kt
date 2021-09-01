@@ -14,12 +14,8 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
@@ -58,6 +54,9 @@ internal open class BugsnagUploadSharedObjectTask @Inject constructor(
         description = "Uploads SO mapping files to Bugsnag"
     }
 
+    @get:Input
+    override val manifestInfo: Property<AndroidManifestInfo> = objects.property()
+
     @get:Internal
     internal val uploadRequestClient: Property<UploadRequestClient> = objects.property()
 
@@ -66,14 +65,6 @@ internal open class BugsnagUploadSharedObjectTask @Inject constructor(
 
     @Input
     val projectRoot: Property<String> = objects.property()
-
-    @get:PathSensitive(NONE)
-    @get:InputFile
-    override val manifestInfoFile: RegularFileProperty = objects.fileProperty()
-
-    @get:Optional
-    @get:Input
-    override val versionCode: Property<Int> = objects.property()
 
     @get:OutputFile
     val requestOutputFile: RegularFileProperty = objects.fileProperty()
@@ -132,14 +123,14 @@ internal open class BugsnagUploadSharedObjectTask @Inject constructor(
         val soUploadKey = uploadType.get().uploadKey
 
         val request = BugsnagMultiPartUploadRequest.from(this, requestEndpoint)
-        val manifestInfo = parseManifestInfo()
+        val manifestInfo = manifestInfo.get()
         val mappingFileHash = mappingFile.md5HashCode()
         val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileHash) {
             logger.lifecycle(
                 "Bugsnag: Uploading SO mapping file for " +
                     "$sharedObjectName ($arch) from $mappingFile"
             )
-            request.uploadMultipartEntity(parseManifestInfo(), retryCount.get()) { builder ->
+            request.uploadMultipartEntity(manifestInfo, retryCount.get()) { builder ->
                 builder.addFormDataPart(soUploadKey, mappingFile.name, mappingFile.asRequestBody())
                 builder.addFormDataPart("arch", arch)
                 builder.addFormDataPart("sharedObjectName", sharedObjectName)

@@ -10,7 +10,7 @@
     <ID>MagicNumber:MappingFileProvider.kt$9</ID>
     <ID>MaxLineLength:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$private</ID>
     <ID>ReturnCount:BugsnagPlugin.kt$BugsnagPlugin$ @Suppress("SENSELESS_COMPARISON") internal fun isUnityLibraryUploadEnabled( bugsnag: BugsnagPluginExtension, android: BaseExtension ): Boolean</ID>
-    <ID>ReturnCount:BugsnagPlugin.kt$BugsnagPlugin$ private fun registerUploadSourceMapTask( project: Project, variant: BaseVariant, output: BaseVariantOutput, bugsnag: BugsnagPluginExtension, manifestInfoFileProvider: Provider&lt;RegularFile&gt; ): TaskProvider&lt;out BugsnagUploadJsSourceMapTask&gt;?</ID>
+    <ID>ReturnCount:BugsnagPlugin.kt$BugsnagPlugin$ private fun registerUploadSourceMapTask( project: Project, variant: BaseVariant, output: BaseVariantOutput, bugsnag: BugsnagPluginExtension, manifestInfoProvider: Provider&lt;AndroidManifestInfo&gt; ): TaskProvider&lt;out BugsnagUploadJsSourceMapTask&gt;?</ID>
     <ID>ReturnCount:ManifestUuidTaskV2Compat.kt$internal fun createManifestUpdateTask( bugsnag: BugsnagPluginExtension, project: Project, variantName: String ): TaskProvider&lt;BugsnagManifestUuidTaskV2&gt;?</ID>
     <ID>ReturnCount:SharedObjectMappingFileFactory.kt$SharedObjectMappingFileFactory$ fun generateSoMappingFile(project: Project, params: Params): File?</ID>
     <ID>SpreadOperator:DexguardCompat.kt$(buildDir, *path, variant.dirName, outputDir, "mapping.txt")</ID>
@@ -24,5 +24,6 @@
     <ID>TooGenericExceptionCaught:SharedObjectMappingFileFactory.kt$SharedObjectMappingFileFactory$e: Exception</ID>
     <ID>TooGenericExceptionCaught:SharedObjectMappingFileFactory.kt$SharedObjectMappingFileFactory$ex: Throwable</ID>
     <ID>TooManyFunctions:BugsnagPlugin.kt$BugsnagPlugin : Plugin</ID>
+    <ID>UnusedPrivateMember:BugsnagPlugin.kt$BugsnagPlugin$private fun BaseVariantOutput.findVersionCode(): Int</ID>
   </CurrentIssues>
 </SmellBaseline>
