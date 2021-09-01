@@ -6,6 +6,12 @@
 * Address task dependency warning when using APK splits
   [#412](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/412)
 
+* Custom Dexguard paths are resolved correctly (relative to the project)
+  [#420](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/420)
+
+* Release-metadata tasks are always available for configured projects
+  [#422](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/422)
+
 ## 5.7.8 (2021-07-22)
 
 * Upload correct bundle when Hermes is enabled
