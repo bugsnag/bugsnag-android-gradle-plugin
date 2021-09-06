@@ -1,6 +1,6 @@
 package com.bugsnag.android.gradle.internal
 
-import com.android.build.gradle.api.ApkVariantOutput
+import com.android.build.gradle.api.BaseVariantOutput
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
@@ -27,38 +27,38 @@ internal const val NDK_SO_MAPPING_DIR = "intermediates/bugsnag/soMappings/ndk"
 internal const val UNITY_SO_MAPPING_DIR = "intermediates/bugsnag/soMappings/unity"
 
 /**
- * Gets a unique suffix for a [ApkVariantOutput] which is used in tasks and intermediate directories
+ * Gets a unique suffix for a [BaseVariantOutput] which is used in tasks and intermediate directories
  */
-internal fun ApkVariantOutput.taskNameSuffix() = name.capitalize()
+internal fun BaseVariantOutput.taskNameSuffix() = name.capitalize()
 
 /** Intermediate locations for task outputs/inputs **/
 
-internal fun intermediateForUnitySoRequest(project: Project, output: ApkVariantOutput): Provider<RegularFile> {
+internal fun intermediateForUnitySoRequest(project: Project, output: BaseVariantOutput): Provider<RegularFile> {
     val path = "intermediates/bugsnag/requests/unityFor${output.taskNameSuffix()}.json"
     return project.layout.buildDirectory.file(path)
 }
 
-internal fun intermediateForReleaseRequest(project: Project, output: ApkVariantOutput): Provider<RegularFile> {
+internal fun intermediateForReleaseRequest(project: Project, output: BaseVariantOutput): Provider<RegularFile> {
     val path = "intermediates/bugsnag/requests/releasesFor${output.taskNameSuffix()}.json"
     return project.layout.buildDirectory.file(path)
 }
 
-internal fun intermediateForNdkSoRequest(project: Project, output: ApkVariantOutput): Provider<RegularFile> {
+internal fun intermediateForNdkSoRequest(project: Project, output: BaseVariantOutput): Provider<RegularFile> {
     val path = "intermediates/bugsnag/requests/ndkFor${output.taskNameSuffix()}.json"
     return project.layout.buildDirectory.file(path)
 }
 
-internal fun intermediateForMappingFileRequest(project: Project, output: ApkVariantOutput): Provider<RegularFile> {
+internal fun intermediateForMappingFileRequest(project: Project, output: BaseVariantOutput): Provider<RegularFile> {
     val path = "intermediates/bugsnag/requests/proguardFor${output.taskNameSuffix()}.json"
     return project.layout.buildDirectory.file(path)
 }
 
-internal fun intermediateForGenerateJvmMapping(project: Project, output: ApkVariantOutput): Provider<RegularFile> {
+internal fun intermediateForGenerateJvmMapping(project: Project, output: BaseVariantOutput): Provider<RegularFile> {
     val path = "intermediates/bugsnag/jvmMappings/mappingFor${output.taskNameSuffix()}.gz"
     return project.layout.buildDirectory.file(path)
 }
 
-internal fun intermediateForUploadSourcemaps(project: Project, output: ApkVariantOutput): Provider<RegularFile> {
+internal fun intermediateForUploadSourcemaps(project: Project, output: BaseVariantOutput): Provider<RegularFile> {
     val path = "intermediates/bugsnag/requests/sourceMapFor${output.taskNameSuffix()}"
     return project.layout.buildDirectory.file(path)
 }
@@ -69,7 +69,7 @@ internal fun Project.computeManifestInfoOutputV2(variant: String): Provider<Regu
 }
 
 internal fun Project.computeManifestInfoOutputV1(
-    output: ApkVariantOutput
+    output: BaseVariantOutput
 ): Provider<RegularFile> {
     val path = "intermediates/bugsnag/manifestInfoFor${output.taskNameSuffix()}.json"
     return layout.buildDirectory.file(path)

@@ -1,6 +1,6 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.gradle.AppExtension
+import com.android.build.gradle.BaseExtension
 import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.SharedObjectType.NDK
 import com.bugsnag.android.gradle.SharedObjectMappingFileFactory.SharedObjectType.UNITY
 import com.bugsnag.android.gradle.internal.outputZipFile
@@ -123,7 +123,7 @@ internal object SharedObjectMappingFileFactory {
 
     private fun findObjDump(project: Project, arch: String): File {
         val abi = Abi.findByName(arch)
-        val android = project.extensions.getByType(AppExtension::class.java)
+        val android = project.extensions.getByType(BaseExtension::class.java)
         val ndkDir = android.ndkDirectory.absolutePath
         val osName = calculateOsName()
         checkNotNull(abi) { "Failed to find ABI for $arch" }

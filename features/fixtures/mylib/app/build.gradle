@@ -1,0 +1,39 @@
+plugins {
+    id "com.android.library"
+}
+
+apply plugin: "com.bugsnag.android.gradle"
+
+android {
+    compileSdkVersion 30
+    buildToolsVersion "30.0.3"
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 30
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+}
+
+dependencies {
+    implementation "com.bugsnag:bugsnag-android:5.12.0"
+}
+
+bugsnag {
+    uploadNdkMappings = true
+    endpoint = "http://localhost:9339"
+    releasesEndpoint = "http://localhost:9339"
+}

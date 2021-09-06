@@ -3,6 +3,9 @@
 * Custom Dexguard paths are resolved correctly (relative to the project)
   [#421](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/421)
 
+* Support extracting SO files from bugsnag AARs for library modules
+  [#423](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/423)
+
 ## 7.0.0 (2021-08-12)
 
 * Address task dependency warning when using APK splits
