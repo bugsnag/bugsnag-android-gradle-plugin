@@ -6,6 +6,9 @@
 * Support extracting SO files from bugsnag AARs for library modules
   [#423](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/423)
 
+* Support DexGuard with AGP 7
+  [#426](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/426)
+
 ## 7.0.0 (2021-08-12)
 
 * Address task dependency warning when using APK splits
