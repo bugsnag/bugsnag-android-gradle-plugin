@@ -50,6 +50,11 @@ When('I build the NDK app') do
   assert(exit_code.zero?, "Expected script to complete with 0 exit code, got #{exit_code}")
 end
 
+When('I build the library module fixture') do
+  _, exit_code = Maze::Runner.run_script('features/scripts/build_library.sh', blocking: true)
+  assert(exit_code == 0, "Expected script to pass with zero exit code, got #{exit_code}")
+end
+
 When('I set the fixture JVM arguments to {string}') do |jvm_args|
   steps %(
     When I set environment variable "CUSTOM_JVM_ARGS" to "#{jvm_args}"

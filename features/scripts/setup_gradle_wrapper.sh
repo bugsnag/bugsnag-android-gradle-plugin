@@ -36,4 +36,9 @@ echo "Updating gradle wrapper for: $UNITY_2019_FIXTURE_DIR"
 ./gradlew wrapper --gradle-version "$GRADLE_WRAPPER_VERSION"
 popd
 
+pushd "$LIB_FIXTURE_DIR"
+echo "Updating gradle wrapper for: $LIB_FIXTURE_DIR"
+./gradlew wrapper --gradle-version "$GRADLE_WRAPPER_VERSION"
+popd
+
 unset UPDATING_GRADLEW
