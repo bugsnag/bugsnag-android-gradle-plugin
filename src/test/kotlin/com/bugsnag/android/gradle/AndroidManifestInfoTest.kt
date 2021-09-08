@@ -1,9 +1,12 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.gradle.api.ApkVariantOutput
 import groovy.util.GroovyTestCase.assertEquals
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
 import java.io.File
 
 class AndroidManifestInfoTest {
@@ -39,10 +42,19 @@ class AndroidManifestInfoTest {
             """.trimIndent()
         )
 
-        val copy = AndroidManifestInfo.read(jsonFile, null)
+        val copy = AndroidManifestInfo.read(jsonFile)
         assertEquals(info, copy)
+    }
 
-        val customCode = AndroidManifestInfo.read(jsonFile, 2)
-        assertEquals(info.copy(versionCode = "2"), customCode)
+    @Test
+    fun testManifestReadForApkVariant() {
+        val variantOutput = mock(ApkVariantOutput::class.java)
+        `when`(variantOutput.versionCodeOverride).thenReturn(21)
+        val variantManifestInfo = info.forApkVariantOutput(variantOutput)
+
+        assertEquals(
+            info.copy(versionCode = "21"),
+            variantManifestInfo
+        )
     }
 }

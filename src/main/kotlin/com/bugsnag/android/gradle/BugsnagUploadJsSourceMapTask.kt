@@ -20,10 +20,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
@@ -38,13 +35,8 @@ sealed class BugsnagUploadJsSourceMapTask @Inject constructor(
         description = "Uploads JS source maps to Bugsnag"
     }
 
-    @get:PathSensitive(PathSensitivity.NONE)
-    @get:InputFile
-    override val manifestInfoFile: RegularFileProperty = objects.fileProperty()
-
-    @get:Optional
     @get:Input
-    override val versionCode: Property<Int> = objects.property()
+    override val manifestInfo: Property<AndroidManifestInfo> = objects.property()
 
     @get:InputFile
     val bugsnagSourceMaps: RegularFileProperty = objects.fileProperty()
@@ -76,7 +68,7 @@ sealed class BugsnagUploadJsSourceMapTask @Inject constructor(
     @TaskAction
     fun uploadJsSourceMap() {
         // Construct a basic request
-        val manifestInfo = parseManifestInfo()
+        val manifestInfo = manifestInfo.get()
         val executable = bugsnagSourceMaps.get().asFile
         val builder = generateUploadCommand(executable.absolutePath, manifestInfo)
         project.logger.lifecycle("Bugsnag: uploading react native sourcemap: ${builder.command()}")

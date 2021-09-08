@@ -1,0 +1,17 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  package="com.bugsnag.libvanilla" >
+  <application android:name="com.example.android.gradle.plugin.FooApp">
+
+    <meta-data
+      android:name="com.bugsnag.android.API_KEY"
+      android:value="${BUGSNAG_API_KEY}" />
+
+    <meta-data
+      android:name="com.bugsnag.android.VERSION_CODE"
+      android:value="101" />
+
+    <meta-data
+      android:name="com.bugsnag.android.APP_VERSION"
+      android:value="3.5" />
+  </application>
+</manifest>

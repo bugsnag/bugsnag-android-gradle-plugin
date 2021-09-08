@@ -12,6 +12,9 @@
 * Support extracting SO files from bugsnag AARs for library modules
   [#423](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/423)
 
+* Using versionCodeOverride and VERSION_CODE meta-data will result in a build error to avoid undefined behaviour
+  [#425](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/425)
+
 ## 5.7.8 (2021-07-22)
 
 * Upload correct bundle when Hermes is enabled

@@ -39,12 +39,14 @@ internal class AndroidManifestParser {
         var buildUuid: String? = null
         var versionName: String? = null
         var applicationId: String? = null
+        var metaVersionCode: String? = null
+        var metaVersionName: String? = null
 
         openAndroidManifestXml(manifestPath) { doc ->
             apiKey = findBugsnagMetadataValue(doc, TAG_API_KEY)
             buildUuid = findBugsnagMetadataValue(doc, TAG_BUILD_UUID)
-            versionCode = findBugsnagMetadataValue(doc, TAG_VERSION_CODE)
-            versionName = findBugsnagMetadataValue(doc, TAG_APP_VERSION)
+            metaVersionCode = findBugsnagMetadataValue(doc, TAG_VERSION_CODE)
+            metaVersionName = findBugsnagMetadataValue(doc, TAG_APP_VERSION)
 
             val manifest = doc.getElementsByTagName(TAG_MANIFEST).item(0)
 
@@ -81,7 +83,9 @@ internal class AndroidManifestParser {
             requireNotNull(versionCode),
             requireNotNull(buildUuid),
             requireNotNull(versionName),
-            requireNotNull(applicationId)
+            requireNotNull(applicationId),
+            metaVersionCode,
+            metaVersionName
         )
     }
 
