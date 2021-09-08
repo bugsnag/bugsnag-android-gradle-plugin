@@ -19,13 +19,10 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity.NONE
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.process.ExecOperations
@@ -58,19 +55,14 @@ open class BugsnagReleasesTask @Inject constructor(
         description = "Assembles information about the build that will be sent to the releases API"
     }
 
+    @get:Input
+    override val manifestInfo: Property<AndroidManifestInfo> = objects.property()
+
     @get:Internal
     internal val uploadRequestClient: Property<UploadRequestClient> = objects.property()
 
     @get:Internal
     internal val httpClientHelper: Property<BugsnagHttpClientHelper> = objects.property()
-
-    @get:PathSensitive(NONE)
-    @get:InputFile
-    override val manifestInfoFile: RegularFileProperty = objects.fileProperty()
-
-    @get:Optional
-    @get:Input
-    override val versionCode: Property<Int> = objects.property()
 
     @get:OutputFile
     val requestOutputFile: RegularFileProperty = objects.fileProperty()
@@ -149,7 +141,7 @@ open class BugsnagReleasesTask @Inject constructor(
 
     @TaskAction
     fun fetchReleaseInfo() {
-        val manifestInfo = parseManifestInfo()
+        val manifestInfo = manifestInfo.get()
         val payload = generateJsonPayload(manifestInfo)
 
         val response =
