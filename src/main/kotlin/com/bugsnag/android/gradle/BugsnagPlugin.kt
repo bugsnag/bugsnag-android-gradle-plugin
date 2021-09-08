@@ -342,11 +342,9 @@ class BugsnagPlugin : Plugin<Project> {
                 // so need to alter task dependency so that BAGP always runs
                 // after DexGuard
                 if (project.hasDexguardPlugin()) {
-                    generateProguardTaskProvider.configure { bagpTask ->
-                        val taskName = getDexguardAabTaskName(variant)
-                        project.tasks.findByName(taskName)?.let { dexguardTask ->
-                            bagpTask.mustRunAfter(dexguardTask)
-                        }
+                    val taskName = getDexguardAabTaskName(variant)
+                    project.tasks.named(taskName).configure { dexguardTask ->
+                        generateProguardTaskProvider.get().mustRunAfter(dexguardTask)
                     }
                 }
             }
