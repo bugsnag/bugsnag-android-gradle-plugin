@@ -1,4 +1,4 @@
-## TBD
+## 7.1.0 (2021-09-15)
 
 * Custom Dexguard paths are resolved correctly (relative to the project)
   [#421](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/421)
