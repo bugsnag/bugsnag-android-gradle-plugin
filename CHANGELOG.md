@@ -1,4 +1,4 @@
-## 5.8.0 (2021-09-15)
+## 5.8.0 (2021-09-16)
 
 * Address task dependency warning when using APK splits
   [#408](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/408)
