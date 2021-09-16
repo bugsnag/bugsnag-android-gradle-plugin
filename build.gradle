@@ -1,8 +1,8 @@
 buildscript {
     repositories {
-        maven { url "https://plugins.gradle.org/m2/" }
         mavenCentral()
         google()
+        maven { url "https://plugins.gradle.org/m2/" }
     }
 
     ext.agpVersion = "4.2.0-beta03" // compile against 4.1, but maintain compat to 3.4.0
