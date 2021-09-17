@@ -52,8 +52,6 @@ Scenario: Source maps are uploaded when assembling an app which uses productFlav
         | 5              | 2.45.beta  | true     | false |
         | 5              | 2.45.beta  | true     | false |
 
-# blocked by PLAT-6305
-@skip_gradle_7_or_higher
 Scenario: Source maps are uploaded when assembling an app within a monorepo
     When I run the script "features/scripts/build_react_native_monorepo_app.sh" synchronously
     And I wait to receive 3 requests
