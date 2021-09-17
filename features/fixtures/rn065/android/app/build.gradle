@@ -76,9 +76,8 @@ import com.android.build.OutputFile
  *   extraPackagerArgs: []
  * ]
  */
-
 project.ext.react = [
-    enableHermes: false,  // clean and rebuild if changing
+    enableHermes: System.env.RN_ENABLE_HERMES == true // clean and rebuild if changing
 ]
 
 apply from: "../../node_modules/react-native/react.gradle"
@@ -96,7 +95,7 @@ def enableSeparateBuildPerCPUArchitecture = false
 /**
  * Run Proguard to shrink the Java bytecode in release builds.
  */
-def enableProguardInReleaseBuilds = false
+def enableProguardInReleaseBuilds = true
 
 /**
  * The preferred build flavor of JavaScriptCore.
@@ -121,16 +120,20 @@ def jscFlavor = 'org.webkit:android-jsc:+'
 def enableHermes = project.ext.react.get("enableHermes", false);
 
 android {
-    ndkVersion rootProject.ext.ndkVersion
-
     compileSdkVersion rootProject.ext.compileSdkVersion
+    ndkVersion "16.1.4479499"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 
     defaultConfig {
-        applicationId "com.rn065"
+        applicationId "com.bugsnag.android.rnapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 5
+        versionName "2.45.beta"
     }
     splits {
         abi {
@@ -161,17 +164,29 @@ android {
         }
     }
 
+    if (System.env.USE_RN_FLAVORS) {
+        flavorDimensions "regular"
+
+        productFlavors {
+            foo {
+                applicationIdSuffix ".foo"
+            }
+            bar {
+                applicationIdSuffix ".bar"
+            }
+        }
+    }
+
     // applicationVariants are e.g. debug, release
     applicationVariants.all { variant ->
         variant.outputs.each { output ->
             // For each separate APK per architecture, set a unique version code as described here:
             // https://developer.android.com/studio/build/configure-apk-splits.html
-            // Example: versionCode 1 will generate 1001 for armeabi-v7a, 1002 for x86, etc.
             def versionCodes = ["armeabi-v7a": 1, "x86": 2, "arm64-v8a": 3, "x86_64": 4]
             def abi = output.getFilter(OutputFile.ABI)
             if (abi != null) {  // null for the universal-debug, universal-release variants
                 output.versionCodeOverride =
-                        defaultConfig.versionCode * 1000 + versionCodes.get(abi)
+                    versionCodes.get(abi) * 1048576 + defaultConfig.versionCode
             }
 
         }
@@ -186,7 +201,7 @@ dependencies {
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
 
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {
-      exclude group:'com.facebook.fbjni'
+        exclude group:'com.facebook.fbjni'
     }
 
     debugImplementation("com.facebook.flipper:flipper-network-plugin:${FLIPPER_VERSION}") {
@@ -215,3 +230,17 @@ task copyDownloadableDepsToLibs(type: Copy) {
 }
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
+
+if (!System.env.UPDATING_GRADLEW) {
+    apply plugin: 'com.bugsnag.android.gradle'
+
+    bugsnag {
+        endpoint = "http://localhost:9339"
+        releasesEndpoint = "http://localhost:9339"
+        uploadReactNativeMappings = "false" != System.env.UPLOAD_RN_MAPPINGS
+
+        if (System.env.CUSTOM_NODE_MODULES_DIR == "true") {
+            nodeModulesDir = new File(project.rootDir.parentFile, "node_modules")
+        }
+    }
+}
