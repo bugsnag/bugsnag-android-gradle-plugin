@@ -10,20 +10,24 @@ env:
 android:
   components:
     - tools
+    - build-tools-30
+    - platform-tools
     - android-29
     - extra-google-m2repository
     - extra-android-m2repository
 
+jdk: openjdk11
+
 before_install:
   - rvm install 2.5.5
   - rvm use 2.5.5
-  - echo y | sdkmanager "platform-tools" >/dev/null
-  - echo y | sdkmanager "tools" >/dev/null
+  - jdk_switcher use oraclejdk8
   - echo y | sdkmanager 'cmake;3.6.4111459' >/dev/null
   - echo y | sdkmanager 'ndk;16.1.4479499' >/dev/null
   - gem install bundler
   - gem update --system 3.0.6
   - bundle install
+  - export JAVA_HOME="$HOME/openjdk11"
   - ls $ANDROID_HOME
 
 install:
@@ -45,56 +49,12 @@ jobs:
   include:
     # Unit test job
     - name: unit tests
-      script: ./gradlew detekt ktlintCheck check
+      script: ./gradlew detekt ktlintCheck check install
 
-    # Plugin install job
-    - name: plugin install
-      script: ./gradlew install
-
-    # AGP 3.4.0 E2E tests
-    - name: AGP 3.4.0 E2E tests
+      # AGP E2E tests
+    - name: AGP E2E tests
       env:
-        - AGP_VERSION=3.4.0
-        - GRADLE_WRAPPER_VERSION=5.1.1
-        - RN_FIXTURE_DIR=features/fixtures/rn060/android
-      script: bundle exec maze-runner -c --verbose --fail-fast
-
-      # AGP 3.5.0 E2E tests
-    - name: AGP 3.5.0 E2E tests
-      env:
-        - AGP_VERSION=3.5.0
-        - GRADLE_WRAPPER_VERSION=5.4.1
-        - RN_FIXTURE_DIR=features/fixtures/rn060/android
-      script: bundle exec maze-runner -c --verbose --fail-fast
-
-      # AGP 3.6.0 E2E tests
-    - name: AGP 3.6.0 E2E tests
-      env:
-        - AGP_VERSION=3.6.0
-        - GRADLE_WRAPPER_VERSION=5.6.4
-        - RN_FIXTURE_DIR=features/fixtures/rn061/android
-      script: bundle exec maze-runner -c --verbose --fail-fast
-
-      # AGP 4.0.0 E2E tests
-    - name: AGP 4.0.0 E2E tests
-      env:
-        - AGP_VERSION=4.0.0
-        - GRADLE_WRAPPER_VERSION=6.1.1
-        - RN_FIXTURE_DIR=features/fixtures/rn062/android
-      script: bundle exec maze-runner -c --verbose --fail-fast
-
-      # AGP 4.1.0 E2E tests
-    - name: AGP 4.1.0 E2E tests
-      env:
-        - AGP_VERSION=4.1.0
-        - GRADLE_WRAPPER_VERSION=6.5.1
-        - RN_FIXTURE_DIR=features/fixtures/rn063/android
-      script: bundle exec maze-runner -c --verbose --fail-fast
-
-      # AGP 4.2.0 E2E tests
-    - name: AGP 4.2.0 E2E tests
-      env:
-        - AGP_VERSION=4.2.0-beta03
-        - GRADLE_WRAPPER_VERSION=7.0-rc-1
+        - AGP_VERSION=7.0.0
+        - GRADLE_WRAPPER_VERSION=7.0.2
         - RN_FIXTURE_DIR=features/fixtures/rn063/android
       script: bundle exec maze-runner -c --verbose --fail-fast

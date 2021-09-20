@@ -2,6 +2,7 @@ package com.bugsnag.android.gradle
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.BaseVariant
@@ -16,7 +17,6 @@ import com.bugsnag.android.gradle.internal.TASK_JNI_LIBS
 import com.bugsnag.android.gradle.internal.UNITY_SO_COPY_DIR
 import com.bugsnag.android.gradle.internal.UNITY_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.UploadRequestClient
-import com.bugsnag.android.gradle.internal.computeManifestInfoOutputV1
 import com.bugsnag.android.gradle.internal.dependsOn
 import com.bugsnag.android.gradle.internal.getDexguardAabTaskName
 import com.bugsnag.android.gradle.internal.hasDexguardPlugin
@@ -28,7 +28,6 @@ import com.bugsnag.android.gradle.internal.intermediateForUnitySoRequest
 import com.bugsnag.android.gradle.internal.intermediateForUploadSourcemaps
 import com.bugsnag.android.gradle.internal.isVariantEnabled
 import com.bugsnag.android.gradle.internal.newUploadRequestClientProvider
-import com.bugsnag.android.gradle.internal.newUuidProvider
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.registerV2ManifestUuidTask
 import com.bugsnag.android.gradle.internal.taskNameForGenerateJvmMapping
@@ -74,11 +73,19 @@ class BugsnagPlugin : Plugin<Project> {
 
     @Suppress("LongMethod")
     override fun apply(project: Project) {
-        if (AgpVersions.CURRENT >= AgpVersions.VERSION_7_0) {
+        if (AgpVersions.CURRENT < AgpVersions.VERSION_7_0) {
             throw StopExecutionException(
-                "Using com.bugsnag.android.gradle with Android Gradle Plugin 7+ " +
-                    "requires an upgrade to com.bugsnag.android.gradle:7.+. " +
+                "Using com.bugsnag.android.gradle:7+ with Android Gradle Plugin < 7 " +
+                    "is not supported. Either upgrade the Android Gradle Plugin to 7, or use an " +
+                    "earlier version of the BugSnag Gradle Plugin. " +
                     "For more information about this change, see " +
+                    "https://docs.bugsnag.com/build-integrations/gradle/"
+            )
+        } else if (AgpVersions.CURRENT >= AgpVersions.VERSION_8_0) {
+            project.logger.warn(
+                "Using com.bugsnag.android.gradle:7+ with Android Gradle Plugin 8+ is not " +
+                    "formally supported, and may lead to compatibility errors. " +
+                    "For more information, please see " +
                     "https://docs.bugsnag.com/build-integrations/gradle/"
             )
         }
@@ -107,7 +114,7 @@ class BugsnagPlugin : Plugin<Project> {
                 }
             }
             project.pluginManager.withPlugin("com.android.application") {
-                setupBugsnagPlugin(project, bugsnag, android as AppExtension)
+                setupBugsnagPlugin(project, bugsnag, android)
             }
         }
     }
@@ -115,7 +122,7 @@ class BugsnagPlugin : Plugin<Project> {
     private fun setupBugsnagPlugin(
         project: Project,
         bugsnag: BugsnagPluginExtension,
-        android: AppExtension
+        android: BaseExtension
     ) {
         val httpClientHelperProvider = BugsnagHttpClientHelper.create(
             project,
@@ -127,9 +134,7 @@ class BugsnagPlugin : Plugin<Project> {
         val ndkUploadClientProvider = newUploadRequestClientProvider(project, "ndk")
         val unityUploadClientProvider = newUploadRequestClientProvider(project, "unity")
 
-        if (BugsnagManifestUuidTaskV2.isApplicable()) {
-            registerV2ManifestUuidTask(android, bugsnag, project)
-        }
+        registerV2ManifestUuidTask(bugsnag, project)
 
         project.afterEvaluate {
             addReactNativeMavenRepo(project, bugsnag)
@@ -138,7 +143,12 @@ class BugsnagPlugin : Plugin<Project> {
                 return@afterEvaluate
             }
 
-            android.applicationVariants.configureEach { variant ->
+            val variants = when (android) {
+                is AppExtension -> android.applicationVariants
+                is LibraryExtension -> android.libraryVariants
+                else -> throw IllegalStateException("Unexpected variant type: $android")
+            }
+            variants.configureEach { variant ->
                 val filterImpl = VariantFilterImpl(variant.name)
                 if (!isVariantEnabled(bugsnag, filterImpl)) {
                     return@configureEach
@@ -203,26 +213,11 @@ class BugsnagPlugin : Plugin<Project> {
 
             // register bugsnag tasks
             val mappingFilesProvider = createMappingFileProvider(project, variant, output)
-            val manifestTaskProvider = registerManifestUuidTask(project, variant, output)
+            val manifestTaskProvider = registerManifestUuidTask(project, variant)
 
             val manifestInfoProvider = manifestTaskProvider
                 .flatMap { it.manifestInfoProvider }
                 .map { AndroidManifestInfo.read(it.asFile).forApkVariantOutput(output) }
-
-            val releaseUploadTask = registerReleasesUploadTask(
-                project,
-                variant,
-                output,
-                bugsnag,
-                manifestInfoProvider,
-                releasesUploadClientProvider,
-                mappingFilesProvider,
-                ndkEnabled,
-                httpClientHelperProvider
-            ).dependsOn(manifestTaskProvider)
-
-            val releaseAutoUpload = bugsnag.reportBuilds.get()
-            variant.register(project, releaseUploadTask, releaseAutoUpload)
 
             // skip tasks for variant if JVM/NDK/Unity minification not enabled
             if (!jvmMinificationEnabled && !ndkEnabled && !unityEnabled && !reactNativeEnabled) {
@@ -320,6 +315,21 @@ class BugsnagPlugin : Plugin<Project> {
                 else -> null
             }
 
+            val releaseUploadTask = registerReleasesUploadTask(
+                project,
+                variant,
+                output,
+                bugsnag,
+                manifestInfoProvider,
+                releasesUploadClientProvider,
+                mappingFilesProvider,
+                ndkEnabled,
+                httpClientHelperProvider
+            ).dependsOn(manifestTaskProvider)
+
+            val releaseAutoUpload = bugsnag.reportBuilds.get()
+            variant.register(project, releaseUploadTask, releaseAutoUpload)
+
             if (generateNdkMappingProvider != null && uploadNdkMappingProvider != null) {
                 variant.register(project, generateNdkMappingProvider, ndkEnabled)
                 variant.register(project, uploadNdkMappingProvider, ndkEnabled)
@@ -337,11 +347,9 @@ class BugsnagPlugin : Plugin<Project> {
                 // so need to alter task dependency so that BAGP always runs
                 // after DexGuard
                 if (project.hasDexguardPlugin()) {
-                    generateProguardTaskProvider.configure { bagpTask ->
-                        val taskName = getDexguardAabTaskName(variant)
-                        project.tasks.findByName(taskName)?.let { dexguardTask ->
-                            bagpTask.mustRunAfter(dexguardTask)
-                        }
+                    val taskName = getDexguardAabTaskName(variant)
+                    project.tasks.named(taskName).configure { dexguardTask ->
+                        generateProguardTaskProvider.get().mustRunAfter(dexguardTask)
                     }
                 }
             }
@@ -407,50 +415,14 @@ class BugsnagPlugin : Plugin<Project> {
 
     private fun registerManifestUuidTask(
         project: Project,
-        variant: BaseVariant,
-        output: BaseVariantOutput
-    ): TaskProvider<out BaseBugsnagManifestUuidTask> {
-        return if (BugsnagManifestUuidTaskV2.isApplicable()) {
-            val taskName = taskNameForManifestUuid(variant.name)
-            // This task will have already been created!
-            project.tasks
-                .withType(BugsnagManifestUuidTaskV2::class.java)
-                .named(taskName)
-        } else {
-            val taskName = taskNameForManifestUuid(output.name)
-            val manifestInfoOutputFile = project.computeManifestInfoOutputV1(output)
-            val buildUuidProvider = project.newUuidProvider()
-
-            val manifestTask = project.tasks.register(taskName, BugsnagManifestUuidTask::class.java) {
-                it.buildUuid.set(buildUuidProvider)
-                it.variantOutput = output
-                it.variant = variant
-                it.manifestInfoProvider.set(manifestInfoOutputFile)
-                it.dependsOn(output.processManifestProvider)
-                it.mustRunAfter(output.processManifestProvider)
-            }
-
-            // Enforces correct task ordering. The manifest can only be edited inbetween
-            // when the merged manifest is generated (processManifestProvider) and when
-            // the merged manifest is copied for use in packaging the artifact (processResourcesProvider).
-            // This ensures BugsnagManifestUuidTask runs at the correct time for both tasks.
-            //
-            // https://docs.gradle.org/current/userguide/more_about_tasks.html#sec:ordering_tasks
-            output.processResourcesProvider.configure {
-                it.mustRunAfter(manifestTask)
-            }
-            output.processManifestProvider.configure {
-                // Trigger eager configuration of the manifest task. This creates the task
-                // and ensures that it is configured whenever the manifest is processed
-                // and avoids mutating the task directly which should be avoided.
-                //
-                // https://docs.gradle.org/current/userguide/task_configuration_avoidance.html
-                // #sec:task_configuration_avoidance_general
-                manifestTask.get()
-            }
-
-            manifestTask
-        }
+        variant: BaseVariant
+    ): TaskProvider<BugsnagManifestUuidTaskV2> {
+        val taskName = taskNameForManifestUuid(variant.name)
+        // This task will have already been created!
+        val manifestUpdater = project.tasks
+            .withType(BugsnagManifestUuidTaskV2::class.java)
+            .named(taskName)
+        return manifestUpdater
     }
 
     /**
@@ -527,22 +499,13 @@ class BugsnagPlugin : Plugin<Project> {
         val rnTaskName = "bundle${variant.name.capitalize()}JsAndAssets"
         val rnTask: Task = project.tasks.findByName(rnTaskName) ?: return null
         val rnSourceMap = findReactNativeSourcemapFile(project, variant)
-        var rnBundle = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--bundle-output")
+        val rnBundle =
+            BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--bundle-output")
         val dev = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--dev")
 
         if (rnBundle == null || dev == null) {
             project.logger.error("Bugsnag: unable to upload JS sourcemaps. Please enable sourcemap + bundle output.")
             return null
-        }
-
-        val enabledHermes = BugsnagUploadJsSourceMapTask.isHermesEnabled(project)
-        if (enabledHermes) {
-            rnBundle = BugsnagUploadJsSourceMapTask.rescueReactNativeSourceBundle(
-                rnTask,
-                rnBundle,
-                project,
-                output
-            )
         }
 
         return BugsnagUploadJsSourceMapTask.register(project, taskName) {
@@ -562,7 +525,7 @@ class BugsnagPlugin : Plugin<Project> {
             val nodeModulesDir = bugsnag.nodeModulesDir.getOrElse(defaultLocation)
             val cliPath = File(nodeModulesDir, "@bugsnag/source-maps/bin/cli")
             bugsnagSourceMaps.set(cliPath)
-            dependsOn(rnTask)
+            mustRunAfter(rnTask)
         }
     }
 
@@ -586,11 +549,15 @@ class BugsnagPlugin : Plugin<Project> {
             val searchPaths = getSharedObjectSearchPaths(project, bugsnag, android)
             searchDirectories.from(searchPaths)
             variant.externalNativeBuildProviders.forEach { provider ->
-                searchDirectories.from(provider.map(ExternalNativeBuildTask::objFolder))
-                searchDirectories.from(provider.map(ExternalNativeBuildTask::soFolder))
+                searchDirectories.from(provider.map { fixNativeOutputPath(it.objFolder) })
+                searchDirectories.from(provider.map { fixNativeOutputPath(it.soFolder) })
             }
             intermediateOutputDir.set(project.layout.buildDirectory.dir(soMappingOutputPath))
         }
+    }
+
+    private fun fixNativeOutputPath(taskFolder: File): File {
+        return taskFolder.parentFile.parentFile.takeIf { it.parentFile.name == "cxx" } ?: taskFolder
     }
 
     @Suppress("LongParameterList")
@@ -729,8 +696,8 @@ class BugsnagPlugin : Plugin<Project> {
             }
             if (checkSearchDirectories) {
                 variant.externalNativeBuildProviders.forEach { task ->
-                    ndkMappingFileProperty.from(task.map { it.objFolder })
-                    ndkMappingFileProperty.from(task.map { it.soFolder })
+                    ndkMappingFileProperty.from(task.map { fixNativeOutputPath(it.objFolder) })
+                    ndkMappingFileProperty.from(task.map { fixNativeOutputPath(it.soFolder) })
                 }
             }
             configureMetadata()

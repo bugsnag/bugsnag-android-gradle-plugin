@@ -1,20 +1,17 @@
 package com.bugsnag.android.gradle
 
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
-import com.bugsnag.android.gradle.internal.GradleVersions
 import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.bugsnag.android.gradle.internal.mapProperty
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.runRequestWithRetries
 import com.bugsnag.android.gradle.internal.systemPropertyCompat
-import com.bugsnag.android.gradle.internal.versionNumber
 import com.squareup.moshi.JsonClass
 import okhttp3.OkHttpClient
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
@@ -47,9 +44,10 @@ import java.io.IOException
 import java.nio.charset.Charset
 import javax.inject.Inject
 
-sealed class BugsnagReleasesTask(
+open class BugsnagReleasesTask @Inject constructor(
     objects: ObjectFactory,
-    private val providerFactory: ProviderFactory
+    private val providerFactory: ProviderFactory,
+    private val execOperations: ExecOperations
 ) : DefaultTask(), AndroidManifestInfoReceiver {
 
     init {
@@ -72,13 +70,14 @@ sealed class BugsnagReleasesTask(
     // should take the JVM + NDK mapping files as inputs because the manifestInfo will
     // not necessarily vary between different builds. it is not guaranteed that
     // either of these properties will be set so they are marked as optional.
-    @get:InputFiles
-    @get:Optional
-    abstract val jvmMappingFileProperty: ConfigurableFileCollection
 
     @get:InputFiles
     @get:Optional
-    abstract val ndkMappingFileProperty: ConfigurableFileCollection
+    val jvmMappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
+
+    @get:InputFiles
+    @get:Optional
+    val ndkMappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
 
     @get:Input
     val retryCount: Property<Int> = objects.property()
@@ -136,25 +135,28 @@ sealed class BugsnagReleasesTask(
     @get:Optional
     val gitVersion: Property<String> = objects.property()
 
-    internal abstract fun exec(action: (ExecSpec) -> Unit): ExecResult
+    fun exec(action: (ExecSpec) -> Unit): ExecResult {
+        return execOperations.exec(action)
+    }
 
     @TaskAction
     fun fetchReleaseInfo() {
         val manifestInfo = manifestInfo.get()
         val payload = generateJsonPayload(manifestInfo)
 
-        val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, payload.hashCode()) {
-            logger.lifecycle("Bugsnag: Uploading to Releases API")
-            val response = try {
-                deliverPayload(payload, manifestInfo)
-            } catch (exc: Throwable) {
-                when {
-                    failOnUploadError.get() -> throw exc
-                    else -> "Failure"
+        val response =
+            uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, payload.hashCode()) {
+                logger.lifecycle("Bugsnag: Uploading to Releases API")
+                val response = try {
+                    deliverPayload(payload, manifestInfo)
+                } catch (exc: Throwable) {
+                    when {
+                        failOnUploadError.get() -> throw exc
+                        else -> "Failure"
+                    }
                 }
+                response
             }
-            response
-        }
         requestOutputFile.asFile.get().writeText(response)
     }
 
@@ -175,7 +177,10 @@ sealed class BugsnagReleasesTask(
                 readRequestResponse(response.execute())
             }
         } catch (e: IOException) {
-            throw IllegalStateException("Request to Bugsnag Releases API failed, aborting build.", e)
+            throw IllegalStateException(
+                "Request to Bugsnag Releases API failed, aborting build.",
+                e
+            )
         }
     }
 
@@ -335,80 +340,8 @@ sealed class BugsnagReleasesTask(
             name: String,
             configurationAction: BugsnagReleasesTask.() -> Unit
         ): TaskProvider<out BugsnagReleasesTask> {
-            return when {
-                project.gradle.versionNumber() >= GradleVersions.VERSION_6 -> {
-                    project.tasks.register<BugsnagReleasesTaskGradle6Plus>(name, configurationAction)
-                }
-                project.gradle.versionNumber() >= GradleVersions.VERSION_5_3 -> {
-                    project.tasks.register<BugsnagReleasesTaskGradle53Plus>(name, configurationAction)
-                }
-                else -> {
-                    project.tasks.register<BugsnagReleasesTaskLegacy>(name, configurationAction)
-                }
-            }
+            return project.tasks.register(name, configurationAction)
         }
-    }
-}
-
-/**
- * Legacy [BugsnagReleasesTask] task that requires using [getProject] and
- * [ProjectLayout.configurableFiles].
- */
-internal open class BugsnagReleasesTaskLegacy @Inject constructor(
-    objects: ObjectFactory,
-    providerFactory: ProviderFactory,
-    projectLayout: ProjectLayout
-) : BugsnagReleasesTask(objects, providerFactory) {
-    @Suppress("DEPRECATION") // Here for backward compat
-    @get:InputFiles
-    @get:Optional
-    override val jvmMappingFileProperty: ConfigurableFileCollection = projectLayout.configurableFiles()
-
-    @Suppress("DEPRECATION") // Here for backward compat
-    @get:InputFiles
-    @get:Optional
-    override val ndkMappingFileProperty: ConfigurableFileCollection = projectLayout.configurableFiles()
-
-    override fun exec(action: (ExecSpec) -> Unit): ExecResult = project.exec(action)
-}
-
-/** Legacy [BugsnagReleasesTask] task that requires using [getProject]. */
-internal open class BugsnagReleasesTaskGradle53Plus @Inject constructor(
-    objects: ObjectFactory,
-    providerFactory: ProviderFactory
-) : BugsnagReleasesTask(objects, providerFactory) {
-    @get:InputFiles
-    @get:Optional
-    override val jvmMappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
-
-    @get:InputFiles
-    @get:Optional
-    override val ndkMappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
-
-    override fun exec(action: (ExecSpec) -> Unit): ExecResult {
-        return project.exec(action)
-    }
-}
-
-/**
- * A Gradle 6.0+ compatible [BugsnagReleasesTask], which uses [ExecOperations]
- * and supports configuration caching.
- */
-internal open class BugsnagReleasesTaskGradle6Plus @Inject constructor(
-    objects: ObjectFactory,
-    providerFactory: ProviderFactory,
-    private val execOperations: ExecOperations
-) : BugsnagReleasesTask(objects, providerFactory) {
-    @get:InputFiles
-    @get:Optional
-    override val jvmMappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
-
-    @get:InputFiles
-    @get:Optional
-    override val ndkMappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
-
-    override fun exec(action: (ExecSpec) -> Unit): ExecResult {
-        return execOperations.exec(action)
     }
 }
 

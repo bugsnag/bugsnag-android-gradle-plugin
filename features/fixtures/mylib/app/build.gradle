@@ -2,19 +2,17 @@ plugins {
     id "com.android.library"
 }
 
+apply plugin: "com.bugsnag.android.gradle"
+
 android {
-    compileSdkVersion 29
-    ndkVersion "16.1.4479499"
+    compileSdkVersion 30
+    buildToolsVersion "30.0.3"
 
     defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 29
+        minSdkVersion 16
+        targetSdkVersion 30
         versionCode 1
         versionName "1.0"
-
-        ndk {
-            abiFilters "x86", "x86_64", "armeabi-v7a", "arm64-v8a"
-        }
     }
 
     buildTypes {
@@ -34,12 +32,8 @@ dependencies {
     implementation "com.bugsnag:bugsnag-android:5.12.0"
 }
 
-if (!System.env.UPDATING_GRADLEW) {
-    apply plugin: "com.bugsnag.android.gradle"
-
-    bugsnag {
-        uploadNdkMappings = true
-        endpoint = "http://localhost:9339"
-        releasesEndpoint = "http://localhost:9339"
-    }
+bugsnag {
+    uploadNdkMappings = true
+    endpoint = "http://localhost:9339"
+    releasesEndpoint = "http://localhost:9339"
 }

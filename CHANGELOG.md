@@ -1,32 +1,30 @@
-## 5.8.0 (2021-09-20)
-
-* Address task dependency warning when using APK splits
-  [#408](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/408)
+## 7.1.0 (2021-09-20)
 
 * Custom Dexguard paths are resolved correctly (relative to the project)
-  [#420](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/420)
-
-* Release-metadata tasks are always available for configured projects
-  [#422](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/422)
+  [#421](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/421)
 
 * Support extracting SO files from bugsnag AARs for library modules
   [#423](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/423)
 
-* Using versionCodeOverride and VERSION_CODE meta-data will result in a build error to avoid undefined behaviour
-  [#425](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/425)
+* Support DexGuard with AGP 7
+  [#426](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/426)
 
-## 5.7.8 (2021-07-22)
+## 7.0.0 (2021-08-12)
 
-* Upload correct bundle when Hermes is enabled
-  [404](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/404)
+* Address task dependency warning when using APK splits
+  [#407](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/407)
 
 * Added clear error messages when node_modules cannot be located in ReactNative projects
-  [409](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/409)
+  [#410](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/410)
 
-## 5.7.7 (2021-06-23)
+* Upgrade AGP dependency to 7.0.0
+  [#415](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/415)
 
-* Emit a helpful compatibility error when Android Gradle Plugin 7 or higher is detected
-  [#390](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/390)
+## 7.0.0-beta01 (2021-06-23)
+
+Support for Android Gradle Plugin 7.0.0-beta04 added. This version introduces no new features and
+should only be used along-side Android Gradle Plugin 7.0.0-beta04 and higher. For more information
+see the [upgrading guide](UPGRADING.md).
 
 ## 5.7.6 (2021-04-08)
 

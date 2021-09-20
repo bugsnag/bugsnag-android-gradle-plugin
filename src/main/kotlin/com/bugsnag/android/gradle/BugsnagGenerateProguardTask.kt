@@ -1,14 +1,11 @@
 package com.bugsnag.android.gradle
 
-import com.bugsnag.android.gradle.internal.GradleVersions
 import com.bugsnag.android.gradle.internal.outputZipFile
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
-import com.bugsnag.android.gradle.internal.versionNumber
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -23,7 +20,7 @@ import javax.inject.Inject
 /**
  * Task to generate compressed JVM mapping files to Bugsnag.
  */
-sealed class BugsnagGenerateProguardTask @Inject constructor(
+open class BugsnagGenerateProguardTask @Inject constructor(
     objects: ObjectFactory
 ) : DefaultTask(), AndroidManifestInfoReceiver {
 
@@ -36,7 +33,7 @@ sealed class BugsnagGenerateProguardTask @Inject constructor(
     override val manifestInfo: Property<AndroidManifestInfo> = objects.property()
 
     @get:InputFiles
-    abstract val mappingFileProperty: ConfigurableFileCollection
+    val mappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
 
     @get:OutputFile
     val archiveOutputFile: RegularFileProperty = objects.fileProperty()
@@ -79,35 +76,7 @@ sealed class BugsnagGenerateProguardTask @Inject constructor(
             name: String,
             configurationAction: BugsnagGenerateProguardTask.() -> Unit
         ): TaskProvider<out BugsnagGenerateProguardTask> {
-            return when {
-                project.gradle.versionNumber() >= GradleVersions.VERSION_5_3 -> {
-                    project.tasks.register<BugsnagGenerateProguardTaskGradle53Plus>(name, configurationAction)
-                }
-                else -> {
-                    project.tasks.register<BugsnagGenerateProguardTaskLegacy>(name, configurationAction)
-                }
-            }
+            return project.tasks.register(name, configurationAction)
         }
     }
-}
-
-/**
- * Legacy [BugsnagGenerateProguardTask] task that requires using [getProject] and
- * [ProjectLayout.configurableFiles].
- */
-internal open class BugsnagGenerateProguardTaskLegacy @Inject constructor(
-    objects: ObjectFactory,
-    projectLayout: ProjectLayout
-) : BugsnagGenerateProguardTask(objects) {
-
-    @get:InputFiles
-    override val mappingFileProperty: ConfigurableFileCollection = projectLayout.configurableFiles()
-}
-
-internal open class BugsnagGenerateProguardTaskGradle53Plus @Inject constructor(
-    objects: ObjectFactory
-) : BugsnagGenerateProguardTask(objects) {
-
-    @get:InputFiles
-    override val mappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
 }

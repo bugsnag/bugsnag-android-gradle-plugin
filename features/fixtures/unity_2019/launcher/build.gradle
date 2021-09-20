@@ -4,7 +4,7 @@ apply plugin: 'com.android.application'
 
 dependencies {
     implementation project(':unityLibrary')
-    }
+}
 
 android {
     compileSdkVersion 28
@@ -39,14 +39,12 @@ android {
     buildTypes {
         debug {
             minifyEnabled false
-            useProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt')
             signingConfig signingConfigs.debug
             jniDebuggable true
         }
         release {
             minifyEnabled true
-            useProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt')
             signingConfig signingConfigs.debug
         }
@@ -73,8 +71,8 @@ if (!System.env.UPDATING_GRADLEW) {
     apply plugin: 'com.bugsnag.android.gradle'
 
     bugsnag {
-        endpoint = "http://localhost:9339/uploads"
-        releasesEndpoint = "http://localhost:9339/builds"
+        endpoint = "http://localhost:9339"
+        releasesEndpoint = "http://localhost:9339"
 
         if ("false" == System.env.UNITY_SO_UPLOAD) {
             uploadNdkUnityLibraryMappings = false

@@ -1,20 +1,22 @@
 Upgrading Guide
 ===============
 
-Upgrade from 4.X to 5.X
------------------------
+Upgrade to 7.0.0
+----------------
 
 This release contains **breaking changes**.
 
 ```groovy
 dependencies {
-    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:5.x.x'
+    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:7.x.x'
 }
 ```
 
 ### Minimum requirements
 
-The plugin now requires a Gradle wrapper >= 5.1.1, Android Gradle Plugin >= 3.4.0, and JDK >= 8.
+The plugin now requires a Gradle wrapper >= 7.0.0, Android Gradle Plugin >= 7.0.0-beta04, and JDK >= 11.
+
+## Upgrading from 4.x
 
 ### API changes
 

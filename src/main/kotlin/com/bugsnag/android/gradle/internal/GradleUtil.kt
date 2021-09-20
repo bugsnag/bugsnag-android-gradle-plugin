@@ -1,13 +1,13 @@
 @file:Suppress("MatchingDeclarationName", "TooManyFunctions") // This file contains multiple top-level members
 package com.bugsnag.android.gradle.internal
 
-// TODO use the new replacement when min AGP version is 4.0
 import com.android.build.VariantOutput
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
+// TODO use the new replacement when min AGP version is 4.0
 import com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import okio.HashingSink
 import okio.blackholeSink
@@ -47,6 +47,7 @@ internal object AgpVersions {
     val VERSION_4_1: VersionNumber = VersionNumber.parse("4.1.0")
     val VERSION_4_2: VersionNumber = VersionNumber.parse("4.2.0")
     val VERSION_7_0: VersionNumber = VersionNumber.parse("7.0.0")
+    val VERSION_8_0: VersionNumber = VersionNumber.parse("8.0.0")
 }
 
 /** A fast file hash that don't load the entire file contents into memory at once. */
@@ -71,17 +72,18 @@ internal fun <T : Task> TaskProvider<out T>.dependsOn(vararg tasks: TaskProvider
 /** An alternative to [BaseVariant.register] that accepts a [TaskProvider] input. */
 internal fun ApkVariant.register(project: Project, provider: TaskProvider<out Task>, autoRunTask: Boolean) {
     if (autoRunTask) {
-        assembleProvider.configure { task ->
-            task.dependsOn(provider)
-        }
-        getBundleProvider(project)?.configure { task ->
-            task.dependsOn(provider)
-        }
+        assembleProvider.dependsOn(provider)
+        val bundleName = "bundle" + assembleProvider.name.removePrefix("assemble")
+        project.tasks.matching { it.name == bundleName }
+            .configureEach { task ->
+                task.dependsOn(provider)
+            }
     }
 
     provider.configure { task ->
-        // backwards compatibility - older AGP versions require a dependsOn relationship
-        if (autoRunTask && AgpVersions.CURRENT <= AgpVersions.VERSION_3_5) {
+        // the upload task should always execute after the package task,
+        // but should only run automatically when specified
+        if (autoRunTask) {
             task.dependsOn(packageApplicationProvider)
         }
         task.mustRunAfter(packageApplicationProvider)
@@ -94,14 +96,6 @@ internal fun ApkVariant.register(project: Project, provider: TaskProvider<out Ta
         }
     }
 }
-
-/**
- * Fetches the [TaskProvider] for the variant's bundle task, or null if it cannot be found
- */
-private fun ApkVariant.getBundleProvider(project: Project) = runCatching {
-    val bundleName = "bundle" + assembleProvider.name.removePrefix("assemble")
-    project.tasks.named(bundleName)
-}.getOrNull()
 
 /**
  * Returns true if a project has configured multiple variant outputs.

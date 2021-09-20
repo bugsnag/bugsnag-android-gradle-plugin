@@ -70,10 +70,6 @@ If you are a project maintainer, you can build and release a new version of
     signing.keyId=your-gpg-key-id # From gpg --list-keys
     signing.password=your-gpg-key-passphrase
     signing.secretKeyRingFile=/Users/james/.gnupg/secring.gpg
-
-    # Your credentials for https://bintray.com
-    bintray_user=your-bintray-username
-    bintray_api_key=your-bintray-api-key
     ```
 -   Get the API key from James and [add it to your Gradle configuration](https://plugins.gradle.org/docs/submit)
 
@@ -89,7 +85,7 @@ If you are a project maintainer, you can build and release a new version of
 
 - https://github.com/bugsnag/bugsnag-android-gradle-plugin/releases
 
-#### 3. Release to jCenter and Maven Central
+#### 3. Release to Maven Central
 
 -   "Promote" the release build on Maven Central
 
@@ -101,9 +97,6 @@ If you are a project maintainer, you can build and release a new version of
     -   Click the “refresh” button
     -   Select the com.bugsnag closed repository
     -   Click the “release” button in the toolbar
--   Confirm the release on Bintray
-    - Go to the [Bintray page for the gradle plugin](https://bintray.com/bugsnag/maven/bugsnag-android-gradle-plugin)
-    - Click "Publish" for the newly uploaded artifacts
 
 ### 4. Update docs.bugsnag.com
 

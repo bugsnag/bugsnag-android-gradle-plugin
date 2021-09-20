@@ -1,19 +1,12 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.BaseVariant
-import com.android.build.gradle.api.BaseVariantOutput
-import com.bugsnag.android.gradle.internal.GradleVersions
-import com.bugsnag.android.gradle.internal.intermediateForRescuedReactNativeBundle
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
-import com.bugsnag.android.gradle.internal.versionNumber
-import org.gradle.api.Action
 import org.gradle.api.DefaultTask
-import org.gradle.api.Describable
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -23,10 +16,9 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
 import javax.inject.Inject
 
-sealed class BugsnagUploadJsSourceMapTask @Inject constructor(
+open class BugsnagUploadJsSourceMapTask @Inject constructor(
     objects: ObjectFactory
 ) : DefaultTask(), AndroidManifestInfoReceiver {
 
@@ -51,7 +43,7 @@ sealed class BugsnagUploadJsSourceMapTask @Inject constructor(
     val requestOutputFile: RegularFileProperty = objects.fileProperty()
 
     @get:InputFiles
-    abstract val projectRootFileProvider: ConfigurableFileCollection
+    val projectRootFileProvider: ConfigurableFileCollection = objects.fileCollection()
 
     @get:Input
     val overwrite: Property<Boolean> = objects.property()
@@ -107,7 +99,10 @@ sealed class BugsnagUploadJsSourceMapTask @Inject constructor(
         requestOutputFile.asFile.get().writeText(cliResult)
     }
 
-    private fun generateUploadCommand(executable: String, manifestInfo: AndroidManifestInfo): ProcessBuilder {
+    private fun generateUploadCommand(
+        executable: String,
+        manifestInfo: AndroidManifestInfo
+    ): ProcessBuilder {
         val cmd = mutableListOf(
             executable,
             "upload-react-native",
@@ -173,51 +168,7 @@ sealed class BugsnagUploadJsSourceMapTask @Inject constructor(
             name: String,
             configurationAction: BugsnagUploadJsSourceMapTask.() -> Unit
         ): TaskProvider<out BugsnagUploadJsSourceMapTask> {
-            return when {
-                project.gradle.versionNumber() >= GradleVersions.VERSION_5_3 -> {
-                    project.tasks.register<BugsnagUploadJsSourceMapTaskGradle53Plus>(name, configurationAction)
-                }
-                else -> {
-                    project.tasks.register<BugsnagUploadJsSourceMapTaskLegacy>(name, configurationAction)
-                }
-            }
-        }
-
-        internal fun rescueReactNativeSourceBundle(
-            rnTask: Task,
-            rnBundle: String?,
-            project: Project,
-            output: BaseVariantOutput
-        ): String? {
-            // since the Hermes bundle overwrites the JS bundle in the same Task as the Bundle
-            // is generated, we need to inject an extra Action to save the JS bundle beforehand
-            var rnBundle1 = rnBundle
-            val actions = rnTask.actions.toMutableList()
-            val indexToInsert = actions.indexOfFirst {
-                (it as? Describable)?.displayName?.contains("doLast", ignoreCase = true) == true
-            }
-
-            if (indexToInsert != -1) {
-                val rnSourceBundle = File(rnBundle1)
-                val rnRescuedSourceBundle = intermediateForRescuedReactNativeBundle(project, output)
-                actions.add(
-                    indexToInsert,
-                    Action<Task> {
-                        rnSourceBundle.copyTo(rnRescuedSourceBundle)
-                    }
-                )
-
-                rnTask.actions = actions
-
-                // make sure the remainder of our Task uses the "rescued" source bundle
-                rnBundle1 = rnRescuedSourceBundle.absolutePath
-            }
-            return rnBundle1
-        }
-
-        internal fun isHermesEnabled(project: Project): Boolean {
-            return project.hasProperty("react") &&
-                (project.property("react") as Map<*, *>)["enableHermes"] == true
+            return project.tasks.register(name, configurationAction)
         }
     }
 }
@@ -235,24 +186,4 @@ internal fun findReactNativeSourcemapFile(project: Project, variant: BaseVariant
     val bundleAssetName = react?.get("bundleAssetName") as String? ?: "index.android.bundle"
     val jsSourceMapsDir = "${project.buildDir}/generated/sourcemaps/react/${variant.dirName}"
     return "$jsSourceMapsDir/$bundleAssetName.map"
-}
-
-/**
- * Legacy [BugsnagUploadJsSourceMapTask] task that requires using [ProjectLayout.configurableFiles].
- */
-internal open class BugsnagUploadJsSourceMapTaskLegacy @Inject constructor(
-    objects: ObjectFactory,
-    projectLayout: ProjectLayout
-) : BugsnagUploadJsSourceMapTask(objects) {
-
-    @get:InputFiles
-    override val projectRootFileProvider: ConfigurableFileCollection = projectLayout.configurableFiles()
-}
-
-internal open class BugsnagUploadJsSourceMapTaskGradle53Plus @Inject constructor(
-    objects: ObjectFactory
-) : BugsnagUploadJsSourceMapTask(objects) {
-
-    @get:InputFiles
-    override val projectRootFileProvider: ConfigurableFileCollection = objects.fileCollection()
 }
