@@ -24,8 +24,8 @@
       <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" />
 
       <meta-data android:name="com.bugsnag.android.API_KEY" android:value="TEST_API_KEY" />
-      <meta-data android:name="com.bugsnag.android.ENDPOINT_NOTIFY" android:value="http://localhost:9339/notify" />
-      <meta-data android:name="com.bugsnag.android.ENDPOINT_SESSIONS" android:value="http://localhost:9339/sessions" />
+      <meta-data android:name="com.bugsnag.android.ENDPOINT_NOTIFY" android:value="http://localhost:9339" />
+      <meta-data android:name="com.bugsnag.android.ENDPOINT_SESSIONS" android:value="http://localhost:9339" />
     </application>
 
 </manifest>

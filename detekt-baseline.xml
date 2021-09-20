@@ -14,7 +14,6 @@
     <ID>ReturnCount:ManifestUuidTaskV2Compat.kt$internal fun createManifestUpdateTask( bugsnag: BugsnagPluginExtension, project: Project, variantName: String ): TaskProvider&lt;BugsnagManifestUuidTaskV2&gt;?</ID>
     <ID>ReturnCount:SharedObjectMappingFileFactory.kt$SharedObjectMappingFileFactory$ fun generateSoMappingFile(project: Project, params: Params): File?</ID>
     <ID>SpreadOperator:DexguardCompat.kt$(buildDir, *path, variant.dirName, outputDir, "mapping.txt")</ID>
-    <ID>SwallowedException:MappingFileProvider.kt$catch (exc: Throwable) { project.provider { project.layout.files(variant.mappingFile) } }</ID>
     <ID>ThrowingExceptionsWithoutMessageOrCause:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$IllegalStateException()</ID>
     <ID>TooGenericExceptionCaught:BugsnagHttpClientHelper.kt$exc: Throwable</ID>
     <ID>TooGenericExceptionCaught:BugsnagManifestUuidTask.kt$BugsnagManifestUuidTask$exc: Throwable</ID>

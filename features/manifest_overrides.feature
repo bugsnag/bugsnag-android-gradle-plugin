@@ -5,13 +5,12 @@ Feature: Manifest meta-data overrides
 Scenario: Invalid Split Overrides
     When I build the failing "splits_and_manual_version" using the "standard" bugsnag config
     And I wait for 3 seconds
-    Then I should receive no builds
+    Then I should receive no requests
 
 Scenario: Manual versionCode overrides default
     When I build "manual_version" using the "standard" bugsnag config
-    And I wait to receive a build
-    And I wait to receive an upload
+    And I wait to receive 2 requests
 
-    Then 1 builds are valid for the build API and match the following:
+    Then 1 requests are valid for the build API and match the following:
         | appVersionCode | appVersion | buildTool      | sourceControl.provider | sourceControl.repository                                     |
         | 101            | 3.5        | gradle-android | github                 | https://github.com/bugsnag/bugsnag-android-gradle-plugin.git |

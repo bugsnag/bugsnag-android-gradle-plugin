@@ -1,14 +1,11 @@
 package com.bugsnag.android.gradle.internal
 
-import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.Artifacts
-import com.android.build.api.extension.AndroidComponentsExtension
-import com.android.build.gradle.AppExtension
+import com.android.build.api.artifact.SingleArtifact
+import com.android.build.api.variant.AndroidComponentsExtension
 import com.bugsnag.android.gradle.BugsnagManifestUuidTaskV2
 import com.bugsnag.android.gradle.BugsnagPluginExtension
-import com.bugsnag.android.gradle.GroovyCompat
 import com.bugsnag.android.gradle.VariantFilterImpl
-import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -18,25 +15,6 @@ import java.util.UUID
  * Registers a [BugsnagManifestUuidTaskV2] for the given variant.
  */
 internal fun registerV2ManifestUuidTask(
-    android: AppExtension,
-    bugsnag: BugsnagPluginExtension,
-    project: Project
-) {
-    when {
-        AgpVersions.CURRENT >= AgpVersions.VERSION_4_2 -> registerUuidTaskAGP42(bugsnag, project)
-        AgpVersions.CURRENT >= AgpVersions.VERSION_4_1 -> registerUuidTaskAGP41(android, bugsnag, project)
-        else -> {
-        }
-    }
-}
-
-/**
- * Registers a [BugsnagManifestUuidTaskV2] for a project using AGP 4.2+. This
- * version of AGP uses `androidComponents.onVariants` to allow task registration
- * for variants.
- */
-@Suppress("UnstableApiUsage")
-private fun registerUuidTaskAGP42(
     bugsnag: BugsnagPluginExtension,
     project: Project
 ) {
@@ -47,29 +25,6 @@ private fun registerUuidTaskAGP42(
             wireManifestUpdaterTask(manifestUpdater, variant.artifacts)
         }
     }
-}
-
-/**
- * Registers a [BugsnagManifestUuidTaskV2] for a project using AGP 4.1. This
- * version of AGP uses `android.onVariants.onProperties` to allow task registration
- * for variants.
- */
-@Suppress("UnstableApiUsage")
-private fun registerUuidTaskAGP41(
-    android: AppExtension,
-    bugsnag: BugsnagPluginExtension,
-    project: Project
-) {
-    var manifestUpdater: TaskProvider<BugsnagManifestUuidTaskV2>? = null
-    val onVariants = Action<String> { name ->
-        manifestUpdater = createManifestUpdateTask(bugsnag, project, name)
-    }
-    val onProperties = Action<Artifacts> { artifacts ->
-        manifestUpdater?.apply {
-            wireManifestUpdaterTask(this, artifacts)
-        }
-    }
-    GroovyCompat.registerUuidTaskAGP41(android, onVariants, onProperties)
 }
 
 internal fun createManifestUpdateTask(
@@ -109,7 +64,7 @@ internal fun wireManifestUpdaterTask(
             taskInput = BugsnagManifestUuidTaskV2::inputManifest,
             taskOutput = BugsnagManifestUuidTaskV2::outputManifest
         )
-        .toTransform(ArtifactType.MERGED_MANIFEST)
+        .toTransform(SingleArtifact.MERGED_MANIFEST)
 }
 
 internal fun isVariantEnabled(

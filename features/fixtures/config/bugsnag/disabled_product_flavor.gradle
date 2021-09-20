@@ -1,12 +1,12 @@
 apply plugin: 'com.bugsnag.android.gradle'
 
 bugsnag {
-    endpoint = "http://localhost:9339/uploads"
-    releasesEndpoint = "http://localhost:9339/builds"
+    endpoint = "http://localhost:9339"
+    releasesEndpoint = "http://localhost:9339"
 
     // disable bugsnag plugin for 'foo' productFlavor
     variantFilter { variant ->
-        if (variant.name.toLowerCase().contains("debug") || variant.name.toLowerCase().contains("foo")) {
+        if (variant.name.toLowerCase().contains("foo")) {
             enabled = false
         }
     }

@@ -77,7 +77,7 @@ import com.android.build.OutputFile
  * ]
  */
 project.ext.react = [
-    enableHermes: !!System.env.RN_ENABLE_HERMES // clean and rebuild if changing
+    enableHermes: System.env.RN_ENABLE_HERMES == true // clean and rebuild if changing
 ]
 
 apply from: "../../node_modules/react-native/react.gradle"
@@ -225,7 +225,7 @@ dependencies {
 // Run this once to be able to run the application with BUCK
 // puts all compile dependencies into folder libs for BUCK to use
 task copyDownloadableDepsToLibs(type: Copy) {
-    from configurations.compile
+    from configurations.implementation
     into 'libs'
 }
 
@@ -235,8 +235,8 @@ if (!System.env.UPDATING_GRADLEW) {
     apply plugin: 'com.bugsnag.android.gradle'
 
     bugsnag {
-        endpoint = "http://localhost:9339/uploads"
-        releasesEndpoint = "http://localhost:9339/builds"
+        endpoint = "http://localhost:9339"
+        releasesEndpoint = "http://localhost:9339"
         uploadReactNativeMappings = "false" != System.env.UPLOAD_RN_MAPPINGS
 
         if (System.env.CUSTOM_NODE_MODULES_DIR == "true") {

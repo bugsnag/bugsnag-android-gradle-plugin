@@ -1,18 +1,15 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.ApkVariantOutput
-import com.bugsnag.android.gradle.internal.GradleVersions
 import com.bugsnag.android.gradle.internal.clearDir
 import com.bugsnag.android.gradle.internal.includesAbi
 import com.bugsnag.android.gradle.internal.mapProperty
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
-import com.bugsnag.android.gradle.internal.versionNumber
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.ProjectLayout
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -28,7 +25,7 @@ import javax.inject.Inject
 /**
  * Task that generates NDK shared object mapping files for upload to Bugsnag.
  */
-sealed class BugsnagGenerateNdkSoMappingTask(
+open class BugsnagGenerateNdkSoMappingTask @Inject constructor(
     objects: ObjectFactory
 ) : DefaultTask(), AndroidManifestInfoReceiver {
 
@@ -50,7 +47,7 @@ sealed class BugsnagGenerateNdkSoMappingTask(
     val objDumpPaths: MapProperty<String, String> = objects.mapProperty()
 
     @get:InputFiles
-    abstract val searchDirectories: ConfigurableFileCollection
+    val searchDirectories: ConfigurableFileCollection = objects.fileCollection()
 
     @TaskAction
     fun generateMappingFiles() {
@@ -122,32 +119,7 @@ sealed class BugsnagGenerateNdkSoMappingTask(
             name: String,
             configurationAction: BugsnagGenerateNdkSoMappingTask.() -> Unit
         ): TaskProvider<out BugsnagGenerateNdkSoMappingTask> {
-            val gradleVersion = project.gradle.versionNumber()
-            return when {
-                gradleVersion >= GradleVersions.VERSION_5_3 -> {
-                    project.tasks.register<BugsnagGenerateNdkSoMappingTask53Plus>(name, configurationAction)
-                }
-                else -> {
-                    project.tasks.register<BugsnagGenerateNdkSoMappingTaskLegacy>(name, configurationAction)
-                }
-            }
+            return project.tasks.register(name, configurationAction)
         }
     }
-}
-
-/** A legacy [BugsnagGenerateNdkSoMappingTask] that uses [ProjectLayout.configurableFiles]. */
-internal open class BugsnagGenerateNdkSoMappingTaskLegacy @Inject constructor(
-    objects: ObjectFactory,
-    projectLayout: ProjectLayout
-) : BugsnagGenerateNdkSoMappingTask(objects) {
-    @Suppress("DEPRECATION") // Here for backward compat
-    @get:InputFiles
-    override val searchDirectories: ConfigurableFileCollection = projectLayout.configurableFiles()
-}
-
-internal open class BugsnagGenerateNdkSoMappingTask53Plus @Inject constructor(
-    objects: ObjectFactory
-) : BugsnagGenerateNdkSoMappingTask(objects) {
-    @get:InputFiles
-    override val searchDirectories: ConfigurableFileCollection = objects.fileCollection()
 }
