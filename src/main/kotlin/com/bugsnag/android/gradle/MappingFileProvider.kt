@@ -1,7 +1,7 @@
 package com.bugsnag.android.gradle
 
-import com.android.build.gradle.api.ApkVariant
-import com.android.build.gradle.api.ApkVariantOutput
+import com.android.build.gradle.api.BaseVariant
+import com.android.build.gradle.api.BaseVariantOutput
 import com.bugsnag.android.gradle.internal.findMappingFileDexguard9
 import com.bugsnag.android.gradle.internal.findMappingFileDexguardLegacy
 import com.bugsnag.android.gradle.internal.getDexguardMajorVersionInt
@@ -16,8 +16,8 @@ import org.gradle.api.provider.Provider
  */
 internal fun createMappingFileProvider(
     project: Project,
-    variant: ApkVariant,
-    variantOutput: ApkVariantOutput
+    variant: BaseVariant,
+    variantOutput: BaseVariantOutput
 ): Provider<FileCollection> {
     return findMappingFiles(project, variant, variantOutput)
         .map { files -> files.filter { it.exists() } }
@@ -25,8 +25,8 @@ internal fun createMappingFileProvider(
 
 private fun findMappingFiles(
     project: Project,
-    variant: ApkVariant,
-    variantOutput: ApkVariantOutput
+    variant: BaseVariant,
+    variantOutput: BaseVariantOutput
 ): Provider<FileCollection> {
     return when {
         project.hasDexguardPlugin() -> {
@@ -53,7 +53,7 @@ private fun findMappingFiles(
  * to the old "mappingFile" API if necessary
  */
 internal fun findMappingFileAgp(
-    variant: ApkVariant,
+    variant: BaseVariant,
     project: Project
 ) = try {
     variant.mappingFileProvider

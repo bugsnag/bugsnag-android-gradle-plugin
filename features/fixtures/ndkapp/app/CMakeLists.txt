@@ -42,3 +42,14 @@ target_link_libraries( # Specifies the target library.
                        # Links the target library to the log library
                        # included in the NDK.
                        ${log-lib} )
+
+add_library(lib_bugsnag SHARED IMPORTED)
+# This directory is created automatically by the Bugsnag Gradle plugin
+set(BUGSNAG_LIB_DIR
+    ${CMAKE_SOURCE_DIR}/build/intermediates/bugsnag-libs)
+set(BUGSNAG_INCLUDE_DIR ${BUGSNAG_LIB_DIR}/assets/include)
+set_target_properties(lib_bugsnag PROPERTIES IMPORTED_LOCATION
+                      ${BUGSNAG_LIB_DIR}/jni/${ANDROID_ABI}/libbugsnag-ndk.so)
+# Insert your target name:
+target_include_directories(native-lib PRIVATE ${BUGSNAG_INCLUDE_DIR})
+target_link_libraries(native-lib lib_bugsnag)

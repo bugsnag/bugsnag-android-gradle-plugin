@@ -15,10 +15,12 @@ class AndroidManifestParseOverrideTest {
 
     private val info = AndroidManifestInfo(
         "api-key",
-        "103",
+        "12",
         "build-uuid-123",
-        "57.2",
-        "com.example"
+        "5.2",
+        "com.example",
+        "103",
+        "57.2"
     )
 
     @Mock

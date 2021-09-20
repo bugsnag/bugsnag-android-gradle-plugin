@@ -1,3 +1,20 @@
+## 5.8.0 (2021-09-20)
+
+* Address task dependency warning when using APK splits
+  [#408](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/408)
+
+* Custom Dexguard paths are resolved correctly (relative to the project)
+  [#420](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/420)
+
+* Release-metadata tasks are always available for configured projects
+  [#422](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/422)
+
+* Support extracting SO files from bugsnag AARs for library modules
+  [#423](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/423)
+
+* Using versionCodeOverride and VERSION_CODE meta-data will result in a build error to avoid undefined behaviour
+  [#425](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/425)
+
 ## 5.7.8 (2021-07-22)
 
 * Upload correct bundle when Hermes is enabled
