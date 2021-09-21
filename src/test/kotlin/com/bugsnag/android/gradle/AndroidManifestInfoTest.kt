@@ -16,7 +16,9 @@ class AndroidManifestInfoTest {
         "12",
         "build-123",
         "5.2",
-        "com.example"
+        "com.example",
+        null,
+        null
     )
 
     private lateinit var jsonFile: File
