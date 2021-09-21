@@ -1,3 +1,8 @@
+## TBD
+
+* Prevent exception when old Moshi version on buildScript classpath
+  [#439](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/439)
+
 ## 7.1.0 (2021-09-20)
 
 * Custom Dexguard paths are resolved correctly (relative to the project)
