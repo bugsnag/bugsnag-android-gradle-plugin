@@ -6,10 +6,11 @@ buildscript {
         minSdkVersion = 21
         compileSdkVersion = 30
         targetSdkVersion = 30
+        ndkVersion = "20.1.5948944"
     }
     repositories {
-        mavenCentral()
         google()
+        mavenCentral()
         mavenLocal()
     }
     dependencies {
@@ -17,7 +18,9 @@ buildscript {
         classpath "com.android.tools.build:gradle:${agpVersion}"
 
         if (!System.env.UPDATING_GRADLEW) {
-            classpath("com.bugsnag:bugsnag-android-gradle-plugin:9000.0.0-test")
+            dependencies {
+                classpath "com.bugsnag:bugsnag-android-gradle-plugin:9000.0.0-test"
+            }
         }
     }
 }
@@ -28,11 +31,11 @@ allprojects {
         mavenLocal()
         maven {
             // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-            url("$rootDir/../../node_modules/react-native/android")
+            url("$rootDir/../node_modules/react-native/android")
         }
         maven {
             // Android JSC is installed from npm
-            url("$rootDir/../../node_modules/jsc-android/dist")
+            url("$rootDir/../node_modules/jsc-android/dist")
         }
 
         google()

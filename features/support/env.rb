@@ -3,7 +3,7 @@
 # Set which test fixture should be used
 ENV["APP_FIXTURE_DIR"] ||= "features/fixtures/app"
 ENV["NDK_FIXTURE_DIR"] ||= "features/fixtures/ndkapp"
-ENV["RN_FIXTURE_DIR"] ||= "features/fixtures/rn063/android"
+ENV["RN_FIXTURE_DIR"] ||= "features/fixtures/rn065/android"
 ENV["LIB_FIXTURE_DIR"] ||= "features/fixtures/mylib"
 ENV["RN_MONOREPO_FIXTURE_DIR"] ||= "features/fixtures/rn-monorepo/abc/android"
 ENV["UNITY_2018_FIXTURE_DIR"] ||= "features/fixtures/unity_2018/example"

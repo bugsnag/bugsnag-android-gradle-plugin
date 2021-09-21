@@ -56,5 +56,5 @@ jobs:
       env:
         - AGP_VERSION=7.0.0
         - GRADLE_WRAPPER_VERSION=7.0.2
-        - RN_FIXTURE_DIR=features/fixtures/rn063/android
+        - RN_FIXTURE_DIR=features/fixtures/rn065/android
       script: bundle exec maze-runner -c --verbose --fail-fast
