@@ -217,6 +217,7 @@ class BugsnagPlugin : Plugin<Project> {
             val generateProguardTaskProvider = when {
                 jvmMinificationEnabled -> registerGenerateProguardTask(
                     project,
+                    variant,
                     output,
                     bugsnag,
                     manifestInfoProvider,
@@ -234,7 +235,7 @@ class BugsnagPlugin : Plugin<Project> {
                     manifestInfoProvider,
                     proguardUploadClientProvider,
                     generateProguardTaskProvider
-                ).dependsOn(manifestTaskProvider)
+                ).dependsOn(generateProguardTaskProvider as TaskProvider<out Task>)
                 else -> null
             }
             val ndkSoMappingOutput = "$NDK_SO_MAPPING_DIR/${output.name}"
@@ -261,7 +262,7 @@ class BugsnagPlugin : Plugin<Project> {
                         ndkUploadClientProvider,
                         generateNdkMappingProvider,
                         ndkSoMappingOutput
-                    ).dependsOn(manifestTaskProvider)
+                    ).dependsOn(generateNdkMappingProvider)
                 }
                 else -> null
             }
@@ -289,7 +290,7 @@ class BugsnagPlugin : Plugin<Project> {
                         unityUploadClientProvider,
                         generateUnityMappingProvider,
                         unityMappingDir
-                    ).dependsOn(manifestTaskProvider)
+                    ).dependsOn(generateUnityMappingProvider)
                 }
                 else -> null
             }
@@ -459,6 +460,7 @@ class BugsnagPlugin : Plugin<Project> {
     @Suppress("LongParameterList")
     private fun registerGenerateProguardTask(
         project: Project,
+        variant: BaseVariant,
         output: BaseVariantOutput,
         bugsnag: BugsnagPluginExtension,
         manifestInfoProvider: Provider<AndroidManifestInfo>,
@@ -471,9 +473,12 @@ class BugsnagPlugin : Plugin<Project> {
             manifestInfo.set(manifestInfoProvider)
             archiveOutputFile.set(gzipOutputProvider)
             failOnUploadError.set(bugsnag.failOnUploadError)
+            mappingFileProperty.from(mappingFilesProvider)
 
-            mappingFilesProvider.let {
-                mappingFileProperty.from(it)
+            // On AGP < 4 we need to manually order the Proguard task to ensure that the mapping.txt file
+            // has been generated before the task attempts to read it, that's what this does:
+            if (AgpVersions.CURRENT < AgpVersions.VERSION_4_0) {
+                dependsOn("package${variant.name.capitalize()}")
             }
         }
     }
