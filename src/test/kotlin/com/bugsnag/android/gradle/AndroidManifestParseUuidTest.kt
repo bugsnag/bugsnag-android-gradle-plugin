@@ -18,7 +18,9 @@ class AndroidManifestParseUuidTest {
         "12",
         "build-uuid-123",
         "5.2",
-        "com.example"
+        "com.example",
+        null,
+        null
     )
 
     @Mock
