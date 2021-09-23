@@ -1,3 +1,14 @@
+## 5.8.1 (2021-09-23)
+
+* Prevent exception when old Moshi version on buildScript classpath
+  [#439](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/439)
+
+* Avoid registering the release task if minification is disabled, restoring the behaviour of v5.7.8
+  [#443](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/443)
+
+* Fix task ordering for projects using AGP 3.*
+  [#441](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/441)
+
 ## 5.8.0 (2021-09-20)
 
 * Address task dependency warning when using APK splits

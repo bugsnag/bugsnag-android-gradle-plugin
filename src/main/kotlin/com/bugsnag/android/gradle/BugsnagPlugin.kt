@@ -201,6 +201,11 @@ class BugsnagPlugin : Plugin<Project> {
             val unityEnabled = isUnityLibraryUploadEnabled(bugsnag, android)
             val reactNativeEnabled = isReactNativeUploadEnabled(bugsnag)
 
+            // skip tasks for variant if JVM/NDK/Unity minification not enabled
+            if (!jvmMinificationEnabled && !ndkEnabled && !unityEnabled && !reactNativeEnabled) {
+                return@configureEach
+            }
+
             // register bugsnag tasks
             val mappingFilesProvider = createMappingFileProvider(project, variant, output)
             val manifestTaskProvider = registerManifestUuidTask(project, variant, output)
@@ -209,29 +214,10 @@ class BugsnagPlugin : Plugin<Project> {
                 .flatMap { it.manifestInfoProvider }
                 .map { AndroidManifestInfo.read(it.asFile).forApkVariantOutput(output) }
 
-            val releaseUploadTask = registerReleasesUploadTask(
-                project,
-                variant,
-                output,
-                bugsnag,
-                manifestInfoProvider,
-                releasesUploadClientProvider,
-                mappingFilesProvider,
-                ndkEnabled,
-                httpClientHelperProvider
-            ).dependsOn(manifestTaskProvider)
-
-            val releaseAutoUpload = bugsnag.reportBuilds.get()
-            variant.register(project, releaseUploadTask, releaseAutoUpload)
-
-            // skip tasks for variant if JVM/NDK/Unity minification not enabled
-            if (!jvmMinificationEnabled && !ndkEnabled && !unityEnabled && !reactNativeEnabled) {
-                return@configureEach
-            }
-
             val generateProguardTaskProvider = when {
                 jvmMinificationEnabled -> registerGenerateProguardTask(
                     project,
+                    variant,
                     output,
                     bugsnag,
                     manifestInfoProvider,
@@ -249,7 +235,7 @@ class BugsnagPlugin : Plugin<Project> {
                     manifestInfoProvider,
                     proguardUploadClientProvider,
                     generateProguardTaskProvider
-                ).dependsOn(manifestTaskProvider)
+                ).dependsOn(generateProguardTaskProvider as TaskProvider<out Task>)
                 else -> null
             }
             val ndkSoMappingOutput = "$NDK_SO_MAPPING_DIR/${output.name}"
@@ -276,7 +262,7 @@ class BugsnagPlugin : Plugin<Project> {
                         ndkUploadClientProvider,
                         generateNdkMappingProvider,
                         ndkSoMappingOutput
-                    ).dependsOn(manifestTaskProvider)
+                    ).dependsOn(generateNdkMappingProvider)
                 }
                 else -> null
             }
@@ -304,7 +290,7 @@ class BugsnagPlugin : Plugin<Project> {
                         unityUploadClientProvider,
                         generateUnityMappingProvider,
                         unityMappingDir
-                    ).dependsOn(manifestTaskProvider)
+                    ).dependsOn(generateUnityMappingProvider)
                 }
                 else -> null
             }
@@ -319,6 +305,21 @@ class BugsnagPlugin : Plugin<Project> {
                 )?.dependsOn(manifestTaskProvider)
                 else -> null
             }
+
+            val releaseUploadTask = registerReleasesUploadTask(
+                project,
+                variant,
+                output,
+                bugsnag,
+                manifestInfoProvider,
+                releasesUploadClientProvider,
+                mappingFilesProvider,
+                ndkEnabled,
+                httpClientHelperProvider
+            ).dependsOn(manifestTaskProvider)
+
+            val releaseAutoUpload = bugsnag.reportBuilds.get()
+            variant.register(project, releaseUploadTask, releaseAutoUpload)
 
             if (generateNdkMappingProvider != null && uploadNdkMappingProvider != null) {
                 variant.register(project, generateNdkMappingProvider, ndkEnabled)
@@ -459,6 +460,7 @@ class BugsnagPlugin : Plugin<Project> {
     @Suppress("LongParameterList")
     private fun registerGenerateProguardTask(
         project: Project,
+        variant: BaseVariant,
         output: BaseVariantOutput,
         bugsnag: BugsnagPluginExtension,
         manifestInfoProvider: Provider<AndroidManifestInfo>,
@@ -471,9 +473,12 @@ class BugsnagPlugin : Plugin<Project> {
             manifestInfo.set(manifestInfoProvider)
             archiveOutputFile.set(gzipOutputProvider)
             failOnUploadError.set(bugsnag.failOnUploadError)
+            mappingFileProperty.from(mappingFilesProvider)
 
-            mappingFilesProvider.let {
-                mappingFileProperty.from(it)
+            // On AGP < 4 we need to manually order the Proguard task to ensure that the mapping.txt file
+            // has been generated before the task attempts to read it, that's what this does:
+            if (AgpVersions.CURRENT < AgpVersions.VERSION_4_0) {
+                dependsOn("package${variant.name.capitalize()}")
             }
         }
     }
