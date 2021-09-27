@@ -525,7 +525,7 @@ class BugsnagPlugin : Plugin<Project> {
             val nodeModulesDir = bugsnag.nodeModulesDir.getOrElse(defaultLocation)
             val cliPath = File(nodeModulesDir, "@bugsnag/source-maps/bin/cli")
             bugsnagSourceMaps.set(cliPath)
-            mustRunAfter(rnTask)
+            dependsOn(rnTask)
         }
     }
 
