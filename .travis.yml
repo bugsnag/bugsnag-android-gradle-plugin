@@ -43,13 +43,13 @@ cache:
 
 jobs:
   include:
-    # Unit test job
-    - name: unit tests
-      script: ./gradlew detekt ktlintCheck check
+    # # Unit test job
+    # - name: unit tests
+    #   script: ./gradlew detekt ktlintCheck check
 
-    # Plugin install job
-    - name: plugin install
-      script: ./gradlew install
+    # # Plugin install job
+    # - name: plugin install
+    #   script: ./gradlew install
 
     # AGP 3.4.0 E2E tests
     - name: AGP 3.4.0 E2E tests

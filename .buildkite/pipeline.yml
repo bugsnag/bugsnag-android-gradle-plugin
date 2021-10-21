@@ -4,3 +4,27 @@ steps:
     plugins:
       - docker-compose#v3.7.0:
           run: license-audit
+
+  - label: ':docker: Build Android gradle plugin CI image'
+    key: 'agp-ci'
+    timeout_in_minutes: 30
+    plugins:
+      - docker-compose#v3.7.0:
+          build:
+            - android-gradle-plugin-ci
+
+  - label: ':android: Run unit tests'
+    depends_on: 'agp-ci'
+    timeout_in_minutes: 30
+    plugins:
+      - docker-compose#v3.7.0:
+          run: android-gradle-plugin-ci
+          command: ./gradlew detekt ktlintCheck check
+
+  - label: ':android: Plugin installation check'
+    depends_on: 'agp-ci'
+    timeout_in_minutes: 30
+    plugins:
+      - docker-compose#v3.7.0:
+          run: android-gradle-plugin-ci
+          command: ./gradlew install

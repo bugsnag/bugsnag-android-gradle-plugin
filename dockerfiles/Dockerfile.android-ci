@@ -1,0 +1,49 @@
+FROM 855461928731.dkr.ecr.us-west-1.amazonaws.com/android:latest as android
+
+WORKDIR /app
+
+# Install Ruby and other maze-runner requirements
+RUN apt-get update
+RUN apt-get install -y ruby-full make libcurl4-openssl-dev gcc g++
+RUN gem install bundler
+RUN gem update --system 3.0.6
+
+# Install node, npm and yarn
+RUN curl -fsSL https://deb.nodesource.com/setup_12.x | bash -
+RUN apt-get install -y nodejs
+RUN npm install --global yarn
+
+# Setup node credentials
+RUN rm -f ~/.npmrc
+ARG REG_BASIC_CREDENTIAL
+ARG REG_NPM_EMAIL
+ARG REG_URL
+RUN echo "_auth=$REG_BASIC_CREDENTIAL" >> ~/.npmrc
+RUN echo "email=$REG_NPM_EMAIL" >> ~/.npmrc
+RUN echo "registry=$REG_URL" >> ~/.npmrc
+RUN echo "always-auth=true" >> ~/.npmrc
+
+# Install any additionally required NDK/SDK tools
+run sdkmanager 'cmake;3.6.4111459' >/dev/null
+run sdkmanager 'ndk;16.1.4479499' >/dev/null
+
+# Force download of gradle zip early to avoid repeating
+# if Docker cache is invalidated by branch changes.
+COPY gradlew gradle.properties /app/
+COPY gradle/ /app/gradle/
+ENV GRADLE_OPTS="-Dorg.gradle.daemon=false"
+COPY settings.gradle /app/
+RUN ./gradlew
+
+# Copy remaining Gradle files
+COPY build.gradle /app/
+
+# Copy source
+COPY src/ src/
+
+# Copy any other test associated files
+COPY detekt-baseline.xml Gemfile Makefile LICENSE /app/
+COPY features/ features/
+
+# Install maze-runner
+RUN bundle install
