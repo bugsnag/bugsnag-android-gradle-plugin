@@ -19,7 +19,11 @@ steps:
     plugins:
       - docker-compose#v3.7.0:
           run: android-gradle-plugin-ci
-          command: ./gradlew detekt ktlintCheck check
+          command:
+            - './gradlew'
+            - 'detekt'
+            - 'ktlintCheck'
+            - 'check'
 
   - label: ':android: Plugin installation check'
     depends_on: 'agp-ci'
@@ -27,4 +31,6 @@ steps:
     plugins:
       - docker-compose#v3.7.0:
           run: android-gradle-plugin-ci
-          command: ./gradlew install
+          command:
+            - './gradlew'
+            - 'install'
