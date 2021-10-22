@@ -21,6 +21,24 @@ When('I bundle the {string} variantOutput for {string} using the {string} bugsna
   assert(exit_code.zero?, "Expected script to complete with 0 exit code, got #{exit_code}")
 end
 
+When("I build the React Native app") do
+  steps %Q{
+  And I run the script "features/scripts/build_react_native_app.sh" synchronously
+}
+end
+
+When("I build the NDK app") do
+  steps %Q{
+  And I run the script "features/scripts/build_ndk_app.sh" synchronously
+}
+end
+
+When("I set the fixture JVM arguments to {string}") do |jvm_args|
+  steps %Q{
+  When I set environment variable "CUSTOM_JVM_ARGS" to "#{jvm_args}"
+}
+end
+
 When('I build the failing {string} using the {string} bugsnag config') do |module_config, bugsnag_config|
   exit_code = setup_and_run_script(module_config, bugsnag_config, 'features/scripts/build_project_module.sh')
   assert(exit_code != 0, "Expected script to fail with non-zero exit code, got #{exit_code}")
@@ -45,18 +63,6 @@ steps %Q{
     When I set environment variable "AGP_VERSION" to "#{agp_version}"
     And I build the failing "#{module_config}" using the "#{bugsnag_config}" bugsnag config
 }
-end
-
-When('I build the NDK app') do
-  steps %(
-    And I run the script "features/scripts/build_ndk_app.sh" synchronously
-  )
-end
-
-When('I set the fixture JVM arguments to {string}') do |jvm_args|
-  steps %(
-    When I set environment variable "CUSTOM_JVM_ARGS" to "#{jvm_args}"
-  )
 end
 
 Then(/^the exit code equals (\d+)$/) do |exit_code|
