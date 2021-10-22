@@ -45,6 +45,7 @@ steps %Q{
     When I set environment variable "AGP_VERSION" to "#{agp_version}"
     And I build the failing "#{module_config}" using the "#{bugsnag_config}" bugsnag config
 }
+end
 
 When('I build the NDK app') do
   steps %(
@@ -56,6 +57,10 @@ When('I set the fixture JVM arguments to {string}') do |jvm_args|
   steps %(
     When I set environment variable "CUSTOM_JVM_ARGS" to "#{jvm_args}"
   )
+end
+
+Then(/^the exit code equals (\d+)$/) do |exit_code|
+  assert_equal(exit_code, $?.exitstatus.to_i)
 end
 
 Then('{int} requests are valid for the build API and match the following:') do |request_count, data_table|

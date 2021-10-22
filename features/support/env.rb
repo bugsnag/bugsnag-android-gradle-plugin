@@ -21,10 +21,6 @@ ENV['GRADLE_WRAPPER_VERSION'] ||= '7.0.2'
 
 AfterConfiguration do |_config|
   Maze.config.enforce_bugsnag_integrity = false
-
-  Maze::Runner.run_command('./features/scripts/clear_local_maven_repo.sh')
-  Maze::Runner.run_command('./features/scripts/setup_gradle_wrapper.sh')
-  Maze::Runner.run_command('./features/scripts/install_gradle_plugin.sh')
 end
 
 Before('@requires_agp4_1_or_higher') do |scenario|
