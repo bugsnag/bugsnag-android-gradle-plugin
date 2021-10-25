@@ -24,8 +24,9 @@ RUN echo "registry=$REG_URL" >> ~/.npmrc
 RUN echo "always-auth=true" >> ~/.npmrc
 
 # Install any additionally required NDK/SDK tools
-run sdkmanager 'cmake;3.6.4111459' >/dev/null
-run sdkmanager 'ndk;16.1.4479499' >/dev/null
+RUN sdkmanager 'cmake;3.6.4111459' >/dev/null
+RUN sdkmanager 'ndk;16.1.4479499' >/dev/null
+ENV ANDROID_NDK_HOME="/sdk/ndk/16.1.4479499"
 
 # Force download of gradle zip early to avoid repeating
 # if Docker cache is invalidated by branch changes.
@@ -38,8 +39,9 @@ RUN ./gradlew
 # Copy remaining Gradle files
 COPY build.gradle /app/
 
-# Copy source
+# Copy source and git config
 COPY src/ src/
+COPY .git/ .git/
 
 # Copy any other test associated files
 COPY detekt-baseline.xml Gemfile Makefile LICENSE /app/
