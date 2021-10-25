@@ -2,7 +2,7 @@ Feature: Exported Unity project uploads mapping files
 
 Scenario: Unity 2018 exported gradle project uploads JVM/release/Unity information
     When I run the script "features/scripts/build_unity_2018.sh" synchronously
-    And I wait to receive 8 requests
+    And I wait to receive 8 builds
 
     Then 1 requests are valid for the build API and match the following:
       | appVersionCode | appVersion | buildTool      |
@@ -26,7 +26,7 @@ Scenario: Unity 2018 exported gradle project uploads JVM/release/Unity informati
 
 Scenario: Unity 2019 exported gradle project uploads JVM/release/Unity information
     When I run the script "features/scripts/build_unity_2019.sh" synchronously
-    And I wait to receive 5 requests
+    And I wait to receive 5 builds
 
     Then 1 requests are valid for the build API and match the following:
       | appVersionCode | appVersion | buildTool      |
@@ -49,7 +49,7 @@ Scenario: Unity 2019 exported gradle project uploads JVM/release/Unity informati
 Scenario: Shared object files not uploaded when uploadNdkUnityLibraryMappings set to false
     When I set environment variable "UNITY_SO_UPLOAD" to "false"
     And I run the script "features/scripts/build_unity_2019.sh" synchronously
-    And I wait to receive 2 requests
+    And I wait to receive 2 builds
 
     Then 1 requests are valid for the build API and match the following:
         | appVersionCode | appVersion | buildTool      |
@@ -61,7 +61,7 @@ Scenario: Shared object files not uploaded when uploadNdkUnityLibraryMappings se
 
 Scenario: Bundling a Unity project uploads JVM/release/Unity information
     When I run the script "features/scripts/bundle_unity_2019.sh" synchronously
-    And I wait to receive 5 requests
+    And I wait to receive 5 builds
 
     Then 1 requests are valid for the build API and match the following:
         | appVersionCode | appVersion | buildTool      |
@@ -84,7 +84,7 @@ Scenario: Bundling a Unity project uploads JVM/release/Unity information
 Scenario: Building a Unity product flavor uploads Unity SO files
     When I set environment variable "UNITY_FLAVORS" to "true"
     When I run the script "features/scripts/build_unity_2018_flavors.sh" synchronously
-    And I wait to receive 8 requests
+    And I wait to receive 8 builds
 
     Then 1 requests are valid for the build API and match the following:
         | appVersionCode | appVersion | buildTool      |
@@ -109,7 +109,7 @@ Scenario: Building a Unity product flavor uploads Unity SO files
 Scenario: Building a Unity product flavor uploads Unity SO files
     When I set environment variable "UNITY_ABI_SPLITS" to "true"
     When I run the script "features/scripts/build_unity_2018_abi_splits.sh" synchronously
-    And I wait to receive 2 requests
+    And I wait to receive 2 builds
 
     And 2 requests are valid for the android unity NDK mapping API and match the following:
         | arch        | projectRoot | sharedObjectName |
