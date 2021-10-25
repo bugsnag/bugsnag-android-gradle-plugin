@@ -19,11 +19,7 @@ steps:
     plugins:
       - docker-compose#v3.7.0:
           run: android-gradle-plugin-ci
-          command:
-            - './gradlew'
-            - 'detekt'
-            - 'ktlintCheck'
-            - 'check'
+          command: ['./gradlew', 'detekt', 'ktlintCheck', 'check']
 
   - label: ':android: Plugin installation check'
     depends_on: 'agp-ci'
@@ -31,6 +27,76 @@ steps:
     plugins:
       - docker-compose#v3.7.0:
           run: android-gradle-plugin-ci
-          command:
-            - './gradlew'
-            - 'install'
+          command: ['./gradlew', 'install']
+
+  - label: ':android: AGP 3.4.0 E2E tests'
+    depends_on: 'agp-ci'
+    timeout_in_minutes: 60
+    plugins:
+      - docker-compose#v3.7.0:
+          run: android-gradle-plugin-ci
+          env:
+            - AGP_VERSION=3.4.0
+            - GRADLE_WRAPPER_VERSION=5.1.1
+            - RN_FIXTURE_DIR=features/fixtures/rn060/android
+          command: ['bundle', 'exec', 'maze-runner', '-c', '--verbose', '--fail-fast']
+
+  - label: ':android: AGP 3.5.0 E2E tests'
+    depends_on: 'agp-ci'
+    timeout_in_minutes: 60
+    plugins:
+      - docker-compose#v3.7.0:
+          run: android-gradle-plugin-ci
+          env:
+            - AGP_VERSION=3.5.0
+            - GRADLE_WRAPPER_VERSION=5.4.1
+            - RN_FIXTURE_DIR=features/fixtures/rn060/android
+          command: ['bundle', 'exec', 'maze-runner', '-c', '--verbose', '--fail-fast']
+
+  - label: ':android: AGP 3.6.0 E2E tests'
+    depends_on: 'agp-ci'
+    timeout_in_minutes: 60
+    plugins:
+      - docker-compose#v3.7.0:
+          run: android-gradle-plugin-ci
+          env:
+            - AGP_VERSION=3.6.0
+            - GRADLE_WRAPPER_VERSION=5.6.4
+            - RN_FIXTURE_DIR=features/fixtures/rn061/android
+          command: ['bundle', 'exec', 'maze-runner', '-c', '--verbose', '--fail-fast']
+
+  - label: ':android: AGP 4.0.0 E2E tests'
+    depends_on: 'agp-ci'
+    timeout_in_minutes: 60
+    plugins:
+      - docker-compose#v3.7.0:
+          run: android-gradle-plugin-ci
+          env:
+            - AGP_VERSION=4.0.0
+            - GRADLE_WRAPPER_VERSION=6.1.1
+            - RN_FIXTURE_DIR=features/fixtures/rn062/android
+          command: ['bundle', 'exec', 'maze-runner', '-c', '--verbose', '--fail-fast']
+
+  - label: ':android: AGP 4.1.0 E2E tests'
+    depends_on: 'agp-ci'
+    timeout_in_minutes: 60
+    plugins:
+      - docker-compose#v3.7.0:
+          run: android-gradle-plugin-ci
+          env:
+            - AGP_VERSION=4.1.0
+            - GRADLE_WRAPPER_VERSION=6.5.1
+            - RN_FIXTURE_DIR=features/fixtures/rn063/android
+          command: ['bundle', 'exec', 'maze-runner', '-c', '--verbose', '--fail-fast']
+
+  - label: ':android: AGP 4.2.0 E2E tests'
+    depends_on: 'agp-ci'
+    timeout_in_minutes: 60
+    plugins:
+      - docker-compose#v3.7.0:
+          run: android-gradle-plugin-ci
+          env:
+            - AGP_VERSION=4.2.0
+            - GRADLE_WRAPPER_VERSION=6.8.3
+            - RN_FIXTURE_DIR=features/fixtures/rn063/android
+          command: ['bundle', 'exec', 'maze-runner', '-c', '--verbose', '--fail-fast']
