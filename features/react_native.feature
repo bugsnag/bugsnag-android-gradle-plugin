@@ -116,7 +116,6 @@ Scenario: Plugin handles server failure gracefully
         | 5              | 2.45.beta  | true      | false |
         | 5              | 2.45.beta  | true      | false |
         | 5              | 2.45.beta  | true      | false |
-    And the exit code equals 0
 
 Scenario: Source maps are uploaded when assembling an app with a custom nodeModulesDir
     When I set environment variable "CUSTOM_NODE_MODULES_DIR" to "true"
