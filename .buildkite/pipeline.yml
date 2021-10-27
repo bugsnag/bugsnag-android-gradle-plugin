@@ -15,10 +15,10 @@ steps:
           image-repository: 855461928731.dkr.ecr.us-west-1.amazonaws.com/android
           cache-from:
             - android-common:855461928731.dkr.ecr.us-west-1.amazonaws.com/android:latest
-            - android-gradle-plugin-ci:855461928731.dkr.ecr.us-west-1.amazonaws.com/android:android-gradle-plugin-ci-v5
+            - android-gradle-plugin-ci:855461928731.dkr.ecr.us-west-1.amazonaws.com/android:android-gradle-plugin-ci-v7
       - docker-compose#v3.7.0:
           push:
-            - android-gradle-plugin-ci:855461928731.dkr.ecr.us-west-1.amazonaws.com/android:android-gradle-plugin-ci-v5
+            - android-gradle-plugin-ci:855461928731.dkr.ecr.us-west-1.amazonaws.com/android:android-gradle-plugin-ci-v7
 
   - label: ':android: Detekt'
     depends_on: 'agp-ci'
@@ -44,7 +44,7 @@ steps:
           run: android-gradle-plugin-ci
           command: ['./gradlew', 'test']
 
-  - label: ':android: AGP 3.4.0 E2E tests'
+  - label: ':android: AGP 7.0.0 E2E tests'
     depends_on: 'agp-ci'
     timeout_in_minutes: 60
     plugins:
