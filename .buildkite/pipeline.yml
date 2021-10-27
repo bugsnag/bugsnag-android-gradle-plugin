@@ -42,7 +42,7 @@ steps:
     plugins:
       - docker-compose#v3.7.0:
           run: android-gradle-plugin-ci
-          command: ['./gradlew', 'check']
+          command: ['./gradlew', 'test']
 
   - label: ':android: AGP 3.4.0 E2E tests'
     depends_on: 'agp-ci'
