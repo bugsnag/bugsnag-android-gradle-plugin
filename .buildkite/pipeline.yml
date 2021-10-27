@@ -20,21 +20,29 @@ steps:
           push:
             - android-gradle-plugin-ci:855461928731.dkr.ecr.us-west-1.amazonaws.com/android:android-gradle-plugin-ci
 
-  - label: ':android: Run unit tests'
+  - label: ':android: Detekt'
     depends_on: 'agp-ci'
     timeout_in_minutes: 30
     plugins:
       - docker-compose#v3.7.0:
           run: android-gradle-plugin-ci
-          command: ['./gradlew', 'detekt', 'ktlintCheck', 'check']
+          command: ['./gradlew', 'detekt']
 
-  - label: ':android: Plugin installation check'
+  - label: ':android: Ktlint'
     depends_on: 'agp-ci'
     timeout_in_minutes: 30
     plugins:
       - docker-compose#v3.7.0:
           run: android-gradle-plugin-ci
-          command: ['./gradlew', 'install']
+          command: ['./gradlew', 'ktlintCheck']
+
+  - label: ':android: Unit tests'
+    depends_on: 'agp-ci'
+    timeout_in_minutes: 30
+    plugins:
+      - docker-compose#v3.7.0:
+          run: android-gradle-plugin-ci
+          command: ['./gradlew', 'check']
 
   - label: ':android: AGP 3.4.0 E2E tests'
     depends_on: 'agp-ci'
