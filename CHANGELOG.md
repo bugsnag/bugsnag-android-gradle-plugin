@@ -1,3 +1,10 @@
+## TBD
+
+# Bug Fixes
+
+* Fix FileAlreadyExistsException errors when building ReactNative projects with Hermes
+  [#451](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/451)
+
 ## 5.8.1 (2021-09-23)
 
 * Prevent exception when old Moshi version on buildScript classpath
