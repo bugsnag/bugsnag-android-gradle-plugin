@@ -2,7 +2,7 @@ Feature: Generating Android app bundles
 
 Scenario: Single-module default app bundles successfully
     When I bundle "default_app" using the "standard" bugsnag config
-    And I wait to receive 2 requests
+    And I wait to receive 2 builds
 
     Then 1 requests are valid for the build API and match the following:
       | appVersionCode | appVersion | buildTool      | sourceControl.provider | sourceControl.repository                                     |
@@ -19,7 +19,7 @@ Scenario: Single-module default app bundles successfully
 
 Scenario: Bundling multiple flavors automatically
     When I bundle "flavors" using the "standard" bugsnag config
-    And I wait to receive 4 requests
+    And I wait to receive 4 builds
 
     Then 2 requests are valid for the build API and match the following:
       | appVersion | appVersionCode |
@@ -33,7 +33,7 @@ Scenario: Bundling multiple flavors automatically
 
 Scenario: Bundling single flavor
     When I bundle the "Foo" variantOutput for "flavors" using the "standard" bugsnag config
-    And I wait to receive 2 requests
+    And I wait to receive 2 builds
 
     Then 1 requests are valid for the build API and match the following:
       | appVersion | appVersionCode |
@@ -46,4 +46,4 @@ Scenario: Bundling single flavor
 Scenario: Auto upload disabled
     When I bundle "default_app" using the "all_disabled" bugsnag config
     And I wait for 3 seconds
-    Then I should receive no requests
+    Then I should receive no builds

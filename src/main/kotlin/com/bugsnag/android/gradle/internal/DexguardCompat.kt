@@ -66,6 +66,15 @@ internal fun Project.hasDexguardPlugin(): Boolean {
 }
 
 /**
+ * Determine whether a specific variant is configured for DexGuard.
+ */
+internal fun Project.isDexguardEnabledForVariant(variant: BaseVariant): Boolean {
+    val flavor = variant.flavorName
+    val buildType = variant.buildType.name.capitalize()
+    return GroovyCompat.isDexguardEnabledForVariant(project, "$flavor$buildType")
+}
+
+/**
  * Retrieves the major version of DexGuard in use in the project
  */
 internal fun getDexguardMajorVersionInt(project: Project): Int {

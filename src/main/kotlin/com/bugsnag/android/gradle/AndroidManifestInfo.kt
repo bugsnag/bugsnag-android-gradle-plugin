@@ -16,8 +16,8 @@ data class AndroidManifestInfo(
     val buildUUID: String,
     val versionName: String,
     val applicationId: String,
-    val metaVersionCode: String? = null,
-    val metaVersionName: String? = null
+    val metaVersionCode: String?,
+    val metaVersionName: String?
 ) : Serializable {
     internal fun write(file: File) {
         file.sink().buffer().use {

@@ -2,7 +2,7 @@ Feature: Plugin integrated in default app
 
 Scenario: Single-module default app builds successfully
     When I build "default_app" using the "standard" bugsnag config
-    And I wait to receive 2 requests
+    And I wait to receive 2 builds
 
     Then 1 requests are valid for the build API and match the following:
       | appVersionCode | appVersion | buildTool      | sourceControl.provider | sourceControl.repository                                     |

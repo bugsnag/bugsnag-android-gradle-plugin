@@ -1,3 +1,14 @@
+## 7.2.0 (2022-01-13)
+
+* Prevent exception when old Moshi version on buildScript classpath
+  [#439](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/439)
+
+* Address task dependency warning when using APK splits
+  [#412](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/412)
+
+* Fix "Task with name *** not found" errors when using custom build variants and DexGuard
+  [#452](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/452)
+
 ## 7.1.0 (2021-09-20)
 
 * Custom Dexguard paths are resolved correctly (relative to the project)

@@ -11,7 +11,9 @@ class UploadRequestClientTest {
         "5",
         "build-uuid-123",
         "1.0",
-        "com.example"
+        "com.example",
+        null,
+        null
     )
 
     @Test

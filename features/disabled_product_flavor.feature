@@ -2,7 +2,7 @@ Feature: Disabling plugin for product flavors
 
 Scenario: Disabled product flavor makes no requests
     When I build "flavors" using the "disabled_product_flavor" bugsnag config
-    And I wait to receive 2 requests
+    And I wait to receive 2 builds
 
     Then 1 requests are valid for the build API and match the following:
       | appVersionCode | appVersion |

@@ -26,6 +26,7 @@ import com.bugsnag.android.gradle.internal.intermediateForNdkSoRequest
 import com.bugsnag.android.gradle.internal.intermediateForReleaseRequest
 import com.bugsnag.android.gradle.internal.intermediateForUnitySoRequest
 import com.bugsnag.android.gradle.internal.intermediateForUploadSourcemaps
+import com.bugsnag.android.gradle.internal.isDexguardEnabledForVariant
 import com.bugsnag.android.gradle.internal.isVariantEnabled
 import com.bugsnag.android.gradle.internal.newUploadRequestClientProvider
 import com.bugsnag.android.gradle.internal.register
@@ -346,10 +347,14 @@ class BugsnagPlugin : Plugin<Project> {
                 // DexGuard 9 runs as part of the bundle task supplied by AGP,
                 // so need to alter task dependency so that BAGP always runs
                 // after DexGuard
-                if (project.hasDexguardPlugin()) {
+                if (project.hasDexguardPlugin() && project.isDexguardEnabledForVariant(variant)) {
                     val taskName = getDexguardAabTaskName(variant)
-                    project.tasks.named(taskName).configure { dexguardTask ->
-                        generateProguardTaskProvider.get().mustRunAfter(dexguardTask)
+                    releaseUploadTask.configure {
+                        it.dependsOn(generateProguardTaskProvider)
+                    }
+
+                    generateProguardTaskProvider.configure {
+                        it.dependsOn(project.tasks.named(taskName))
                     }
                 }
             }
@@ -525,7 +530,7 @@ class BugsnagPlugin : Plugin<Project> {
             val nodeModulesDir = bugsnag.nodeModulesDir.getOrElse(defaultLocation)
             val cliPath = File(nodeModulesDir, "@bugsnag/source-maps/bin/cli")
             bugsnagSourceMaps.set(cliPath)
-            mustRunAfter(rnTask)
+            dependsOn(rnTask)
         }
     }
 

@@ -2,14 +2,14 @@
 
 buildscript {
     ext {
-        buildToolsVersion = "29.0.2"
-        minSdkVersion = 16
-        compileSdkVersion = 29
-        targetSdkVersion = 29
+        buildToolsVersion = "30.0.2"
+        minSdkVersion = 21
+        compileSdkVersion = 30
+        targetSdkVersion = 30
     }
     repositories {
+        mavenCentral()
         google()
-        jcenter()
         mavenLocal()
     }
     dependencies {
@@ -24,6 +24,7 @@ buildscript {
 
 allprojects {
     repositories {
+        mavenCentral()
         mavenLocal()
         maven {
             // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
@@ -35,7 +36,6 @@ allprojects {
         }
 
         google()
-        jcenter()
         maven { url 'https://www.jitpack.io' }
     }
 }
