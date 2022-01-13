@@ -1,4 +1,4 @@
-## TBD
+## 7.2.0 (2022-01-13)
 
 * Prevent exception when old Moshi version on buildScript classpath
   [#439](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/439)
