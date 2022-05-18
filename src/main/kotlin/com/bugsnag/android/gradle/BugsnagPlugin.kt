@@ -12,6 +12,7 @@ import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.bugsnag.android.gradle.BugsnagInstallJniLibsTask.Companion.resolveBugsnagArtifacts
 import com.bugsnag.android.gradle.internal.AgpVersions
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
+import com.bugsnag.android.gradle.internal.ExternalNativeBuildTaskUtil
 import com.bugsnag.android.gradle.internal.NDK_SO_MAPPING_DIR
 import com.bugsnag.android.gradle.internal.TASK_JNI_LIBS
 import com.bugsnag.android.gradle.internal.UNITY_SO_COPY_DIR
@@ -551,18 +552,15 @@ class BugsnagPlugin : Plugin<Project> {
             objDumpPaths.set(bugsnag.objdumpPaths)
             manifestInfo.set(manifestInfoProvider)
 
+            val externalNativeBuildTaskUtil = ExternalNativeBuildTaskUtil(project.providers)
+
             val searchPaths = getSharedObjectSearchPaths(project, bugsnag, android)
             searchDirectories.from(searchPaths)
             variant.externalNativeBuildProviders.forEach { provider ->
-                searchDirectories.from(provider.map { fixNativeOutputPath(it.objFolder) })
-                searchDirectories.from(provider.map { fixNativeOutputPath(it.soFolder) })
+                searchDirectories.from(externalNativeBuildTaskUtil.findSearchPaths(provider))
             }
             intermediateOutputDir.set(project.layout.buildDirectory.dir(soMappingOutputPath))
         }
-    }
-
-    private fun fixNativeOutputPath(taskFolder: File): File {
-        return taskFolder.parentFile.parentFile.takeIf { it.parentFile.name == "cxx" } ?: taskFolder
     }
 
     @Suppress("LongParameterList")
@@ -700,9 +698,10 @@ class BugsnagPlugin : Plugin<Project> {
                 }
             }
             if (checkSearchDirectories) {
+                val externalNativeBuildTaskUtil = ExternalNativeBuildTaskUtil(project.providers)
+
                 variant.externalNativeBuildProviders.forEach { task ->
-                    ndkMappingFileProperty.from(task.map { fixNativeOutputPath(it.objFolder) })
-                    ndkMappingFileProperty.from(task.map { fixNativeOutputPath(it.soFolder) })
+                    ndkMappingFileProperty.from(externalNativeBuildTaskUtil.findSearchPaths(task))
                 }
             }
             configureMetadata()
