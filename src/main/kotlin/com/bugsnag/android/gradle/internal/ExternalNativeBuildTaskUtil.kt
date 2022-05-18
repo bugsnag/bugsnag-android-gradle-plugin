@@ -14,7 +14,7 @@ class ExternalNativeBuildTaskUtil(private val providerFactory: ProviderFactory) 
             when (soFolder) {
                 is File -> providerFactory.provider { fixNativeOutputPath(soFolder) }
                 is DirectoryProperty -> soFolder.map { fixNativeOutputPath(it.asFile) }
-                else -> throw IllegalArgumentException("Unknown type of ${propName}: $soFolder")
+                else -> throw IllegalArgumentException("Unknown type of $propName: $soFolder")
             }
         }
 
