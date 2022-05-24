@@ -81,22 +81,23 @@ If you are a project maintainer, you can build and release a new version of
 - Run `make VERSION={version_number} release` to publish the release. Press
   return after running the command to kick off the build.
 
-#### 2. Upload the jar to the GitHub releases page
-
-- https://github.com/bugsnag/bugsnag-android-gradle-plugin/releases
-
-#### 3. Release to Maven Central
+#### 2. Release to Maven Central
 
 -   "Promote" the release build on Maven Central
 
-    -   Go to the [sonatype open source dashboard](https://oss.sonatype.org/index.html#stagingRepositories)
-    -   Click “Staging Repositories”
-    -   Click the search box at the top right, and type “com.bugsnag”
-    -   Select the com.bugsnag staging repository
-    -   Click the “close” button in the toolbar, no message
-    -   Click the “refresh” button
-    -   Select the com.bugsnag closed repository
-    -   Click the “release” button in the toolbar
+    - Go to the [sonatype open source dashboard](https://oss.sonatype.org/index.html#stagingRepositories)
+    - Click “Staging Repositories”
+    - Click the search box at the top right, and type “com.bugsnag”
+    - Select the com.bugsnag staging repository
+    - Click the “close” button in the toolbar, no message
+    - Click the “refresh” button
+    - Select the com.bugsnag closed repository
+    - Click the “release” button in the toolbar
+
+#### 3. Create the GitHub release page
+
+- https://github.com/bugsnag/bugsnag-android-gradle-plugin/releases
+- Include the appropriate CHANGELOG entries
 
 ### 4. Update docs.bugsnag.com
 
