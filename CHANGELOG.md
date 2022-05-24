@@ -1,3 +1,8 @@
+## 7.2.1 (2022-05-24)
+
+* Support for AGP 7.2
+  [#464](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/464)
+
 ## 7.2.0 (2022-01-13)
 
 * Prevent exception when old Moshi version on buildScript classpath
