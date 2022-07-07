@@ -215,11 +215,10 @@ class BugsnagPlugin : Plugin<Project> {
 
             // register bugsnag tasks
             val mappingFilesProvider = createMappingFileProvider(project, variant, output)
-            val manifestTaskProvider = registerManifestUuidTask(project, variant)
+            val manifestTaskProvider = registerManifestUuidTask(project, output)
 
             val manifestInfoProvider = manifestTaskProvider
                 .flatMap { it.manifestInfoProvider }
-                .map { AndroidManifestInfo.read(it.asFile).forApkVariantOutput(output) }
 
             // skip tasks for variant if JVM/NDK/Unity minification not enabled
             if (!jvmMinificationEnabled && !ndkEnabled && !unityEnabled && !reactNativeEnabled) {
@@ -421,12 +420,12 @@ class BugsnagPlugin : Plugin<Project> {
 
     private fun registerManifestUuidTask(
         project: Project,
-        variant: BaseVariant
-    ): TaskProvider<BugsnagManifestUuidTaskV2> {
+        variant: BaseVariantOutput
+    ): TaskProvider<BugsnagManifestUuidTask> {
         val taskName = taskNameForManifestUuid(variant.name)
         // This task will have already been created!
         val manifestUpdater = project.tasks
-            .withType(BugsnagManifestUuidTaskV2::class.java)
+            .withType(BugsnagManifestUuidTask::class.java)
             .named(taskName)
         return manifestUpdater
     }
@@ -439,7 +438,7 @@ class BugsnagPlugin : Plugin<Project> {
         project: Project,
         output: BaseVariantOutput,
         bugsnag: BugsnagPluginExtension,
-        manifestInfoProvider: Provider<AndroidManifestInfo>,
+        manifestInfoProvider: Provider<RegularFile>,
         mappingFilesProvider: Provider<FileCollection>
     ): TaskProvider<out BugsnagGenerateProguardTask> {
         val taskName = taskNameForGenerateJvmMapping(output)
@@ -465,7 +464,7 @@ class BugsnagPlugin : Plugin<Project> {
         output: BaseVariantOutput,
         bugsnag: BugsnagPluginExtension,
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
-        manifestInfoProvider: Provider<AndroidManifestInfo>,
+        manifestInfoProvider: Provider<RegularFile>,
         proguardUploadClientProvider: Provider<out UploadRequestClient>,
         generateProguardTaskProvider: TaskProvider<out BugsnagGenerateProguardTask>?
     ): TaskProvider<out BugsnagUploadProguardTask> {
@@ -495,7 +494,7 @@ class BugsnagPlugin : Plugin<Project> {
         variant: BaseVariant,
         output: BaseVariantOutput,
         bugsnag: BugsnagPluginExtension,
-        manifestInfoProvider: Provider<AndroidManifestInfo>
+        manifestInfoProvider: Provider<RegularFile>
     ): TaskProvider<out BugsnagUploadJsSourceMapTask>? {
         val taskName = taskNameForUploadSourcemaps(output)
         val path = intermediateForUploadSourcemaps(project, output)
@@ -542,7 +541,7 @@ class BugsnagPlugin : Plugin<Project> {
         output: ApkVariantOutput,
         bugsnag: BugsnagPluginExtension,
         android: BaseExtension,
-        manifestInfoProvider: Provider<AndroidManifestInfo>,
+        manifestInfoProvider: Provider<RegularFile>,
         soMappingOutputPath: String
     ): TaskProvider<out BugsnagGenerateNdkSoMappingTask> {
         // Create a Bugsnag task to upload NDK mapping file(s)
@@ -568,7 +567,7 @@ class BugsnagPlugin : Plugin<Project> {
         project: Project,
         output: ApkVariantOutput,
         bugsnag: BugsnagPluginExtension,
-        manifestInfoProvider: Provider<AndroidManifestInfo>,
+        manifestInfoProvider: Provider<RegularFile>,
         mappingFileOutputDir: String,
         copyOutputDir: String
     ): TaskProvider<out BugsnagGenerateUnitySoMappingTask> {
@@ -590,7 +589,7 @@ class BugsnagPlugin : Plugin<Project> {
         output: BaseVariantOutput,
         bugsnag: BugsnagPluginExtension,
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
-        manifestInfoProvider: Provider<AndroidManifestInfo>,
+        manifestInfoProvider: Provider<RegularFile>,
         ndkUploadClientProvider: Provider<out UploadRequestClient>,
         generateTaskProvider: TaskProvider<out BugsnagGenerateNdkSoMappingTask>,
         soMappingOutputDir: String
@@ -615,7 +614,7 @@ class BugsnagPlugin : Plugin<Project> {
         output: BaseVariantOutput,
         bugsnag: BugsnagPluginExtension,
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
-        manifestInfoProvider: Provider<AndroidManifestInfo>,
+        manifestInfoProvider: Provider<RegularFile>,
         ndkUploadClientProvider: Provider<out UploadRequestClient>,
         generateTaskProvider: TaskProvider<out BugsnagGenerateUnitySoMappingTask>,
         mappingFileOutputDir: String
@@ -640,7 +639,7 @@ class BugsnagPlugin : Plugin<Project> {
         generateTaskProvider: TaskProvider<out Task>,
         bugsnag: BugsnagPluginExtension,
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
-        manifestInfoProvider: Provider<AndroidManifestInfo>,
+        manifestInfoProvider: Provider<RegularFile>,
         ndkUploadClientProvider: Provider<out UploadRequestClient>,
         taskName: String,
         requestOutputFile: Provider<RegularFile>,
@@ -668,7 +667,7 @@ class BugsnagPlugin : Plugin<Project> {
         variant: BaseVariant,
         output: BaseVariantOutput,
         bugsnag: BugsnagPluginExtension,
-        manifestInfoProvider: Provider<AndroidManifestInfo>,
+        manifestInfoProvider: Provider<RegularFile>,
         releasesUploadClientProvider: Provider<out UploadRequestClient>,
         mappingFilesProvider: Provider<FileCollection>?,
         checkSearchDirectories: Boolean,

@@ -27,8 +27,8 @@ open class BugsnagUploadJsSourceMapTask @Inject constructor(
         description = "Uploads JS source maps to Bugsnag"
     }
 
-    @get:Input
-    override val manifestInfo: Property<AndroidManifestInfo> = objects.property()
+    @get:InputFile
+    override val manifestInfo: RegularFileProperty = objects.fileProperty()
 
     @get:InputFile
     val bugsnagSourceMaps: RegularFileProperty = objects.fileProperty()
@@ -60,7 +60,7 @@ open class BugsnagUploadJsSourceMapTask @Inject constructor(
     @TaskAction
     fun uploadJsSourceMap() {
         // Construct a basic request
-        val manifestInfo = manifestInfo.get()
+        val manifestInfo = parseManifestInfo()
         val executable = bugsnagSourceMaps.get().asFile
         val builder = generateUploadCommand(executable.absolutePath, manifestInfo)
         project.logger.lifecycle("Bugsnag: uploading react native sourcemap: ${builder.command()}")

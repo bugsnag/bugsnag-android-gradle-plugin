@@ -14,6 +14,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
@@ -54,8 +55,8 @@ internal open class BugsnagUploadSharedObjectTask @Inject constructor(
         description = "Uploads SO mapping files to Bugsnag"
     }
 
-    @get:Input
-    override val manifestInfo: Property<AndroidManifestInfo> = objects.property()
+    @get:InputFile
+    override val manifestInfo: RegularFileProperty = objects.fileProperty()
 
     @get:Internal
     internal val uploadRequestClient: Property<UploadRequestClient> = objects.property()
@@ -123,7 +124,7 @@ internal open class BugsnagUploadSharedObjectTask @Inject constructor(
         val soUploadKey = uploadType.get().uploadKey
 
         val request = BugsnagMultiPartUploadRequest.from(this, requestEndpoint)
-        val manifestInfo = manifestInfo.get()
+        val manifestInfo = parseManifestInfo()
         val mappingFileHash = mappingFile.md5HashCode()
         val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileHash) {
             logger.lifecycle(

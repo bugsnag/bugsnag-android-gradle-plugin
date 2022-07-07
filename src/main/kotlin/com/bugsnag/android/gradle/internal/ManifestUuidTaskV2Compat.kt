@@ -3,7 +3,10 @@ package com.bugsnag.android.gradle.internal
 import com.android.build.api.artifact.Artifacts
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.AndroidComponentsExtension
-import com.bugsnag.android.gradle.BugsnagManifestUuidTaskV2
+import com.android.build.api.variant.ApplicationVariant
+import com.android.build.api.variant.VariantOutput
+import com.android.build.api.variant.impl.VariantOutputImpl
+import com.bugsnag.android.gradle.BugsnagManifestUuidTask
 import com.bugsnag.android.gradle.BugsnagPluginExtension
 import com.bugsnag.android.gradle.VariantFilterImpl
 import org.gradle.api.Project
@@ -12,7 +15,7 @@ import org.gradle.api.tasks.TaskProvider
 import java.util.UUID
 
 /**
- * Registers a [BugsnagManifestUuidTaskV2] for the given variant.
+ * Registers a [BugsnagManifestUuidTask] for the given variant.
  */
 internal fun registerV2ManifestUuidTask(
     bugsnag: BugsnagPluginExtension,
@@ -20,9 +23,12 @@ internal fun registerV2ManifestUuidTask(
 ) {
     val androidComponents = project.extensions.getByType(AndroidComponentsExtension::class.java)
     androidComponents.onVariants { variant ->
-        val manifestUpdater = createManifestUpdateTask(bugsnag, project, variant.name)
-        manifestUpdater?.let {
-            wireManifestUpdaterTask(manifestUpdater, variant.artifacts)
+        (variant as ApplicationVariant).outputs.forEach { variantOutput ->
+            val manifestUpdater =
+                createManifestUpdateTask(bugsnag, project, variant.name, variantOutput)
+            manifestUpdater?.let {
+                wireManifestUpdaterTask(manifestUpdater, variant.artifacts)
+            }
         }
     }
 }
@@ -30,8 +36,9 @@ internal fun registerV2ManifestUuidTask(
 internal fun createManifestUpdateTask(
     bugsnag: BugsnagPluginExtension,
     project: Project,
-    variantName: String
-): TaskProvider<BugsnagManifestUuidTaskV2>? {
+    variantName: String,
+    variantOutput: VariantOutput
+): TaskProvider<BugsnagManifestUuidTask>? {
     if (!bugsnag.enabled.get()) {
         return null
     }
@@ -39,13 +46,17 @@ internal fun createManifestUpdateTask(
     if (!isVariantEnabled(bugsnag, variantFilterImpl)) {
         return null
     }
-    val taskName = taskNameForManifestUuid(variantName)
-    val manifestInfoOutputFile = project.computeManifestInfoOutputV2(variantName)
+
+    check(variantOutput is VariantOutputImpl)
+    val taskName = taskNameForManifestUuid(variantOutput.baseName)
+    val manifestInfoOutputFile = project.computeManifestInfoOutputV2(variantOutput.baseName)
     val buildUuidProvider = project.newUuidProvider()
     return project.tasks.register(
         taskName,
-        BugsnagManifestUuidTaskV2::class.java
+        BugsnagManifestUuidTask::class.java
     ) {
+        it.versionCode.set(variantOutput.versionCode)
+        it.versionName.set(variantOutput.versionName)
         it.buildUuid.set(buildUuidProvider)
         it.manifestInfoProvider.set(manifestInfoOutputFile)
     }
@@ -55,14 +66,14 @@ internal fun createManifestUpdateTask(
  * Wires the manifest UUID task up so that it transforms each variant's AndroidManifest.
  */
 internal fun wireManifestUpdaterTask(
-    manifestUpdater: TaskProvider<BugsnagManifestUuidTaskV2>,
+    manifestUpdater: TaskProvider<BugsnagManifestUuidTask>,
     artifacts: Artifacts
 ) {
     artifacts
         .use(manifestUpdater)
         .wiredWithFiles(
-            taskInput = BugsnagManifestUuidTaskV2::inputManifest,
-            taskOutput = BugsnagManifestUuidTaskV2::outputManifest
+            taskInput = BugsnagManifestUuidTask::inputManifest,
+            taskOutput = BugsnagManifestUuidTask::outputManifest
         )
         .toTransform(SingleArtifact.MERGED_MANIFEST)
 }

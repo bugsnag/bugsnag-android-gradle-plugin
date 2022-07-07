@@ -27,8 +27,8 @@ internal fun taskNameForUploadUnityMapping(output: BaseVariantOutput) =
 internal fun taskNameForUploadRelease(output: BaseVariantOutput) =
     "bugsnagRelease${output.taskNameSuffix()}Task"
 
-internal fun taskNameForManifestUuid(variant: String) =
-    "processBugsnag${variant.capitalize()}Manifest"
+internal fun taskNameForManifestUuid(variantOutput: String) =
+    "processBugsnag${variantOutput.capitalize()}Manifest"
 
 internal fun taskNameForUploadSourcemaps(output: BaseVariantOutput) =
     "uploadBugsnag${output.taskNameSuffix()}SourceMaps"
