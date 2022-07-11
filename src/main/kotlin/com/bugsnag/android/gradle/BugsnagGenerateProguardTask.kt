@@ -10,6 +10,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
@@ -29,8 +30,8 @@ open class BugsnagGenerateProguardTask @Inject constructor(
         description = "Generates a compressed JVM mapping file for upload to Bugsnag"
     }
 
-    @get:Input
-    override val manifestInfo: Property<AndroidManifestInfo> = objects.property()
+    @get:InputFile
+    override val manifestInfo: RegularFileProperty = objects.fileProperty()
 
     @get:InputFiles
     val mappingFileProperty: ConfigurableFileCollection = objects.fileCollection()
