@@ -1,3 +1,8 @@
+## TBD
+
+* Emit an error if the ReactNative bundle task cannot be found instead of silently failing
+  [#470](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/470)
+
 ## 7.2.1 (2022-05-24)
 
 * Support for AGP 7.2

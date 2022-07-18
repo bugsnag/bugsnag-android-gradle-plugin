@@ -162,6 +162,12 @@ detekt {
     }
 }
 
+ktlint {
+    filter {
+        exclude { element -> element.file.path.contains("/generated/") }
+    }
+}
+
 sourceCompatibility = JavaVersion.VERSION_1_8
 
 // see https://github.com/asciidoctor/asciidoctorj/pull/862
