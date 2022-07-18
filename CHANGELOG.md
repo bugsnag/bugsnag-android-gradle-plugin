@@ -2,6 +2,8 @@
 
 * Emit an error if the ReactNative bundle task cannot be found instead of silently failing
   [#470](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/470)
+* Do not fail builds for Expo apps, which do not depend on `@bugsnag/react-native`
+  [#471](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/471)
 
 ## 7.2.1 (2022-05-24)
 

@@ -139,11 +139,11 @@ class BugsnagPlugin : Plugin<Project> {
         registerV2ManifestUuidTask(bugsnag, project)
 
         project.afterEvaluate {
-            addReactNativeMavenRepo(project, bugsnag)
-
             if (!bugsnag.enabled.get()) {
                 return@afterEvaluate
             }
+
+            addReactNativeMavenRepo(project, bugsnag)
 
             val variants = when (android) {
                 is AppExtension -> android.applicationVariants
@@ -387,7 +387,11 @@ class BugsnagPlugin : Plugin<Project> {
     private fun addReactNativeMavenRepo(project: Project, bugsnag: BugsnagPluginExtension) {
         val props = project.extensions.extraProperties
         val hasReact = props.has("react")
-        if (hasReact) {
+        // Expo projects are ReactNative projects but *do not* depend on @bugsnag/react-native
+        // Expo doesn't define any good indicators within the Gradle project, so we try look for a well known
+        // property that it normally defines, and have a slightly slower per-project fallback
+        val hasExpo = project.hasProperty("expo.jsEngine")
+        if (hasReact && !hasExpo) {
             project.rootProject.allprojects { subProj ->
                 val defaultNodeModulesDir = File("${subProj.rootDir}/../node_modules")
                 val nodeModulesDir = bugsnag.nodeModulesDir.getOrElse(defaultNodeModulesDir)
@@ -400,7 +404,9 @@ class BugsnagPlugin : Plugin<Project> {
                 }
 
                 val bugsnagModuleDir = File(nodeModulesDir, "@bugsnag/react-native/android")
-                if (!bugsnagModuleDir.exists()) {
+                // if the @expo modules are installed, we don't require @bugsnag/react-native
+                val expoModulesDir = File(nodeModulesDir, "@expo")
+                if (!bugsnagModuleDir.exists() && !expoModulesDir.exists()) {
                     throw StopExecutionException(
                         "Cannot find the @bugsnag/react-native module in your node_modules directory. " +
                             "Manual installation instructions can be found here: " +
@@ -408,8 +414,10 @@ class BugsnagPlugin : Plugin<Project> {
                     )
                 }
 
-                subProj.repositories.maven { repo ->
-                    repo.setUrl(bugsnagModuleDir.toString())
+                if (bugsnagModuleDir.exists()) {
+                    subProj.repositories.maven { repo ->
+                        repo.setUrl(bugsnagModuleDir.toString())
+                    }
                 }
             }
         }
