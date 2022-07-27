@@ -12,6 +12,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
@@ -41,8 +42,8 @@ open class BugsnagUploadProguardTask @Inject constructor(
         description = "Uploads the mapping file to Bugsnag"
     }
 
-    @get:Input
-    override val manifestInfo: Property<AndroidManifestInfo> = objects.property()
+    @get:InputFile
+    override val manifestInfo: RegularFileProperty = objects.fileProperty()
 
     @get:Internal
     internal val uploadRequestClient: Property<UploadRequestClient> = objects.property()
@@ -78,7 +79,7 @@ open class BugsnagUploadProguardTask @Inject constructor(
         // Read the API key and Build ID etc..
 
         // Construct a basic request
-        val manifestInfo = manifestInfo.get()
+        val manifestInfo = parseManifestInfo()
 
         // Send the request
         val request = BugsnagMultiPartUploadRequest.from(this)

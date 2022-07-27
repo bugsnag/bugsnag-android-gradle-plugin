@@ -1,3 +1,12 @@
+## 7.3.0 (2022-07-27)
+
+* Emit an error if the ReactNative bundle task cannot be found instead of silently failing
+  [#470](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/470)
+* Do not fail builds for Expo apps, which do not depend on `@bugsnag/react-native`
+  [#471](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/471)
+* Basic support for Gradle Config Caching by collecting VariantOutput info earlier in the configuration
+  [#469](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/469)
+
 ## 7.2.1 (2022-05-24)
 
 * Support for AGP 7.2

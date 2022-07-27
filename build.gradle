@@ -103,7 +103,7 @@ dependencies {
 // Gradle plugin publishing settings (plugins.gradle.com)
 pluginBundle {
     website = POM_URL
-    vcsUrl = POM_SCM_CONNECTION
+    vcsUrl = POM_SCM_URL
 
     plugins {
         androidGradlePlugin {
@@ -159,6 +159,12 @@ detekt {
         html {
             enabled = true
         }
+    }
+}
+
+ktlint {
+    filter {
+        exclude { element -> element.file.path.contains("/generated/") }
     }
 }
 

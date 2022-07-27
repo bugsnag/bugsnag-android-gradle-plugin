@@ -139,11 +139,11 @@ class BugsnagPlugin : Plugin<Project> {
         registerV2ManifestUuidTask(bugsnag, project)
 
         project.afterEvaluate {
-            addReactNativeMavenRepo(project, bugsnag)
-
             if (!bugsnag.enabled.get()) {
                 return@afterEvaluate
             }
+
+            addReactNativeMavenRepo(project, bugsnag)
 
             val variants = when (android) {
                 is AppExtension -> android.applicationVariants
@@ -215,11 +215,10 @@ class BugsnagPlugin : Plugin<Project> {
 
             // register bugsnag tasks
             val mappingFilesProvider = createMappingFileProvider(project, variant, output)
-            val manifestTaskProvider = registerManifestUuidTask(project, variant)
+            val manifestTaskProvider = registerManifestUuidTask(project, output)
 
             val manifestInfoProvider = manifestTaskProvider
                 .flatMap { it.manifestInfoProvider }
-                .map { AndroidManifestInfo.read(it.asFile).forApkVariantOutput(output) }
 
             // skip tasks for variant if JVM/NDK/Unity minification not enabled
             if (!jvmMinificationEnabled && !ndkEnabled && !unityEnabled && !reactNativeEnabled) {
@@ -388,7 +387,11 @@ class BugsnagPlugin : Plugin<Project> {
     private fun addReactNativeMavenRepo(project: Project, bugsnag: BugsnagPluginExtension) {
         val props = project.extensions.extraProperties
         val hasReact = props.has("react")
-        if (hasReact) {
+        // Expo projects are ReactNative projects but *do not* depend on @bugsnag/react-native
+        // Expo doesn't define any good indicators within the Gradle project, so we try look for a well known
+        // property that it normally defines, and have a slightly slower per-project fallback
+        val hasExpo = project.hasProperty("expo.jsEngine")
+        if (hasReact && !hasExpo) {
             project.rootProject.allprojects { subProj ->
                 val defaultNodeModulesDir = File("${subProj.rootDir}/../node_modules")
                 val nodeModulesDir = bugsnag.nodeModulesDir.getOrElse(defaultNodeModulesDir)
@@ -401,7 +404,9 @@ class BugsnagPlugin : Plugin<Project> {
                 }
 
                 val bugsnagModuleDir = File(nodeModulesDir, "@bugsnag/react-native/android")
-                if (!bugsnagModuleDir.exists()) {
+                // if the @expo modules are installed, we don't require @bugsnag/react-native
+                val expoModulesDir = File(nodeModulesDir, "@expo")
+                if (!bugsnagModuleDir.exists() && !expoModulesDir.exists()) {
                     throw StopExecutionException(
                         "Cannot find the @bugsnag/react-native module in your node_modules directory. " +
                             "Manual installation instructions can be found here: " +
@@ -409,8 +414,10 @@ class BugsnagPlugin : Plugin<Project> {
                     )
                 }
 
-                subProj.repositories.maven { repo ->
-                    repo.setUrl(bugsnagModuleDir.toString())
+                if (bugsnagModuleDir.exists()) {
+                    subProj.repositories.maven { repo ->
+                        repo.setUrl(bugsnagModuleDir.toString())
+                    }
                 }
             }
         }
@@ -421,12 +428,12 @@ class BugsnagPlugin : Plugin<Project> {
 
     private fun registerManifestUuidTask(
         project: Project,
-        variant: BaseVariant
-    ): TaskProvider<BugsnagManifestUuidTaskV2> {
+        variant: BaseVariantOutput
+    ): TaskProvider<BugsnagManifestUuidTask> {
         val taskName = taskNameForManifestUuid(variant.name)
         // This task will have already been created!
         val manifestUpdater = project.tasks
-            .withType(BugsnagManifestUuidTaskV2::class.java)
+            .withType(BugsnagManifestUuidTask::class.java)
             .named(taskName)
         return manifestUpdater
     }
@@ -439,7 +446,7 @@ class BugsnagPlugin : Plugin<Project> {
         project: Project,
         output: BaseVariantOutput,
         bugsnag: BugsnagPluginExtension,
-        manifestInfoProvider: Provider<AndroidManifestInfo>,
+        manifestInfoProvider: Provider<RegularFile>,
         mappingFilesProvider: Provider<FileCollection>
     ): TaskProvider<out BugsnagGenerateProguardTask> {
         val taskName = taskNameForGenerateJvmMapping(output)
@@ -465,7 +472,7 @@ class BugsnagPlugin : Plugin<Project> {
         output: BaseVariantOutput,
         bugsnag: BugsnagPluginExtension,
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
-        manifestInfoProvider: Provider<AndroidManifestInfo>,
+        manifestInfoProvider: Provider<RegularFile>,
         proguardUploadClientProvider: Provider<out UploadRequestClient>,
         generateProguardTaskProvider: TaskProvider<out BugsnagGenerateProguardTask>?
     ): TaskProvider<out BugsnagUploadProguardTask> {
@@ -495,7 +502,7 @@ class BugsnagPlugin : Plugin<Project> {
         variant: BaseVariant,
         output: BaseVariantOutput,
         bugsnag: BugsnagPluginExtension,
-        manifestInfoProvider: Provider<AndroidManifestInfo>
+        manifestInfoProvider: Provider<RegularFile>
     ): TaskProvider<out BugsnagUploadJsSourceMapTask>? {
         val taskName = taskNameForUploadSourcemaps(output)
         val path = intermediateForUploadSourcemaps(project, output)
@@ -503,7 +510,12 @@ class BugsnagPlugin : Plugin<Project> {
         // lookup the react-native task by its name
         // https://github.com/facebook/react-native/blob/master/react.gradle#L132
         val rnTaskName = "bundle${variant.name.capitalize()}JsAndAssets"
-        val rnTask: Task = project.tasks.findByName(rnTaskName) ?: return null
+        val rnTask: Task? = project.tasks.findByName(rnTaskName)
+        if (rnTask == null) {
+            project.logger.error("Bugsnag: unable to find ReactNative bundle task '$rnTaskName'")
+            return null
+        }
+
         val rnSourceMap = findReactNativeSourcemapFile(project, variant)
         val rnBundle =
             BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--bundle-output")
@@ -542,7 +554,7 @@ class BugsnagPlugin : Plugin<Project> {
         output: ApkVariantOutput,
         bugsnag: BugsnagPluginExtension,
         android: BaseExtension,
-        manifestInfoProvider: Provider<AndroidManifestInfo>,
+        manifestInfoProvider: Provider<RegularFile>,
         soMappingOutputPath: String
     ): TaskProvider<out BugsnagGenerateNdkSoMappingTask> {
         // Create a Bugsnag task to upload NDK mapping file(s)
@@ -568,7 +580,7 @@ class BugsnagPlugin : Plugin<Project> {
         project: Project,
         output: ApkVariantOutput,
         bugsnag: BugsnagPluginExtension,
-        manifestInfoProvider: Provider<AndroidManifestInfo>,
+        manifestInfoProvider: Provider<RegularFile>,
         mappingFileOutputDir: String,
         copyOutputDir: String
     ): TaskProvider<out BugsnagGenerateUnitySoMappingTask> {
@@ -590,7 +602,7 @@ class BugsnagPlugin : Plugin<Project> {
         output: BaseVariantOutput,
         bugsnag: BugsnagPluginExtension,
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
-        manifestInfoProvider: Provider<AndroidManifestInfo>,
+        manifestInfoProvider: Provider<RegularFile>,
         ndkUploadClientProvider: Provider<out UploadRequestClient>,
         generateTaskProvider: TaskProvider<out BugsnagGenerateNdkSoMappingTask>,
         soMappingOutputDir: String
@@ -615,7 +627,7 @@ class BugsnagPlugin : Plugin<Project> {
         output: BaseVariantOutput,
         bugsnag: BugsnagPluginExtension,
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
-        manifestInfoProvider: Provider<AndroidManifestInfo>,
+        manifestInfoProvider: Provider<RegularFile>,
         ndkUploadClientProvider: Provider<out UploadRequestClient>,
         generateTaskProvider: TaskProvider<out BugsnagGenerateUnitySoMappingTask>,
         mappingFileOutputDir: String
@@ -640,7 +652,7 @@ class BugsnagPlugin : Plugin<Project> {
         generateTaskProvider: TaskProvider<out Task>,
         bugsnag: BugsnagPluginExtension,
         httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
-        manifestInfoProvider: Provider<AndroidManifestInfo>,
+        manifestInfoProvider: Provider<RegularFile>,
         ndkUploadClientProvider: Provider<out UploadRequestClient>,
         taskName: String,
         requestOutputFile: Provider<RegularFile>,
@@ -668,7 +680,7 @@ class BugsnagPlugin : Plugin<Project> {
         variant: BaseVariant,
         output: BaseVariantOutput,
         bugsnag: BugsnagPluginExtension,
-        manifestInfoProvider: Provider<AndroidManifestInfo>,
+        manifestInfoProvider: Provider<RegularFile>,
         releasesUploadClientProvider: Provider<out UploadRequestClient>,
         mappingFilesProvider: Provider<FileCollection>?,
         checkSearchDirectories: Boolean,
