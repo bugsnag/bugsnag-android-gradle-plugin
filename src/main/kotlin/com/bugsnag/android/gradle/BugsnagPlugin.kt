@@ -32,7 +32,6 @@ import com.bugsnag.android.gradle.internal.isVariantEnabled
 import com.bugsnag.android.gradle.internal.newUploadRequestClientProvider
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.registerV2ManifestUuidTask
-import com.bugsnag.android.gradle.internal.taskNameForGenerateNdkMapping
 import com.bugsnag.android.gradle.internal.taskNameForGenerateUnityMapping
 import com.bugsnag.android.gradle.internal.taskNameForManifestUuid
 import com.bugsnag.android.gradle.internal.taskNameForUploadJvmMapping
@@ -248,15 +247,15 @@ class BugsnagPlugin : Plugin<Project> {
             }
             val ndkSoMappingOutput = "$NDK_SO_MAPPING_DIR/${output.name}"
             val generateNdkMappingProvider = when {
-                ndkEnabled -> registerGenerateSoMappingTask(
-                    project,
-                    variant,
-                    output,
-                    bugsnag,
-                    android,
-                    manifestInfoProvider,
-                    ndkSoMappingOutput
-                ).dependsOn(manifestTaskProvider)
+                ndkEnabled -> // Create a Bugsnag task to upload NDK mapping file(s)
+                    BugsnagGenerateNdkSoMappingTask.register(
+                        project,
+                        variant,
+                        output,
+                        bugsnag.objdumpPaths,
+                        getSharedObjectSearchPaths(project, bugsnag, android),
+                        ndkSoMappingOutput
+                    )
                 else -> null
             }
             val uploadNdkMappingProvider = when {
@@ -517,34 +516,6 @@ class BugsnagPlugin : Plugin<Project> {
             val cliPath = File(nodeModulesDir, "@bugsnag/source-maps/bin/cli")
             bugsnagSourceMaps.set(cliPath)
             dependsOn(rnTask)
-        }
-    }
-
-    @Suppress("LongParameterList")
-    private fun registerGenerateSoMappingTask(
-        project: Project,
-        variant: BaseVariant,
-        output: ApkVariantOutput,
-        bugsnag: BugsnagPluginExtension,
-        android: BaseExtension,
-        manifestInfoProvider: Provider<RegularFile>,
-        soMappingOutputPath: String
-    ): TaskProvider<out BugsnagGenerateNdkSoMappingTask> {
-        // Create a Bugsnag task to upload NDK mapping file(s)
-        val taskName = taskNameForGenerateNdkMapping(output)
-        return BugsnagGenerateNdkSoMappingTask.register(project, taskName) {
-            variantOutput = output
-            objDumpPaths.set(bugsnag.objdumpPaths)
-            manifestInfo.set(manifestInfoProvider)
-
-            val externalNativeBuildTaskUtil = ExternalNativeBuildTaskUtil(project.providers)
-
-            val searchPaths = getSharedObjectSearchPaths(project, bugsnag, android)
-            searchDirectories.from(searchPaths)
-            variant.externalNativeBuildProviders.forEach { provider ->
-                searchDirectories.from(externalNativeBuildTaskUtil.findSearchPaths(provider))
-            }
-            intermediateOutputDir.set(project.layout.buildDirectory.dir(soMappingOutputPath))
         }
     }
 
