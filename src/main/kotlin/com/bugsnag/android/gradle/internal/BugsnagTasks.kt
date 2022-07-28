@@ -9,9 +9,6 @@ internal const val TASK_JNI_LIBS = "bugsnagInstallJniLibsTask"
 internal fun taskNameForUploadJvmMapping(output: BaseVariantOutput) =
     "uploadBugsnag${output.taskNameSuffix()}Mapping"
 
-internal fun taskNameForGenerateUnityMapping(output: BaseVariantOutput) =
-    "generateBugsnagUnity${output.taskNameSuffix()}Mapping"
-
 internal fun taskNameForUploadNdkMapping(output: BaseVariantOutput) =
     "uploadBugsnagNdk${output.taskNameSuffix()}Mapping"
 

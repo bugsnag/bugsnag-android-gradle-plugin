@@ -32,7 +32,6 @@ import com.bugsnag.android.gradle.internal.isVariantEnabled
 import com.bugsnag.android.gradle.internal.newUploadRequestClientProvider
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.registerV2ManifestUuidTask
-import com.bugsnag.android.gradle.internal.taskNameForGenerateUnityMapping
 import com.bugsnag.android.gradle.internal.taskNameForManifestUuid
 import com.bugsnag.android.gradle.internal.taskNameForUploadJvmMapping
 import com.bugsnag.android.gradle.internal.taskNameForUploadNdkMapping
@@ -276,14 +275,15 @@ class BugsnagPlugin : Plugin<Project> {
 
             val unityMappingDir = "$UNITY_SO_MAPPING_DIR/${output.name}"
             val generateUnityMappingProvider = when {
-                unityEnabled -> registerGenerateUnityMappingTask(
-                    project,
-                    output,
-                    bugsnag,
-                    manifestInfoProvider,
-                    unityMappingDir,
-                    "$UNITY_SO_COPY_DIR/${output.name}"
-                ).dependsOn(manifestTaskProvider)
+                unityEnabled ->
+                    // Create a Bugsnag task to upload Unity mapping file(s)
+                    BugsnagGenerateUnitySoMappingTask.register(
+                        project,
+                        output,
+                        bugsnag.objdumpPaths,
+                        unityMappingDir,
+                        "$UNITY_SO_COPY_DIR/${output.name}"
+                    )
                 else -> null
             }
             val uploadUnityMappingProvider = when {
@@ -516,27 +516,6 @@ class BugsnagPlugin : Plugin<Project> {
             val cliPath = File(nodeModulesDir, "@bugsnag/source-maps/bin/cli")
             bugsnagSourceMaps.set(cliPath)
             dependsOn(rnTask)
-        }
-    }
-
-    @Suppress("LongParameterList")
-    private fun registerGenerateUnityMappingTask(
-        project: Project,
-        output: ApkVariantOutput,
-        bugsnag: BugsnagPluginExtension,
-        manifestInfoProvider: Provider<RegularFile>,
-        mappingFileOutputDir: String,
-        copyOutputDir: String
-    ): TaskProvider<out BugsnagGenerateUnitySoMappingTask> {
-        // Create a Bugsnag task to upload Unity mapping file(s)
-        val taskName = taskNameForGenerateUnityMapping(output)
-        return BugsnagGenerateUnitySoMappingTask.register(project, taskName) {
-            variantOutput = output
-            objDumpPaths.set(bugsnag.objdumpPaths)
-            manifestInfo.set(manifestInfoProvider)
-            rootProjectDir.set(project.rootProject.projectDir)
-            intermediateOutputDir.set(project.layout.buildDirectory.dir(mappingFileOutputDir))
-            unitySharedObjectDir.set(project.layout.buildDirectory.dir(copyOutputDir))
         }
     }
 

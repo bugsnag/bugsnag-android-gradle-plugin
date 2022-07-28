@@ -1,7 +1,10 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.ApkVariantOutput
+import com.bugsnag.android.gradle.internal.BugsnagTaskCompanion
 import com.bugsnag.android.gradle.internal.clearDir
+import com.bugsnag.android.gradle.internal.dependsOn
+import com.bugsnag.android.gradle.internal.forBuildOutput
 import com.bugsnag.android.gradle.internal.includesAbi
 import com.bugsnag.android.gradle.internal.mapProperty
 import com.bugsnag.android.gradle.internal.register
@@ -15,12 +18,12 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.util.zip.ZipFile
 import javax.inject.Inject
@@ -194,15 +197,22 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
         } ?: emptyList()
     }
 
-    companion object {
+    companion object : BugsnagTaskCompanion<BugsnagGenerateUnitySoMappingTask> {
 
-        internal fun register(
+        fun register(
             project: Project,
-            name: String,
-            configurationAction: BugsnagGenerateUnitySoMappingTask.() -> Unit
-        ): TaskProvider<out BugsnagGenerateUnitySoMappingTask> {
-            return project.tasks.register(name, configurationAction)
-        }
+            output: ApkVariantOutput,
+            objdumpPaths: Provider<Map<String, String>>,
+            mappingFileOutputDir: String,
+            copyOutputDir: String
+        ) = register(project, output) {
+            variantOutput = output
+            objDumpPaths.set(objdumpPaths)
+            manifestInfo.set(BugsnagManifestUuidTask.manifestInfoForOutput(project, output))
+            rootProjectDir.set(project.rootProject.projectDir)
+            intermediateOutputDir.set(project.layout.buildDirectory.dir(mappingFileOutputDir))
+            unitySharedObjectDir.set(project.layout.buildDirectory.dir(copyOutputDir))
+        }.dependsOn(BugsnagManifestUuidTask.forBuildOutput(project, output))
 
         internal fun isUnitySymbolsArchive(name: String, projectName: String): Boolean {
             return name.endsWith("symbols.zip") && name.startsWith(projectName)
@@ -213,5 +223,8 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
             val nameMatch = name.contains("libunity") || name.contains("libil2cpp")
             return extensionMatch && nameMatch
         }
+
+        override fun taskNameFor(variantOutputName: String) =
+            "generateBugsnagUnity${variantOutputName.capitalize()}Mapping"
     }
 }
