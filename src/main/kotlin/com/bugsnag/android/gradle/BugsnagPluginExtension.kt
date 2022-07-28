@@ -12,6 +12,7 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.util.ConfigureUtil
 import java.io.File
+import java.util.Locale
 
 // To make kotlin happy with gradle's nullability
 private val NULL_STRING: String? = null
@@ -96,7 +97,7 @@ open class BugsnagPluginExtension(objects: ObjectFactory) {
     }
 
     internal var filter: Action<VariantFilter> = Action {
-        if (it.name.toLowerCase().contains("debug")) {
+        if (it.name.toLowerCase(Locale.ENGLISH).contains("debug")) {
             it.setEnabled(false)
         }
     }

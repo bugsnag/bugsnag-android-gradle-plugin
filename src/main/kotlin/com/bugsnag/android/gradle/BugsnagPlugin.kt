@@ -32,7 +32,6 @@ import com.bugsnag.android.gradle.internal.isVariantEnabled
 import com.bugsnag.android.gradle.internal.newUploadRequestClientProvider
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.registerV2ManifestUuidTask
-import com.bugsnag.android.gradle.internal.taskNameForGenerateJvmMapping
 import com.bugsnag.android.gradle.internal.taskNameForGenerateNdkMapping
 import com.bugsnag.android.gradle.internal.taskNameForGenerateUnityMapping
 import com.bugsnag.android.gradle.internal.taskNameForManifestUuid
@@ -226,13 +225,12 @@ class BugsnagPlugin : Plugin<Project> {
             }
 
             val generateProguardTaskProvider = when {
-                jvmMinificationEnabled -> registerGenerateProguardTask(
+                jvmMinificationEnabled -> BugsnagGenerateProguardTask.register(
                     project,
                     output,
-                    bugsnag,
-                    manifestInfoProvider,
+                    bugsnag.failOnUploadError,
                     mappingFilesProvider
-                ).dependsOn(manifestTaskProvider)
+                )
                 else -> null
             }
 
@@ -436,31 +434,6 @@ class BugsnagPlugin : Plugin<Project> {
             .withType(BugsnagManifestUuidTask::class.java)
             .named(taskName)
         return manifestUpdater
-    }
-
-    /**
-     * Creates a bugsnag task to compress JVM mapping files
-     */
-    @Suppress("LongParameterList")
-    private fun registerGenerateProguardTask(
-        project: Project,
-        output: BaseVariantOutput,
-        bugsnag: BugsnagPluginExtension,
-        manifestInfoProvider: Provider<RegularFile>,
-        mappingFilesProvider: Provider<FileCollection>
-    ): TaskProvider<out BugsnagGenerateProguardTask> {
-        val taskName = taskNameForGenerateJvmMapping(output)
-        val gzipOutputProvider = intermediateForGenerateJvmMapping(project, output)
-
-        return BugsnagGenerateProguardTask.register(project, taskName) {
-            manifestInfo.set(manifestInfoProvider)
-            archiveOutputFile.set(gzipOutputProvider)
-            failOnUploadError.set(bugsnag.failOnUploadError)
-
-            mappingFilesProvider.let {
-                mappingFileProperty.from(it)
-            }
-        }
     }
 
     /**

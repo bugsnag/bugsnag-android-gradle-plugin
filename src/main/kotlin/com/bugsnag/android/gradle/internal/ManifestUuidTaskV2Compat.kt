@@ -48,17 +48,13 @@ internal fun createManifestUpdateTask(
     }
 
     check(variantOutput is VariantOutputImpl)
-    val taskName = taskNameForManifestUuid(variantOutput.baseName)
     val manifestInfoOutputFile = project.computeManifestInfoOutputV2(variantOutput.baseName)
     val buildUuidProvider = project.newUuidProvider()
-    return project.tasks.register(
-        taskName,
-        BugsnagManifestUuidTask::class.java
-    ) {
-        it.versionCode.set(variantOutput.versionCode)
-        it.versionName.set(variantOutput.versionName)
-        it.buildUuid.set(buildUuidProvider)
-        it.manifestInfoProvider.set(manifestInfoOutputFile)
+    return BugsnagManifestUuidTask.register(project, variantOutput) {
+        versionCode.set(variantOutput.versionCode)
+        versionName.set(variantOutput.versionName)
+        buildUuid.set(buildUuidProvider)
+        manifestInfoProvider.set(manifestInfoOutputFile)
     }
 }
 

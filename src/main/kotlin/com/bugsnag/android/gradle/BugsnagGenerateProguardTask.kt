@@ -1,20 +1,27 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.gradle.api.BaseVariantOutput
+import com.bugsnag.android.gradle.internal.BugsnagTaskCompanion
+import com.bugsnag.android.gradle.internal.dependsOn
+import com.bugsnag.android.gradle.internal.forBuildOutput
+import com.bugsnag.android.gradle.internal.intermediateForGenerateJvmMapping
 import com.bugsnag.android.gradle.internal.outputZipFile
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import javax.inject.Inject
 
@@ -66,18 +73,22 @@ open class BugsnagGenerateProguardTask @Inject constructor(
         return mappingFile
     }
 
-    companion object {
+    companion object : BugsnagTaskCompanion<BugsnagGenerateProguardTask> {
+        override fun taskNameFor(variantOutputName: String) = "generateBugsnag${variantOutputName.capitalize()}Mapping"
 
-        /**
-         * Registers the appropriate subtype to this [project] with the given [name] and
-         * [configurationAction]
-         */
-        internal fun register(
+        fun archiveOutputFile(project: Project, output: BaseVariantOutput): Provider<RegularFile> =
+            forBuildOutput(project, output).flatMap { it.archiveOutputFile }
+
+        fun register(
             project: Project,
-            name: String,
-            configurationAction: BugsnagGenerateProguardTask.() -> Unit
-        ): TaskProvider<out BugsnagGenerateProguardTask> {
-            return project.tasks.register(name, configurationAction)
-        }
+            output: BaseVariantOutput,
+            failOnUploadError: Property<Boolean>,
+            mappingFilesProvider: Provider<FileCollection>
+        ) = register(project, output) {
+            this.manifestInfo.set(BugsnagManifestUuidTask.manifestInfoForOutput(project, output))
+            this.archiveOutputFile.set(intermediateForGenerateJvmMapping(project, output))
+            this.failOnUploadError.set(failOnUploadError)
+            this.mappingFileProperty.from(mappingFilesProvider)
+        }.dependsOn(BugsnagManifestUuidTask.forBuildOutput(project, output))
     }
 }
