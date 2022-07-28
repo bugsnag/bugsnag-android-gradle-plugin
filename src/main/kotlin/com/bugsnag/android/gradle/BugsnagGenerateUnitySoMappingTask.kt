@@ -1,7 +1,7 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.ApkVariantOutput
-import com.bugsnag.android.gradle.internal.BugsnagTaskCompanion
+import com.bugsnag.android.gradle.internal.VariantTaskCompanion
 import com.bugsnag.android.gradle.internal.clearDir
 import com.bugsnag.android.gradle.internal.dependsOn
 import com.bugsnag.android.gradle.internal.forBuildOutput
@@ -197,7 +197,7 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
         } ?: emptyList()
     }
 
-    companion object : BugsnagTaskCompanion<BugsnagGenerateUnitySoMappingTask> {
+    companion object : VariantTaskCompanion<BugsnagGenerateUnitySoMappingTask> {
 
         fun register(
             project: Project,

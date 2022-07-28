@@ -1,7 +1,7 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.BaseVariantOutput
-import com.bugsnag.android.gradle.internal.BugsnagTaskCompanion
+import com.bugsnag.android.gradle.internal.VariantTaskCompanion
 import com.bugsnag.android.gradle.internal.dependsOn
 import com.bugsnag.android.gradle.internal.forBuildOutput
 import com.bugsnag.android.gradle.internal.intermediateForGenerateJvmMapping
@@ -73,7 +73,7 @@ open class BugsnagGenerateProguardTask @Inject constructor(
         return mappingFile
     }
 
-    companion object : BugsnagTaskCompanion<BugsnagGenerateProguardTask> {
+    companion object : VariantTaskCompanion<BugsnagGenerateProguardTask> {
         override fun taskNameFor(variantOutputName: String) = "generateBugsnag${variantOutputName.capitalize()}Mapping"
 
         fun archiveOutputFile(project: Project, output: BaseVariantOutput): Provider<RegularFile> =

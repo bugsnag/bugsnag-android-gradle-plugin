@@ -7,26 +7,26 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskProvider
 
-internal interface BugsnagTaskCompanion<T : Task> {
+internal interface VariantTaskCompanion<T : Task> {
     fun taskNameFor(variantOutputName: String): String
     fun taskNameFor(output: BaseVariantOutput): String = taskNameFor(output.name)
     fun taskNameFor(output: VariantOutput): String =
         taskNameFor((output as VariantOutputImpl).baseName)
 }
 
-internal inline fun <reified T : Task> BugsnagTaskCompanion<T>.register(
+internal inline fun <reified T : Task> VariantTaskCompanion<T>.register(
     project: Project,
     output: BaseVariantOutput,
     noinline configure: T.() -> Unit
 ) = project.tasks.register(taskNameFor(output), configure)
 
-internal inline fun <reified T : Task> BugsnagTaskCompanion<T>.register(
+internal inline fun <reified T : Task> VariantTaskCompanion<T>.register(
     project: Project,
     output: VariantOutput,
     noinline configure: T.() -> Unit
 ) = project.tasks.register(taskNameFor(output), configure)
 
-internal inline fun <reified T : Task> BugsnagTaskCompanion<T>.forBuildOutput(
+internal inline fun <reified T : Task> VariantTaskCompanion<T>.forBuildOutput(
     project: Project,
     output: BaseVariantOutput
 ): TaskProvider<T> {

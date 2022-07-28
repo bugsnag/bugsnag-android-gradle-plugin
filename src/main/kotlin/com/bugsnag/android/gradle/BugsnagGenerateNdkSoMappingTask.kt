@@ -3,8 +3,8 @@ package com.bugsnag.android.gradle
 import com.android.build.VariantOutput
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.BaseVariant
-import com.bugsnag.android.gradle.internal.BugsnagTaskCompanion
 import com.bugsnag.android.gradle.internal.ExternalNativeBuildTaskUtil
+import com.bugsnag.android.gradle.internal.VariantTaskCompanion
 import com.bugsnag.android.gradle.internal.clearDir
 import com.bugsnag.android.gradle.internal.dependsOn
 import com.bugsnag.android.gradle.internal.forBuildOutput
@@ -114,7 +114,7 @@ open class BugsnagGenerateNdkSoMappingTask @Inject constructor(
         }
     }
 
-    companion object : BugsnagTaskCompanion<BugsnagGenerateNdkSoMappingTask> {
+    companion object : VariantTaskCompanion<BugsnagGenerateNdkSoMappingTask> {
 
         /**
          * SO files which should be ignored by the NDK upload task. These are Unity

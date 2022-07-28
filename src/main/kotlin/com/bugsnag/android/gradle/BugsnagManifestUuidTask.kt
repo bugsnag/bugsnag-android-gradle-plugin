@@ -1,7 +1,7 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.BaseVariantOutput
-import com.bugsnag.android.gradle.internal.BugsnagTaskCompanion
+import com.bugsnag.android.gradle.internal.VariantTaskCompanion
 import com.bugsnag.android.gradle.internal.forBuildOutput
 import com.bugsnag.android.gradle.internal.property
 import org.gradle.api.DefaultTask
@@ -69,7 +69,7 @@ abstract class BugsnagManifestUuidTask @Inject constructor(
         info.write(manifestInfoProvider.get().asFile)
     }
 
-    companion object : BugsnagTaskCompanion<BugsnagManifestUuidTask> {
+    companion object : VariantTaskCompanion<BugsnagManifestUuidTask> {
         fun manifestInfoForOutput(project: Project, output: BaseVariantOutput): Provider<RegularFile> =
             forBuildOutput(project, output).flatMap { it.manifestInfoProvider }
 
