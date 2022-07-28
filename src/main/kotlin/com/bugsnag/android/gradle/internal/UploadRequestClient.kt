@@ -9,7 +9,7 @@ import java.util.Objects
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.FutureTask
 
-sealed class UploadRequestClient : AutoCloseable {
+abstract class UploadRequestClient : AutoCloseable, BuildService<BuildServiceParameters.None> {
 
     private val requestMap = ConcurrentHashMap<String, FutureTask<String>>()
 
@@ -46,23 +46,11 @@ sealed class UploadRequestClient : AutoCloseable {
     }
 }
 
-/** A [BuildService]-based implementation of [UploadRequestClient]. */
-abstract class BuildServiceUploadRequestClient : UploadRequestClient(), BuildService<BuildServiceParameters.None>
-
-/** A simple [UploadRequestClient] for use on Gradle <6.1 */
-class LegacyUploadRequestClient : UploadRequestClient()
-
 internal fun newUploadRequestClientProvider(project: Project, prefix: String): Provider<out UploadRequestClient> {
-    return if (project.gradle.versionNumber() >= GradleVersions.VERSION_6_1) {
-        project.gradle.sharedServices.registerIfAbsent(
-            "bugsnag${prefix.capitalize()}UploadRequestClient",
-            BuildServiceUploadRequestClient::class.java
-        ) {
-            // No parameters!
-        }
-    } else {
-        // Reuse this single instance every time it's provided
-        val provider = LegacyUploadRequestClient()
-        project.provider { provider }
+    return project.gradle.sharedServices.registerIfAbsent(
+        "bugsnag${prefix.capitalize()}UploadRequestClient",
+        UploadRequestClient::class.java
+    ) {
+        // No parameters!
     }
 }

@@ -1,6 +1,7 @@
 package com.bugsnag.android.gradle
 
-import com.bugsnag.android.gradle.internal.LegacyUploadRequestClient
+import com.bugsnag.android.gradle.internal.UploadRequestClient
+import org.gradle.api.services.BuildServiceParameters
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -18,7 +19,8 @@ class UploadRequestClientTest {
 
     @Test
     fun testRequestDiffVersionInfo() {
-        val client = LegacyUploadRequestClient()
+        val client = createTestRequestClient()
+
         var requestCount = 0
         val request = {
             requestCount += 1
@@ -31,7 +33,8 @@ class UploadRequestClientTest {
 
     @Test
     fun testRequestDiffPayload() {
-        val client = LegacyUploadRequestClient()
+        val client = createTestRequestClient()
+
         var requestCount = 0
         val request = {
             requestCount += 1
@@ -44,7 +47,8 @@ class UploadRequestClientTest {
 
     @Test
     fun testRequestSameInfo() {
-        val client = LegacyUploadRequestClient()
+        val client = createTestRequestClient()
+
         var requestCount = 0
         val request = {
             requestCount += 1
@@ -53,5 +57,9 @@ class UploadRequestClientTest {
         client.makeRequestIfNeeded(info, "{}".hashCode(), request)
         client.makeRequestIfNeeded(info, "{}".hashCode(), request)
         assertEquals(1, requestCount)
+    }
+
+    private fun createTestRequestClient() = object : UploadRequestClient() {
+        override fun getParameters(): BuildServiceParameters.None = null!!
     }
 }

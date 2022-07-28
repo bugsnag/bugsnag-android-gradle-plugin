@@ -26,7 +26,7 @@ import javax.inject.Inject
  * Task that uploads shared object mapping files to Bugsnag.
  */
 internal open class BugsnagUploadSharedObjectTask @Inject constructor(
-    objects: ObjectFactory
+    objects: ObjectFactory,
 ) : DefaultTask(), AndroidManifestInfoReceiver, BugsnagFileUploadTask {
 
     enum class UploadType(private val path: String, val uploadKey: String) {

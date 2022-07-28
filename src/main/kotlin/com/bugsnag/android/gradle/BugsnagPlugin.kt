@@ -586,6 +586,9 @@ class BugsnagPlugin : Plugin<Project> {
         return BugsnagUploadSharedObjectTask.register(project, taskName) {
             // upload task requires SO mapping generation to occur first
             this.dependsOn(generateTaskProvider)
+            this.usesService(httpClientHelperProvider)
+            this.usesService(ndkUploadClientProvider)
+
             this.requestOutputFile.set(requestOutputFile)
             this.uploadType.set(uploadType)
             projectRoot.set(bugsnag.projectRoot.getOrElse(project.projectDir.toString()))
@@ -612,6 +615,9 @@ class BugsnagPlugin : Plugin<Project> {
         val taskName = taskNameForUploadRelease(output)
         val requestOutputFile = intermediateForReleaseRequest(project, output)
         return BugsnagReleasesTask.register(project, taskName) {
+            usesService(httpClientHelperProvider)
+            usesService(releasesUploadClientProvider)
+
             this.requestOutputFile.set(requestOutputFile)
             httpClientHelper.set(httpClientHelperProvider)
             retryCount.set(bugsnag.retryCount)
