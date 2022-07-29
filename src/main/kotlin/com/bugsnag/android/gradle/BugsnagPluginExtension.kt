@@ -13,6 +13,7 @@ import org.gradle.api.provider.Property
 import org.gradle.util.ConfigureUtil
 import java.io.File
 import java.util.Locale
+import javax.inject.Inject
 
 // To make kotlin happy with gradle's nullability
 private val NULL_STRING: String? = null
@@ -24,8 +25,7 @@ internal const val UPLOAD_ENDPOINT_DEFAULT: String = "https://upload.bugsnag.com
 /**
  * Defines configuration options (Gradle plugin extensions) for the BugsnagPlugin
  */
-// After Gradle 5.2, this can use service injection for injecting ObjectFactory
-open class BugsnagPluginExtension(objects: ObjectFactory) {
+open class BugsnagPluginExtension @Inject constructor(objects: ObjectFactory) {
 
     val sourceControl: SourceControl = objects.newInstance()
 

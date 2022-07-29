@@ -7,7 +7,6 @@ import com.android.build.gradle.api.ApkVariant
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
-import com.android.build.gradle.api.LibraryVariantOutput
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.bugsnag.android.gradle.BugsnagInstallJniLibsTask.Companion.resolveBugsnagArtifacts
 import com.bugsnag.android.gradle.internal.AgpVersions
@@ -23,9 +22,7 @@ import com.bugsnag.android.gradle.internal.getDexguardAabTaskName
 import com.bugsnag.android.gradle.internal.hasDexguardPlugin
 import com.bugsnag.android.gradle.internal.intermediateForGenerateJvmMapping
 import com.bugsnag.android.gradle.internal.intermediateForMappingFileRequest
-import com.bugsnag.android.gradle.internal.intermediateForNdkSoRequest
 import com.bugsnag.android.gradle.internal.intermediateForReleaseRequest
-import com.bugsnag.android.gradle.internal.intermediateForUnitySoRequest
 import com.bugsnag.android.gradle.internal.intermediateForUploadSourcemaps
 import com.bugsnag.android.gradle.internal.isDexguardEnabledForVariant
 import com.bugsnag.android.gradle.internal.isVariantEnabled
@@ -34,10 +31,8 @@ import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.registerV2ManifestUuidTask
 import com.bugsnag.android.gradle.internal.taskNameForManifestUuid
 import com.bugsnag.android.gradle.internal.taskNameForUploadJvmMapping
-import com.bugsnag.android.gradle.internal.taskNameForUploadNdkMapping
 import com.bugsnag.android.gradle.internal.taskNameForUploadRelease
 import com.bugsnag.android.gradle.internal.taskNameForUploadSourcemaps
-import com.bugsnag.android.gradle.internal.taskNameForUploadUnityMapping
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -89,16 +84,12 @@ class BugsnagPlugin : Plugin<Project> {
             )
         }
 
-        // After Gradle 5.2, this can use service injection for injecting ObjectFactory
-        val bugsnag = project.extensions.create(
-            "bugsnag",
-            BugsnagPluginExtension::class.java,
-            project.objects
-        )
+        val bugsnag = project.extensions.create("bugsnag", BugsnagPluginExtension::class.java)
 
         if (!bugsnag.enabled.get()) {
             return
         }
+
         runCatching {
             val android = project.extensions.getByType(BaseExtension::class.java)
 
@@ -259,16 +250,14 @@ class BugsnagPlugin : Plugin<Project> {
             }
             val uploadNdkMappingProvider = when {
                 ndkEnabled && generateNdkMappingProvider != null -> {
-                    registerUploadNdkTask(
+                    BugsnagUploadSharedObjectTask.registerUploadNdkTask(
                         project,
                         output,
-                        bugsnag,
                         httpClientHelperProvider,
-                        manifestInfoProvider,
                         ndkUploadClientProvider,
                         generateNdkMappingProvider,
                         ndkSoMappingOutput
-                    ).dependsOn(manifestTaskProvider)
+                    )
                 }
                 else -> null
             }
@@ -288,16 +277,14 @@ class BugsnagPlugin : Plugin<Project> {
             }
             val uploadUnityMappingProvider = when {
                 unityEnabled && generateUnityMappingProvider != null -> {
-                    registerUploadUnityTask(
+                    BugsnagUploadSharedObjectTask.registerUploadUnityTask(
                         project,
                         output,
-                        bugsnag,
                         httpClientHelperProvider,
-                        manifestInfoProvider,
                         unityUploadClientProvider,
                         generateUnityMappingProvider,
                         unityMappingDir
-                    ).dependsOn(manifestTaskProvider)
+                    )
                 }
                 else -> null
             }
@@ -520,87 +507,6 @@ class BugsnagPlugin : Plugin<Project> {
     }
 
     @Suppress("LongParameterList")
-    private fun registerUploadNdkTask(
-        project: Project,
-        output: BaseVariantOutput,
-        bugsnag: BugsnagPluginExtension,
-        httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
-        manifestInfoProvider: Provider<RegularFile>,
-        ndkUploadClientProvider: Provider<out UploadRequestClient>,
-        generateTaskProvider: TaskProvider<out BugsnagGenerateNdkSoMappingTask>,
-        soMappingOutputDir: String
-    ): TaskProvider<out BugsnagUploadSharedObjectTask> {
-        return registerSharedObjectUploadTask(
-            project,
-            generateTaskProvider,
-            bugsnag,
-            httpClientHelperProvider,
-            manifestInfoProvider,
-            ndkUploadClientProvider,
-            taskNameForUploadNdkMapping(output),
-            intermediateForNdkSoRequest(project, output),
-            BugsnagUploadSharedObjectTask.UploadType.NDK,
-            soMappingOutputDir
-        )
-    }
-
-    @Suppress("LongParameterList")
-    private fun registerUploadUnityTask(
-        project: Project,
-        output: BaseVariantOutput,
-        bugsnag: BugsnagPluginExtension,
-        httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
-        manifestInfoProvider: Provider<RegularFile>,
-        ndkUploadClientProvider: Provider<out UploadRequestClient>,
-        generateTaskProvider: TaskProvider<out BugsnagGenerateUnitySoMappingTask>,
-        mappingFileOutputDir: String
-    ): TaskProvider<out BugsnagUploadSharedObjectTask> {
-        return registerSharedObjectUploadTask(
-            project,
-            generateTaskProvider,
-            bugsnag,
-            httpClientHelperProvider,
-            manifestInfoProvider,
-            ndkUploadClientProvider,
-            taskNameForUploadUnityMapping(output),
-            intermediateForUnitySoRequest(project, output),
-            BugsnagUploadSharedObjectTask.UploadType.UNITY,
-            mappingFileOutputDir
-        )
-    }
-
-    @Suppress("LongParameterList")
-    private fun registerSharedObjectUploadTask(
-        project: Project,
-        generateTaskProvider: TaskProvider<out Task>,
-        bugsnag: BugsnagPluginExtension,
-        httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
-        manifestInfoProvider: Provider<RegularFile>,
-        ndkUploadClientProvider: Provider<out UploadRequestClient>,
-        taskName: String,
-        requestOutputFile: Provider<RegularFile>,
-        uploadType: BugsnagUploadSharedObjectTask.UploadType,
-        intermediateOutputPath: String
-    ): TaskProvider<BugsnagUploadSharedObjectTask> {
-        // Create a Bugsnag task to upload NDK mapping file(s)
-        return BugsnagUploadSharedObjectTask.register(project, taskName) {
-            // upload task requires SO mapping generation to occur first
-            this.dependsOn(generateTaskProvider)
-            this.usesService(httpClientHelperProvider)
-            this.usesService(ndkUploadClientProvider)
-
-            this.requestOutputFile.set(requestOutputFile)
-            this.uploadType.set(uploadType)
-            projectRoot.set(bugsnag.projectRoot.getOrElse(project.projectDir.toString()))
-            httpClientHelper.set(httpClientHelperProvider)
-            manifestInfo.set(manifestInfoProvider)
-            uploadRequestClient.set(ndkUploadClientProvider)
-            intermediateOutputDir.set(project.layout.buildDirectory.dir(intermediateOutputPath))
-            configureWith(bugsnag)
-        }
-    }
-
-    @Suppress("LongParameterList")
     private fun registerReleasesUploadTask(
         project: Project,
         variant: BaseVariant,
@@ -646,14 +552,6 @@ class BugsnagPlugin : Plugin<Project> {
                 }
             }
             configureMetadata()
-        }
-    }
-
-    private fun BaseVariantOutput.findVersionCode(): Int {
-        return when (this) {
-            is LibraryVariantOutput
-            -> throw IllegalStateException("Library modules not currently supported as they have no versionCode")
-            else -> versionCode
         }
     }
 

@@ -1,17 +1,26 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.gradle.api.BaseVariantOutput
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.UploadRequestClient
+import com.bugsnag.android.gradle.internal.dependsOn
+import com.bugsnag.android.gradle.internal.forBuildOutput
+import com.bugsnag.android.gradle.internal.intermediateForNdkSoRequest
+import com.bugsnag.android.gradle.internal.intermediateForUnitySoRequest
 import com.bugsnag.android.gradle.internal.md5HashCode
 import com.bugsnag.android.gradle.internal.property
-import com.bugsnag.android.gradle.internal.register
+import com.bugsnag.android.gradle.internal.taskNameForUploadNdkMapping
+import com.bugsnag.android.gradle.internal.taskNameForUploadUnityMapping
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
@@ -35,18 +44,6 @@ internal open class BugsnagUploadSharedObjectTask @Inject constructor(
 
         fun endpoint(base: String): String {
             return "$base/$path"
-        }
-    }
-
-    companion object {
-        private const val VALID_SO_FILE_THRESHOLD = 1024
-
-        internal fun register(
-            project: Project,
-            name: String,
-            configurationAction: BugsnagUploadSharedObjectTask.() -> Unit
-        ): TaskProvider<BugsnagUploadSharedObjectTask> {
-            return project.tasks.register(name, configurationAction)
         }
     }
 
@@ -139,5 +136,84 @@ internal open class BugsnagUploadSharedObjectTask @Inject constructor(
             }
         }
         requestOutputFile.asFile.get().writeText(response)
+    }
+
+    companion object {
+        private const val VALID_SO_FILE_THRESHOLD = 1024
+
+        @Suppress("LongParameterList")
+        fun registerUploadNdkTask(
+            project: Project,
+            output: BaseVariantOutput,
+            httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
+            ndkUploadClientProvider: Provider<out UploadRequestClient>,
+            generateTaskProvider: TaskProvider<out BugsnagGenerateNdkSoMappingTask>,
+            soMappingOutputDir: String
+        ): TaskProvider<out BugsnagUploadSharedObjectTask> {
+            return register(
+                project,
+                generateTaskProvider,
+                httpClientHelperProvider,
+                BugsnagManifestUuidTask.manifestInfoForOutput(project, output),
+                ndkUploadClientProvider,
+                taskNameForUploadNdkMapping(output),
+                intermediateForNdkSoRequest(project, output),
+                UploadType.NDK,
+                soMappingOutputDir
+            ).dependsOn(BugsnagManifestUuidTask.forBuildOutput(project, output))
+        }
+
+        @Suppress("LongParameterList")
+        fun registerUploadUnityTask(
+            project: Project,
+            output: BaseVariantOutput,
+            httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
+            ndkUploadClientProvider: Provider<out UploadRequestClient>,
+            generateTaskProvider: TaskProvider<out BugsnagGenerateUnitySoMappingTask>,
+            mappingFileOutputDir: String
+        ): TaskProvider<out BugsnagUploadSharedObjectTask> {
+            return register(
+                project,
+                generateTaskProvider,
+                httpClientHelperProvider,
+                BugsnagManifestUuidTask.manifestInfoForOutput(project, output),
+                ndkUploadClientProvider,
+                taskNameForUploadUnityMapping(output),
+                intermediateForUnitySoRequest(project, output),
+                UploadType.UNITY,
+                mappingFileOutputDir
+            ).dependsOn(BugsnagManifestUuidTask.forBuildOutput(project, output))
+        }
+
+        @Suppress("LongParameterList")
+        fun register(
+            project: Project,
+            generateTaskProvider: TaskProvider<out Task>,
+            httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>,
+            manifestInfoProvider: Provider<RegularFile>,
+            ndkUploadClientProvider: Provider<out UploadRequestClient>,
+            taskName: String,
+            requestOutputFile: Provider<RegularFile>,
+            uploadType: UploadType,
+            intermediateOutputPath: String
+        ): TaskProvider<BugsnagUploadSharedObjectTask> {
+            val bugsnag = project.extensions.getByType(BugsnagPluginExtension::class.java)
+            // Create a Bugsnag task to upload NDK mapping file(s)
+            return project.tasks.register(taskName, BugsnagUploadSharedObjectTask::class.java) { task ->
+                // upload task requires SO mapping generation to occur first
+                task.dependsOn(generateTaskProvider)
+                task.usesService(httpClientHelperProvider)
+                task.usesService(ndkUploadClientProvider)
+
+                task.requestOutputFile.set(requestOutputFile)
+                task.uploadType.set(uploadType)
+                task.projectRoot.set(bugsnag.projectRoot.getOrElse(project.projectDir.toString()))
+                task.httpClientHelper.set(httpClientHelperProvider)
+                task.manifestInfo.set(manifestInfoProvider)
+                task.uploadRequestClient.set(ndkUploadClientProvider)
+                task.intermediateOutputDir.set(project.layout.buildDirectory.dir(intermediateOutputPath))
+                task.configureWith(bugsnag)
+            }
+        }
     }
 }
