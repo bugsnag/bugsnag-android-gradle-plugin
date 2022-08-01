@@ -1,10 +1,16 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.gradle.api.BaseVariantOutput
+import com.bugsnag.android.gradle.internal.VariantTaskCompanion
+import com.bugsnag.android.gradle.internal.forBuildOutput
 import com.bugsnag.android.gradle.internal.property
 import org.gradle.api.DefaultTask
+import org.gradle.api.Project
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
@@ -61,5 +67,13 @@ abstract class BugsnagManifestUuidTask @Inject constructor(
 
     fun writeManifestInfo(info: AndroidManifestInfo) {
         info.write(manifestInfoProvider.get().asFile)
+    }
+
+    companion object : VariantTaskCompanion<BugsnagManifestUuidTask> {
+        fun manifestInfoForOutput(project: Project, output: BaseVariantOutput): Provider<RegularFile> =
+            forBuildOutput(project, output).flatMap { it.manifestInfoProvider }
+
+        override fun taskNameFor(variantOutputName: String): String =
+            "processBugsnag${variantOutputName.capitalize()}Manifest"
     }
 }
