@@ -220,6 +220,7 @@ class BugsnagPlugin : Plugin<Project> {
                     bugsnag.failOnUploadError,
                     mappingFilesProvider
                 )
+
                 else -> null
             }
 
@@ -233,6 +234,7 @@ class BugsnagPlugin : Plugin<Project> {
                     proguardUploadClientProvider,
                     generateProguardTaskProvider
                 ).dependsOn(manifestTaskProvider)
+
                 else -> null
             }
             val ndkSoMappingOutput = "$NDK_SO_MAPPING_DIR/${output.name}"
@@ -246,6 +248,7 @@ class BugsnagPlugin : Plugin<Project> {
                         getSharedObjectSearchPaths(project, bugsnag, android),
                         ndkSoMappingOutput
                     )
+
                 else -> null
             }
             val uploadNdkMappingProvider = when {
@@ -259,6 +262,7 @@ class BugsnagPlugin : Plugin<Project> {
                         ndkSoMappingOutput
                     )
                 }
+
                 else -> null
             }
 
@@ -273,6 +277,7 @@ class BugsnagPlugin : Plugin<Project> {
                         unityMappingDir,
                         "$UNITY_SO_COPY_DIR/${output.name}"
                     )
+
                 else -> null
             }
             val uploadUnityMappingProvider = when {
@@ -286,6 +291,7 @@ class BugsnagPlugin : Plugin<Project> {
                         unityMappingDir
                     )
                 }
+
                 else -> null
             }
 
@@ -297,6 +303,7 @@ class BugsnagPlugin : Plugin<Project> {
                     bugsnag,
                     manifestInfoProvider
                 )?.dependsOn(manifestTaskProvider)
+
                 else -> null
             }
 

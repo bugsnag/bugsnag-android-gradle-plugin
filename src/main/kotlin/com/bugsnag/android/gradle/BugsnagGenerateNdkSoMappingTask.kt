@@ -3,28 +3,21 @@ package com.bugsnag.android.gradle
 import com.android.build.VariantOutput
 import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.BaseVariant
+import com.bugsnag.android.gradle.internal.AbstractSoMappingTask
 import com.bugsnag.android.gradle.internal.ExternalNativeBuildTaskUtil
 import com.bugsnag.android.gradle.internal.VariantTaskCompanion
 import com.bugsnag.android.gradle.internal.clearDir
-import com.bugsnag.android.gradle.internal.dependsOn
-import com.bugsnag.android.gradle.internal.forBuildOutput
-import com.bugsnag.android.gradle.internal.mapProperty
+import com.bugsnag.android.gradle.internal.ndkToolchain
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
-import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import javax.inject.Inject
@@ -32,27 +25,18 @@ import javax.inject.Inject
 /**
  * Task that generates NDK shared object mapping files for upload to Bugsnag.
  */
-open class BugsnagGenerateNdkSoMappingTask @Inject constructor(
+internal abstract class BugsnagGenerateNdkSoMappingTask @Inject constructor(
     objects: ObjectFactory
-) : DefaultTask(), AndroidManifestInfoReceiver {
+) : AbstractSoMappingTask(objects) {
 
     init {
         group = BugsnagPlugin.GROUP_NAME
         description = "Generates NDK mapping files for upload to Bugsnag"
     }
 
-    @get:InputFile
-    override val manifestInfo: RegularFileProperty = objects.fileProperty()
-
     @get:Input
     @get:Optional
     val abi: Property<String> = objects.property()
-
-    @get:OutputDirectory
-    val intermediateOutputDir: DirectoryProperty = objects.directoryProperty()
-
-    @get:Input
-    val objDumpPaths: MapProperty<String, String> = objects.mapProperty()
 
     @get:InputFiles
     val searchDirectories: ConfigurableFileCollection = objects.fileCollection()
@@ -60,15 +44,13 @@ open class BugsnagGenerateNdkSoMappingTask @Inject constructor(
     @TaskAction
     fun generateMappingFiles() {
         logger.lifecycle("Generating NDK mapping files")
-        val searchDirs = searchDirectories.files.toList()
-        val files = findSharedObjectMappingFiles(searchDirs)
+        val files = findSharedObjectMappingFiles()
         processFiles(files)
     }
 
-    private fun findSharedObjectMappingFiles(
-        searchDirectories: List<File>
-    ): Collection<File> {
-        return searchDirectories.flatMap(this::findSharedObjectFiles)
+    private fun findSharedObjectMappingFiles(): Collection<File> {
+        return searchDirectories
+            .flatMap(this::findSharedObjectFiles)
             .toSortedSet(compareBy { it.absolutePath })
     }
 
@@ -96,18 +78,12 @@ open class BugsnagGenerateNdkSoMappingTask @Inject constructor(
 
     private fun processFiles(files: Collection<File>) {
         logger.info("Bugsnag: Found shared object files for upload: $files")
-        val outputDir = intermediateOutputDir.get().asFile
-        outputDir.clearDir()
+        outputDirectory.get().asFile.clearDir()
 
         files.forEach { sharedObjectFile ->
             val arch = sharedObjectFile.parentFile.name
-            val params = SharedObjectMappingFileFactory.Params(
-                sharedObjectFile,
-                requireNotNull(Abi.findByName(arch)),
-                objDumpPaths.get(),
-                outputDir
-            )
-            val outputFile = SharedObjectMappingFileFactory.generateSoMappingFile(project, params)
+            val abi = requireNotNull(Abi.findByName(arch)) { "unknown abi: $arch" }
+            val outputFile = generateMappingFile(sharedObjectFile, abi)
             if (outputFile != null) {
                 logger.info("Bugsnag: Created symbol file for $arch at $outputFile")
             }
@@ -131,8 +107,8 @@ open class BugsnagGenerateNdkSoMappingTask @Inject constructor(
             soMappingOutputPath: String
         ) = register(project, output) {
             abi.set(output.getFilter(VariantOutput.FilterType.ABI))
-            objDumpPaths.set(objdumpPaths)
-            manifestInfo.set(BugsnagManifestUuidTask.manifestInfoForOutput(project, output))
+            ndkDirectory.set(project.ndkToolchain)
+            objDumpOverrides.set(objdumpPaths)
 
             val externalNativeBuildTaskUtil = ExternalNativeBuildTaskUtil(project.providers)
 
@@ -140,8 +116,8 @@ open class BugsnagGenerateNdkSoMappingTask @Inject constructor(
             variant.externalNativeBuildProviders.forEach { provider ->
                 searchDirectories.from(externalNativeBuildTaskUtil.findSearchPaths(provider))
             }
-            intermediateOutputDir.set(project.layout.buildDirectory.dir(soMappingOutputPath))
-        }.dependsOn(BugsnagManifestUuidTask.forBuildOutput(project, output))
+            outputDirectory.set(project.layout.buildDirectory.dir(soMappingOutputPath))
+        }
 
         override fun taskNameFor(variantOutputName: String) =
             "generateBugsnagNdk${variantOutputName.capitalize()}Mapping"
