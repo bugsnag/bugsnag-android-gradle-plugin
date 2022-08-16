@@ -5,16 +5,15 @@ import com.android.build.gradle.api.ApkVariantOutput
 import com.android.build.gradle.api.BaseVariant
 import com.bugsnag.android.gradle.internal.AbstractSoMappingTask
 import com.bugsnag.android.gradle.internal.ExternalNativeBuildTaskUtil
+import com.bugsnag.android.gradle.internal.NdkToolchain
 import com.bugsnag.android.gradle.internal.VariantTaskCompanion
 import com.bugsnag.android.gradle.internal.clearDir
-import com.bugsnag.android.gradle.internal.ndkToolchain
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
@@ -27,7 +26,7 @@ import javax.inject.Inject
  */
 internal abstract class BugsnagGenerateNdkSoMappingTask @Inject constructor(
     objects: ObjectFactory
-) : AbstractSoMappingTask(objects) {
+) : AbstractSoMappingTask() {
 
     init {
         group = BugsnagPlugin.GROUP_NAME
@@ -102,13 +101,12 @@ internal abstract class BugsnagGenerateNdkSoMappingTask @Inject constructor(
             project: Project,
             variant: BaseVariant,
             output: ApkVariantOutput,
-            objdumpPaths: Provider<Map<String, String>>,
+            ndk: NdkToolchain,
             searchPaths: List<File>,
             soMappingOutputPath: String
         ) = register(project, output) {
             abi.set(output.getFilter(VariantOutput.FilterType.ABI))
-            ndkDirectory.set(project.ndkToolchain)
-            objDumpOverrides.set(objdumpPaths)
+            ndkToolchain.set(ndk)
 
             val externalNativeBuildTaskUtil = ExternalNativeBuildTaskUtil(project.providers)
 

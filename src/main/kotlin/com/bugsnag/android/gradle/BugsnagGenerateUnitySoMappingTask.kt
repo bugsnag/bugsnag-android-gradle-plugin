@@ -2,10 +2,10 @@ package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.ApkVariantOutput
 import com.bugsnag.android.gradle.internal.AbstractSoMappingTask
+import com.bugsnag.android.gradle.internal.NdkToolchain
 import com.bugsnag.android.gradle.internal.VariantTaskCompanion
 import com.bugsnag.android.gradle.internal.clearDir
 import com.bugsnag.android.gradle.internal.includesAbi
-import com.bugsnag.android.gradle.internal.ndkToolchain
 import com.bugsnag.android.gradle.internal.register
 import okio.BufferedSource
 import okio.buffer
@@ -14,7 +14,6 @@ import okio.source
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
@@ -27,7 +26,7 @@ import javax.inject.Inject
  */
 internal abstract class BugsnagGenerateUnitySoMappingTask @Inject constructor(
     objects: ObjectFactory
-) : AbstractSoMappingTask(objects) {
+) : AbstractSoMappingTask() {
 
     init {
         group = BugsnagPlugin.GROUP_NAME
@@ -78,7 +77,7 @@ internal abstract class BugsnagGenerateUnitySoMappingTask @Inject constructor(
     }
 
     override fun objdump(inputFile: File, abi: Abi): ProcessBuilder {
-        val objdump = ndkToolchain.objdumpForAbi(abi).path
+        val objdump = ndkToolchain.get().objdumpForAbi(abi).path
         return ProcessBuilder(
             objdump,
             "--sym",
@@ -185,13 +184,12 @@ internal abstract class BugsnagGenerateUnitySoMappingTask @Inject constructor(
         fun register(
             project: Project,
             output: ApkVariantOutput,
-            objdumpPaths: Provider<Map<String, String>>,
+            ndk: NdkToolchain,
             mappingFileOutputDir: String,
             copyOutputDir: String
         ) = register(project, output) {
             variantOutput = output
-            ndkDirectory.set(project.ndkToolchain)
-            objDumpOverrides.set(objdumpPaths)
+            ndkToolchain.set(ndk)
             rootProjectDir.set(project.rootProject.projectDir)
             outputDirectory.set(project.layout.buildDirectory.dir(mappingFileOutputDir))
             unitySharedObjectDir.set(project.layout.buildDirectory.dir(copyOutputDir))

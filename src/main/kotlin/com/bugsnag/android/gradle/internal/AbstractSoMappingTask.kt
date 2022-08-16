@@ -3,36 +3,22 @@ package com.bugsnag.android.gradle.internal
 import com.bugsnag.android.gradle.Abi
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import java.io.File
 
-abstract class AbstractSoMappingTask(objects: ObjectFactory) : DefaultTask() {
+abstract class AbstractSoMappingTask : DefaultTask() {
 
-    @get:Input
-    val forceLegacyMapping: Property<Boolean> = objects.property<Boolean>().convention(true)
-
-    @get:Input
-    abstract val objDumpOverrides: MapProperty<String, String>
-
-    @get:Input
-    abstract val ndkDirectory: Property<File>
+    @get:Nested
+    abstract val ndkToolchain: Property<NdkToolchain>
 
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
-    @get:Internal
-    protected val ndkToolchain by lazy {
-        NdkToolchain(ndkDirectory.get(), objDumpOverrides.get().mapKeys { Abi.findByName(it.key)!! })
-    }
-
     protected open fun objcopy(inputFile: File, abi: Abi): ProcessBuilder {
         return ProcessBuilder(
-            ndkToolchain.objcopy.path,
+            ndkToolchain.get().objcopyForAbi(abi).path,
             "--compress-debug-sections=zlib",
             "--only-keep-debug",
             inputFile.path,
@@ -41,7 +27,7 @@ abstract class AbstractSoMappingTask(objects: ObjectFactory) : DefaultTask() {
     }
 
     protected open fun objdump(inputFile: File, abi: Abi): ProcessBuilder {
-        val objdump = ndkToolchain.objdumpForAbi(abi).path
+        val objdump = ndkToolchain.get().objdumpForAbi(abi).path
         return ProcessBuilder(
             objdump,
             "--dwarf=info",
@@ -52,9 +38,10 @@ abstract class AbstractSoMappingTask(objects: ObjectFactory) : DefaultTask() {
 
     fun generateMappingFile(soFile: File, abi: Abi): File? {
         try {
-            val process =
-                if (ndkToolchain.isLLVM() && !forceLegacyMapping.get()) objcopy(soFile, abi)
-                else objdump(soFile, abi)
+            val process = when (ndkToolchain.get().preferredMappingTool()) {
+                NdkToolchain.MappingTool.OBJCOPY -> objcopy(soFile, abi)
+                NdkToolchain.MappingTool.OBJDUMP -> objdump(soFile, abi)
+            }
 
             val dst = outputFileFor(soFile, abi)
             makeSoMappingFile(dst, process)
