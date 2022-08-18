@@ -33,6 +33,13 @@ When("I build the NDK app") do
 }
 end
 
+When("I build the NDK app using the {string} config") do |config|
+  Maze::Runner.environment['BUGSNAG_NDK_CONFIG'] = config
+  steps %Q{
+  And I run the script "features/scripts/build_ndk_app.sh" synchronously
+}
+end
+
 When("I set the fixture JVM arguments to {string}") do |jvm_args|
   steps %Q{
   When I set environment variable "CUSTOM_JVM_ARGS" to "#{jvm_args}"

@@ -1,0 +1,5 @@
+dependencies {
+    implementation 'com.bugsnag:bugsnag-android:5.9.4'
+}
+
+bugsnag.useLegacyNdkSymbolUpload = true
