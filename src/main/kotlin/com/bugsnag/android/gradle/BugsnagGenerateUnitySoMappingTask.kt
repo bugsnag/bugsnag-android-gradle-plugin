@@ -1,26 +1,19 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.ApkVariantOutput
+import com.bugsnag.android.gradle.internal.AbstractSoMappingTask
+import com.bugsnag.android.gradle.internal.NdkToolchain
 import com.bugsnag.android.gradle.internal.VariantTaskCompanion
 import com.bugsnag.android.gradle.internal.clearDir
-import com.bugsnag.android.gradle.internal.dependsOn
-import com.bugsnag.android.gradle.internal.forBuildOutput
 import com.bugsnag.android.gradle.internal.includesAbi
-import com.bugsnag.android.gradle.internal.mapProperty
 import com.bugsnag.android.gradle.internal.register
 import okio.BufferedSource
 import okio.buffer
 import okio.sink
 import okio.source
-import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.MapProperty
-import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
@@ -31,26 +24,17 @@ import javax.inject.Inject
 /**
  * Task that generates Unity shared object mapping files for upload to Bugsnag.
  */
-internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
+internal abstract class BugsnagGenerateUnitySoMappingTask @Inject constructor(
     objects: ObjectFactory
-) : DefaultTask(), AndroidManifestInfoReceiver {
+) : AbstractSoMappingTask() {
 
     init {
         group = BugsnagPlugin.GROUP_NAME
         description = "Generates Unity mapping files for upload to Bugsnag"
     }
 
-    @get:InputFile
-    override val manifestInfo: RegularFileProperty = objects.fileProperty()
-
     @get:Internal
     internal lateinit var variantOutput: ApkVariantOutput
-
-    @get:Input
-    val objDumpPaths: MapProperty<String, String> = objects.mapProperty()
-
-    @get:OutputDirectory
-    val intermediateOutputDir: DirectoryProperty = objects.directoryProperty()
 
     @get:OutputDirectory
     val unitySharedObjectDir: DirectoryProperty = objects.directoryProperty()
@@ -64,7 +48,7 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
         // search the internal Gradle build + exported Gradle build locations
         val symbolArchives = getUnitySymbolArchives(rootProjectDir)
         val copyDir = unitySharedObjectDir.asFile.get()
-        val outputDir = intermediateOutputDir.asFile.get()
+        val outputDir = outputDirectory.asFile.get()
         copyDir.clearDir()
         outputDir.clearDir()
 
@@ -82,20 +66,30 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
             return
         }
 
-        sharedObjectFiles.addAll(extractSoFilesFromGzipArchive(symbolArchives, copyDir))
+        sharedObjectFiles.addAll(extractSoFilesFromZipArchive(symbolArchives, copyDir))
         logger.info("Extracted Unity SO files: $sharedObjectFiles")
 
         // generate mapping files for each SO file
         sharedObjectFiles.forEach { sharedObjectFile ->
-            generateUnitySoMappingFile(sharedObjectFile)
+            val abi = Abi.findByName(sharedObjectFile.parentFile.name)!!
+            generateMappingFile(sharedObjectFile, abi)
         }
     }
 
+    override fun objdump(inputFile: File, abi: Abi): ProcessBuilder {
+        val objdump = ndkToolchain.get().objdumpForAbi(abi).path
+        return ProcessBuilder(
+            objdump,
+            "--sym",
+            inputFile.path
+        )
+    }
+
     /**
-     * Extracts the libunity/libil2cpp SO files from inside a GZIP archive,
+     * Extracts the libunity/libil2cpp SO files from inside a ZIP archive,
      * which is where the files are located for exported Gradle projects
      */
-    private fun extractSoFilesFromGzipArchive(symbolArchives: List<File>, copyDir: File): List<File> {
+    private fun extractSoFilesFromZipArchive(symbolArchives: List<File>, copyDir: File): List<File> {
         copyDir.mkdirs()
         return symbolArchives.flatMap { archive ->
             val zipFile = ZipFile(archive)
@@ -158,18 +152,6 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
         return dst
     }
 
-    private fun generateUnitySoMappingFile(sharedObjectFile: File) {
-        val arch = sharedObjectFile.parentFile.name
-        val params = SharedObjectMappingFileFactory.Params(
-            sharedObjectFile,
-            requireNotNull(Abi.findByName(arch)),
-            objDumpPaths.get(),
-            intermediateOutputDir.get().asFile,
-            SharedObjectMappingFileFactory.SharedObjectType.UNITY
-        )
-        SharedObjectMappingFileFactory.generateSoMappingFile(project, params)
-    }
-
     /**
      * The directory below the exported symbols. When Unity exports a project to an Android Gradle project
      * the symbols are exported as an archive in the same directory.
@@ -202,17 +184,16 @@ internal open class BugsnagGenerateUnitySoMappingTask @Inject constructor(
         fun register(
             project: Project,
             output: ApkVariantOutput,
-            objdumpPaths: Provider<Map<String, String>>,
+            ndk: NdkToolchain,
             mappingFileOutputDir: String,
             copyOutputDir: String
         ) = register(project, output) {
             variantOutput = output
-            objDumpPaths.set(objdumpPaths)
-            manifestInfo.set(BugsnagManifestUuidTask.manifestInfoForOutput(project, output))
+            ndkToolchain.set(ndk)
             rootProjectDir.set(project.rootProject.projectDir)
-            intermediateOutputDir.set(project.layout.buildDirectory.dir(mappingFileOutputDir))
+            outputDirectory.set(project.layout.buildDirectory.dir(mappingFileOutputDir))
             unitySharedObjectDir.set(project.layout.buildDirectory.dir(copyOutputDir))
-        }.dependsOn(BugsnagManifestUuidTask.forBuildOutput(project, output))
+        }
 
         internal fun isUnitySymbolsArchive(name: String, projectName: String): Boolean {
             return name.endsWith("symbols.zip") && name.startsWith(projectName)

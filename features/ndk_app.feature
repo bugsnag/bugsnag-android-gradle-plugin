@@ -85,3 +85,8 @@ Scenario: Mapping files uploaded for custom sharedObjectPaths
     And 1 requests are valid for the android mapping API and match the following:
         | appId                      |
         | com.bugsnag.android.ndkapp |
+
+Scenario: Mapping fails when using obcopy and an incompatible SDK
+    When I build the NDK app using the "old_sdk_upload_failure" config
+    And I wait for 3 seconds
+    Then I should receive no requests

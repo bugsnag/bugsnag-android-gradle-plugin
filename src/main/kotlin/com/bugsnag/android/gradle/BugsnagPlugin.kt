@@ -13,6 +13,7 @@ import com.bugsnag.android.gradle.internal.AgpVersions
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
 import com.bugsnag.android.gradle.internal.ExternalNativeBuildTaskUtil
 import com.bugsnag.android.gradle.internal.NDK_SO_MAPPING_DIR
+import com.bugsnag.android.gradle.internal.NdkToolchain
 import com.bugsnag.android.gradle.internal.TASK_JNI_LIBS
 import com.bugsnag.android.gradle.internal.UNITY_SO_COPY_DIR
 import com.bugsnag.android.gradle.internal.UNITY_SO_MAPPING_DIR
@@ -192,6 +193,10 @@ class BugsnagPlugin : Plugin<Project> {
         ndkUploadClientProvider: Provider<out UploadRequestClient>,
         unityUploadClientProvider: Provider<out UploadRequestClient>
     ) {
+        val ndkToolchain by lazy(LazyThreadSafetyMode.NONE) {
+            NdkToolchain.configureNdkToolkit(project, bugsnag, variant)
+        }
+
         variant.outputs.configureEach { output ->
             check(output is ApkVariantOutput) {
                 "Expected variant output to be ApkVariantOutput but found ${output.javaClass}"
@@ -220,6 +225,7 @@ class BugsnagPlugin : Plugin<Project> {
                     bugsnag.failOnUploadError,
                     mappingFilesProvider
                 )
+
                 else -> null
             }
 
@@ -233,6 +239,7 @@ class BugsnagPlugin : Plugin<Project> {
                     proguardUploadClientProvider,
                     generateProguardTaskProvider
                 ).dependsOn(manifestTaskProvider)
+
                 else -> null
             }
             val ndkSoMappingOutput = "$NDK_SO_MAPPING_DIR/${output.name}"
@@ -242,10 +249,11 @@ class BugsnagPlugin : Plugin<Project> {
                         project,
                         variant,
                         output,
-                        bugsnag.objdumpPaths,
+                        ndkToolchain,
                         getSharedObjectSearchPaths(project, bugsnag, android),
                         ndkSoMappingOutput
                     )
+
                 else -> null
             }
             val uploadNdkMappingProvider = when {
@@ -259,6 +267,7 @@ class BugsnagPlugin : Plugin<Project> {
                         ndkSoMappingOutput
                     )
                 }
+
                 else -> null
             }
 
@@ -269,10 +278,11 @@ class BugsnagPlugin : Plugin<Project> {
                     BugsnagGenerateUnitySoMappingTask.register(
                         project,
                         output,
-                        bugsnag.objdumpPaths,
+                        ndkToolchain,
                         unityMappingDir,
                         "$UNITY_SO_COPY_DIR/${output.name}"
                     )
+
                 else -> null
             }
             val uploadUnityMappingProvider = when {
@@ -286,6 +296,7 @@ class BugsnagPlugin : Plugin<Project> {
                         unityMappingDir
                     )
                 }
+
                 else -> null
             }
 
@@ -297,6 +308,7 @@ class BugsnagPlugin : Plugin<Project> {
                     bugsnag,
                     manifestInfoProvider
                 )?.dependsOn(manifestTaskProvider)
+
                 else -> null
             }
 
