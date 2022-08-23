@@ -112,6 +112,16 @@ Then('{int} requests are valid for the android unity NDK mapping API and match t
   end
 end
 
+Then('{int} requests are valid for the android so symbol mapping API and match the following:') do |request_count, data_table|
+  requests = get_requests_with_field('build', 'soFile')
+  assert_equal(request_count, requests.length, 'Wrong number of android .so symbol mapping API requests')
+  Maze::Assertions::RequestSetAssertions.assert_requests_match requests, data_table
+
+  requests.each do |request|
+    valid_android_so_symbol_mapping_api?(request[:body])
+  end
+end
+
 Then('{int} requests are valid for the JS source map API and match the following:') do |request_count, data_table|
   requests = get_requests_with_field('build', 'sourceMap')
   assert_equal(request_count, requests.length, 'Wrong number of JS source map API requests')
@@ -174,16 +184,24 @@ end
 
 def valid_android_mapping_api?(request_body)
   valid_mapping_api?(request_body)
+  assert_not_nil(request_body['buildUUID'])
   assert_not_nil(request_body['proguard'])
 end
 
 def valid_android_ndk_mapping_api?(request_body)
   valid_mapping_api?(request_body)
+  assert_not_nil(request_body['buildUUID'])
   assert_not_nil(request_body['soSymbolFile'])
+end
+
+def valid_android_so_symbol_mapping_api?(request_body)
+  valid_mapping_api?(request_body)
+  assert_not_nil(request_body['soFile'])
 end
 
 def valid_android_unity_ndk_mapping_api?(request_body)
   valid_mapping_api?(request_body)
+  assert_not_nil(request_body['buildUUID'])
   assert_not_nil(request_body['soSymbolTableFile'])
 end
 
@@ -191,7 +209,6 @@ def valid_mapping_api?(request_body)
   assert_equal($api_key, request_body['apiKey'])
   assert_not_nil(request_body['appId'])
   assert_not_nil(request_body['versionCode'])
-  assert_not_nil(request_body['buildUUID'])
   assert_not_nil(request_body['versionName'])
 end
 

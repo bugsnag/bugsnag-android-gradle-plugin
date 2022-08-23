@@ -257,7 +257,8 @@ class BugsnagPlugin : Plugin<Project> {
                 else -> null
             }
             val uploadNdkMappingProvider = when {
-                ndkEnabled && generateNdkMappingProvider != null -> {
+                ndkEnabled && generateNdkMappingProvider != null
+                    && ndkToolchain.preferredMappingTool() == NdkToolchain.MappingTool.OBJDUMP -> {
                     BugsnagUploadSharedObjectTask.registerUploadNdkTask(
                         project,
                         output,
@@ -267,6 +268,14 @@ class BugsnagPlugin : Plugin<Project> {
                         ndkSoMappingOutput
                     )
                 }
+
+                ndkEnabled && generateNdkMappingProvider != null -> BugsnagUploadSoSymTask.register(
+                    project,
+                    output,
+                    generateNdkMappingProvider,
+                    httpClientHelperProvider,
+                    ndkUploadClientProvider
+                )
 
                 else -> null
             }

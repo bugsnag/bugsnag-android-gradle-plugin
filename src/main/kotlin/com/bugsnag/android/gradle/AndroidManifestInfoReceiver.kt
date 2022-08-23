@@ -1,10 +1,10 @@
 package com.bugsnag.android.gradle
 
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 
 interface AndroidManifestInfoReceiver {
-    @get:Input
+    @get:InputFile
     val manifestInfo: RegularFileProperty
 }
 

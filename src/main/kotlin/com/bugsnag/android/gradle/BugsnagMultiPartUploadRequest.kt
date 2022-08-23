@@ -4,21 +4,12 @@ import com.bugsnag.android.gradle.internal.runRequestWithRetries
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import org.gradle.api.DefaultTask
 import java.io.IOException
 
 /**
- * Task to upload ProGuard mapping files to Bugsnag.
- *
- * Reads meta-data tags from the project's AndroidManifest.xml to extract a
- * build UUID (injected by BugsnagManifestTask) and a Bugsnag API Key:
- *
- * https://developer.android.com/guide/topics/manifest/manifest-intro.html
- * https://developer.android.com/guide/topics/manifest/meta-data-element.html
- *
- * This task must be called after ProGuard mapping files are generated, so
- * it is usually safe to have this be the absolute last task executed during
- * a build.
+ * Wrapper for common Bugsnag HTTP multipart upload behaviours.
  */
 class BugsnagMultiPartUploadRequest(
     private val failOnUploadError: Boolean,
@@ -28,13 +19,10 @@ class BugsnagMultiPartUploadRequest(
 ) {
 
     fun uploadMultipartEntity(
-        manifestInfo: AndroidManifestInfo,
         retryCount: Int,
-        action: (MultipartBody.Builder) -> Unit
+        bodyBuilder: BugsnagMultiPartUploadRequest.(MultipartBody.Builder) -> Unit
     ): String {
-        val builder = buildMultipartBody(manifestInfo, overwrite)
-        action(builder)
-        val body = builder.build()
+        val body = createMultipartBody(bodyBuilder)
 
         return try {
             runRequestWithRetries(retryCount) {
@@ -48,7 +36,21 @@ class BugsnagMultiPartUploadRequest(
         }
     }
 
-    private fun uploadToServer(body: MultipartBody): String? {
+    fun createMultipartBody(bodyBuilder: BugsnagMultiPartUploadRequest.(MultipartBody.Builder) -> Unit): MultipartBody {
+        return buildMultipartBody(overwrite)
+            .also { bodyBuilder(it) }
+            .build()
+    }
+
+    fun MultipartBody.Builder.addAndroidManifestInfo(manifestInfo: AndroidManifestInfo): MultipartBody.Builder {
+        return addFormDataPart("apiKey", manifestInfo.apiKey)
+            .addFormDataPart("appId", manifestInfo.applicationId)
+            .addFormDataPart("versionCode", manifestInfo.versionCode)
+            .addFormDataPart("versionName", manifestInfo.versionName)
+            .addFormDataPart("buildUUID", manifestInfo.buildUUID)
+    }
+
+    fun <R> uploadRequest(body: MultipartBody, responseHandler: (Response) -> R): R {
         // Make the request
         val request = Request.Builder()
             .url(endpoint)
@@ -56,28 +58,30 @@ class BugsnagMultiPartUploadRequest(
             .build()
 
         okHttpClient.newCall(request).execute().use { response ->
+            return responseHandler(response)
+        }
+    }
+
+    private fun uploadToServer(body: MultipartBody): String? {
+        return uploadRequest(body) { response ->
             if (!response.isSuccessful) {
                 throw IOException("Bugsnag upload failed with code ${response.code}")
             }
-            return response.body?.string()
+
+            response.body?.string()
         }
     }
 
     companion object {
 
-        internal fun buildMultipartBody(manifestInfo: AndroidManifestInfo, overwrite: Boolean): MultipartBody.Builder {
-            val builder = MultipartBody.Builder()
+        internal fun buildMultipartBody(overwrite: Boolean): MultipartBody.Builder {
+            return MultipartBody.Builder()
+                .apply {
+                    if (overwrite) {
+                        addFormDataPart("overwrite", "true")
+                    }
+                }
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("apiKey", manifestInfo.apiKey)
-                .addFormDataPart("appId", manifestInfo.applicationId)
-                .addFormDataPart("versionCode", manifestInfo.versionCode)
-                .addFormDataPart("buildUUID", manifestInfo.buildUUID)
-                .addFormDataPart("versionName", manifestInfo.versionName)
-
-            if (overwrite) {
-                builder.addFormDataPart("overwrite", "true")
-            }
-            return builder
         }
 
         internal fun <T> from(
