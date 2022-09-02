@@ -11,22 +11,10 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.StopExecutionException
 import org.gradle.util.VersionNumber
 import java.io.File
-
-private val osName = when {
-    Os.isFamily(Os.FAMILY_MAC) -> "darwin-x86_64"
-    Os.isFamily(Os.FAMILY_UNIX) -> "linux-x86_64"
-    Os.isFamily(Os.FAMILY_WINDOWS) -> {
-        when {
-            "x86" == System.getProperty("os.arch") -> "windows"
-            else -> "windows-x86_64"
-        }
-    }
-
-    else -> null
-}
 
 abstract class NdkToolchain {
     @get:Input
@@ -38,7 +26,38 @@ abstract class NdkToolchain {
     @get:Input
     abstract val overrides: MapProperty<Abi, String>
 
+    @get:Input
+    @get:Optional
+    abstract val bugsnagNdkVersion: Property<String>
+
     fun preferredMappingTool(): MappingTool {
+        var legacyUploadRequired = bugsnagNdkVersion.orNull
+            ?.let { VersionNumber.parse(it) }
+            ?.let { it < MIN_BUGSNAG_ANDROID_VERSION }
+        if (legacyUploadRequired == null) {
+//            logger.warn(
+//                "Cannot detect Bugsnag SDK version for variant ${variant.name}, assuming a modern version is " +
+//                    "being used. This can cause problems with NDK symbols if older versions are being used. " +
+//                    "Please either specify the Bugsnag SDK version for ${variant.name} directly." +
+//                    "See https://docs.bugsnag.com/api/ndk-symbol-mapping-upload/ for details."
+//            )
+
+            legacyUploadRequired = false
+        }
+
+        if (!useLegacyNdkSymbolUpload.get() && legacyUploadRequired) {
+            throw StopExecutionException(
+                "Your Bugsnag SDK configured for variant does not support the new NDK " +
+                    "symbols upload mechanism. Please set legacyNDKSymbolsUpload or upgrade your " +
+                    "Bugsnag SDK. See https://docs.bugsnag.com/api/ndk-symbol-mapping-upload/ for details."
+            )
+//            throw StopExecutionException(
+//                "Your Bugsnag SDK configured for variant ${variant.name} does not support the new NDK " +
+//                    "symbols upload mechanism. Please set legacyNDKSymbolsUpload or upgrade your " +
+//                    "Bugsnag SDK. See https://docs.bugsnag.com/api/ndk-symbol-mapping-upload/ for details."
+//            )
+        }
+
         // useLegacyNdkSymbolUpload force overrides any defaults or options
         if (useLegacyNdkSymbolUpload.get()) {
             return MappingTool.OBJDUMP
@@ -46,7 +65,7 @@ abstract class NdkToolchain {
 
         val ndkVersion = version.get()
         return when {
-            ndkVersion >= VersionNumber.version(23, 0) -> MappingTool.OBJCOPY
+            ndkVersion >= MIN_NDK_OBJCOPY_VERSION -> MappingTool.OBJCOPY
             else -> MappingTool.OBJDUMP
         }
     }
@@ -58,6 +77,7 @@ abstract class NdkToolchain {
         baseDir.set(other.baseDir)
         overrides.set(other.overrides)
         useLegacyNdkSymbolUpload.set(other.useLegacyNdkSymbolUpload)
+        bugsnagNdkVersion.set(other.bugsnagNdkVersion)
     }
 
     private fun executableName(cmdName: String): String {
@@ -75,12 +95,21 @@ abstract class NdkToolchain {
     }
 
     fun objcopyForAbi(abi: Abi): File {
-        val objdumpOverrides = overrides.get()
+        val objcopyOverrides = overrides.get()
 
-        return objdumpOverrides[abi]?.let { File(it) } ?: File(
-            baseDir.get(),
-            "toolchains/llvm/prebuilt/$osName/bin/${executableName("llvm-objcopy")}"
-        )
+        return objcopyOverrides[abi]?.let { File(it) }
+            ?: locateObjcopy(abi)
+    }
+
+    private fun locateObjcopy(abi: Abi): File {
+        val relativeExecutablePath = when {
+            isLLVMPreferred.get() -> "toolchains/llvm/prebuilt/$osName/bin/${executableName("llvm-objcopy")}"
+            else ->
+                "toolchains/${abi.toolchainPrefix}-4.9/prebuilt/" +
+                    "$osName/bin/${abi.objdumpPrefix}-${executableName("objcopy")}"
+        }
+
+        return File(baseDir.get(), relativeExecutablePath)
     }
 
     enum class MappingTool {
@@ -89,6 +118,35 @@ abstract class NdkToolchain {
     }
 
     companion object {
+        /**
+         * Minimum `bugsnag-android` version where the new symbol uploading is available, using `objcopy` to produce
+         * the symbol files instead of `objdump`
+         */
+        internal val MIN_BUGSNAG_ANDROID_VERSION = VersionNumber.version(5, 26)
+
+        /**
+         * The minimum NDK version where we will use `objcopy` instead of `objdump` to produce the symbol files
+         */
+        internal val MIN_NDK_OBJCOPY_VERSION = VersionNumber.version(21)
+
+        /**
+         * The minimum NDK version where we will use the LLVM toolchain instead of the GNU toolchain
+         */
+        internal val MIN_NDK_LLVM_VERSION = VersionNumber.version(23)
+
+        private val osName = when {
+            Os.isFamily(Os.FAMILY_MAC) -> "darwin-x86_64"
+            Os.isFamily(Os.FAMILY_UNIX) -> "linux-x86_64"
+            Os.isFamily(Os.FAMILY_WINDOWS) -> {
+                when {
+                    "x86" == System.getProperty("os.arch") -> "windows"
+                    else -> "windows-x86_64"
+                }
+            }
+
+            else -> null
+        }
+
         /*
          * SdkComponents.ndkDirectory
          * https://developer.android.com/reference/tools/gradle-api/7.2/com/android/build/api/dsl/SdkComponents#ndkDirectory()
@@ -110,13 +168,20 @@ abstract class NdkToolchain {
             }
         }
 
-        private fun isLegacyMappingRequired(variant: ApkVariant): Boolean? {
-            val bugsnagAndroidCoreVersion = variant.compileConfiguration.allDependencyConstraints
-                .find { it.group == "com.bugsnag" && it.name == "bugsnag-plugin-android-ndk" }
-                ?.version
-                ?: return null
+        private fun getBugsnagAndroidNDKVersion(variant: ApkVariant): String? {
+            try {
+                val bugsnagAndroidCoreVersion = variant.compileConfiguration.resolvedConfiguration.resolvedArtifacts
+                    .find {
+                        it.moduleVersion.id.group == "com.bugsnag" &&
+                            it.moduleVersion.id.name == "bugsnag-plugin-android-ndk"
+                    }
+                    ?.moduleVersion?.id?.version
+                    ?: return null
 
-            return VersionNumber.parse(bugsnagAndroidCoreVersion) < VersionNumber.version(5, 26)
+                return bugsnagAndroidCoreVersion
+            } catch (e: Exception) {
+                return null
+            }
         }
 
         fun configureNdkToolkit(
@@ -125,36 +190,18 @@ abstract class NdkToolchain {
             variant: ApkVariant
         ): NdkToolchain {
             val useLegacyNdkSymbolUpload = bugsnag.useLegacyNdkSymbolUpload.get()
-            var legacyUploadRequired = isLegacyMappingRequired(variant)
-
-            if (legacyUploadRequired == null) {
-                project.logger.warn(
-                    "Cannot detect Bugsnag SDK version for variant ${variant.name}, assuming a modern version is " +
-                        "being used. This can cause problems with NDK symbols if older versions are being used. " +
-                        "Please either specify the Bugsnag SDK version for ${variant.name} directly." +
-                        "See https://docs.bugsnag.com/api/ndk-symbol-mapping-upload/ for details."
-                )
-
-                legacyUploadRequired = false
-            }
-
-            if (!useLegacyNdkSymbolUpload && legacyUploadRequired) {
-                throw StopExecutionException(
-                    "Your Bugsnag SDK configured for variant ${variant.name} does not support the new NDK " +
-                        "symbols upload mechanism. Please set legacyNDKSymbolsUpload or upgrade your " +
-                        "Bugsnag SDK. See https://docs.bugsnag.com/api/ndk-symbol-mapping-upload/ for details."
-                )
-            }
-
             val overrides = bugsnag.objdumpPaths.map { it.mapKeys { (abi, _) -> Abi.findByName(abi)!! } }
+
             val ndkToolchain = project.objects.newInstance<NdkToolchain>()
             ndkToolchain.baseDir.set(ndkToolchainDirectoryFor(project))
             ndkToolchain.useLegacyNdkSymbolUpload.set(useLegacyNdkSymbolUpload)
             ndkToolchain.overrides.set(overrides)
+            ndkToolchain.bugsnagNdkVersion.set(project.provider { getBugsnagAndroidNDKVersion(variant) })
 
             return ndkToolchain
         }
     }
 }
 
-val NdkToolchain.version get() = baseDir.map { VersionNumber.parse(it.name) }
+private val NdkToolchain.version get() = baseDir.map { VersionNumber.parse(it.name) }
+private val NdkToolchain.isLLVMPreferred get() = version.map { it >= NdkToolchain.MIN_NDK_LLVM_VERSION }
