@@ -66,7 +66,7 @@ def setup_and_run_script(module_config, bugsnag_config, script_path, variant = n
 end
 
 When("I build the failing {string} on AGP {string} using the {string} bugsnag config") do |module_config, agp_version, bugsnag_config|
-steps %Q{
+  steps %Q{
     When I set environment variable "AGP_VERSION" to "#{agp_version}"
     And I build the failing "#{module_config}" using the "#{bugsnag_config}" bugsnag config
 }
@@ -197,6 +197,14 @@ end
 def valid_android_so_symbol_mapping_api?(request_body)
   valid_mapping_api?(request_body)
   assert_not_nil(request_body['soFile'])
+
+  gzipped_part = request_body['soFile']
+  archive = Zlib::GzipReader.new(StringIO.new(gzipped_part))
+
+  # check that decompressed this is a valid ELF file:
+  # https://en.wikipedia.org/wiki/Executable_and_Linkable_Format#File_header
+  header = archive.read(4)
+  assert_equal("\x7f\x45\x4c\x46", header, 'not a valid ELF file')
 end
 
 def valid_android_unity_ndk_mapping_api?(request_body)

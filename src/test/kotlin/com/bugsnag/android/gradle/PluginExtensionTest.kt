@@ -79,7 +79,7 @@ class PluginExtensionTest {
 
         // ndk/unity upload defaults to false
         val plugin = proj.plugins.findPlugin(BugsnagPlugin::class.java)!!
-        assertFalse(plugin.isUnityLibraryUploadEnabled(bugsnag, android))
+        assertFalse(BugsnagGenerateUnitySoMappingTask.isUnityLibraryUploadEnabled(bugsnag, android))
         assertFalse(plugin.isNdkUploadEnabled(bugsnag, android))
         assertFalse(plugin.isReactNativeUploadEnabled(bugsnag))
         assertEquals(emptyList<File>(), plugin.getSharedObjectSearchPaths(proj, bugsnag, android))
@@ -143,7 +143,7 @@ class PluginExtensionTest {
 
         // ndk/unity upload overridden to true
         val plugin = proj.plugins.findPlugin(BugsnagPlugin::class.java)!!
-        assertTrue(plugin.isUnityLibraryUploadEnabled(bugsnag, android))
+        assertTrue(BugsnagGenerateUnitySoMappingTask.isUnityLibraryUploadEnabled(bugsnag, android))
         assertTrue(plugin.isNdkUploadEnabled(bugsnag, android))
         assertTrue(plugin.isReactNativeUploadEnabled(bugsnag))
         assertEquals("http://localhost:1234", bugsnag.endpoint.get())
@@ -168,7 +168,7 @@ class PluginExtensionTest {
         `when`(cmake.path).thenReturn(File("/users/sdk/cmake"))
 
         // ndk/unity upload overridden to true
-        assertTrue(plugin.isUnityLibraryUploadEnabled(bugsnag, android))
+        assertTrue(BugsnagGenerateUnitySoMappingTask.isUnityLibraryUploadEnabled(bugsnag, android))
         assertTrue(plugin.isNdkUploadEnabled(bugsnag, android))
         val expected = listOf(
             File(proj.projectDir, "src/main/jniLibs"),
@@ -198,7 +198,7 @@ class PluginExtensionTest {
         `when`(aaptOptions.noCompress).thenReturn(mutableListOf(".unity3d"))
 
         // ndk/unity uploads overridden to true
-        assertTrue(plugin.isUnityLibraryUploadEnabled(bugsnag, android))
+        assertTrue(BugsnagGenerateUnitySoMappingTask.isUnityLibraryUploadEnabled(bugsnag, android))
         assertTrue(plugin.isNdkUploadEnabled(bugsnag, android))
         val expected = listOf(
             File(proj.projectDir, "src/main/jniLibs"),

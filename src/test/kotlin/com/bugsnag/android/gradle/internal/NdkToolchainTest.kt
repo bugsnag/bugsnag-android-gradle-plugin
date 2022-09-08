@@ -89,6 +89,7 @@ private class TestNdkToolchainImpl(
     override val useLegacyNdkSymbolUpload: Property<Boolean> = Mockito.mock(Property::class.java) as Property<Boolean>
     override val overrides: MapProperty<Abi, String> = Mockito.mock(MapProperty::class.java) as MapProperty<Abi, String>
     override val bugsnagNdkVersion: Property<String> = Mockito.mock(Property::class.java) as Property<String>
+    override val variantName: Property<String> = Mockito.mock(Property::class.java) as Property<String>
 
     init {
         whenMock(this.baseDir.get()).thenReturn(baseDir)

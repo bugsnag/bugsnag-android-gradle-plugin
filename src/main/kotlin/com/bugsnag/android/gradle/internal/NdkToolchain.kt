@@ -4,9 +4,12 @@ import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.ApkVariant
 import com.bugsnag.android.gradle.Abi
+import com.bugsnag.android.gradle.BugsnagGenerateUnitySoMappingTask
 import com.bugsnag.android.gradle.BugsnagPluginExtension
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Project
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -30,32 +33,32 @@ abstract class NdkToolchain {
     @get:Optional
     abstract val bugsnagNdkVersion: Property<String>
 
+    @get:Input
+    abstract val variantName: Property<String>
+
+    private val logger: Logger = Logging.getLogger(this::class.java)
+
     fun preferredMappingTool(): MappingTool {
         var legacyUploadRequired = bugsnagNdkVersion.orNull
             ?.let { VersionNumber.parse(it) }
             ?.let { it < MIN_BUGSNAG_ANDROID_VERSION }
         if (legacyUploadRequired == null) {
-//            logger.warn(
-//                "Cannot detect Bugsnag SDK version for variant ${variant.name}, assuming a modern version is " +
-//                    "being used. This can cause problems with NDK symbols if older versions are being used. " +
-//                    "Please either specify the Bugsnag SDK version for ${variant.name} directly." +
-//                    "See https://docs.bugsnag.com/api/ndk-symbol-mapping-upload/ for details."
-//            )
+            logger.warn(
+                "Cannot detect Bugsnag SDK version for variant ${variantName.get()}, assuming a modern version is " +
+                    "being used. This can cause problems with NDK symbols if older versions are being used. " +
+                    "Please either specify the Bugsnag SDK version for ${variantName.get()} directly." +
+                    "See https://docs.bugsnag.com/api/ndk-symbol-mapping-upload/ for details."
+            )
 
             legacyUploadRequired = false
         }
 
         if (!useLegacyNdkSymbolUpload.get() && legacyUploadRequired) {
             throw StopExecutionException(
-                "Your Bugsnag SDK configured for variant does not support the new NDK " +
+                "Your Bugsnag SDK configured for variant ${variantName.get()} does not support the new NDK " +
                     "symbols upload mechanism. Please set legacyNDKSymbolsUpload or upgrade your " +
                     "Bugsnag SDK. See https://docs.bugsnag.com/api/ndk-symbol-mapping-upload/ for details."
             )
-//            throw StopExecutionException(
-//                "Your Bugsnag SDK configured for variant ${variant.name} does not support the new NDK " +
-//                    "symbols upload mechanism. Please set legacyNDKSymbolsUpload or upgrade your " +
-//                    "Bugsnag SDK. See https://docs.bugsnag.com/api/ndk-symbol-mapping-upload/ for details."
-//            )
         }
 
         // useLegacyNdkSymbolUpload force overrides any defaults or options
@@ -78,6 +81,7 @@ abstract class NdkToolchain {
         overrides.set(other.overrides)
         useLegacyNdkSymbolUpload.set(other.useLegacyNdkSymbolUpload)
         bugsnagNdkVersion.set(other.bugsnagNdkVersion)
+        variantName.set(other.variantName)
     }
 
     private fun executableName(cmdName: String): String {
@@ -169,18 +173,17 @@ abstract class NdkToolchain {
         }
 
         private fun getBugsnagAndroidNDKVersion(variant: ApkVariant): String? {
-            try {
+            return try {
                 val bugsnagAndroidCoreVersion = variant.compileConfiguration.resolvedConfiguration.resolvedArtifacts
                     .find {
                         it.moduleVersion.id.group == "com.bugsnag" &&
                             it.moduleVersion.id.name == "bugsnag-plugin-android-ndk"
                     }
                     ?.moduleVersion?.id?.version
-                    ?: return null
 
-                return bugsnagAndroidCoreVersion
+                bugsnagAndroidCoreVersion
             } catch (e: Exception) {
-                return null
+                null
             }
         }
 
@@ -196,7 +199,14 @@ abstract class NdkToolchain {
             ndkToolchain.baseDir.set(ndkToolchainDirectoryFor(project))
             ndkToolchain.useLegacyNdkSymbolUpload.set(useLegacyNdkSymbolUpload)
             ndkToolchain.overrides.set(overrides)
-            ndkToolchain.bugsnagNdkVersion.set(project.provider { getBugsnagAndroidNDKVersion(variant) })
+
+            // we disable the bugsnag-android version check if Unity is enabled otherwise we end up with mutation errors
+            if (!BugsnagGenerateUnitySoMappingTask
+                .isUnityLibraryUploadEnabled(bugsnag, project.extensions.findByType(BaseExtension::class.java)!!)
+            ) {
+                ndkToolchain.bugsnagNdkVersion.set(project.provider { getBugsnagAndroidNDKVersion(variant) })
+            }
+            ndkToolchain.variantName.set(variant.name)
 
             return ndkToolchain
         }
