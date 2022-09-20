@@ -203,7 +203,7 @@ class BugsnagPlugin : Plugin<Project> {
             }
             val jvmMinificationEnabled = project.isJvmMinificationEnabled(variant)
             val ndkEnabled = isNdkUploadEnabled(bugsnag, android)
-            val unityEnabled = isUnityLibraryUploadEnabled(bugsnag, android)
+            val unityEnabled = BugsnagGenerateUnitySoMappingTask.isUnityLibraryUploadEnabled(bugsnag, android)
             val reactNativeEnabled = isReactNativeUploadEnabled(bugsnag)
 
             // register bugsnag tasks
@@ -257,7 +257,8 @@ class BugsnagPlugin : Plugin<Project> {
                 else -> null
             }
             val uploadNdkMappingProvider = when {
-                ndkEnabled && generateNdkMappingProvider != null -> {
+                ndkEnabled && generateNdkMappingProvider != null
+                    && ndkToolchain.preferredMappingTool() == NdkToolchain.MappingTool.OBJDUMP -> {
                     BugsnagUploadSharedObjectTask.registerUploadNdkTask(
                         project,
                         output,
@@ -267,6 +268,14 @@ class BugsnagPlugin : Plugin<Project> {
                         ndkSoMappingOutput
                     )
                 }
+
+                ndkEnabled && generateNdkMappingProvider != null -> BugsnagUploadSoSymTask.register(
+                    project,
+                    output,
+                    generateNdkMappingProvider,
+                    httpClientHelperProvider,
+                    ndkUploadClientProvider
+                )
 
                 else -> null
             }
@@ -567,40 +576,13 @@ class BugsnagPlugin : Plugin<Project> {
         }
     }
 
-    /**
-     * Determines whether SO mapping files should be generated for the
-     * libunity.so file in Unity projects.
-     */
-    @Suppress("SENSELESS_COMPARISON")
-    internal fun isUnityLibraryUploadEnabled(
-        bugsnag: BugsnagPluginExtension,
-        android: BaseExtension
-    ): Boolean {
-        val enabled = bugsnag.uploadNdkUnityLibraryMappings.orNull
-        return when {
-            enabled != null -> enabled
-            else -> {
-                // workaround to avoid exception as noCompress was null until AGP 4.1
-                runCatching {
-                    val clz = android.aaptOptions.javaClass
-                    val method = clz.getMethod("getNoCompress")
-                    val noCompress = method.invoke(android.aaptOptions)
-                    if (noCompress is Collection<*>) {
-                        return noCompress.contains(".unity3d")
-                    }
-                }
-                return false
-            }
-        }
-    }
-
     internal fun isNdkUploadEnabled(
         bugsnag: BugsnagPluginExtension,
         android: BaseExtension
     ): Boolean {
         val usesCmake = android.externalNativeBuild.cmake.path != null
         val usesNdkBuild = android.externalNativeBuild.ndkBuild.path != null
-        val unityEnabled = isUnityLibraryUploadEnabled(bugsnag, android)
+        val unityEnabled = BugsnagGenerateUnitySoMappingTask.isUnityLibraryUploadEnabled(bugsnag, android)
         val default = usesCmake || usesNdkBuild || unityEnabled
         return bugsnag.uploadNdkMappings.getOrElse(default)
     }
@@ -625,7 +607,7 @@ class BugsnagPlugin : Plugin<Project> {
         android: BaseExtension
     ): List<File> {
         val searchPaths = bugsnag.sharedObjectPaths.get().toMutableList()
-        val unityEnabled = isUnityLibraryUploadEnabled(bugsnag, android)
+        val unityEnabled = BugsnagGenerateUnitySoMappingTask.isUnityLibraryUploadEnabled(bugsnag, android)
         val ndkEnabled = isNdkUploadEnabled(bugsnag, android)
 
         if (unityEnabled && ndkEnabled) {

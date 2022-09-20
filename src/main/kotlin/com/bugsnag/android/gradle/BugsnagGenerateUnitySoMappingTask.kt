@@ -1,5 +1,6 @@
 package com.bugsnag.android.gradle
 
+import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.ApkVariantOutput
 import com.bugsnag.android.gradle.internal.AbstractSoMappingTask
 import com.bugsnag.android.gradle.internal.NdkToolchain
@@ -203,6 +204,33 @@ internal abstract class BugsnagGenerateUnitySoMappingTask @Inject constructor(
             val extensionMatch = name.endsWith(".sym.so") || name.endsWith(".sym")
             val nameMatch = name.contains("libunity") || name.contains("libil2cpp")
             return extensionMatch && nameMatch
+        }
+
+        /**
+         * Determines whether SO mapping files should be generated for the
+         * libunity.so file in Unity projects.
+         */
+        @Suppress("SENSELESS_COMPARISON")
+        internal fun isUnityLibraryUploadEnabled(
+            bugsnag: BugsnagPluginExtension,
+            android: BaseExtension
+        ): Boolean {
+            val enabled = bugsnag.uploadNdkUnityLibraryMappings.orNull
+            return when {
+                enabled != null -> enabled
+                else -> {
+                    // workaround to avoid exception as noCompress was null until AGP 4.1
+                    runCatching {
+                        val clz = android.aaptOptions.javaClass
+                        val method = clz.getMethod("getNoCompress")
+                        val noCompress = method.invoke(android.aaptOptions)
+                        if (noCompress is Collection<*>) {
+                            return noCompress.contains(".unity3d")
+                        }
+                    }
+                    return false
+                }
+            }
         }
 
         override fun taskNameFor(variantOutputName: String) =

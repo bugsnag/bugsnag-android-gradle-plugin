@@ -125,10 +125,10 @@ internal open class BugsnagUploadSharedObjectTask @Inject constructor(
         val mappingFileHash = mappingFile.md5HashCode()
         val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileHash) {
             logger.lifecycle(
-                "Bugsnag: Uploading SO mapping file for " +
-                    "$sharedObjectName ($arch) from $mappingFile"
+                "Bugsnag: Uploading SO mapping file for $sharedObjectName ($arch) from $mappingFile"
             )
-            request.uploadMultipartEntity(manifestInfo, retryCount.get()) { builder ->
+            request.uploadMultipartEntity(retryCount.get()) { builder ->
+                builder.addAndroidManifestInfo(manifestInfo)
                 builder.addFormDataPart(soUploadKey, mappingFile.name, mappingFile.asRequestBody())
                 builder.addFormDataPart("arch", arch)
                 builder.addFormDataPart("sharedObjectName", sharedObjectName)

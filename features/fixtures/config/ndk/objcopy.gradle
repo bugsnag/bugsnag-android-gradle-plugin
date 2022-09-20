@@ -1,0 +1,6 @@
+dependencies {
+    implementation 'com.bugsnag:bugsnag-android:5.26.0'
+}
+
+android.ndkVersion = "23.0.7599858"
+bugsnag.useLegacyNdkSymbolUpload = false
