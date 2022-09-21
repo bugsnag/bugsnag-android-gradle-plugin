@@ -1,3 +1,8 @@
+## TBD
+
+* Fixed a bug where using ndkBuild generated empty some mapping files which could not be uploaded
+  [#478](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/478)
+
 ## 7.3.0 (2022-07-27)
 
 * Emit an error if the ReactNative bundle task cannot be found instead of silently failing

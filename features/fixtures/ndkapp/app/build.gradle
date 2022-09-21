@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.bugsnag.android.gradle'
 
-ext.abiCodes = ['arm64-v8a':2, 'armeabi-v7a':3, 'x86':4, 'x86_64':5]
+ext.abiCodes = ['arm64-v8a': 2, 'armeabi-v7a': 3, 'x86': 4, 'x86_64': 5]
 
 android {
     compileSdkVersion 29
@@ -29,8 +29,14 @@ android {
         }
     }
     externalNativeBuild {
-        cmake {
-            path "CMakeLists.txt"
+        if (System.getenv("USE_NDK_BUILD") == "true") {
+            ndkBuild {
+                path "src/main/cpp/Android.mk"
+            }
+        } else {
+            cmake {
+                path "CMakeLists.txt"
+            }
         }
     }
     lintOptions {
@@ -78,7 +84,7 @@ bugsnag {
 
     if (objdumpLocation != null) {
         objdumpPaths = [
-            "x86": objdumpLocation,
+            "x86"      : objdumpLocation,
             "arm64-v8a": objdumpLocation
         ]
     }

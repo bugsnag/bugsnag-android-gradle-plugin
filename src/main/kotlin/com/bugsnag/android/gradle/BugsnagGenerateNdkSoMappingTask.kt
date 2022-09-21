@@ -26,6 +26,7 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import javax.inject.Inject
 
@@ -129,19 +130,26 @@ open class BugsnagGenerateNdkSoMappingTask @Inject constructor(
             objdumpPaths: Provider<Map<String, String>>,
             searchPaths: List<File>,
             soMappingOutputPath: String
-        ) = register(project, output) {
-            abi.set(output.getFilter(VariantOutput.FilterType.ABI))
-            objDumpPaths.set(objdumpPaths)
-            manifestInfo.set(BugsnagManifestUuidTask.manifestInfoForOutput(project, output))
+        ): TaskProvider<out BugsnagGenerateNdkSoMappingTask> {
+            val task = register(project, output) {
+                abi.set(output.getFilter(VariantOutput.FilterType.ABI))
+                objDumpPaths.set(objdumpPaths)
+                manifestInfo.set(BugsnagManifestUuidTask.manifestInfoForOutput(project, output))
 
-            val externalNativeBuildTaskUtil = ExternalNativeBuildTaskUtil(project.providers)
+                val externalNativeBuildTaskUtil = ExternalNativeBuildTaskUtil(project.providers)
 
-            searchDirectories.from(searchPaths)
-            variant.externalNativeBuildProviders.forEach { provider ->
-                searchDirectories.from(externalNativeBuildTaskUtil.findSearchPaths(provider))
+                searchDirectories.from(searchPaths)
+                variant.externalNativeBuildProviders.forEach { provider ->
+                    searchDirectories.from(externalNativeBuildTaskUtil.findSearchPaths(provider))
+                }
+                intermediateOutputDir.set(project.layout.buildDirectory.dir(soMappingOutputPath))
             }
-            intermediateOutputDir.set(project.layout.buildDirectory.dir(soMappingOutputPath))
-        }.dependsOn(BugsnagManifestUuidTask.forBuildOutput(project, output))
+
+            task.dependsOn(BugsnagManifestUuidTask.forBuildOutput(project, output))
+            variant.externalNativeBuildProviders.forEach { task.dependsOn(it) }
+
+            return task
+        }
 
         override fun taskNameFor(variantOutputName: String) =
             "generateBugsnagNdk${variantOutputName.capitalize()}Mapping"

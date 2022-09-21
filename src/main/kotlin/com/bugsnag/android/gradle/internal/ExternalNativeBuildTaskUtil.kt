@@ -19,7 +19,9 @@ class ExternalNativeBuildTaskUtil(private val providerFactory: ProviderFactory) 
         }
 
     private fun fixNativeOutputPath(taskFolder: File): File {
-        return taskFolder.parentFile.parentFile.takeIf { it.parentFile.name == "cxx" } ?: taskFolder
+        return taskFolder.parentFile.parentFile.takeIf { it.parentFile.name == "cxx" }
+            ?: taskFolder.parentFile.parentFile.parentFile.takeIf { it.parentFile.name == "cxx" }
+            ?: taskFolder
     }
 
     fun findSearchPaths(buildTask: Provider<ExternalNativeBuildTask>) = arrayOf(
