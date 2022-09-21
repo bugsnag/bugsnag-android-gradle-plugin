@@ -476,13 +476,23 @@ class BugsnagPlugin : Plugin<Project> {
         }
 
         val rnSourceMap = findReactNativeSourcemapFile(project, variant)
-        val rnBundle =
+        var rnBundle =
             BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--bundle-output")
         val dev = BugsnagUploadJsSourceMapTask.findReactNativeTaskArg(rnTask, "--dev")
 
         if (rnBundle == null || dev == null) {
             project.logger.error("Bugsnag: unable to upload JS sourcemaps. Please enable sourcemap + bundle output.")
             return null
+        }
+
+        val enabledHermes = BugsnagUploadJsSourceMapTask.isHermesEnabled(project)
+        if (enabledHermes) {
+            rnBundle = BugsnagUploadJsSourceMapTask.rescueReactNativeSourceBundle(
+                rnTask,
+                rnBundle,
+                project,
+                output
+            )
         }
 
         return BugsnagUploadJsSourceMapTask.register(project, taskName) {

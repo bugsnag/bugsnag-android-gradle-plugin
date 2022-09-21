@@ -10,11 +10,28 @@ Scenario: Source maps are uploaded when assembling an app with the default proje
 
     And 1 requests are valid for the android mapping API and match the following:
       | versionCode | versionName | appId                     |
-      | 5           | 2.45.beta  | com.bugsnag.android.rnapp |
+      | 5           | 2.45.beta   | com.bugsnag.android.rnapp |
 
     And 1 requests are valid for the JS source map API and match the following:
         | appVersionCode | appVersion | overwrite | dev   |
-        | 5              | 2.45.beta  | true     | false |
+        | 5              | 2.45.beta  | true      | false |
+
+Scenario: Source maps are uploaded when assembling a Hermes app with the default project structure
+    Given I set environment variable "RN_ENABLE_HERMES" to "true"
+    When I build the React Native app
+    And I wait to receive 3 builds
+
+    Then 1 requests are valid for the build API and match the following:
+        | appVersionCode | appVersion | buildTool      |
+        | 5              | 2.45.beta  | gradle-android |
+
+    And 1 requests are valid for the android mapping API and match the following:
+        | versionCode | versionName | appId                     |
+        | 5           | 2.45.beta  | com.bugsnag.android.rnapp |
+
+    And 1 requests are valid for the JS source map API and match the following:
+        | appVersionCode | appVersion | overwrite | dev   |
+        | 5              | 2.45.beta  | true      | false |
 
 Scenario: Source maps are uploaded when bundling an app with the default project structure
     And I run the script "features/scripts/bundle_react_native_app.sh" synchronously
