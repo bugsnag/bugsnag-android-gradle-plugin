@@ -23,6 +23,31 @@ Scenario: NDK apps send requests
       | jvmSymbols |
       | com.bugsnag.android.ndkapp.MainActivity |
 
+Scenario: ndkBuild apps send requests
+    Given I set environment variable "USE_NDK_BUILD" to "true"
+    When I build the NDK app
+    And I wait to receive 6 builds
+
+    Then 1 requests are valid for the build API and match the following:
+        | appVersionCode | appVersion | buildTool      |
+        | 1              | 1.0        | gradle-android |
+
+    And 4 requests are valid for the android NDK mapping API and match the following:
+        | arch        | projectRoot | sharedObjectName |
+        | arm64-v8a   | /\S+/       | libnative-lib.so |
+        | armeabi-v7a | /\S+/       | libnative-lib.so |
+        | x86         | /\S+/       | libnative-lib.so |
+        | x86_64      | /\S+/       | libnative-lib.so |
+
+    And 1 requests are valid for the android mapping API and match the following:
+        | appId                      |
+        | com.bugsnag.android.ndkapp |
+
+    And 1 requests have an R8 mapping file with the following symbols:
+        | jvmSymbols |
+        | com.bugsnag.android.ndkapp.MainActivity |
+
+
 Scenario: Custom projectRoot is added to payload
     When I set environment variable "PROJECT_ROOT" to "/repos/custom/my-app"
     And I build the NDK app

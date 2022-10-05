@@ -1,7 +1,6 @@
 package com.bugsnag.android.gradle.internal
 
 import com.bugsnag.android.gradle.BugsnagPluginExtension
-import com.bugsnag.android.gradle.internal.BuildServiceBugsnagHttpClientHelper.Params
 import okhttp3.Authenticator
 import okhttp3.OkHttpClient
 import org.gradle.api.Project
@@ -18,8 +17,10 @@ import java.time.Duration
  * A simple API for providing a shared [OkHttpClient] instance for shared use in upload tasks. This
  * also handles common shared configuration such as timeouts, proxies, etc.
  */
-interface BugsnagHttpClientHelper : AutoCloseable {
-    val okHttpClient: OkHttpClient
+abstract class BugsnagHttpClientHelper : AutoCloseable, BuildService<BugsnagHttpClientHelper.Params> {
+    val okHttpClient: OkHttpClient by lazy {
+        newClient(parameters.timeoutMillis.get())
+    }
 
     override fun close() {
         okHttpClient.dispatcher.executorService.shutdown()
@@ -32,42 +33,19 @@ interface BugsnagHttpClientHelper : AutoCloseable {
             project: Project,
             bugsnag: BugsnagPluginExtension
         ): Provider<out BugsnagHttpClientHelper> {
-            val canUseBuildService = project.gradle.versionNumber() >= GradleVersions.VERSION_6_1
-            return if (canUseBuildService) {
-                project.gradle.sharedServices.registerIfAbsent(
-                    "bugsnagHttpClientHelper",
-                    BuildServiceBugsnagHttpClientHelper::class.java
-                ) { spec ->
-                    // Provide some parameters
-                    spec.parameters.timeoutMillis.set(bugsnag.requestTimeoutMs)
-                }
-            } else {
-                // Reuse instance
-                val client = LegacyBugsnagHttpClientHelper(bugsnag.requestTimeoutMs)
-                project.provider { client }
+            return project.gradle.sharedServices.registerIfAbsent(
+                "bugsnagHttpClientHelper",
+                BugsnagHttpClientHelper::class.java
+            ) { spec ->
+                // Provide some parameters
+                spec.parameters.timeoutMillis.set(bugsnag.requestTimeoutMs)
             }
         }
     }
-}
-
-/** A [BuildService] implementation of [BugsnagHttpClientHelper]. */
-internal abstract class BuildServiceBugsnagHttpClientHelper :
-    BuildService<Params>, BugsnagHttpClientHelper {
 
     interface Params : BuildServiceParameters {
         val timeoutMillis: Property<Long>
     }
-
-    override val okHttpClient: OkHttpClient by lazy {
-        newClient(parameters.timeoutMillis.get())
-    }
-}
-
-/** A simple instance-based [BugsnagHttpClientHelper] for use on Gradle <6.1. */
-class LegacyBugsnagHttpClientHelper(
-    timeoutMillis: Provider<Long>
-) : BugsnagHttpClientHelper {
-    override val okHttpClient: OkHttpClient by lazy { newClient(timeoutMillis.get()) }
 }
 
 internal class ProxyAuthenticator(val user: String, val pass: String) : java.net.Authenticator() {

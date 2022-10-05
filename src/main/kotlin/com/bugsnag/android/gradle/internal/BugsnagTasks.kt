@@ -6,17 +6,8 @@ import com.android.build.gradle.api.BaseVariantOutput
 
 internal const val TASK_JNI_LIBS = "bugsnagInstallJniLibsTask"
 
-internal fun taskNameForGenerateJvmMapping(output: BaseVariantOutput) =
-    "generateBugsnag${output.taskNameSuffix()}Mapping"
-
 internal fun taskNameForUploadJvmMapping(output: BaseVariantOutput) =
     "uploadBugsnag${output.taskNameSuffix()}Mapping"
-
-internal fun taskNameForGenerateNdkMapping(output: BaseVariantOutput) =
-    "generateBugsnagNdk${output.taskNameSuffix()}Mapping"
-
-internal fun taskNameForGenerateUnityMapping(output: BaseVariantOutput) =
-    "generateBugsnagUnity${output.taskNameSuffix()}Mapping"
 
 internal fun taskNameForUploadNdkMapping(output: BaseVariantOutput) =
     "uploadBugsnagNdk${output.taskNameSuffix()}Mapping"
