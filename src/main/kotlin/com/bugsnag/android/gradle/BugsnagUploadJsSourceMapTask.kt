@@ -196,7 +196,7 @@ open class BugsnagUploadJsSourceMapTask @Inject constructor(
                 actions.add(
                     indexToInsert,
                     Action<Task> {
-                        rnSourceBundle.copyTo(rnRescuedSourceBundle)
+                        rnSourceBundle.copyTo(rnRescuedSourceBundle, overwrite = true)
                     }
                 )
 
