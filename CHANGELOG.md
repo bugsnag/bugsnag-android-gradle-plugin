@@ -1,3 +1,10 @@
+## TBD
+
+# Bug Fixes
+
+* Fix FileAlreadyExistsException errors when building ReactNative projects with Hermes
+  [#482](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/482)
+
 ## 7.3.1 (2022-10-05)
 
 * Fixed a bug where using ndkBuild generated empty some mapping files which could not be uploaded
