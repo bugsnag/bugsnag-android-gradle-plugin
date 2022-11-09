@@ -257,21 +257,11 @@ class BugsnagPlugin : Plugin<Project> {
                 else -> null
             }
             val uploadNdkMappingProvider = when {
-                ndkEnabled && generateNdkMappingProvider != null
-                    && ndkToolchain.preferredMappingTool() == NdkToolchain.MappingTool.OBJDUMP -> {
-                    BugsnagUploadSharedObjectTask.registerUploadNdkTask(
-                        project,
-                        output,
-                        httpClientHelperProvider,
-                        ndkUploadClientProvider,
-                        generateNdkMappingProvider,
-                        ndkSoMappingOutput
-                    )
-                }
-
                 ndkEnabled && generateNdkMappingProvider != null -> BugsnagUploadSoSymTask.register(
                     project,
                     output,
+                    ndkToolchain,
+                    BugsnagUploadSoSymTask.UploadType.NDK,
                     generateNdkMappingProvider,
                     httpClientHelperProvider,
                     ndkUploadClientProvider
@@ -296,13 +286,14 @@ class BugsnagPlugin : Plugin<Project> {
             }
             val uploadUnityMappingProvider = when {
                 unityEnabled && generateUnityMappingProvider != null -> {
-                    BugsnagUploadSharedObjectTask.registerUploadUnityTask(
+                    BugsnagUploadSoSymTask.register(
                         project,
                         output,
-                        httpClientHelperProvider,
-                        unityUploadClientProvider,
+                        ndkToolchain,
+                        BugsnagUploadSoSymTask.UploadType.UNITY,
                         generateUnityMappingProvider,
-                        unityMappingDir
+                        httpClientHelperProvider,
+                        unityUploadClientProvider
                     )
                 }
 
