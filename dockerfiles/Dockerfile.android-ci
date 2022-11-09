@@ -51,7 +51,7 @@ RUN gem install bundler
 RUN gem update --system 3.0.6
 
 # Install node, npm and yarn
-RUN curl -fsSL https://deb.nodesource.com/setup_12.x | bash -
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
 RUN apt-get install -y nodejs
 RUN npm install --global yarn
 

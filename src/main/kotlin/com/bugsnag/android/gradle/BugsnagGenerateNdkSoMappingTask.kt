@@ -8,6 +8,8 @@ import com.bugsnag.android.gradle.internal.ExternalNativeBuildTaskUtil
 import com.bugsnag.android.gradle.internal.NdkToolchain
 import com.bugsnag.android.gradle.internal.VariantTaskCompanion
 import com.bugsnag.android.gradle.internal.clearDir
+import com.bugsnag.android.gradle.internal.dependsOn
+import com.bugsnag.android.gradle.internal.forBuildOutput
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
 import org.gradle.api.Project
@@ -18,6 +20,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import javax.inject.Inject
 
@@ -104,17 +107,24 @@ internal abstract class BugsnagGenerateNdkSoMappingTask @Inject constructor(
             ndk: NdkToolchain,
             searchPaths: List<File>,
             soMappingOutputPath: String
-        ) = register(project, output) {
-            abi.set(output.getFilter(VariantOutput.FilterType.ABI))
-            ndkToolchain.set(ndk)
+        ): TaskProvider<out BugsnagGenerateNdkSoMappingTask> {
+            val task = register(project, output) {
+                abi.set(output.getFilter(VariantOutput.FilterType.ABI))
+                ndkToolchain.set(ndk)
 
-            val externalNativeBuildTaskUtil = ExternalNativeBuildTaskUtil(project.providers)
+                val externalNativeBuildTaskUtil = ExternalNativeBuildTaskUtil(project.providers)
 
-            searchDirectories.from(searchPaths)
-            variant.externalNativeBuildProviders.forEach { provider ->
-                searchDirectories.from(externalNativeBuildTaskUtil.findSearchPaths(provider))
+                searchDirectories.from(searchPaths)
+                variant.externalNativeBuildProviders.forEach { provider ->
+                    searchDirectories.from(externalNativeBuildTaskUtil.findSearchPaths(provider))
+                }
+                outputDirectory.set(project.layout.buildDirectory.dir(soMappingOutputPath))
             }
-            outputDirectory.set(project.layout.buildDirectory.dir(soMappingOutputPath))
+
+            task.dependsOn(BugsnagManifestUuidTask.forBuildOutput(project, output))
+            variant.externalNativeBuildProviders.forEach { task.dependsOn(it) }
+
+            return task
         }
 
         override fun taskNameFor(variantOutputName: String) =

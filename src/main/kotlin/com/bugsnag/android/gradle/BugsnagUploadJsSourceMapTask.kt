@@ -1,9 +1,13 @@
 package com.bugsnag.android.gradle
 
 import com.android.build.gradle.api.BaseVariant
+import com.android.build.gradle.api.BaseVariantOutput
+import com.bugsnag.android.gradle.internal.intermediateForRescuedReactNativeBundle
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
+import org.gradle.api.Action
 import org.gradle.api.DefaultTask
+import org.gradle.api.Describable
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
@@ -16,6 +20,7 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
 import javax.inject.Inject
 
 open class BugsnagUploadJsSourceMapTask @Inject constructor(
@@ -169,6 +174,43 @@ open class BugsnagUploadJsSourceMapTask @Inject constructor(
             configurationAction: BugsnagUploadJsSourceMapTask.() -> Unit
         ): TaskProvider<out BugsnagUploadJsSourceMapTask> {
             return project.tasks.register(name, configurationAction)
+        }
+
+        internal fun rescueReactNativeSourceBundle(
+            rnTask: Task,
+            rnBundle: String?,
+            project: Project,
+            output: BaseVariantOutput
+        ): String? {
+            // since the Hermes bundle overwrites the JS bundle in the same Task as the Bundle
+            // is generated, we need to inject an extra Action to save the JS bundle beforehand
+            var rnBundle1 = rnBundle
+            val actions = rnTask.actions.toMutableList()
+            val indexToInsert = actions.indexOfFirst {
+                (it as? Describable)?.displayName?.contains("doLast", ignoreCase = true) == true
+            }
+
+            if (indexToInsert != -1) {
+                val rnSourceBundle = File(rnBundle1)
+                val rnRescuedSourceBundle = intermediateForRescuedReactNativeBundle(project, output)
+                actions.add(
+                    indexToInsert,
+                    Action<Task> {
+                        rnSourceBundle.copyTo(rnRescuedSourceBundle, overwrite = true)
+                    }
+                )
+
+                rnTask.actions = actions
+
+                // make sure the remainder of our Task uses the "rescued" source bundle
+                rnBundle1 = rnRescuedSourceBundle.absolutePath
+            }
+            return rnBundle1
+        }
+
+        internal fun isHermesEnabled(project: Project): Boolean {
+            return project.hasProperty("react") &&
+                (project.property("react") as Map<*, *>)["enableHermes"] == true
         }
     }
 }
