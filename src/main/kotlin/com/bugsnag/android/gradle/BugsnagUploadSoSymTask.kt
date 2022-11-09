@@ -155,8 +155,8 @@ internal abstract class BugsnagUploadSoSymTask : DefaultTask(), AndroidManifestI
 
         private const val VALID_SO_FILE_THRESHOLD = 1024
 
-        fun taskNameFor(variant: BaseVariantOutput) =
-            "uploadBugsnag${variant.baseName.capitalize()}Symbols"
+        fun taskNameFor(variant: BaseVariantOutput, uploadType: UploadType) =
+            "uploadBugsnag${uploadType.name.toLowerCase().capitalize()}${variant.baseName.capitalize()}Mapping"
 
         internal fun requestOutputFileFor(project: Project, output: BaseVariantOutput): Provider<RegularFile> {
             val path = "intermediates/bugsnag/requests/symFor${output.taskNameSuffix()}.json"
@@ -173,7 +173,10 @@ internal abstract class BugsnagUploadSoSymTask : DefaultTask(), AndroidManifestI
             ndkUploadClientProvider: Provider<out UploadRequestClient>,
         ): TaskProvider<BugsnagUploadSoSymTask> {
             val bugsnag = project.extensions.getByType(BugsnagPluginExtension::class.java)
-            return project.tasks.register(taskNameFor(variant), BugsnagUploadSoSymTask::class.java) { task ->
+            return project.tasks.register(
+                taskNameFor(variant, uploadType),
+                BugsnagUploadSoSymTask::class.java
+            ) { task ->
                 task.dependsOn(generateTaskProvider)
                 task.usesService(httpClientHelperProvider)
                 task.usesService(ndkUploadClientProvider)
