@@ -110,3 +110,27 @@ Scenario: Mapping files uploaded for custom sharedObjectPaths
     And 1 requests are valid for the android mapping API and match the following:
         | appId                      |
         | com.bugsnag.android.ndkapp |
+
+Scenario: Mapping fails when using obcopy and an incompatible SDK
+    When I build the NDK app using the "old_sdk_upload_failure" config
+    And I wait for 3 seconds
+    Then I should receive no requests
+
+Scenario: objcopy is used to produce symbols when configured
+    When I build the NDK app using the "objcopy" config
+    And I wait to receive 6 builds
+
+    Then 1 requests are valid for the build API and match the following:
+        | appVersionCode | appVersion | buildTool      |
+        | 1              | 1.0        | gradle-android |
+
+    And 4 requests are valid for the android so symbol mapping API and match the following:
+        | projectRoot | sharedObjectName |
+        | /\S+/       | libnative-lib.so |
+        | /\S+/       | libnative-lib.so |
+        | /\S+/       | libnative-lib.so |
+        | /\S+/       | libnative-lib.so |
+
+    And 1 requests are valid for the android mapping API and match the following:
+        | appId                      |
+        | com.bugsnag.android.ndkapp |

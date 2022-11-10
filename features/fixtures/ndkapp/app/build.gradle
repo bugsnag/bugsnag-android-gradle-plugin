@@ -66,10 +66,6 @@ android {
     }
 }
 
-dependencies {
-    implementation 'com.bugsnag:bugsnag-android:5.9.4'
-}
-
 bugsnag {
     uploadNdkMappings = true
     endpoint = "http://localhost:9339/builds"
@@ -95,3 +91,6 @@ bugsnag {
         ]
     }
 }
+
+def ndkConfig = System.env.BUGSNAG_NDK_CONFIG ?: "standard"
+apply from: "../../config/ndk/${ndkConfig}.gradle"
