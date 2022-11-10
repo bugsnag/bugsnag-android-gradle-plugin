@@ -4,22 +4,24 @@
   <CurrentIssues>
     <ID>ComplexCondition:AndroidManifestParser.kt$AndroidManifestParser$apiKey == null || "" == apiKey || versionCode == null || buildUuid == null || versionName == null || applicationId == null</ID>
     <ID>ComplexCondition:BugsnagPlugin.kt$BugsnagPlugin$!jvmMinificationEnabled &amp;&amp; !ndkEnabled &amp;&amp; !unityEnabled &amp;&amp; !reactNativeEnabled</ID>
-    <ID>LongParameterList:BugsnagGenerateNdkSoMappingTask.kt$BugsnagGenerateNdkSoMappingTask.Companion$( project: Project, variant: BaseVariant, output: ApkVariantOutput, objdumpPaths: Provider&lt;Map&lt;String, String>>, searchPaths: List&lt;File>, soMappingOutputPath: String )</ID>
+    <ID>LongParameterList:BugsnagGenerateNdkSoMappingTask.kt$BugsnagGenerateNdkSoMappingTask.Companion$( project: Project, variant: BaseVariant, output: ApkVariantOutput, ndk: NdkToolchain, searchPaths: List&lt;File>, soMappingOutputPath: String )</ID>
+    <ID>LongParameterList:BugsnagUploadSoSymTask.kt$BugsnagUploadSoSymTask.Companion$( project: Project, variant: BaseVariantOutput, ndkToolchain: NdkToolchain, uploadType: UploadType, generateTaskProvider: TaskProvider&lt;out AbstractSoMappingTask>, httpClientHelperProvider: Provider&lt;out BugsnagHttpClientHelper>, ndkUploadClientProvider: Provider&lt;out UploadRequestClient>, )</ID>
     <ID>MagicNumber:BugsnagPluginExtension.kt$BugsnagPluginExtension$60000</ID>
     <ID>MagicNumber:BugsnagReleasesTask.kt$BugsnagReleasesTask$200</ID>
     <ID>MagicNumber:MappingFileProvider.kt$9</ID>
-    <ID>ReturnCount:BugsnagPlugin.kt$BugsnagPlugin$ @Suppress("SENSELESS_COMPARISON") internal fun isUnityLibraryUploadEnabled( bugsnag: BugsnagPluginExtension, android: BaseExtension ): Boolean</ID>
+    <ID>MaxLineLength:NdkToolchain.kt$NdkToolchain.Companion$/* * SdkComponents.ndkDirectory * https://developer.android.com/reference/tools/gradle-api/7.2/com/android/build/api/dsl/SdkComponents#ndkDirectory() * sometimes fails to resolve when ndkPath is not defined (Cannot query the value of this property because it has * no value available.). This means that even `map` and `isPresent` will break. * * So we also fall back use the old BaseExtension if it appears broken */</ID>
+    <ID>ReturnCount:BugsnagGenerateUnitySoMappingTask.kt$BugsnagGenerateUnitySoMappingTask.Companion$ @Suppress("SENSELESS_COMPARISON") internal fun isUnityLibraryUploadEnabled( bugsnag: BugsnagPluginExtension, android: BaseExtension ): Boolean</ID>
     <ID>ReturnCount:BugsnagPlugin.kt$BugsnagPlugin$ private fun registerUploadSourceMapTask( project: Project, variant: BaseVariant, output: BaseVariantOutput, bugsnag: BugsnagPluginExtension, manifestInfoProvider: Provider&lt;RegularFile> ): TaskProvider&lt;out BugsnagUploadJsSourceMapTask>?</ID>
     <ID>ReturnCount:ManifestUuidTaskV2Compat.kt$internal fun createManifestUpdateTask( bugsnag: BugsnagPluginExtension, project: Project, variantName: String, variantOutput: VariantOutput ): TaskProvider&lt;BugsnagManifestUuidTask>?</ID>
-    <ID>ReturnCount:SharedObjectMappingFileFactory.kt$SharedObjectMappingFileFactory$ fun generateSoMappingFile(project: Project, params: Params): File?</ID>
     <ID>SpreadOperator:DexguardCompat.kt$(buildDir, *path, variant.dirName, outputDir, "mapping.txt")</ID>
+    <ID>SwallowedException:NdkToolchain.kt$NdkToolchain.Companion$catch (e: Exception) { null }</ID>
+    <ID>SwallowedException:NdkToolchain.kt$NdkToolchain.Companion$catch (e: Exception) { return@provider extensions.getByType(BaseExtension::class.java).ndkDirectory.absoluteFile }</ID>
+    <ID>TooGenericExceptionCaught:AbstractSoMappingTask.kt$AbstractSoMappingTask$e: Exception</ID>
     <ID>TooGenericExceptionCaught:BugsnagHttpClientHelper.kt$exc: Throwable</ID>
     <ID>TooGenericExceptionCaught:BugsnagMultiPartUploadRequest.kt$BugsnagMultiPartUploadRequest$exc: Throwable</ID>
     <ID>TooGenericExceptionCaught:BugsnagReleasesTask.kt$BugsnagReleasesTask$exc: Throwable</ID>
     <ID>TooGenericExceptionCaught:MappingFileProvider.kt$exc: Throwable</ID>
-    <ID>TooGenericExceptionCaught:SharedObjectMappingFileFactory.kt$SharedObjectMappingFileFactory$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:SharedObjectMappingFileFactory.kt$SharedObjectMappingFileFactory$ex: Throwable</ID>
+    <ID>TooGenericExceptionCaught:NdkToolchain.kt$NdkToolchain.Companion$e: Exception</ID>
     <ID>TooManyFunctions:BugsnagPlugin.kt$BugsnagPlugin : Plugin</ID>
-    <ID>UnusedPrivateMember:BugsnagPlugin.kt$BugsnagPlugin$private fun BaseVariantOutput.findVersionCode(): Int</ID>
   </CurrentIssues>
 </SmellBaseline>

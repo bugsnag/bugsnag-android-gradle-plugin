@@ -4,6 +4,8 @@
 
 * Fix FileAlreadyExistsException errors when building ReactNative projects with Hermes
   [#482](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/482)
+* Support using objcopy instead of objdump to extract native symbols (when supported by the current NDK).
+  [#484](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/484)
 
 ## 7.3.1 (2022-10-05)
 

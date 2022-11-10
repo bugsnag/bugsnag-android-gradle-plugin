@@ -33,6 +33,13 @@ When("I build the NDK app") do
 }
 end
 
+When("I build the NDK app using the {string} config") do |config|
+  Maze::Runner.environment['BUGSNAG_NDK_CONFIG'] = config
+  steps %Q{
+  And I run the script "features/scripts/build_ndk_app.sh" synchronously
+}
+end
+
 When("I set the fixture JVM arguments to {string}") do |jvm_args|
   steps %Q{
   When I set environment variable "CUSTOM_JVM_ARGS" to "#{jvm_args}"
@@ -59,7 +66,7 @@ def setup_and_run_script(module_config, bugsnag_config, script_path, variant = n
 end
 
 When("I build the failing {string} on AGP {string} using the {string} bugsnag config") do |module_config, agp_version, bugsnag_config|
-steps %Q{
+  steps %Q{
     When I set environment variable "AGP_VERSION" to "#{agp_version}"
     And I build the failing "#{module_config}" using the "#{bugsnag_config}" bugsnag config
 }
@@ -102,6 +109,16 @@ Then('{int} requests are valid for the android unity NDK mapping API and match t
 
   requests.each do |request|
     valid_android_unity_ndk_mapping_api?(request[:body])
+  end
+end
+
+Then('{int} requests are valid for the android so symbol mapping API and match the following:') do |request_count, data_table|
+  requests = get_requests_with_field('build', 'soFile')
+  assert_equal(request_count, requests.length, 'Wrong number of android .so symbol mapping API requests')
+  Maze::Assertions::RequestSetAssertions.assert_requests_match requests, data_table
+
+  requests.each do |request|
+    valid_android_so_symbol_mapping_api?(request[:body])
   end
 end
 
@@ -167,16 +184,32 @@ end
 
 def valid_android_mapping_api?(request_body)
   valid_mapping_api?(request_body)
+  assert_not_nil(request_body['buildUUID'])
   assert_not_nil(request_body['proguard'])
 end
 
 def valid_android_ndk_mapping_api?(request_body)
   valid_mapping_api?(request_body)
+  assert_not_nil(request_body['buildUUID'])
   assert_not_nil(request_body['soSymbolFile'])
+end
+
+def valid_android_so_symbol_mapping_api?(request_body)
+  valid_mapping_api?(request_body)
+  assert_not_nil(request_body['soFile'])
+
+  gzipped_part = request_body['soFile']
+  archive = Zlib::GzipReader.new(StringIO.new(gzipped_part))
+
+  # check that decompressed this is a valid ELF file:
+  # https://en.wikipedia.org/wiki/Executable_and_Linkable_Format#File_header
+  header = archive.read(4)
+  assert_equal("\x7f\x45\x4c\x46", header, 'not a valid ELF file')
 end
 
 def valid_android_unity_ndk_mapping_api?(request_body)
   valid_mapping_api?(request_body)
+  assert_not_nil(request_body['buildUUID'])
   assert_not_nil(request_body['soSymbolTableFile'])
 end
 
@@ -184,7 +217,6 @@ def valid_mapping_api?(request_body)
   assert_equal($api_key, request_body['apiKey'])
   assert_not_nil(request_body['appId'])
   assert_not_nil(request_body['versionCode'])
-  assert_not_nil(request_body['buildUUID'])
   assert_not_nil(request_body['versionName'])
 end
 
