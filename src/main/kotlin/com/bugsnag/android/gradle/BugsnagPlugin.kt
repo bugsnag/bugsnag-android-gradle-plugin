@@ -453,11 +453,13 @@ class BugsnagPlugin : Plugin<Project> {
 
         return BugsnagUploadProguardTask.register(project, taskName) {
             requestOutputFile.set(requestOutputFileProvider)
-            httpClientHelper.set(httpClientHelperProvider)
             manifestInfo.set(manifestInfoProvider)
-            uploadRequestClient.set(proguardUploadClientProvider)
             mappingFileProperty.set(gzipOutputProvider)
-            configureWith(bugsnag)
+
+            uploadRequestClient.set(proguardUploadClientProvider)
+            usesService(proguardUploadClientProvider)
+
+            configureWith(bugsnag, httpClientHelperProvider)
 
             val task = generateProguardTaskProvider?.get()
             mustRunAfter(task)
