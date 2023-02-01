@@ -151,6 +151,14 @@ open class BugsnagUploadJsSourceMapTask @Inject constructor(
 
     companion object {
 
+        fun taskNamesForVariant(variantName: String): Set<String> =
+            setOf(
+                // https://github.com/facebook/react-native/blob/v0.69.8/react.gradle#L230
+                "bundle${variantName.capitalize()}JsAndAssets",
+                // https://github.com/facebook/react-native/blob/v0.71.2/packages/react-native-gradle-plugin/src/main/kotlin/com/facebook/react/TaskConfiguration.kt#L55
+                "createBundle${variantName.capitalize()}JsAndAssets"
+            )
+
         /**
          * Introspects the command line arguments for the React Native Exec task
          * and returns the value of the argument which matches the given key.
