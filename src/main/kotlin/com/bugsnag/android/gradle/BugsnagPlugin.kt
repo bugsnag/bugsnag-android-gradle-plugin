@@ -485,8 +485,10 @@ class BugsnagPlugin : Plugin<Project> {
         val rnTaskNames = BugsnagUploadJsSourceMapTask.taskNamesForVariant(variant.name)
         val rnTask: Task? = rnTaskNames.mapNotNull { taskName -> project.tasks.findByName(taskName) }.firstOrNull()
         if (rnTask == null) {
-            project.logger.error("Bugsnag: unable to find any ReactNative bundle task, " +
-                "expected one of ${rnTaskNames.joinToString()}")
+            project.logger.error(
+                "Bugsnag: unable to find any ReactNative bundle task, " +
+                    "expected one of ${rnTaskNames.joinToString()}"
+            )
             return null
         }
 
