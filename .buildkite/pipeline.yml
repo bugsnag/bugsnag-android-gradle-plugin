@@ -68,6 +68,18 @@ steps:
                   - RN_FIXTURE_DIR=features/fixtures/rn065/android
               command: ['bundle', 'exec', 'maze-runner', '-c', '--verbose', '--fail-fast']
 
+  - label: ':android: AGP 7.4.1 E2E tests'
+    depends_on: 'agp-ci'
+    timeout_in_minutes: 60
+    plugins:
+        - docker-compose#v3.7.0:
+              run: android-gradle-plugin-ci
+              env:
+                  - AGP_VERSION=7.4.1
+                  - GRADLE_WRAPPER_VERSION=7.5.1
+                  - RN_FIXTURE_DIR=features/fixtures/rn065/android
+              command: ['bundle', 'exec', 'maze-runner', '-c', '--verbose', '--fail-fast']
+
   - label: ':android: AGP 7.2.1 R/N 0.70 E2E tests'
     depends_on: 'agp-ci'
     timeout_in_minutes: 60
