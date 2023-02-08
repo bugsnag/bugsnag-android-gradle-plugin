@@ -44,10 +44,11 @@ abstract class NdkToolchain {
             ?.let { it < MIN_BUGSNAG_ANDROID_VERSION }
         if (legacyUploadRequired == null) {
             logger.warn(
-                "Cannot detect Bugsnag SDK version for variant ${variantName.get()}, assuming a modern version is " +
-                    "being used. This can cause problems with NDK symbols if older versions are being used. " +
-                    "Please either specify the Bugsnag SDK version for ${variantName.get()} directly." +
-                    "See https://docs.bugsnag.com/api/ndk-symbol-mapping-upload/ for details."
+                "Cannot detect Bugsnag SDK version for variant ${variantName.get()}. To use the new upload " +
+                    "functionality, version 5.26.0 of bugsnag-android is required. If this is not the case, " +
+                    "please either upgrade the dependency or set bugsnag.useLegacyNdkSymbolUpload to use the legacy " +
+                    "upload mechanism. See https://docs.bugsnag.com/build-integrations/gradle/#ndk-symbol-files " +
+                    "for details."
             )
 
             legacyUploadRequired = false
