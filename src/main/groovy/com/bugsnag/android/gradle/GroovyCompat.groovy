@@ -5,7 +5,6 @@ import com.android.build.gradle.AppExtension
 import org.gradle.api.Action
 import org.gradle.api.Project
 
-import java.nio.file.Paths
 import java.util.jar.Attributes
 import java.util.jar.Manifest
 
