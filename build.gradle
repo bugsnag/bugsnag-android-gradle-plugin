@@ -1,41 +1,21 @@
-buildscript {
-    repositories {
-        maven { url "https://plugins.gradle.org/m2/" }
-        mavenCentral()
-        google()
-    }
-
-    ext.agpVersion = "7.2.0"
-    ext.kotlinVersion = "1.4.31"
-
-    dependencies {
-        classpath "com.android.tools.build:gradle:$agpVersion"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-        classpath "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.17.1"
-        classpath "org.jlleitschuh.gradle:ktlint-gradle:10.1.0"
-    }
-}
-// Gradle plugins
 plugins {
-    id "java-gradle-plugin"
-    id "groovy"
-    id 'maven-publish'
-    id "com.gradle.plugin-publish" version "0.15.0"
-    id "com.vanniktech.maven.publish" version "0.15.1"
-    id "com.github.hierynomus.license" version "0.16.1"
+    id("java-gradle-plugin")
+    id("groovy")
+    id("maven-publish")
+
+    id("org.jetbrains.kotlin.kapt") version "1.7.10"
+    id("org.jetbrains.kotlin.jvm") version "1.7.10"
+
+    id("org.jlleitschuh.gradle.ktlint") version "10.1.0"
+    id("io.gitlab.arturbosch.detekt") version "1.21.0"
+    id("com.github.hierynomus.license") version "0.16.1"
+
+    id("org.jetbrains.dokka") version "1.7.20"
+    id("com.gradle.plugin-publish") version "1.1.0"
 }
 
-apply plugin: "org.jetbrains.kotlin.jvm"
-apply plugin: "org.jetbrains.kotlin.kapt"
-apply plugin: "io.gitlab.arturbosch.detekt"
-apply plugin: "org.jlleitschuh.gradle.ktlint"
-
-allprojects {
-    repositories {
-        mavenCentral()
-        google()
-    }
-}
+def agpVersion = "8.1.0-alpha01"
+def kotlinVersion = "1.7.10"
 
 sourceSets {
     main {
@@ -45,15 +25,9 @@ sourceSets {
     }
 }
 
-// Repositories for dependencies
-repositories {
-    mavenCentral()
-    google()
-}
-
 compileGroovy {
-    sourceCompatibility = "1.8"
-    targetCompatibility = "1.8"
+    sourceCompatibility = "11"
+    targetCompatibility = "11"
 }
 
 // compile groovy first, see
@@ -68,7 +42,7 @@ tasks.named("compileKotlin") {
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
 }
 
@@ -76,23 +50,25 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
 // as otherwise the downloadLicenses task misses these deps
 // Build dependencies
 dependencies {
-    kapt "com.squareup.moshi:moshi-kotlin-codegen:1.9.3"
-    compileOnly "com.android.tools.build:gradle:$agpVersion"
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+    kapt("com.squareup.moshi:moshi-kotlin-codegen:1.14.0")
+
+    api("com.android.tools.build:gradle:$agpVersion")
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
 
     // For uploading proguard/ndk files
-    compile "com.squareup.okhttp3:okhttp:4.8.0"
-    compile "com.squareup.retrofit2:retrofit:2.9.0"
-    compile "com.squareup.retrofit2:converter-moshi:2.9.0"
-    compile "com.squareup.retrofit2:converter-scalars:2.9.0"
+    implementation "com.squareup.okhttp3:okhttp:4.8.0"
+    implementation "com.squareup.retrofit2:retrofit:2.9.0"
+    implementation "com.squareup.retrofit2:converter-moshi:2.9.0"
+    implementation "com.squareup.retrofit2:converter-scalars:2.9.0"
 
     // For serialization of shared data
-    compile "com.squareup.moshi:moshi:1.9.3"
+    implementation "com.squareup.moshi:moshi:1.9.3"
 
     // For multiple I/O use cases
-    compile "com.squareup.okio:okio:2.7.0"
+    implementation "com.squareup.okio:okio:2.7.0"
 
-    testImplementation "com.android.tools.build:gradle:$agpVersion"
+    testImplementation "com.android.tools.build:gradle-api:$agpVersion"
     testImplementation "junit:junit:4.12"
     testImplementation "org.mockito:mockito-core:2.28.2"
     testImplementation "com.squareup.okhttp3:mockwebserver:4.8.0"
@@ -100,43 +76,43 @@ dependencies {
     testImplementation "com.google.truth:truth:1.0.1"
 }
 
-// Gradle plugin publishing settings (plugins.gradle.com)
-pluginBundle {
-    website = POM_URL
-    vcsUrl = POM_SCM_URL
-
-    plugins {
-        androidGradlePlugin {
-            id = "com.bugsnag.android.gradle"
-            displayName = POM_NAME
-            description = POM_DESCRIPTION
-            tags = ["bugsnag", "proguard", "android", "upload"]
-        }
-    }
-
-    mavenCoordinates {
-        groupId = GROUP
-        artifactId = POM_ARTIFACT_ID
-    }
-}
-
-publishing {
-    repositories {
-        maven {
-            name = "Sonatype"
-            if (VERSION_NAME.contains("SNAPSHOT")) {
-                url = "https://oss.sonatype.org/content/repositories/snapshots/"
-            } else {
-                url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-            }
-
-            credentials {
-                username = project.hasProperty("NEXUS_USERNAME") ? "$NEXUS_USERNAME" : System.getenv("NEXUS_USERNAME")
-                password = project.hasProperty("NEXUS_PASSWORD") ? "$NEXUS_PASSWORD" : System.getenv("NEXUS_PASSWORD")
-            }
-        }
-    }
-}
+//// Gradle plugin publishing settings (plugins.gradle.com)
+//pluginBundle {
+//    website = POM_URL
+//    vcsUrl = POM_SCM_URL
+//
+//    plugins {
+//        androidGradlePlugin {
+//            id = "com.bugsnag.android.gradle"
+//            displayName = POM_NAME
+//            description = POM_DESCRIPTION
+//            tags = ["bugsnag", "proguard", "android", "upload"]
+//        }
+//    }
+//
+//    mavenCoordinates {
+//        groupId = GROUP
+//        artifactId = POM_ARTIFACT_ID
+//    }
+//}
+//
+//publishing {
+//    repositories {
+//        maven {
+//            name = "Sonatype"
+//            if (VERSION_NAME.contains("SNAPSHOT")) {
+//                url = "https://oss.sonatype.org/content/repositories/snapshots/"
+//            } else {
+//                url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+//            }
+//
+//            credentials {
+//                username = project.hasProperty("NEXUS_USERNAME") ? "$NEXUS_USERNAME" : System.getenv("NEXUS_USERNAME")
+//                password = project.hasProperty("NEXUS_PASSWORD") ? "$NEXUS_PASSWORD" : System.getenv("NEXUS_PASSWORD")
+//            }
+//        }
+//    }
+//}
 
 // license checking
 license {
@@ -168,7 +144,7 @@ ktlint {
     }
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_11
 
 // see https://github.com/asciidoctor/asciidoctorj/pull/862
 Signature.metaClass.getToSignArtifact = { ->
