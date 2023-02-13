@@ -1,7 +1,5 @@
 plugins {
-    id("java-gradle-plugin")
     id("groovy")
-    id("maven-publish")
 
     id("org.jetbrains.kotlin.kapt") version "1.7.10"
     id("org.jetbrains.kotlin.jvm") version "1.7.10"
@@ -14,7 +12,7 @@ plugins {
     id("com.gradle.plugin-publish") version "1.1.0"
 }
 
-def agpVersion = "8.1.0-alpha01"
+def agpVersion = "8.0.0-beta02"
 def kotlinVersion = "1.7.10"
 
 sourceSets {
@@ -77,42 +75,46 @@ dependencies {
 }
 
 //// Gradle plugin publishing settings (plugins.gradle.com)
-//pluginBundle {
-//    website = POM_URL
-//    vcsUrl = POM_SCM_URL
-//
-//    plugins {
-//        androidGradlePlugin {
-//            id = "com.bugsnag.android.gradle"
-//            displayName = POM_NAME
-//            description = POM_DESCRIPTION
-//            tags = ["bugsnag", "proguard", "android", "upload"]
-//        }
-//    }
-//
-//    mavenCoordinates {
-//        groupId = GROUP
-//        artifactId = POM_ARTIFACT_ID
-//    }
-//}
-//
-//publishing {
-//    repositories {
-//        maven {
-//            name = "Sonatype"
-//            if (VERSION_NAME.contains("SNAPSHOT")) {
-//                url = "https://oss.sonatype.org/content/repositories/snapshots/"
-//            } else {
-//                url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-//            }
-//
-//            credentials {
-//                username = project.hasProperty("NEXUS_USERNAME") ? "$NEXUS_USERNAME" : System.getenv("NEXUS_USERNAME")
-//                password = project.hasProperty("NEXUS_PASSWORD") ? "$NEXUS_PASSWORD" : System.getenv("NEXUS_PASSWORD")
-//            }
-//        }
-//    }
-//}
+gradlePlugin {
+    website = POM_URL
+    vcsUrl = POM_SCM_URL
+
+    plugins {
+        androidGradlePlugin {
+            id = "com.bugsnag.android.gradle"
+            implementationClass = "com.bugsnag.android.gradle.BugsnagPlugin"
+            displayName = POM_NAME
+            description = POM_DESCRIPTION
+            tags.set(["bugsnag", "proguard", "android", "upload"])
+        }
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "Sonatype"
+            if (VERSION_NAME.contains("SNAPSHOT")) {
+                url = "https://oss.sonatype.org/content/repositories/snapshots/"
+            } else {
+                url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            }
+
+            credentials {
+                username = project.hasProperty("NEXUS_USERNAME") ? "$NEXUS_USERNAME" : System.getenv("NEXUS_USERNAME")
+                password = project.hasProperty("NEXUS_PASSWORD") ? "$NEXUS_PASSWORD" : System.getenv("NEXUS_PASSWORD")
+            }
+        }
+    }
+
+    publications {
+        pluginMaven(MavenPublication) {
+            groupId = GROUP
+            artifactId = POM_ARTIFACT_ID
+            version = VERSION_NAME
+        }
+    }
+}
 
 // license checking
 license {
