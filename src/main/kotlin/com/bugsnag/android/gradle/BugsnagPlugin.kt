@@ -68,17 +68,17 @@ class BugsnagPlugin : Plugin<Project> {
 
     @Suppress("LongMethod")
     override fun apply(project: Project) {
-        if (AgpVersions.CURRENT < AgpVersions.VERSION_7_0) {
+        if (AgpVersions.CURRENT < AgpVersions.VERSION_8_0) {
             throw StopExecutionException(
-                "Using com.bugsnag.android.gradle:7+ with Android Gradle Plugin < 7 " +
-                    "is not supported. Either upgrade the Android Gradle Plugin to 7, or use an " +
+                "Using com.bugsnag.android.gradle:8+ with Android Gradle Plugin < 8 " +
+                    "is not supported. Either upgrade the Android Gradle Plugin to 8, or use an " +
                     "earlier version of the BugSnag Gradle Plugin. " +
                     "For more information about this change, see " +
                     "https://docs.bugsnag.com/build-integrations/gradle/"
             )
-        } else if (AgpVersions.CURRENT >= AgpVersions.VERSION_8_0) {
+        } else if (AgpVersions.CURRENT >= AgpVersions.VERSION_9_0) {
             project.logger.warn(
-                "Using com.bugsnag.android.gradle:7+ with Android Gradle Plugin 8+ is not " +
+                "Using com.bugsnag.android.gradle:8+ with Android Gradle Plugin 9+ is not " +
                     "formally supported, and may lead to compatibility errors. " +
                     "For more information, please see " +
                     "https://docs.bugsnag.com/build-integrations/gradle/"
