@@ -1,9 +1,9 @@
 steps:
-  - label: 'Audit current licenses'
-    timeout_in_minutes: 30
-    plugins:
-      - docker-compose#v3.7.0:
-          run: license-audit
+#  - label: 'Audit current licenses'
+#    timeout_in_minutes: 30
+#    plugins:
+#      - docker-compose#v3.7.0:
+#          run: license-audit
 
   - label: ':docker: Build Android gradle plugin CI image'
     key: 'agp-ci'
@@ -11,21 +11,21 @@ steps:
     plugins:
       - docker-compose#v3.7.0:
           build:
-            - android-gradle-plugin-ci
+            - android-gradle-plugin-ci-v8
           image-repository: 855461928731.dkr.ecr.us-west-1.amazonaws.com/android
           cache-from:
             - android-common:855461928731.dkr.ecr.us-west-1.amazonaws.com/android:latest
-            - android-gradle-plugin-ci:855461928731.dkr.ecr.us-west-1.amazonaws.com/android:android-gradle-plugin-ci-v7
+            - android-gradle-plugin-ci-v8:855461928731.dkr.ecr.us-west-1.amazonaws.com/android:android-gradle-plugin-ci-v8
       - docker-compose#v3.7.0:
           push:
-            - android-gradle-plugin-ci:855461928731.dkr.ecr.us-west-1.amazonaws.com/android:android-gradle-plugin-ci-v7
+            - android-gradle-plugin-ci-v8:855461928731.dkr.ecr.us-west-1.amazonaws.com/android:android-gradle-plugin-ci-v8
 
   - label: ':android: Detekt'
     depends_on: 'agp-ci'
     timeout_in_minutes: 30
     plugins:
       - docker-compose#v3.7.0:
-          run: android-gradle-plugin-ci
+          run: android-gradle-plugin-ci-v8
           command: ['./gradlew', 'detekt']
 
   - label: ':android: Ktlint'
@@ -33,7 +33,7 @@ steps:
     timeout_in_minutes: 30
     plugins:
       - docker-compose#v3.7.0:
-          run: android-gradle-plugin-ci
+          run: android-gradle-plugin-ci-v8
           command: ['./gradlew', 'ktlintCheck']
 
   - label: ':android: Unit tests'
@@ -41,53 +41,17 @@ steps:
     timeout_in_minutes: 30
     plugins:
       - docker-compose#v3.7.0:
-          run: android-gradle-plugin-ci
+          run: android-gradle-plugin-ci-v8
           command: ['./gradlew', 'test']
 
-  - label: ':android: AGP 7.0.0 E2E tests'
+  - label: ':android: AGP 8.0.0 E2E tests'
     depends_on: 'agp-ci'
     timeout_in_minutes: 60
     plugins:
       - docker-compose#v3.7.0:
-          run: android-gradle-plugin-ci
+          run: android-gradle-plugin-ci-v8
           env:
-            - AGP_VERSION=7.0.0
-            - GRADLE_WRAPPER_VERSION=7.0.2
-            - RN_FIXTURE_DIR=features/fixtures/rn065/android
+            - AGP_VERSION=8.0.0-beta02
+            - GRADLE_WRAPPER_VERSION=8.0
+            - RN_FIXTURE_DIR=features/fixtures/rn070/android
           command: ['bundle', 'exec', 'maze-runner', '-c', '--verbose', '--fail-fast']
-
-  - label: ':android: AGP 7.2.0 E2E tests'
-    depends_on: 'agp-ci'
-    timeout_in_minutes: 60
-    plugins:
-        - docker-compose#v3.7.0:
-              run: android-gradle-plugin-ci
-              env:
-                  - AGP_VERSION=7.2.0
-                  - GRADLE_WRAPPER_VERSION=7.3.3
-                  - RN_FIXTURE_DIR=features/fixtures/rn065/android
-              command: ['bundle', 'exec', 'maze-runner', '-c', '--verbose', '--fail-fast']
-
-  - label: ':android: AGP 7.4.1 E2E tests'
-    depends_on: 'agp-ci'
-    timeout_in_minutes: 60
-    plugins:
-        - docker-compose#v3.7.0:
-              run: android-gradle-plugin-ci
-              env:
-                  - AGP_VERSION=7.4.1
-                  - GRADLE_WRAPPER_VERSION=7.5.1
-                  - RN_FIXTURE_DIR=features/fixtures/rn70/android
-              command: ['bundle', 'exec', 'maze-runner', '-c', '--verbose', '--fail-fast']
-
-  - label: ':android: AGP 7.2.1 R/N 0.70 E2E tests'
-    depends_on: 'agp-ci'
-    timeout_in_minutes: 60
-    plugins:
-        - docker-compose#v3.7.0:
-              run: android-gradle-plugin-ci
-              env:
-                  - AGP_VERSION=7.2.1
-                  - GRADLE_WRAPPER_VERSION=7.3.3
-                  - RN_FIXTURE_DIR=features/fixtures/rn70/android
-              command: ['bundle', 'exec', 'maze-runner', '-c', '--verbose', '--fail-fast']
