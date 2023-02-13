@@ -1,3 +1,10 @@
+## TBD
+
+### Bug Fixes
+
+* Fix task ordering when using DexGuard and a `bundle***` task
+  [496](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/496)
+
 ## 7.4.0 (2022-11-10)
 
 ### Enhancements
