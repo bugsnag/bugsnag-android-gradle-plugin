@@ -1,6 +1,5 @@
 package com.bugsnag.android.gradle.internal
 
-import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.ApkVariant
 import com.bugsnag.android.gradle.Abi
@@ -155,28 +154,6 @@ abstract class NdkToolchain {
             else -> null
         }
 
-        /*
-         * SdkComponents.ndkDirectory
-         * https://developer.android.com/reference/tools/gradle-api/7.2/com/android/build/api/dsl/SdkComponents#ndkDirectory()
-         * sometimes fails to resolve when ndkPath is not defined (Cannot query the value of this property because it has
-         * no value available.). This means that even `map` and `isPresent` will break.
-         *
-         * So we also fall back use the old BaseExtension if it appears broken
-         */
-        private fun setNdkToolchainDirectory(
-            ndkToolchain: NdkToolchain,
-            project: Project,
-        ) {
-            val extensions = project.extensions
-            val sdkComponents = extensions.getByType(AndroidComponentsExtension::class.java)?.sdkComponents
-
-            if (sdkComponents != null) {
-                ndkToolchain.baseDir.set(sdkComponents!!.ndkDirectory)
-            } else {
-                ndkToolchain.baseDir.set(extensions.getByType(BaseExtension::class.java).ndkDirectory)
-            }
-        }
-
         private fun getBugsnagAndroidNDKVersion(variant: ApkVariant): String? {
             return try {
                 val bugsnagAndroidCoreVersion = variant.compileConfiguration.resolvedConfiguration.resolvedArtifacts
@@ -201,7 +178,7 @@ abstract class NdkToolchain {
             val overrides = bugsnag.objdumpPaths.map { it.mapKeys { (abi, _) -> Abi.findByName(abi)!! } }
 
             val ndkToolchain = project.objects.newInstance<NdkToolchain>()
-            setNdkToolchainDirectory(ndkToolchain, project)
+            ndkToolchain.baseDir.set(project.extensions.getByType(BaseExtension::class.java).ndkDirectory)
             ndkToolchain.useLegacyNdkSymbolUpload.set(useLegacyNdkSymbolUpload)
             ndkToolchain.overrides.set(overrides)
 
