@@ -66,9 +66,7 @@ open class BugsnagGenerateProguardTask @Inject constructor(
         val mappingFile = mappingFileProperty.filter(File::exists).singleFile
         if (!mappingFile.exists()) {
             logger.warn("Bugsnag: Mapping file not found: $mappingFile")
-            if (failOnUploadError.get()) {
-                throw IllegalStateException("Mapping file not found: $mappingFile")
-            }
+            check(failOnUploadError.get()) { "Mapping file not found: $mappingFile" }
         }
         return mappingFile
     }
