@@ -15,10 +15,10 @@ steps:
           image-repository: 855461928731.dkr.ecr.us-west-1.amazonaws.com/android
           cache-from:
             - android-common:855461928731.dkr.ecr.us-west-1.amazonaws.com/android:latest
-            - android-gradle-plugin-ci-v8:855461928731.dkr.ecr.us-west-1.amazonaws.com/android:android-gradle-plugin-ci-v7
+            - android-gradle-plugin-ci-v8:855461928731.dkr.ecr.us-west-1.amazonaws.com/android:android-gradle-plugin-${BRANCH_NAME}-ci-v8
       - docker-compose#v3.7.0:
           push:
-            - android-gradle-plugin-ci-v8:855461928731.dkr.ecr.us-west-1.amazonaws.com/android:android-gradle-plugin-ci-v8
+            - android-gradle-plugin-ci-v8:855461928731.dkr.ecr.us-west-1.amazonaws.com/android:android-gradle-plugin-${BRANCH_NAME}-ci-v8
 
   - label: ':android: Detekt'
     depends_on: 'agp-ci'
