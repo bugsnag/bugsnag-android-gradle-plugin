@@ -112,11 +112,9 @@ internal abstract class BugsnagGenerateNdkSoMappingTask @Inject constructor(
                 abi.set(output.getFilter(VariantOutput.FilterType.ABI))
                 ndkToolchain.set(ndk)
 
-                val externalNativeBuildTaskUtil = ExternalNativeBuildTaskUtil(project.providers)
-
                 searchDirectories.from(searchPaths)
                 variant.externalNativeBuildProviders.forEach { provider ->
-                    searchDirectories.from(externalNativeBuildTaskUtil.findSearchPaths(provider))
+                    searchDirectories.from(ExternalNativeBuildTaskUtil.findSearchPath(provider))
                 }
                 outputDirectory.set(project.layout.buildDirectory.dir(soMappingOutputPath))
             }

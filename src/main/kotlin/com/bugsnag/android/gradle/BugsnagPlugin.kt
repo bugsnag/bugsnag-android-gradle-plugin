@@ -569,10 +569,8 @@ class BugsnagPlugin : Plugin<Project> {
                 }
             }
             if (checkSearchDirectories) {
-                val externalNativeBuildTaskUtil = ExternalNativeBuildTaskUtil(project.providers)
-
                 variant.externalNativeBuildProviders.forEach { task ->
-                    ndkMappingFileProperty.from(externalNativeBuildTaskUtil.findSearchPaths(task))
+                    ndkMappingFileProperty.from(ExternalNativeBuildTaskUtil.findSearchPath(task))
                 }
             }
             configureMetadata()
