@@ -53,5 +53,5 @@ steps:
           env:
             - AGP_VERSION=8.0.0-beta02
             - GRADLE_WRAPPER_VERSION=8.0
-            - RN_FIXTURE_DIR=features/fixtures/rn070/android
+            - RN_FIXTURE_DIR=features/fixtures/rn70/android
           command: ['bundle', 'exec', 'maze-runner', '-c', '--verbose', '--fail-fast']
