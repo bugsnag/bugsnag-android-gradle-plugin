@@ -1,5 +1,7 @@
 Feature: Plugin integrated in React Native app
 
+# ReactNative apps cannot currently be built with AGP-8 so we skip these tests until they are supported again (PLAT-9672)
+@skip
 Scenario: Source maps are uploaded when assembling an app with the default project structure
     When I build the React Native app
     And I wait to receive 3 builds
@@ -16,6 +18,8 @@ Scenario: Source maps are uploaded when assembling an app with the default proje
         | appVersionCode | appVersion | overwrite | dev   |
         | 5              | 2.45.beta  | true      | false |
 
+# ReactNative apps cannot currently be built with AGP-8 so we skip these tests until they are supported again (PLAT-9672)
+@skip
 Scenario: Source maps are uploaded when assembling a Hermes app with the default project structure
     Given I set environment variable "RN_ENABLE_HERMES" to "true"
     When I build the React Native app
@@ -33,6 +37,8 @@ Scenario: Source maps are uploaded when assembling a Hermes app with the default
         | appVersionCode | appVersion | overwrite | dev   |
         | 5              | 2.45.beta  | true      | false |
 
+# ReactNative apps cannot currently be built with AGP-8 so we skip these tests until they are supported again (PLAT-9672)
+@skip
 Scenario: Source maps are uploaded when bundling an app with the default project structure
     And I run the script "features/scripts/bundle_react_native_app.sh" synchronously
     And I wait to receive 3 builds
@@ -49,6 +55,8 @@ Scenario: Source maps are uploaded when bundling an app with the default project
         | appVersionCode | appVersion | overwrite | dev   |
         | 5              | 2.45.beta  | true     | false |
 
+# ReactNative apps cannot currently be built with AGP-8 so we skip these tests until they are supported again (PLAT-9672)
+@skip
 Scenario: Source maps are uploaded when assembling an app which uses productFlavors
     When I set environment variable "USE_RN_FLAVORS" to "true"
     When I build the React Native app
@@ -69,6 +77,8 @@ Scenario: Source maps are uploaded when assembling an app which uses productFlav
         | 5              | 2.45.beta  | true     | false |
         | 5              | 2.45.beta  | true     | false |
 
+# ReactNative apps cannot currently be built with AGP-8 so we skip these tests until they are supported again (PLAT-9672)
+@skip
 Scenario: Source maps are uploaded when assembling an app within a monorepo
     When I run the script "features/scripts/build_react_native_monorepo_app.sh" synchronously
     And I wait to receive 3 builds
@@ -85,6 +95,8 @@ Scenario: Source maps are uploaded when assembling an app within a monorepo
       | appVersionCode | appVersion | overwrite | dev   |
       | 5              | 2.45.beta  | true      | false |
 
+# ReactNative apps cannot currently be built with AGP-8 so we skip these tests until they are supported again (PLAT-9672)
+@skip
 Scenario: Setting uploadReactNativeMappings to false will prevent any source map upload
     When I set environment variable "UPLOAD_RN_MAPPINGS" to "false"
     When I build the React Native app
@@ -98,6 +110,8 @@ Scenario: Setting uploadReactNativeMappings to false will prevent any source map
         | versionCode | versionName | appId                     |
         | 5           | 2.45.beta  | com.bugsnag.android.rnapp |
 
+# ReactNative apps cannot currently be built with AGP-8 so we skip these tests until they are supported again (PLAT-9672)
+@skip
 Scenario: Manually invoking source map upload task
     And I run the script "features/scripts/manual_upload_react_native.sh" synchronously
     And I wait to receive 1 build
@@ -105,6 +119,8 @@ Scenario: Manually invoking source map upload task
         | appVersionCode | appVersion | overwrite | dev   |
         | 5              | 2.45.beta  | true     | false |
 
+# ReactNative apps cannot currently be built with AGP-8 so we skip these tests until they are supported again (PLAT-9672)
+@skip
 Scenario: Source maps are uploaded in an app using Hermes
     When I set environment variable "RN_ENABLE_HERMES" to "true"
     When I build the React Native app
@@ -122,6 +138,8 @@ Scenario: Source maps are uploaded in an app using Hermes
         | appVersionCode | appVersion | overwrite | dev   |
         | 5              | 2.45.beta  | true     | false |
 
+# ReactNative apps cannot currently be built with AGP-8 so we skip these tests until they are supported again (PLAT-9672)
+@skip
 Scenario: Plugin handles server failure gracefully
     When I set the HTTP status code to 500
     And I run the script "features/scripts/manual_upload_react_native.sh" synchronously
@@ -134,6 +152,8 @@ Scenario: Plugin handles server failure gracefully
         | 5              | 2.45.beta  | true      | false |
         | 5              | 2.45.beta  | true      | false |
 
+# ReactNative apps cannot currently be built with AGP-8 so we skip these tests until they are supported again (PLAT-9672)
+@skip
 Scenario: Source maps are uploaded when assembling an app with a custom nodeModulesDir
     When I set environment variable "CUSTOM_NODE_MODULES_DIR" to "true"
     When I build the React Native app

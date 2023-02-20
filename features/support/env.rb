@@ -22,3 +22,7 @@ BeforeAll do
   Maze::Runner.run_command('./features/scripts/install_gradle_plugin.sh')
   Maze::Runner.run_command('./features/scripts/setup_gradle_wrapper.sh')
 end
+
+Before('@skip') do |scenario|
+  skip_this_scenario("Skipping scenario")
+end
