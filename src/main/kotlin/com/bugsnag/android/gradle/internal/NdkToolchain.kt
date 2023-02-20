@@ -16,7 +16,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.StopExecutionException
-import org.gradle.util.VersionNumber
+import org.semver.Version
 import java.io.File
 
 abstract class NdkToolchain {
@@ -42,7 +42,7 @@ abstract class NdkToolchain {
 
     fun preferredMappingTool(): MappingTool {
         var legacyUploadRequired = bugsnagNdkVersion.orNull
-            ?.let { VersionNumber.parse(it) }
+            ?.let { Version.parse(it) }
             ?.let { it < MIN_BUGSNAG_ANDROID_VERSION }
         if (legacyUploadRequired == null) {
             logger.warn(
@@ -129,17 +129,17 @@ abstract class NdkToolchain {
          * Minimum `bugsnag-android` version where the new symbol uploading is available, using `objcopy` to produce
          * the symbol files instead of `objdump`
          */
-        internal val MIN_BUGSNAG_ANDROID_VERSION = VersionNumber.version(5, 26)
+        internal val MIN_BUGSNAG_ANDROID_VERSION = Version(5, 26, 0)
 
         /**
          * The minimum NDK version where we will use `objcopy` instead of `objdump` to produce the symbol files
          */
-        internal val MIN_NDK_OBJCOPY_VERSION = VersionNumber.version(21)
+        internal val MIN_NDK_OBJCOPY_VERSION = Version(21, 0, 0)
 
         /**
          * The minimum NDK version where we will use the LLVM toolchain instead of the GNU toolchain
          */
-        internal val MIN_NDK_LLVM_VERSION = VersionNumber.version(23)
+        internal val MIN_NDK_LLVM_VERSION = Version(23, 0, 0)
 
         private val osName = when {
             Os.isFamily(Os.FAMILY_MAC) -> "darwin-x86_64"
@@ -195,5 +195,5 @@ abstract class NdkToolchain {
     }
 }
 
-private val NdkToolchain.version get() = baseDir.map { VersionNumber.parse(it.asFile.name) }
+private val NdkToolchain.version get() = baseDir.map { Version.parse(it.asFile.name) }
 private val NdkToolchain.isLLVMPreferred get() = version.map { it >= NdkToolchain.MIN_NDK_LLVM_VERSION }

@@ -4,7 +4,7 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.bugsnag.android.gradle.GroovyCompat
 import org.gradle.api.Project
-import org.gradle.util.VersionNumber
+import org.semver.Version
 import java.io.File
 import java.nio.file.Paths
 
@@ -77,10 +77,9 @@ internal fun Project.isDexguardEnabledForVariant(variant: BaseVariant): Boolean 
 /**
  * Retrieves the major version of DexGuard in use in the project
  */
-internal fun getDexguardMajorVersionInt(project: Project): Int {
-    val version = GroovyCompat.getDexguardVersionString(project) ?: ""
-    val versionNumber = VersionNumber.parse(version)
-    return versionNumber.major
+internal fun getDexguardVersion(project: Project): Version? {
+    val version = GroovyCompat.getDexguardVersionString(project) ?: return null
+    return Version.parse(version)
 }
 
 /**

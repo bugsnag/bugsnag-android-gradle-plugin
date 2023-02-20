@@ -25,18 +25,18 @@ import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.util.VersionNumber
+import org.semver.Version
 import java.io.File
 
 internal object GradleVersions {
-    val VERSION_6_1: VersionNumber = VersionNumber.parse("6.1")
+    val VERSION_6_1: Version = Version.parse("6.1")
 }
 
 internal object AgpVersions {
     // Use baseVersion to avoid any qualifiers like `-alpha06`
-    val CURRENT: VersionNumber = VersionNumber.parse(ANDROID_GRADLE_PLUGIN_VERSION).baseVersion
-    val VERSION_8_0: VersionNumber = VersionNumber.parse("8.0.0")
-    val VERSION_9_0: VersionNumber = VersionNumber.parse("9.0.0")
+    val CURRENT: Version = Version.parse(ANDROID_GRADLE_PLUGIN_VERSION).toReleaseVersion()
+    val VERSION_8_0: Version = Version.parse("8.0.0")
+    val VERSION_9_0: Version = Version.parse("9.0.0")
 }
 
 /** A fast file hash that don't load the entire file contents into memory at once. */
@@ -117,7 +117,7 @@ internal fun ApkVariantOutput.includesAbi(abi: String): Boolean {
 /** Returns a String provider for a system property. */
 internal fun ProviderFactory.systemPropertyCompat(
     name: String,
-    gradleVersion: VersionNumber?
+    gradleVersion: Version?
 ): Provider<String> {
     return if (gradleVersion != null && gradleVersion >= GradleVersions.VERSION_6_1) {
         systemProperty(name)

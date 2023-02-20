@@ -63,6 +63,9 @@ dependencies {
     // For multiple I/O use cases
     implementation "com.squareup.okio:okio:2.7.0"
 
+    // For version checking
+    implementation "org.semver:api:0.9.33"
+
     testImplementation "com.android.tools.build:gradle:$agpVersion"
     testImplementation 'junit:junit:4.13.1'
     testImplementation "org.mockito:mockito-core:2.28.2"

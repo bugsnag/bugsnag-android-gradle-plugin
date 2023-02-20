@@ -30,7 +30,7 @@ import org.gradle.process.ExecOperations
 import org.gradle.process.ExecResult
 import org.gradle.process.ExecSpec
 import org.gradle.process.internal.ExecException
-import org.gradle.util.VersionNumber
+import org.semver.Version
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -277,7 +277,7 @@ open class BugsnagReleasesTask @Inject constructor(
     internal fun configureMetadata() {
         val gradleVersionNumber = gradleVersion.orNull?.let {
             gradleVersion.set(it)
-            VersionNumber.parse(it)
+            Version.parse(it)
         }
         gitVersion.set(providerFactory.provider { runCmd(VCS_COMMAND, "--version") })
         osArch.set(providerFactory.systemPropertyCompat(MK_OS_ARCH, gradleVersionNumber))
