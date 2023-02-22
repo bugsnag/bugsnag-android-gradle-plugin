@@ -161,9 +161,9 @@ def valid_r8_mapping_contents?(mapping_file_lines, expected_entries)
   # validates that the mapping file key is present for each symbol,
   # obfuscated values are not validated as they vary depending on AGP's implementation
   expected_entries.each do |row|
-    expected_entry = row[0] + " ->"
+    expected_entry = row[0]
     has_mapping_entry = mapping_file_lines.one? { |line|
-      line.include? expected_entry
+      line.include?(expected_entry) && line.include?(' -> ')
     }
     assert_true(has_mapping_entry, "No entry in mapping file for '#{row[0]}'.")
   end

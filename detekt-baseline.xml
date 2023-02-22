@@ -10,12 +10,10 @@
     <ID>MagicNumber:BugsnagReleasesTask.kt$BugsnagReleasesTask$200</ID>
     <ID>MagicNumber:MappingFileProvider.kt$9</ID>
     <ID>MaxLineLength:NdkToolchain.kt$NdkToolchain.Companion$/* * SdkComponents.ndkDirectory * https://developer.android.com/reference/tools/gradle-api/7.2/com/android/build/api/dsl/SdkComponents#ndkDirectory() * sometimes fails to resolve when ndkPath is not defined (Cannot query the value of this property because it has * no value available.). This means that even `map` and `isPresent` will break. * * So we also fall back use the old BaseExtension if it appears broken */</ID>
-    <ID>ReturnCount:BugsnagGenerateUnitySoMappingTask.kt$BugsnagGenerateUnitySoMappingTask.Companion$ @Suppress("SENSELESS_COMPARISON") internal fun isUnityLibraryUploadEnabled( bugsnag: BugsnagPluginExtension, android: BaseExtension ): Boolean</ID>
-    <ID>ReturnCount:BugsnagPlugin.kt$BugsnagPlugin$ private fun registerUploadSourceMapTask( project: Project, variant: BaseVariant, output: BaseVariantOutput, bugsnag: BugsnagPluginExtension, manifestInfoProvider: Provider&lt;RegularFile> ): TaskProvider&lt;out BugsnagUploadJsSourceMapTask>?</ID>
+    <ID>ReturnCount:BugsnagPlugin.kt$BugsnagPlugin$private fun registerUploadSourceMapTask( project: Project, variant: BaseVariant, output: BaseVariantOutput, bugsnag: BugsnagPluginExtension, manifestInfoProvider: Provider&lt;RegularFile> ): TaskProvider&lt;out BugsnagUploadJsSourceMapTask>?</ID>
     <ID>ReturnCount:ManifestUuidTaskV2Compat.kt$internal fun createManifestUpdateTask( bugsnag: BugsnagPluginExtension, project: Project, variantName: String, variantOutput: VariantOutput ): TaskProvider&lt;BugsnagManifestUuidTask>?</ID>
     <ID>SpreadOperator:DexguardCompat.kt$(buildDir, *path, variant.dirName, outputDir, "mapping.txt")</ID>
-    <ID>SwallowedException:NdkToolchain.kt$NdkToolchain.Companion$catch (e: Exception) { null }</ID>
-    <ID>SwallowedException:NdkToolchain.kt$NdkToolchain.Companion$catch (e: Exception) { return@provider extensions.getByType(BaseExtension::class.java).ndkDirectory.absoluteFile }</ID>
+    <ID>SwallowedException:NdkToolchain.kt$NdkToolchain.Companion$e: Exception</ID>
     <ID>TooGenericExceptionCaught:AbstractSoMappingTask.kt$AbstractSoMappingTask$e: Exception</ID>
     <ID>TooGenericExceptionCaught:BugsnagHttpClientHelper.kt$exc: Throwable</ID>
     <ID>TooGenericExceptionCaught:BugsnagMultiPartUploadRequest.kt$BugsnagMultiPartUploadRequest$exc: Throwable</ID>
@@ -23,5 +21,7 @@
     <ID>TooGenericExceptionCaught:MappingFileProvider.kt$exc: Throwable</ID>
     <ID>TooGenericExceptionCaught:NdkToolchain.kt$NdkToolchain.Companion$e: Exception</ID>
     <ID>TooManyFunctions:BugsnagPlugin.kt$BugsnagPlugin : Plugin</ID>
+    <ID>UseCheckOrError:BugsnagPlugin.kt$BugsnagPlugin$throw IllegalStateException("Unexpected variant type: $android")</ID>
+    <ID>UseCheckOrError:BugsnagReleasesTask.kt$BugsnagReleasesTask$throw IllegalStateException("Request to Bugsnag Releases API failed, aborting build.")</ID>
   </CurrentIssues>
 </SmellBaseline>

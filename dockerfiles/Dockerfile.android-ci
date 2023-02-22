@@ -40,7 +40,7 @@ RUN mv bundletool-all-1.4.0.jar bundletool.jar
 
 # Install AGP specific system and Android requirements
 RUN apt-get update > /dev/null
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y git ruby-full make libcurl4-openssl-dev gcc g++ openjdk-11-jdk
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y git ruby-full make libcurl4-openssl-dev gcc g++ openjdk-17-jdk
 RUN apt-get clean > /dev/null
 
 RUN yes | sdkmanager 'ndk;16.1.4479499' >/dev/null
@@ -72,7 +72,7 @@ WORKDIR /app
 COPY gradlew gradle.properties /app/
 COPY gradle/ /app/gradle/
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false"
-COPY settings.gradle /app/
+COPY settings.gradle.kts /app/
 RUN ./gradlew
 
 # Copy remaining Gradle files

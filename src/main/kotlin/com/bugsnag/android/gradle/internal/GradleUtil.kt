@@ -16,7 +16,6 @@ import okio.source
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.invocation.Gradle
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -26,28 +25,18 @@ import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.util.VersionNumber
+import org.semver.Version
 import java.io.File
 
 internal object GradleVersions {
-    val VERSION_5_3: VersionNumber = VersionNumber.parse("5.3")
-    val VERSION_6: VersionNumber = VersionNumber.parse("6.0")
-    val VERSION_6_1: VersionNumber = VersionNumber.parse("6.1")
-    val VERSION_6_6: VersionNumber = VersionNumber.parse("6.6")
+    val VERSION_6_1: Version = Version.parse("6.1")
 }
-
-internal fun Gradle.versionNumber(): VersionNumber = VersionNumber.parse(gradleVersion)
 
 internal object AgpVersions {
     // Use baseVersion to avoid any qualifiers like `-alpha06`
-    val CURRENT: VersionNumber = VersionNumber.parse(ANDROID_GRADLE_PLUGIN_VERSION).baseVersion
-    val VERSION_3_4: VersionNumber = VersionNumber.parse("3.4.0")
-    val VERSION_3_5: VersionNumber = VersionNumber.parse("3.5.0")
-    val VERSION_4_0: VersionNumber = VersionNumber.parse("4.0.0")
-    val VERSION_4_1: VersionNumber = VersionNumber.parse("4.1.0")
-    val VERSION_4_2: VersionNumber = VersionNumber.parse("4.2.0")
-    val VERSION_7_0: VersionNumber = VersionNumber.parse("7.0.0")
-    val VERSION_8_0: VersionNumber = VersionNumber.parse("8.0.0")
+    val CURRENT: Version = Version.parse(ANDROID_GRADLE_PLUGIN_VERSION).toReleaseVersion()
+    val VERSION_8_0: Version = Version.parse("8.0.0")
+    val VERSION_9_0: Version = Version.parse("9.0.0")
 }
 
 /** A fast file hash that don't load the entire file contents into memory at once. */
@@ -128,7 +117,7 @@ internal fun ApkVariantOutput.includesAbi(abi: String): Boolean {
 /** Returns a String provider for a system property. */
 internal fun ProviderFactory.systemPropertyCompat(
     name: String,
-    gradleVersion: VersionNumber?
+    gradleVersion: Version?
 ): Provider<String> {
     return if (gradleVersion != null && gradleVersion >= GradleVersions.VERSION_6_1) {
         systemProperty(name)

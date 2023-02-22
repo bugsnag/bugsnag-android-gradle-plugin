@@ -17,6 +17,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.junit.MockitoJUnitRunner
+import org.semver.Version
 import java.io.File
 
 @RunWith(MockitoJUnitRunner::class)
@@ -75,14 +76,14 @@ class DexguardCompatKtTest {
     fun dexguardMajorVersionNull() {
         // handles when dexguard is not applied
         `when`(extensions.findByName("dexguard")).thenReturn(null)
-        assertEquals(0, getDexguardMajorVersionInt(proj))
+        assertNull(getDexguardVersion(proj))
     }
 
     @Test
     fun dexguardMajorFromVersion() {
         // dexguard.version set
         `when`(extensions.findByName("dexguard")).thenReturn(mapOf(Pair("version", "8.7.02")))
-        assertEquals(8, getDexguardMajorVersionInt(proj))
+        assertEquals(Version(8, 7, 2), getDexguardVersion(proj))
     }
 
     @Test
