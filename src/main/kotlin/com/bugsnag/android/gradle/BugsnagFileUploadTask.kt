@@ -1,11 +1,13 @@
 package com.bugsnag.android.gradle
 
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
+import org.gradle.api.Task
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 
-interface BugsnagFileUploadTask {
+interface BugsnagFileUploadTask : Task {
     @get:Input
     val failOnUploadError: Property<Boolean>
 
@@ -24,11 +26,16 @@ interface BugsnagFileUploadTask {
     @get:Internal
     val httpClientHelper: Property<BugsnagHttpClientHelper>
 
-    fun configureWith(bugsnag: BugsnagPluginExtension) {
+    fun configureWith(
+        bugsnag: BugsnagPluginExtension,
+        httpClientHelperProvider: Provider<out BugsnagHttpClientHelper>
+    ) {
         failOnUploadError.set(bugsnag.failOnUploadError)
         overwrite.set(bugsnag.overwrite)
         endpoint.set(bugsnag.endpoint)
         retryCount.set(bugsnag.retryCount)
         timeoutMillis.set(bugsnag.requestTimeoutMs)
+        httpClientHelper.set(httpClientHelperProvider)
+        usesService(httpClientHelperProvider)
     }
 }

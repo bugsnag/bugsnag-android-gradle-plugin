@@ -70,7 +70,7 @@ internal fun Project.hasDexguardPlugin(): Boolean {
  */
 internal fun Project.isDexguardEnabledForVariant(variant: BaseVariant): Boolean {
     val flavor = variant.flavorName
-    val buildType = variant.buildType.name.capitalize()
+    val buildType = if (flavor.isEmpty()) variant.buildType.name else variant.buildType.name.capitalize()
     return GroovyCompat.isDexguardEnabledForVariant(project, "$flavor$buildType")
 }
 

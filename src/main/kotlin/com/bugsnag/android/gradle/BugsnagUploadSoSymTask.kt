@@ -178,7 +178,6 @@ internal abstract class BugsnagUploadSoSymTask : DefaultTask(), AndroidManifestI
                 BugsnagUploadSoSymTask::class.java
             ) { task ->
                 task.dependsOn(generateTaskProvider)
-                task.usesService(httpClientHelperProvider)
                 task.usesService(ndkUploadClientProvider)
 
                 task.endpoint.set(bugsnag.endpoint)
@@ -191,10 +190,9 @@ internal abstract class BugsnagUploadSoSymTask : DefaultTask(), AndroidManifestI
                 task.requestOutputFile.set(requestOutputFileFor(project, variant))
                 task.projectRoot.set(bugsnag.projectRoot.getOrElse(project.projectDir.toString()))
 
-                task.httpClientHelper.set(httpClientHelperProvider)
                 task.uploadRequestClient.set(ndkUploadClientProvider)
 
-                task.configureWith(bugsnag)
+                task.configureWith(bugsnag, httpClientHelperProvider)
             }
         }
     }

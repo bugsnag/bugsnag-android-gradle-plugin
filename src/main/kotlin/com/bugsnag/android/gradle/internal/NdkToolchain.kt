@@ -1,6 +1,5 @@
 package com.bugsnag.android.gradle.internal
 
-import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.ApkVariant
 import com.bugsnag.android.gradle.Abi
@@ -8,20 +7,23 @@ import com.bugsnag.android.gradle.BugsnagGenerateUnitySoMappingTask
 import com.bugsnag.android.gradle.BugsnagPluginExtension
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.StopExecutionException
 import org.gradle.util.VersionNumber
 import java.io.File
 
 abstract class NdkToolchain {
-    @get:Input
-    abstract val baseDir: Property<File>
+    // Internal rather than InputDirectory because this is an
+    // absolute path otherwise and would break build caching.
+    @get:Internal
+    abstract val baseDir: DirectoryProperty
 
     @get:Input
     abstract val useLegacyNdkSymbolUpload: Property<Boolean>
@@ -44,10 +46,11 @@ abstract class NdkToolchain {
             ?.let { it < MIN_BUGSNAG_ANDROID_VERSION }
         if (legacyUploadRequired == null) {
             logger.warn(
-                "Cannot detect Bugsnag SDK version for variant ${variantName.get()}, assuming a modern version is " +
-                    "being used. This can cause problems with NDK symbols if older versions are being used. " +
-                    "Please either specify the Bugsnag SDK version for ${variantName.get()} directly." +
-                    "See https://docs.bugsnag.com/api/ndk-symbol-mapping-upload/ for details."
+                "Cannot detect Bugsnag SDK version for variant ${variantName.get()}. To use the new upload " +
+                    "functionality, version 5.26.0 of bugsnag-android is required. If this is not the case, " +
+                    "please either upgrade the dependency or set bugsnag.useLegacyNdkSymbolUpload to use the legacy " +
+                    "upload mechanism. See https://docs.bugsnag.com/build-integrations/gradle/#ndk-symbol-files " +
+                    "for details."
             )
 
             legacyUploadRequired = false
@@ -92,7 +95,7 @@ abstract class NdkToolchain {
         val objdumpOverrides = overrides.get()
 
         return objdumpOverrides[abi]?.let { File(it) } ?: File(
-            baseDir.get(),
+            baseDir.asFile.get(),
             "toolchains/${abi.toolchainPrefix}-4.9/prebuilt/" +
                 "$osName/bin/${abi.objdumpPrefix}-${executableName("objdump")}"
         )
@@ -113,7 +116,7 @@ abstract class NdkToolchain {
                     "$osName/bin/${abi.objdumpPrefix}-${executableName("objcopy")}"
         }
 
-        return File(baseDir.get(), relativeExecutablePath)
+        return File(baseDir.asFile.get(), relativeExecutablePath)
     }
 
     enum class MappingTool {
@@ -151,27 +154,6 @@ abstract class NdkToolchain {
             else -> null
         }
 
-        /*
-         * SdkComponents.ndkDirectory
-         * https://developer.android.com/reference/tools/gradle-api/7.2/com/android/build/api/dsl/SdkComponents#ndkDirectory()
-         * sometimes fails to resolve when ndkPath is not defined (Cannot query the value of this property because it has
-         * no value available.). This means that even `map` and `isPresent` will break.
-         *
-         * So we also fall back use the old BaseExtension if it appears broken
-         */
-        private fun ndkToolchainDirectoryFor(project: Project): Provider<File> {
-            val extensions = project.extensions
-            val sdkComponents = extensions.getByType(AndroidComponentsExtension::class.java)?.sdkComponents
-
-            return project.provider {
-                try {
-                    return@provider sdkComponents!!.ndkDirectory.get().asFile
-                } catch (e: Exception) {
-                    return@provider extensions.getByType(BaseExtension::class.java).ndkDirectory.absoluteFile
-                }
-            }
-        }
-
         private fun getBugsnagAndroidNDKVersion(variant: ApkVariant): String? {
             return try {
                 val bugsnagAndroidCoreVersion = variant.compileConfiguration.resolvedConfiguration.resolvedArtifacts
@@ -196,7 +178,7 @@ abstract class NdkToolchain {
             val overrides = bugsnag.objdumpPaths.map { it.mapKeys { (abi, _) -> Abi.findByName(abi)!! } }
 
             val ndkToolchain = project.objects.newInstance<NdkToolchain>()
-            ndkToolchain.baseDir.set(ndkToolchainDirectoryFor(project))
+            ndkToolchain.baseDir.set(project.extensions.getByType(BaseExtension::class.java).ndkDirectory)
             ndkToolchain.useLegacyNdkSymbolUpload.set(useLegacyNdkSymbolUpload)
             ndkToolchain.overrides.set(overrides)
 
@@ -213,5 +195,5 @@ abstract class NdkToolchain {
     }
 }
 
-private val NdkToolchain.version get() = baseDir.map { VersionNumber.parse(it.name) }
+private val NdkToolchain.version get() = baseDir.map { VersionNumber.parse(it.asFile.name) }
 private val NdkToolchain.isLLVMPreferred get() = version.map { it >= NdkToolchain.MIN_NDK_LLVM_VERSION }

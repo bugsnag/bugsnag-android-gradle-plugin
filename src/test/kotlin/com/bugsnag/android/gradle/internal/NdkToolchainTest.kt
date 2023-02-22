@@ -2,6 +2,8 @@ package com.bugsnag.android.gradle.internal
 
 import com.bugsnag.android.gradle.Abi
 import org.gradle.api.Transformer
+import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.internal.provider.DefaultProvider
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -85,18 +87,21 @@ private class TestNdkToolchainImpl(
     useLegacyNdkSymbolUpload: Boolean,
     overrides: Map<Abi, String> = emptyMap()
 ) : NdkToolchain() {
-    override val baseDir: Property<File> = Mockito.mock(Property::class.java) as Property<File>
+    override val baseDir: DirectoryProperty = Mockito.mock(DirectoryProperty::class.java)
     override val useLegacyNdkSymbolUpload: Property<Boolean> = Mockito.mock(Property::class.java) as Property<Boolean>
     override val overrides: MapProperty<Abi, String> = Mockito.mock(MapProperty::class.java) as MapProperty<Abi, String>
     override val bugsnagNdkVersion: Property<String> = Mockito.mock(Property::class.java) as Property<String>
     override val variantName: Property<String> = Mockito.mock(Property::class.java) as Property<String>
 
     init {
-        whenMock(this.baseDir.get()).thenReturn(baseDir)
-        whenMock(this.baseDir.map(any<Transformer<out Any, in File>>()))
+        val baseDirectory: Directory = Mockito.mock(Directory::class.java)
+        whenMock(baseDirectory.asFile).thenReturn(baseDir)
+
+        whenMock(this.baseDir.asFile).thenReturn(DefaultProvider { baseDir })
+        whenMock(this.baseDir.map(any<Transformer<out Any, in Directory>>()))
             .thenAnswer {
                 DefaultProvider {
-                    (it.arguments.first() as Transformer<out Any, in File>).transform(baseDir)
+                    (it.arguments.first() as Transformer<out Any, in Directory>).transform(baseDirectory)
                 }
             }
         whenMock(this.useLegacyNdkSymbolUpload.get()).thenReturn(useLegacyNdkSymbolUpload)
