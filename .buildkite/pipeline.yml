@@ -1,9 +1,9 @@
 steps:
-#  - label: 'Audit current licenses'
-#    timeout_in_minutes: 30
-#    plugins:
-#      - docker-compose#v3.7.0:
-#          run: license-audit
+  - label: 'Audit current licenses'
+    timeout_in_minutes: 30
+    plugins:
+      - docker-compose#v3.7.0:
+          run: license-audit
 
   - label: ':docker: Build Android gradle plugin CI image'
     key: 'agp-ci'
