@@ -8,7 +8,7 @@ RUN gem install license_finder -v 6.13
 WORKDIR /scan
 COPY gradle gradle
 COPY src src
-COPY build.gradle gradle.properties gradlew gradlew.bat LICENSE settings.gradle ./
+COPY build.gradle gradle.properties gradlew gradlew.bat LICENSE settings.gradle.kts ./
 
 RUN ./gradlew
 
