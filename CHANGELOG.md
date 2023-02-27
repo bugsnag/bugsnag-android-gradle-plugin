@@ -1,9 +1,21 @@
 ## TBD
 
+### Enhancements
+
+* Support for Android Gradle Plugin 8.0+
+  [#500](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/500)
+* NDK: `objcopy` is now the default symbol-extraction mechanism (useLegacyNdkSymbolUpload is `false` by default)
+  [#505](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/505)
+
+## 7.4.1 (2023-02-22)
+
 ### Bug Fixes
 
 * Fix task ordering when using DexGuard and a `bundle***` task
-  [496](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/496)
+  [#496](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/496)
+* Improve support for Gradle Configuration Caching
+  [#491](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/491)
+  [#499](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/499)
 
 ## 7.4.0 (2022-11-10)
 

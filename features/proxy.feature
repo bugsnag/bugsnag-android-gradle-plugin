@@ -49,12 +49,12 @@ Scenario: NDK request for basic HTTP proxy
         | appVersionCode | appVersion | buildTool      |
         | 1              | 1.0        | gradle-android |
 
-    And 4 requests are valid for the android NDK mapping API and match the following:
-        | arch        |
-        | arm64-v8a   |
-        | armeabi-v7a |
-        | x86         |
-        | x86_64      |
+    And 4 requests are valid for the android so symbol mapping API and match the following:
+        | projectRoot | sharedObjectName |
+        | /\S+/       | libnative-lib.so |
+        | /\S+/       | libnative-lib.so |
+        | /\S+/       | libnative-lib.so |
+        | /\S+/       | libnative-lib.so |
 
     And 1 requests are valid for the android mapping API and match the following:
         | appId                      |
