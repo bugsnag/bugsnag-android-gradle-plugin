@@ -3,4 +3,3 @@ dependencies {
 }
 
 android.ndkVersion = "24.0.8215888"
-bugsnag.useLegacyNdkSymbolUpload = false

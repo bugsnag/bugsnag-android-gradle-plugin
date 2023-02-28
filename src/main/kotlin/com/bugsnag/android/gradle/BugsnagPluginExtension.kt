@@ -85,7 +85,8 @@ open class BugsnagPluginExtension @Inject constructor(objects: ObjectFactory) {
     val objdumpPaths: MapProperty<String, String> = objects.mapProperty<String, String>()
         .convention(emptyMap())
 
-    val useLegacyNdkSymbolUpload: Property<Boolean> = objects.property<Boolean>().convention(true)
+    val useLegacyNdkSymbolUpload: Property<Boolean> = objects.property<Boolean>()
+        .convention(false)
 
     // exposes sourceControl as a nested object on the extension,
     // see https://docs.gradle.org/current/userguide/custom_gradle_types.html#nested_objects
