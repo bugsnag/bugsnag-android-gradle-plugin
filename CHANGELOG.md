@@ -1,4 +1,4 @@
-## TBD
+## 8.0.0-beta01 (2023-03-01)
 
 ### Enhancements
 
