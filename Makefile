@@ -16,4 +16,4 @@ endif
 	@git commit -m "Release v$(VERSION)"
 	@git tag v$(VERSION)
 	@git push origin master v$(VERSION)
-	@./gradlew clean publishAllPublicationsToSonatypeRepository publishPlugins
+	@./gradlew clean publishPluginMavenPublicationToSonatypeRepository publishPlugins
