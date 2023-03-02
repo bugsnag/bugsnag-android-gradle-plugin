@@ -72,7 +72,8 @@ open class BugsnagGenerateProguardTask @Inject constructor(
     }
 
     companion object : VariantTaskCompanion<BugsnagGenerateProguardTask> {
-        override fun taskNameFor(variantOutputName: String) = "generateBugsnag${variantOutputName.capitalize()}Mapping"
+        override fun taskNameFor(variantOutputName: String) =
+            "generateBugsnag${variantOutputName.replaceFirstChar { it.uppercaseChar() }}Mapping"
 
         fun archiveOutputFile(project: Project, output: BaseVariantOutput): Provider<RegularFile> =
             forBuildOutput(project, output).flatMap { it.archiveOutputFile }

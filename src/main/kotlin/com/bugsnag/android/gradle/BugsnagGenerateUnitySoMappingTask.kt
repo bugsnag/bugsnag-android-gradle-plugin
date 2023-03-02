@@ -223,6 +223,6 @@ internal abstract class BugsnagGenerateUnitySoMappingTask @Inject constructor(
         }
 
         override fun taskNameFor(variantOutputName: String) =
-            "generateBugsnagUnity${variantOutputName.capitalize()}Mapping"
+            "generateBugsnagUnity${variantOutputName.replaceFirstChar { it.uppercaseChar() }}Mapping"
     }
 }
