@@ -74,6 +74,6 @@ abstract class BugsnagManifestUuidTask @Inject constructor(
             forBuildOutput(project, output).flatMap { it.manifestInfoProvider }
 
         override fun taskNameFor(variantOutputName: String): String =
-            "processBugsnag${variantOutputName.capitalize()}Manifest"
+            "processBugsnag${variantOutputName.replaceFirstChar { it.uppercaseChar() }}Manifest"
     }
 }
