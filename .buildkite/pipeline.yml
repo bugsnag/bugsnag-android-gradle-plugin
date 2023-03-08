@@ -51,7 +51,7 @@ steps:
       - docker-compose#v3.7.0:
           run: android-gradle-plugin-ci-v8
           env:
-            - AGP_VERSION=8.0.0-beta02
+            - AGP_VERSION=8.0.0-beta04
             - GRADLE_WRAPPER_VERSION=8.0
             - RN_FIXTURE_DIR=features/fixtures/rn065/android
           command: ['bundle', 'exec', 'maze-runner', '-c', '--verbose', '--fail-fast']
