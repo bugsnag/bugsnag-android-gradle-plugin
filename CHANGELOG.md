@@ -1,3 +1,10 @@
+## TBD
+
+### Enhancements
+
+* Determine the NDK version being used based on the `package.xml` files within the NDK directories, with a fallback to the directory-name.
+  [#514](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/514)
+
 ## 7.4.1 (2023-02-22)
 
 ### Bug Fixes
