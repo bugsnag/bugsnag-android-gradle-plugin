@@ -70,7 +70,9 @@ internal fun Project.hasDexguardPlugin(): Boolean {
  */
 internal fun Project.isDexguardEnabledForVariant(variant: BaseVariant): Boolean {
     val flavor = variant.flavorName
-    val buildType = if (flavor.isEmpty()) variant.buildType.name else variant.buildType.name.capitalize()
+    val buildType =
+        if (flavor.isEmpty()) variant.buildType.name
+        else variant.buildType.name.replaceFirstChar { it.uppercaseChar() }
     return GroovyCompat.isDexguardEnabledForVariant(project, "$flavor$buildType")
 }
 
@@ -86,7 +88,7 @@ internal fun getDexguardVersion(project: Project): Version? {
  * Gets the task name for the Dexguard App Bundle task for this variant.
  */
 internal fun getDexguardAabTaskName(variant: BaseVariant): String {
-    val buildType = variant.buildType.name.capitalize()
-    val flavor = variant.flavorName.capitalize()
+    val buildType = variant.buildType.name.replaceFirstChar { it.uppercaseChar() }
+    val flavor = variant.flavorName.replaceFirstChar { it.uppercaseChar() }
     return "dexguardAab$flavor$buildType"
 }

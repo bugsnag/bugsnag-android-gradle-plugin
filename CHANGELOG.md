@@ -1,3 +1,10 @@
+## 8.0.0 (2023-04-20)
+
+### Enhancements
+
+* Determine the NDK version being used based on the `package.xml` files within the NDK directories, with a fallback to the directory-name.
+  [#515](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/515)
+
 ## 8.0.0-beta01 (2023-03-01)
 
 ### Enhancements

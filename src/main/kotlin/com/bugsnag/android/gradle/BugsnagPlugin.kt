@@ -482,7 +482,7 @@ class BugsnagPlugin : Plugin<Project> {
 
         // lookup the react-native task by its name
         // https://github.com/facebook/react-native/blob/master/react.gradle#L132
-        val rnTaskName = "bundle${variant.name.capitalize()}JsAndAssets"
+        val rnTaskName = "bundle${variant.name.replaceFirstChar { it.uppercaseChar() }}JsAndAssets"
         val rnTask: Task? = project.tasks.findByName(rnTaskName)
         if (rnTask == null) {
             project.logger.error("Bugsnag: unable to find ReactNative bundle task '$rnTaskName'")

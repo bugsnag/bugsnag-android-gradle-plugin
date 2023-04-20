@@ -1,5 +1,8 @@
 plugins {
+    id("java-gradle-plugin")
     id("groovy")
+    id("maven-publish")
+    id("signing")
 
     id("org.jetbrains.kotlin.kapt") version "1.7.10"
     id("org.jetbrains.kotlin.jvm") version "1.7.10"
@@ -12,8 +15,12 @@ plugins {
     id("com.gradle.plugin-publish") version "1.1.0"
 }
 
-def agpVersion = "8.0.0-beta03"
+def agpVersion = "8.0.0"
 def kotlinVersion = "1.7.10"
+
+group = GROUP
+version = VERSION_NAME
+description = POM_DESCRIPTION
 
 sourceSets {
     main {
@@ -80,7 +87,7 @@ gradlePlugin {
     vcsUrl = POM_SCM_URL
 
     plugins {
-        androidGradlePlugin {
+        bugsnagPlugin {
             id = "com.bugsnag.android.gradle"
             implementationClass = "com.bugsnag.android.gradle.BugsnagPlugin"
             displayName = POM_NAME
@@ -112,8 +119,37 @@ publishing {
             groupId = GROUP
             artifactId = POM_ARTIFACT_ID
             version = VERSION_NAME
+
+            pom {
+                name = POM_NAME
+                description = POM_DESCRIPTION
+                url = POM_URL
+
+                licenses {
+                    license {
+                        name = POM_LICENCE_NAME
+                        url = POM_LICENCE_URL
+                    }
+                }
+                developers {
+                    developer {
+                        id = POM_DEVELOPER_ID
+                        name = POM_DEVELOPER_NAME
+                        email = POM_DEVELOPER_URL
+                    }
+                }
+                scm {
+                    connection = POM_SCM_CONNECTION
+                    developerConnection = POM_SCM_DEV_CONNECTION
+                    url = POM_SCM_URL
+                }
+            }
         }
     }
+}
+
+signing {
+    sign(publishing.publications["pluginMaven"])
 }
 
 // license checking
@@ -147,8 +183,3 @@ ktlint {
 }
 
 sourceCompatibility = JavaVersion.VERSION_11
-
-// see https://github.com/asciidoctor/asciidoctorj/pull/862
-Signature.metaClass.getToSignArtifact = { ->
-    return (delegate as Signature).source
-}

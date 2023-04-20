@@ -126,6 +126,6 @@ internal abstract class BugsnagGenerateNdkSoMappingTask @Inject constructor(
         }
 
         override fun taskNameFor(variantOutputName: String) =
-            "generateBugsnagNdk${variantOutputName.capitalize()}Mapping"
+            "generateBugsnagNdk${variantOutputName.replaceFirstChar { it.uppercaseChar() }}Mapping"
     }
 }

@@ -12,10 +12,10 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.StopExecutionException
 import org.semver.Version
 import java.io.File
 
@@ -26,6 +26,7 @@ abstract class NdkToolchain {
     abstract val baseDir: DirectoryProperty
 
     @get:Input
+    @get:Optional
     abstract val useLegacyNdkSymbolUpload: Property<Boolean>
 
     @get:Input
@@ -41,6 +42,15 @@ abstract class NdkToolchain {
     private val logger: Logger = Logging.getLogger(this::class.java)
 
     fun preferredMappingTool(): MappingTool {
+        val forceNdkSymbolTool = useLegacyNdkSymbolUpload.orNull
+        if (forceNdkSymbolTool != null) {
+            return if (forceNdkSymbolTool == true) MappingTool.OBJDUMP else MappingTool.OBJCOPY
+        }
+
+        return detectMappingTool()
+    }
+
+    private fun detectMappingTool(): MappingTool {
         var legacyUploadRequired = bugsnagNdkVersion.orNull
             ?.let { Version.parse(it) }
             ?.let { it < MIN_BUGSNAG_ANDROID_VERSION }
@@ -56,35 +66,11 @@ abstract class NdkToolchain {
             legacyUploadRequired = false
         }
 
-        if (!useLegacyNdkSymbolUpload.get() && legacyUploadRequired) {
-            throw StopExecutionException(
-                "Your Bugsnag SDK configured for variant ${variantName.get()} does not support the new NDK " +
-                    "symbols upload mechanism. Please set legacyNDKSymbolsUpload or upgrade your " +
-                    "Bugsnag SDK. See https://docs.bugsnag.com/api/ndk-symbol-mapping-upload/ for details."
-            )
-        }
-
-        // useLegacyNdkSymbolUpload force overrides any defaults or options
-        if (useLegacyNdkSymbolUpload.get()) {
-            return MappingTool.OBJDUMP
-        }
-
         val ndkVersion = version.get()
         return when {
-            ndkVersion >= MIN_NDK_OBJCOPY_VERSION -> MappingTool.OBJCOPY
+            !legacyUploadRequired && ndkVersion >= MIN_NDK_OBJCOPY_VERSION -> MappingTool.OBJCOPY
             else -> MappingTool.OBJDUMP
         }
-    }
-
-    /**
-     * Set all the fields of this `NdkToolchain` based on the given [other] `NdkToolchain`
-     */
-    fun configureWith(other: NdkToolchain) {
-        baseDir.set(other.baseDir)
-        overrides.set(other.overrides)
-        useLegacyNdkSymbolUpload.set(other.useLegacyNdkSymbolUpload)
-        bugsnagNdkVersion.set(other.bugsnagNdkVersion)
-        variantName.set(other.variantName)
     }
 
     private fun executableName(cmdName: String): String {
@@ -174,7 +160,7 @@ abstract class NdkToolchain {
             bugsnag: BugsnagPluginExtension,
             variant: ApkVariant
         ): NdkToolchain {
-            val useLegacyNdkSymbolUpload = bugsnag.useLegacyNdkSymbolUpload.get()
+            val useLegacyNdkSymbolUpload = bugsnag.useLegacyNdkSymbolUpload.orNull
             val overrides = bugsnag.objdumpPaths.map { it.mapKeys { (abi, _) -> Abi.findByName(abi)!! } }
 
             val ndkToolchain = project.objects.newInstance<NdkToolchain>()
@@ -183,8 +169,13 @@ abstract class NdkToolchain {
             ndkToolchain.overrides.set(overrides)
 
             // we disable the bugsnag-android version check if Unity is enabled otherwise we end up with mutation errors
-            if (!BugsnagGenerateUnitySoMappingTask
-                .isUnityLibraryUploadEnabled(bugsnag, project.extensions.findByType(BaseExtension::class.java)!!)
+            // we also disable the check if 'useLegacyNdkSymbolUpload' has been set
+            if (
+                useLegacyNdkSymbolUpload == null ||
+                !BugsnagGenerateUnitySoMappingTask.isUnityLibraryUploadEnabled(
+                    bugsnag,
+                    project.extensions.findByType(BaseExtension::class.java)!!
+                )
             ) {
                 ndkToolchain.bugsnagNdkVersion.set(project.provider { getBugsnagAndroidNDKVersion(variant) })
             }
@@ -195,5 +186,9 @@ abstract class NdkToolchain {
     }
 }
 
-private val NdkToolchain.version get() = baseDir.map { Version.parse(it.asFile.name) }
+private val NdkToolchain.version: Provider<Version>
+    get() = baseDir.map {
+        NdkPackageXmlParser.loadVersionFromPackageXml(it.asFile)
+    }
+
 private val NdkToolchain.isLLVMPreferred get() = version.map { it >= NdkToolchain.MIN_NDK_LLVM_VERSION }
