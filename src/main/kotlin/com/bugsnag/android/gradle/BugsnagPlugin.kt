@@ -101,7 +101,9 @@ class BugsnagPlugin : Plugin<Project> {
                         " produces your APK instead."
                 )
                 project.afterEvaluate {
-                    registerNdkLibInstallTask(project)
+                    if (bugsnag.enableNdkLinkage.get()) {
+                        registerNdkLibInstallTask(project)
+                    }
                 }
             }
             project.pluginManager.withPlugin("com.android.application") {
@@ -157,7 +159,9 @@ class BugsnagPlugin : Plugin<Project> {
                     unityUploadClientProvider
                 )
             }
-            registerNdkLibInstallTask(project)
+            if (bugsnag.enableNdkLinkage.get()) {
+                registerNdkLibInstallTask(project)
+            }
         }
     }
 
