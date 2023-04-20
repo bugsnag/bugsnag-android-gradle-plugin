@@ -88,6 +88,13 @@ open class BugsnagPluginExtension @Inject constructor(objects: ObjectFactory) {
     val useLegacyNdkSymbolUpload: Property<Boolean> = objects.property<Boolean>()
         .convention(NULL_BOOLEAN)
 
+    /**
+     * Whether to unpack the `bugsnag-plugin-android-ndk` library to allow NDK code to link directly with the BugSnag
+     * NDK C library and headers. Defaults to `true` but can be turned off if not required.
+     */
+    val enableNdkLinkage: Property<Boolean> = objects.property<Boolean>()
+        .convention(true)
+
     // exposes sourceControl as a nested object on the extension,
     // see https://docs.gradle.org/current/userguide/custom_gradle_types.html#nested_objects
 
