@@ -15,7 +15,7 @@ plugins {
     id("com.gradle.plugin-publish") version "1.1.0"
 }
 
-def agpVersion = "8.0.0-rc01"
+def agpVersion = "8.0.0"
 def kotlinVersion = "1.7.10"
 
 group = GROUP
