@@ -75,6 +75,7 @@ class PluginExtensionTest {
             assertNull(sourceControl.revision.orNull)
             assertNull(sourceControl.provider.orNull)
             assertNull(nodeModulesDir.orNull)
+            assertNull(useLegacyNdkSymbolUpload.orNull)
         }
 
         // ndk/unity upload defaults to false
@@ -112,6 +113,7 @@ class PluginExtensionTest {
             objdumpPaths.set(mapOf(Pair("armeabi-v7a", "/test/foo")))
             sharedObjectPaths.set(listOf(File("/test/bar")))
             nodeModulesDir.set(File("/test/foo/node_modules"))
+            useLegacyNdkSymbolUpload.set(true)
 
             sourceControl.repository.set("https://github.com")
             sourceControl.revision.set("d0e98fc")
@@ -136,6 +138,8 @@ class PluginExtensionTest {
             assertEquals(mapOf(Pair("armeabi-v7a", "/test/foo")), objdumpPaths.get())
             assertEquals(listOf(File("/test/bar")), sharedObjectPaths.get())
             assertEquals(File("/test/foo/node_modules"), nodeModulesDir.get())
+            assertTrue(useLegacyNdkSymbolUpload.get())
+
             assertEquals("https://github.com", sourceControl.repository.get())
             assertEquals("d0e98fc", sourceControl.revision.get())
             assertEquals("github", sourceControl.provider.get())

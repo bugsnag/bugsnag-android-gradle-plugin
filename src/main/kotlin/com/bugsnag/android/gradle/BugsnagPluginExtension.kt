@@ -86,7 +86,7 @@ open class BugsnagPluginExtension @Inject constructor(objects: ObjectFactory) {
         .convention(emptyMap())
 
     val useLegacyNdkSymbolUpload: Property<Boolean> = objects.property<Boolean>()
-        .convention(false)
+        .convention(NULL_BOOLEAN)
 
     // exposes sourceControl as a nested object on the extension,
     // see https://docs.gradle.org/current/userguide/custom_gradle_types.html#nested_objects

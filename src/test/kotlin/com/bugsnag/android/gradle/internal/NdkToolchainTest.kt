@@ -7,6 +7,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.internal.provider.DefaultProvider
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
@@ -17,21 +18,31 @@ import java.io.File
 import org.mockito.Mockito.`when` as whenMock
 
 class NdkToolchainTest {
+    private var ndkDir: File? = null
+
+    @After
+    fun cleanupNdkDir() {
+        ndkDir?.deleteRecursively()
+    }
+
     @Test
     fun ndk19() {
-        val toolchain = TestNdkToolchainImpl(File("/19.2.5345600/"), true)
+        val ndkDir = setupFakeNdk(19, 2, 5345600)
+        val toolchain = TestNdkToolchainImpl(ndkDir, true)
         assertEquals(NdkToolchain.MappingTool.OBJDUMP, toolchain.preferredMappingTool())
     }
 
     @Test
     fun ndk21Legacy() {
-        val toolchain = TestNdkToolchainImpl(File("/21.1.6352462/"), true)
+        val ndkDir = setupFakeNdk(21, 1, 6352462)
+        val toolchain = TestNdkToolchainImpl(ndkDir, true)
         assertEquals(NdkToolchain.MappingTool.OBJDUMP, toolchain.preferredMappingTool())
     }
 
     @Test
     fun ndk21() {
-        val toolchain = TestNdkToolchainImpl(File("/21.1.6352462/"), false)
+        val ndkDir = setupFakeNdk(21, 1, 6352462)
+        val toolchain = TestNdkToolchainImpl(ndkDir, false)
         assertEquals(NdkToolchain.MappingTool.OBJCOPY, toolchain.preferredMappingTool())
 
         val objcopyPath = toolchain.objcopyForAbi(Abi.ARM64_V8A).toString()
@@ -43,7 +54,8 @@ class NdkToolchainTest {
 
     @Test
     fun ndk23() {
-        val toolchain = TestNdkToolchainImpl(File("/23.0.7599858/"), false)
+        val ndkDir = setupFakeNdk(23, 0, 7599858)
+        val toolchain = TestNdkToolchainImpl(ndkDir, false)
         assertEquals(NdkToolchain.MappingTool.OBJCOPY, toolchain.preferredMappingTool())
 
         val objcopyPath = toolchain.objcopyForAbi(Abi.ARM64_V8A).toString()
@@ -55,8 +67,9 @@ class NdkToolchainTest {
 
     @Test
     fun objcopyOverrides() {
+        val ndkDir = setupFakeNdk(23, 0, 7599858)
         val toolchain = TestNdkToolchainImpl(
-            File("/23.0.7599858/"), false, mapOf(Abi.ARM64_V8A to "arm64-objcopy")
+            ndkDir, false, mapOf(Abi.ARM64_V8A to "arm64-objcopy")
         )
 
         assertEquals(NdkToolchain.MappingTool.OBJCOPY, toolchain.preferredMappingTool())
@@ -69,8 +82,9 @@ class NdkToolchainTest {
 
     @Test
     fun objdumpOverrides() {
+        val ndkDir = setupFakeNdk(19, 2, 5345600)
         val toolchain = TestNdkToolchainImpl(
-            File("/19.2.5345600/"), true, mapOf(Abi.ARM64_V8A to "arm64-objcopy")
+            ndkDir, true, mapOf(Abi.ARM64_V8A to "arm64-objcopy")
         )
 
         assertEquals(NdkToolchain.MappingTool.OBJDUMP, toolchain.preferredMappingTool())
@@ -80,11 +94,35 @@ class NdkToolchainTest {
         assertNotEquals("arm64-objcopy", toolchain.objdumpForAbi(Abi.X86_64).toString())
         assertNotEquals("arm64-objcopy", toolchain.objdumpForAbi(Abi.ARMEABI).toString())
     }
+
+    fun setupFakeNdk(major: Int, minor: Int, micro: Int): File {
+        val newNdkDir = File(System.getProperty("java.io.tmpdir"), "ndk$major.$minor.$micro")
+        newNdkDir.mkdirs()
+
+        val packageXml = File(newNdkDir, "package.xml")
+        packageXml.writeText(
+            """
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+            <ns2:repository xmlns:ns2="http://schemas.android.com/repository/android/common/02" xmlns:ns3="http://schemas.android.com/repository/android/common/01" xmlns:ns4="http://schemas.android.com/repository/android/generic/01" xmlns:ns5="http://schemas.android.com/repository/android/generic/02" xmlns:ns6="http://schemas.android.com/sdk/android/repo/addon2/01" xmlns:ns7="http://schemas.android.com/sdk/android/repo/addon2/02" xmlns:ns8="http://schemas.android.com/sdk/android/repo/repository2/01" xmlns:ns9="http://schemas.android.com/sdk/android/repo/repository2/02" xmlns:ns10="http://schemas.android.com/sdk/android/repo/sys-img2/02" xmlns:ns11="http://schemas.android.com/sdk/android/repo/sys-img2/01">
+            <license id="android-sdk-license" type="text"/>
+            <localPackage path="ndk;23.1.7779620" obsolete="false"><type-details xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns5:genericDetailsType"/>
+                <revision><major>$major</major><minor>$minor</minor><micro>$micro</micro></revision>
+                <display-name>NDK (Side by side) $major.$minor.$micro</display-name>
+                <uses-license ref="android-sdk-license"/>
+                <dependencies><dependency path="patcher;v4"/></dependencies>
+            </localPackage>
+            </ns2:repository>
+            """.trimIndent()
+        )
+
+        ndkDir = newNdkDir
+        return newNdkDir
+    }
 }
 
 private class TestNdkToolchainImpl(
     baseDir: File,
-    useLegacyNdkSymbolUpload: Boolean,
+    useLegacyNdkSymbolUpload: Boolean?,
     overrides: Map<Abi, String> = emptyMap()
 ) : NdkToolchain() {
     override val baseDir: DirectoryProperty = Mockito.mock(DirectoryProperty::class.java)
@@ -104,7 +142,7 @@ private class TestNdkToolchainImpl(
                     (it.arguments.first() as Transformer<out Any, in Directory>).transform(baseDirectory)
                 }
             }
-        whenMock(this.useLegacyNdkSymbolUpload.get()).thenReturn(useLegacyNdkSymbolUpload)
+        whenMock(this.useLegacyNdkSymbolUpload.orNull).thenReturn(useLegacyNdkSymbolUpload)
         whenMock(this.overrides.get()).thenReturn(overrides)
     }
 }
