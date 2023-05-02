@@ -7,7 +7,6 @@ import com.bugsnag.android.gradle.internal.mapProperty
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.runRequestWithRetries
-import com.bugsnag.android.gradle.internal.systemPropertyCompat
 import com.squareup.moshi.JsonClass
 import okhttp3.OkHttpClient
 import org.gradle.api.DefaultTask
@@ -31,7 +30,6 @@ import org.gradle.process.ExecOperations
 import org.gradle.process.ExecResult
 import org.gradle.process.ExecSpec
 import org.gradle.process.internal.ExecException
-import org.semver.Version
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -277,15 +275,11 @@ open class BugsnagReleasesTask @Inject constructor(
     }
 
     internal fun configureMetadata() {
-        val gradleVersionNumber = gradleVersion.orNull?.let {
-            gradleVersion.set(it)
-            Version.parse(it)
-        }
         gitVersion.set(providerFactory.of(GitVersionValueSource::class.java) {})
-        osArch.set(providerFactory.systemPropertyCompat(MK_OS_ARCH, gradleVersionNumber))
-        osName.set(providerFactory.systemPropertyCompat(MK_OS_NAME, gradleVersionNumber))
-        osVersion.set(providerFactory.systemPropertyCompat(MK_OS_VERSION, gradleVersionNumber))
-        javaVersion.set(providerFactory.systemPropertyCompat(MK_JAVA_VERSION, gradleVersionNumber))
+        osArch.set(providerFactory.systemProperty(MK_OS_ARCH))
+        osName.set(providerFactory.systemProperty(MK_OS_NAME))
+        osVersion.set(providerFactory.systemProperty(MK_OS_VERSION))
+        javaVersion.set(providerFactory.systemProperty(MK_JAVA_VERSION))
     }
 
     companion object {
