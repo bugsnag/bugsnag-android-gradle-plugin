@@ -1,3 +1,12 @@
+## 8.0.1 (2023-05-02)
+
+### Bug Fixes
+
+* Removed `git --version` run from the configuration phase, improving compatibility with Gradle configuration caching
+  [#524](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/524)
+* Fixed a Version parse bug which blocked the use of Gradle Nightly builds
+  [#525](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/525)
+
 ## 8.0.0 (2023-04-24)
 
 ### Enhancements
