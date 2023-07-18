@@ -19,6 +19,7 @@ import javax.inject.Inject
 private val NULL_STRING: String? = null
 private val NULL_BOOLEAN: Boolean? = null
 private val NULL_FILE: File? = null
+private val NULL_INT: Int? = null
 
 internal const val UPLOAD_ENDPOINT_DEFAULT: String = "https://upload.bugsnag.com"
 
@@ -64,6 +65,9 @@ open class BugsnagPluginExtension @Inject constructor(objects: ObjectFactory) {
 
     val sharedObjectPaths: ListProperty<File> = objects.listProperty<File>()
         .convention(emptyList())
+
+    val dexguardMajorVersion: Property<Int> = objects.property<Int>()
+        .convention(NULL_INT)
 
     val nodeModulesDir: Property<File> = objects.property<File>()
         .convention(NULL_FILE)

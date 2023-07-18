@@ -207,7 +207,7 @@ class BugsnagPlugin : Plugin<Project> {
             val reactNativeEnabled = isReactNativeUploadEnabled(bugsnag)
 
             // register bugsnag tasks
-            val mappingFilesProvider = createMappingFileProvider(project, variant, output)
+            val mappingFilesProvider = createMappingFileProvider(project, variant, output, bugsnag.dexguardMajorVersion.orNull)
             val manifestTaskProvider = registerManifestUuidTask(project, output)
 
             val manifestInfoProvider = manifestTaskProvider
