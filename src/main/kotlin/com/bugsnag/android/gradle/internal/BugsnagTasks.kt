@@ -13,7 +13,7 @@ internal fun taskNameForUploadRelease(output: BaseVariantOutput) =
     "bugsnagRelease${output.taskNameSuffix()}Task"
 
 internal fun taskNameForManifestUuid(variantOutput: String) =
-    "processBugsnag${variantOutput.capitalize()}Manifest"
+    "processBugsnag${variantOutput.replaceFirstChar { it.uppercaseChar() }}Manifest"
 
 internal fun taskNameForUploadSourcemaps(output: BaseVariantOutput) =
     "uploadBugsnag${output.taskNameSuffix()}SourceMaps"

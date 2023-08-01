@@ -218,22 +218,11 @@ internal abstract class BugsnagGenerateUnitySoMappingTask @Inject constructor(
             val enabled = bugsnag.uploadNdkUnityLibraryMappings.orNull
             return when {
                 enabled != null -> enabled
-                else -> {
-                    // workaround to avoid exception as noCompress was null until AGP 4.1
-                    runCatching {
-                        val clz = android.aaptOptions.javaClass
-                        val method = clz.getMethod("getNoCompress")
-                        val noCompress = method.invoke(android.aaptOptions)
-                        if (noCompress is Collection<*>) {
-                            return noCompress.contains(".unity3d")
-                        }
-                    }
-                    return false
-                }
+                else -> android.aaptOptions.noCompress.contains(".unity3d")
             }
         }
 
         override fun taskNameFor(variantOutputName: String) =
-            "generateBugsnagUnity${variantOutputName.capitalize()}Mapping"
+            "generateBugsnagUnity${variantOutputName.replaceFirstChar { it.uppercaseChar() }}Mapping"
     }
 }

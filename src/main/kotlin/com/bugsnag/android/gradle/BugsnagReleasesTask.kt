@@ -1,12 +1,12 @@
 package com.bugsnag.android.gradle
 
 import com.bugsnag.android.gradle.internal.BugsnagHttpClientHelper
+import com.bugsnag.android.gradle.internal.GitVersionValueSource
 import com.bugsnag.android.gradle.internal.UploadRequestClient
 import com.bugsnag.android.gradle.internal.mapProperty
 import com.bugsnag.android.gradle.internal.property
 import com.bugsnag.android.gradle.internal.register
 import com.bugsnag.android.gradle.internal.runRequestWithRetries
-import com.bugsnag.android.gradle.internal.systemPropertyCompat
 import com.squareup.moshi.JsonClass
 import okhttp3.OkHttpClient
 import org.gradle.api.DefaultTask
@@ -30,7 +30,6 @@ import org.gradle.process.ExecOperations
 import org.gradle.process.ExecResult
 import org.gradle.process.ExecSpec
 import org.gradle.process.internal.ExecException
-import org.gradle.util.VersionNumber
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -268,22 +267,19 @@ open class BugsnagReleasesTask @Inject constructor(
                 execSpec.standardOutput = baos
                 logging.captureStandardError(LogLevel.INFO)
             }
-            String(baos.toByteArray(), Charset.forName(CHARSET_UTF8)).trim { it <= ' ' }
+
+            baos.toString(Charset.defaultCharset()).trim { it <= ' ' }
         } catch (ignored: ExecException) {
             null
         }
     }
 
     internal fun configureMetadata() {
-        val gradleVersionNumber = gradleVersion.orNull?.let {
-            gradleVersion.set(it)
-            VersionNumber.parse(it)
-        }
-        gitVersion.set(providerFactory.provider { runCmd(VCS_COMMAND, "--version") })
-        osArch.set(providerFactory.systemPropertyCompat(MK_OS_ARCH, gradleVersionNumber))
-        osName.set(providerFactory.systemPropertyCompat(MK_OS_NAME, gradleVersionNumber))
-        osVersion.set(providerFactory.systemPropertyCompat(MK_OS_VERSION, gradleVersionNumber))
-        javaVersion.set(providerFactory.systemPropertyCompat(MK_JAVA_VERSION, gradleVersionNumber))
+        gitVersion.set(providerFactory.of(GitVersionValueSource::class.java) {})
+        osArch.set(providerFactory.systemProperty(MK_OS_ARCH))
+        osName.set(providerFactory.systemProperty(MK_OS_NAME))
+        osVersion.set(providerFactory.systemProperty(MK_OS_VERSION))
+        javaVersion.set(providerFactory.systemProperty(MK_JAVA_VERSION))
     }
 
     companion object {
@@ -300,7 +296,6 @@ open class BugsnagReleasesTask @Inject constructor(
         private const val MK_OS_VERSION = "os.version"
         private const val MK_JAVA_VERSION = "java.version"
         private const val VCS_COMMAND = "git"
-        private const val CHARSET_UTF8 = "UTF-8"
 
         @JvmStatic
         fun isValidVcsProvider(provider: String?): Boolean {

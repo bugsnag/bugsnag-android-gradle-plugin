@@ -5,7 +5,8 @@ ext.abiCodes = ['arm64-v8a': 2, 'armeabi-v7a': 3, 'x86': 4, 'x86_64': 5]
 
 android {
     compileSdkVersion 29
-    ndkVersion "16.1.4479499"
+    namespace "com.bugsnag.android.ndkapp"
+    ndkVersion "24.0.8215888"
 
     defaultConfig {
         applicationId "com.bugsnag.android.ndkapp"

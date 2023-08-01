@@ -66,15 +66,14 @@ open class BugsnagGenerateProguardTask @Inject constructor(
         val mappingFile = mappingFileProperty.filter(File::exists).singleFile
         if (!mappingFile.exists()) {
             logger.warn("Bugsnag: Mapping file not found: $mappingFile")
-            if (failOnUploadError.get()) {
-                throw IllegalStateException("Mapping file not found: $mappingFile")
-            }
+            check(failOnUploadError.get()) { "Mapping file not found: $mappingFile" }
         }
         return mappingFile
     }
 
     companion object : VariantTaskCompanion<BugsnagGenerateProguardTask> {
-        override fun taskNameFor(variantOutputName: String) = "generateBugsnag${variantOutputName.capitalize()}Mapping"
+        override fun taskNameFor(variantOutputName: String) =
+            "generateBugsnag${variantOutputName.replaceFirstChar { it.uppercaseChar() }}Mapping"
 
         fun archiveOutputFile(project: Project, output: BaseVariantOutput): Provider<RegularFile> =
             forBuildOutput(project, output).flatMap { it.archiveOutputFile }

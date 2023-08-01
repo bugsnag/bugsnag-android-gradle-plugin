@@ -30,7 +30,7 @@ internal const val UNITY_SO_MAPPING_DIR = "intermediates/bugsnag/soMappings/unit
 /**
  * Gets a unique suffix for a [BaseVariantOutput] which is used in tasks and intermediate directories
  */
-internal fun BaseVariantOutput.taskNameSuffix() = name.capitalize()
+internal fun BaseVariantOutput.taskNameSuffix() = name.replaceFirstChar { it.uppercaseChar() }
 
 /** Intermediate locations for task outputs/inputs **/
 
@@ -70,7 +70,7 @@ internal fun intermediateForRescuedReactNativeBundle(project: Project, output: B
 }
 
 internal fun Project.computeManifestInfoOutputV2(variant: String): Provider<RegularFile> {
-    val path = "intermediates/bugsnag/manifestInfoFor${variant.capitalize()}.json"
+    val path = "intermediates/bugsnag/manifestInfoFor${variant.replaceFirstChar { it.uppercaseChar() }}.json"
     return layout.buildDirectory.file(path)
 }
 

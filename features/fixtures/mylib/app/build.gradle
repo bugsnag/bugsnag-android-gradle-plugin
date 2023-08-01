@@ -5,6 +5,8 @@ plugins {
 apply plugin: "com.bugsnag.android.gradle"
 
 android {
+    namespace "com.example.bugsnag.mylib"
+
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
 

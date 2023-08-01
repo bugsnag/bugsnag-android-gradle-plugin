@@ -48,7 +48,7 @@ abstract class UploadRequestClient : AutoCloseable, BuildService<BuildServicePar
 
 internal fun newUploadRequestClientProvider(project: Project, prefix: String): Provider<out UploadRequestClient> {
     return project.gradle.sharedServices.registerIfAbsent(
-        "bugsnag${prefix.capitalize()}UploadRequestClient",
+        "bugsnag${prefix.replaceFirstChar { it.uppercaseChar() }}UploadRequestClient",
         UploadRequestClient::class.java
     ) {
         // No parameters!

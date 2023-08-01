@@ -112,11 +112,9 @@ internal abstract class BugsnagGenerateNdkSoMappingTask @Inject constructor(
                 abi.set(output.getFilter(VariantOutput.FilterType.ABI))
                 ndkToolchain.set(ndk)
 
-                val externalNativeBuildTaskUtil = ExternalNativeBuildTaskUtil(project.providers)
-
                 searchDirectories.from(searchPaths)
                 variant.externalNativeBuildProviders.forEach { provider ->
-                    searchDirectories.from(externalNativeBuildTaskUtil.findSearchPaths(provider))
+                    searchDirectories.from(ExternalNativeBuildTaskUtil.findSearchPath(provider))
                 }
                 outputDirectory.set(project.layout.buildDirectory.dir(soMappingOutputPath))
             }
@@ -128,6 +126,6 @@ internal abstract class BugsnagGenerateNdkSoMappingTask @Inject constructor(
         }
 
         override fun taskNameFor(variantOutputName: String) =
-            "generateBugsnagNdk${variantOutputName.capitalize()}Mapping"
+            "generateBugsnagNdk${variantOutputName.replaceFirstChar { it.uppercaseChar() }}Mapping"
     }
 }

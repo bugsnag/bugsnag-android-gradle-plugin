@@ -1,3 +1,30 @@
+## 8.0.1 (2023-05-02)
+
+### Bug Fixes
+
+* Removed `git --version` run from the configuration phase, improving compatibility with Gradle configuration caching
+  [#524](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/524)
+* Fixed a Version parse bug which blocked the use of Gradle Nightly builds
+  [#525](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/525)
+
+## 8.0.0 (2023-04-24)
+
+### Enhancements
+
+* Determine the NDK version being used based on the `package.xml` files within the NDK directories, with a fallback to the directory-name.
+  [#515](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/515)
+* `bugsnag.enableNdkLinkage` can be set to `false` to suppress the extraction of the `bugsnag-plugin-android-ndk` package in projects that don't use [our NDK plugin](https://github.com/bugsnag/bugsnag-android/tree/master/bugsnag-plugin-android-ndk), suppressing "Configuration was resolved at configuration time" warnings as a result.
+  [#520](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/520)
+
+## 8.0.0-beta01 (2023-03-01)
+
+### Enhancements
+
+* Support for Android Gradle Plugin 8.0+
+  [#500](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/500)
+* NDK: `objcopy` is now the default symbol-extraction mechanism (useLegacyNdkSymbolUpload is `false` by default)
+  [#505](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/505)
+
 ## 7.5.0 (2023-04-20)
 
 ### Enhancements

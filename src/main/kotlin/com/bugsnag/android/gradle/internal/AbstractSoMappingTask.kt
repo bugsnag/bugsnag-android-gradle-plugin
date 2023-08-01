@@ -61,11 +61,7 @@ abstract class AbstractSoMappingTask : DefaultTask() {
         outputZipFile(process.inputStream, dst)
 
         val exitCode = process.waitFor()
-        if (exitCode != 0) {
-            throw IllegalStateException(
-                "Failed to generate symbols for $dst, objdump exited with code $exitCode"
-            )
-        }
+        check(exitCode == 0) { "Failed to generate symbols for $dst, objdump exited with code $exitCode" }
     }
 
     protected open fun outputFileFor(soFile: File, abi: Abi): File {

@@ -8,7 +8,7 @@ buildscript {
     }
 
     dependencies {
-        def agpVersion = System.env.AGP_VERSION ?: "7.0.0"
+        def agpVersion = System.env.AGP_VERSION ?: "8.0.0-beta04"
         classpath "com.android.tools.build:gradle:${agpVersion}"
         classpath "com.bugsnag:bugsnag-android-gradle-plugin:9000.0.0-test"
     }
@@ -40,6 +40,7 @@ android {
     compileSdkVersion 29
     ndkVersion "16.1.4479499"
     buildToolsVersion '30.0.2'
+    namespace "com.bugsnag.example"
 
     defaultConfig {
         minSdkVersion 16

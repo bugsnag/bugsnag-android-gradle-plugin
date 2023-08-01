@@ -68,17 +68,17 @@ class BugsnagPlugin : Plugin<Project> {
 
     @Suppress("LongMethod")
     override fun apply(project: Project) {
-        if (AgpVersions.CURRENT < AgpVersions.VERSION_7_0) {
+        if (AgpVersions.CURRENT < AgpVersions.VERSION_8_0) {
             throw StopExecutionException(
-                "Using com.bugsnag.android.gradle:7+ with Android Gradle Plugin < 7 " +
-                    "is not supported. Either upgrade the Android Gradle Plugin to 7, or use an " +
+                "Using com.bugsnag.android.gradle:8+ with Android Gradle Plugin < 8 " +
+                    "is not supported. Either upgrade the Android Gradle Plugin to 8, or use an " +
                     "earlier version of the BugSnag Gradle Plugin. " +
                     "For more information about this change, see " +
                     "https://docs.bugsnag.com/build-integrations/gradle/"
             )
-        } else if (AgpVersions.CURRENT >= AgpVersions.VERSION_8_0) {
+        } else if (AgpVersions.CURRENT >= AgpVersions.VERSION_9_0) {
             project.logger.warn(
-                "Using com.bugsnag.android.gradle:7+ with Android Gradle Plugin 8+ is not " +
+                "Using com.bugsnag.android.gradle:8+ with Android Gradle Plugin 9+ is not " +
                     "formally supported, and may lead to compatibility errors. " +
                     "For more information, please see " +
                     "https://docs.bugsnag.com/build-integrations/gradle/"
@@ -101,7 +101,9 @@ class BugsnagPlugin : Plugin<Project> {
                         " produces your APK instead."
                 )
                 project.afterEvaluate {
-                    registerNdkLibInstallTask(project)
+                    if (bugsnag.enableNdkLinkage.get()) {
+                        registerNdkLibInstallTask(project)
+                    }
                 }
             }
             project.pluginManager.withPlugin("com.android.application") {
@@ -157,7 +159,9 @@ class BugsnagPlugin : Plugin<Project> {
                     unityUploadClientProvider
                 )
             }
-            registerNdkLibInstallTask(project)
+            if (bugsnag.enableNdkLinkage.get()) {
+                registerNdkLibInstallTask(project)
+            }
         }
     }
 
@@ -482,7 +486,7 @@ class BugsnagPlugin : Plugin<Project> {
 
         // lookup the react-native task by its name
         // https://github.com/facebook/react-native/blob/master/react.gradle#L132
-        val rnTaskName = "bundle${variant.name.capitalize()}JsAndAssets"
+        val rnTaskName = "bundle${variant.name.replaceFirstChar { it.uppercaseChar() }}JsAndAssets"
         val rnTask: Task? = project.tasks.findByName(rnTaskName)
         if (rnTask == null) {
             project.logger.error("Bugsnag: unable to find ReactNative bundle task '$rnTaskName'")
@@ -569,10 +573,8 @@ class BugsnagPlugin : Plugin<Project> {
                 }
             }
             if (checkSearchDirectories) {
-                val externalNativeBuildTaskUtil = ExternalNativeBuildTaskUtil(project.providers)
-
                 variant.externalNativeBuildProviders.forEach { task ->
-                    ndkMappingFileProperty.from(externalNativeBuildTaskUtil.findSearchPaths(task))
+                    ndkMappingFileProperty.from(ExternalNativeBuildTaskUtil.findSearchPath(task))
                 }
             }
             configureMetadata()
