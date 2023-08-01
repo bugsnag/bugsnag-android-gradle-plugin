@@ -17,20 +17,23 @@ import org.gradle.api.provider.Provider
 internal fun createMappingFileProvider(
     project: Project,
     variant: BaseVariant,
-    variantOutput: BaseVariantOutput
+    variantOutput: BaseVariantOutput,
+    dexguardMajorVersion: Int? = null
 ): Provider<FileCollection> {
-    return findMappingFiles(project, variant, variantOutput)
+    return findMappingFiles(project, variant, variantOutput, dexguardMajorVersion)
         .map { files -> files.filter { it.exists() } }
 }
 
 private fun findMappingFiles(
     project: Project,
     variant: BaseVariant,
-    variantOutput: BaseVariantOutput
+    variantOutput: BaseVariantOutput,
+    dexguardMajorVersion: Int? = null
 ): Provider<FileCollection> {
     return when {
         project.hasDexguardPlugin() -> {
-            if (getDexguardMajorVersionInt(project) >= 9) {
+            val dexguardVersion = dexguardMajorVersion ?: getDexguardMajorVersionInt(project)
+            if (dexguardVersion >= 9) {
                 project.provider {
                     val files = findMappingFileDexguard9(project, variant, variantOutput)
                     project.layout.files(files)
