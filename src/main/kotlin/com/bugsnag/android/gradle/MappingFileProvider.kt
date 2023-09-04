@@ -4,12 +4,11 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.bugsnag.android.gradle.internal.findMappingFileDexguard9
 import com.bugsnag.android.gradle.internal.findMappingFileDexguardLegacy
-import com.bugsnag.android.gradle.internal.getDexguardVersion
+import com.bugsnag.android.gradle.internal.getDexguardMajorVersionInt
 import com.bugsnag.android.gradle.internal.hasDexguardPlugin
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
-import org.semver.Version
 
 /**
  * Creates a Provider which finds the mapping file for a given variantOutput and filters out
@@ -18,21 +17,23 @@ import org.semver.Version
 internal fun createMappingFileProvider(
     project: Project,
     variant: BaseVariant,
-    variantOutput: BaseVariantOutput
+    variantOutput: BaseVariantOutput,
+    dexguardMajorVersion: Int? = null
 ): Provider<FileCollection> {
-    return findMappingFiles(project, variant, variantOutput)
+    return findMappingFiles(project, variant, variantOutput, dexguardMajorVersion)
         .map { files -> files.filter { it.exists() } }
 }
 
 private fun findMappingFiles(
     project: Project,
     variant: BaseVariant,
-    variantOutput: BaseVariantOutput
+    variantOutput: BaseVariantOutput,
+    dexguardMajorVersion: Int? = null
 ): Provider<FileCollection> {
     return when {
         project.hasDexguardPlugin() -> {
-            val dexguardVersion = getDexguardVersion(project)
-            if (dexguardVersion != null && dexguardVersion >= Version(9, 0, 0)) {
+            val dexguardVersion = dexguardMajorVersion ?: getDexguardMajorVersionInt(project)
+            if (dexguardVersion >= 9) {
                 project.provider {
                     val files = findMappingFileDexguard9(project, variant, variantOutput)
                     project.layout.files(files)
