@@ -4,7 +4,7 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.bugsnag.android.gradle.GroovyCompat
 import org.gradle.api.Project
-import org.semver.Version
+import org.gradle.util.VersionNumber
 import java.io.File
 import java.nio.file.Paths
 
@@ -18,8 +18,18 @@ internal fun findMappingFileDexguard9(
     variantOutput: BaseVariantOutput
 ): List<File> {
     return listOf(
-        findDexguardMappingFile(project, variant, variantOutput, arrayOf("outputs", "dexguard", "mapping", "apk")),
-        findDexguardMappingFile(project, variant, variantOutput, arrayOf("outputs", "dexguard", "mapping", "bundle"))
+        findDexguardMappingFile(
+            project,
+            variant,
+            variantOutput,
+            arrayOf("outputs", "dexguard", "mapping", "apk")
+        ),
+        findDexguardMappingFile(
+            project,
+            variant,
+            variantOutput,
+            arrayOf("outputs", "dexguard", "mapping", "bundle")
+        )
     )
 }
 
@@ -71,24 +81,24 @@ internal fun Project.hasDexguardPlugin(): Boolean {
 internal fun Project.isDexguardEnabledForVariant(variant: BaseVariant): Boolean {
     val flavor = variant.flavorName
     val buildType =
-        if (flavor.isEmpty()) variant.buildType.name
-        else variant.buildType.name.replaceFirstChar { it.uppercaseChar() }
+        if (flavor.isEmpty()) variant.buildType.name else variant.buildType.name.capitalize()
     return GroovyCompat.isDexguardEnabledForVariant(project, "$flavor$buildType")
 }
 
 /**
  * Retrieves the major version of DexGuard in use in the project
  */
-internal fun getDexguardVersion(project: Project): Version? {
-    val version = GroovyCompat.getDexguardVersionString(project) ?: return null
-    return Version.parse(version)
+internal fun getDexguardMajorVersionInt(project: Project): Int {
+    val version = GroovyCompat.getDexguardVersionString(project) ?: "9.0.0"
+    val versionNumber = VersionNumber.parse(version)
+    return versionNumber.major
 }
 
 /**
  * Gets the task name for the Dexguard App Bundle task for this variant.
  */
 internal fun getDexguardAabTaskName(variant: BaseVariant): String {
-    val buildType = variant.buildType.name.replaceFirstChar { it.uppercaseChar() }
-    val flavor = variant.flavorName.replaceFirstChar { it.uppercaseChar() }
+    val buildType = variant.buildType.name.capitalize()
+    val flavor = variant.flavorName.capitalize()
     return "dexguardAab$flavor$buildType"
 }

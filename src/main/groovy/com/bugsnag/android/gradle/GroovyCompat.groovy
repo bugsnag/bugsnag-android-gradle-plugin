@@ -5,9 +5,6 @@ import com.android.build.gradle.AppExtension
 import org.gradle.api.Action
 import org.gradle.api.Project
 
-import java.util.jar.Attributes
-import java.util.jar.Manifest
-
 /**
  * Contains functions which exploit Groovy's metaprogramming to provide backwards
  * compatibility for older AGP versions that would be impractical to achieve with
@@ -38,22 +35,10 @@ class GroovyCompat {
             if (dexguard == null) {
                 return null
             }
-            if (dexguard.version != null) {
+            if (dexguard.hasProperty("version") && dexguard.version != null) {
                 return dexguard.version
             } else {
-                // the path value is structured like this: DexGuard-8.7.02
-                if (dexguard.path == null) {
-                    return null
-                }
-
-                File dexguardDir = project.file(dexguard.path).getCanonicalFile()
-
-                // Get the version from the dexguard.jar manifest
-                URL url = new URL("jar:file:$dexguardDir/lib/dexguard.jar!/")
-                URLConnection jarURLConnection = url.openConnection() as JarURLConnection
-                Manifest manifest = jarURLConnection.manifest
-                Attributes attrs = manifest.mainAttributes
-                return attrs.getValue("Implementation-Version")
+                return "9.0.0"
             }
         } catch (MissingPropertyException ignored) {
             // running earlier version of DexGuard, ignore missing property
