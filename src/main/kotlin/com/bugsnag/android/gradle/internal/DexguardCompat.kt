@@ -78,7 +78,7 @@ internal fun Project.isDexguardEnabledForVariant(variant: BaseVariant): Boolean 
  * Retrieves the major version of DexGuard in use in the project
  */
 internal fun getDexguardMajorVersionInt(project: Project): Int {
-    val version = GroovyCompat.getDexguardVersionString(project) ?: ""
+    val version = GroovyCompat.getDexguardVersionString(project) ?: "9.0.0"
     val versionNumber = VersionNumber.parse(version)
     return versionNumber.major
 }
