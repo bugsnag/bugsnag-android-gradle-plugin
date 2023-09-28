@@ -1,3 +1,10 @@
+## 8.1.0 (2023-09-28)
+
+### Enhancements
+
+* Allow DexGuard version to be specified manually (as `bugsnag.dexguardMajorVersion`) for DexGuard < 9
+  [#531](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/531)
+
 ## 8.0.1 (2023-05-02)
 
 ### Bug Fixes
