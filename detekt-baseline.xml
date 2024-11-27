@@ -8,6 +8,7 @@
     <ID>LongParameterList:BugsnagUploadSoSymTask.kt$BugsnagUploadSoSymTask.Companion$( project: Project, variant: BaseVariantOutput, ndkToolchain: NdkToolchain, uploadType: UploadType, generateTaskProvider: TaskProvider&lt;out AbstractSoMappingTask>, httpClientHelperProvider: Provider&lt;out BugsnagHttpClientHelper>, ndkUploadClientProvider: Provider&lt;out UploadRequestClient>, )</ID>
     <ID>MagicNumber:BugsnagPluginExtension.kt$BugsnagPluginExtension$60000</ID>
     <ID>MagicNumber:BugsnagReleasesTask.kt$BugsnagReleasesTask$200</ID>
+    <ID>MagicNumber:BugsnagUploadSoSymTask.kt$BugsnagUploadSoSymTask$404</ID>
     <ID>MagicNumber:MappingFileProvider.kt$9</ID>
     <ID>MaxLineLength:BugsnagPlugin.kt$BugsnagPlugin$val mappingFilesProvider = createMappingFileProvider(project, variant, output, bugsnag.dexguardMajorVersion.orNull)</ID>
     <ID>ReturnCount:BugsnagPlugin.kt$BugsnagPlugin$private fun registerUploadSourceMapTask( project: Project, variant: BaseVariant, output: BaseVariantOutput, bugsnag: BugsnagPluginExtension, manifestInfoProvider: Provider&lt;RegularFile> ): TaskProvider&lt;out BugsnagUploadJsSourceMapTask>?</ID>
