@@ -82,7 +82,7 @@ internal abstract class BugsnagUploadSoSymTask : DefaultTask(), AndroidManifestI
      */
     private fun uploadSymbols(mappingFile: File) {
         val sharedObjectName = mappingFile.nameWithoutExtension
-        val requestEndpoint = endpoint.get() + ENDPOINT_SUFFIX
+        val requestEndpoint = endpoint.get() + ENDPOINT_NDK + ENDPOINT_SUFFIX
 
         val request = BugsnagMultiPartUploadRequest.from(this, requestEndpoint)
         val manifestInfo = parseManifestInfo()
@@ -152,6 +152,8 @@ internal abstract class BugsnagUploadSoSymTask : DefaultTask(), AndroidManifestI
 
     companion object {
         private const val ENDPOINT_SUFFIX = "/ndk-symbol"
+
+        private const val ENDPOINT_NDK = "/ndk"
 
         private const val VALID_SO_FILE_THRESHOLD = 1024
 
