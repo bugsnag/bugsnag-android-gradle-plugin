@@ -48,8 +48,6 @@ internal abstract class BugsnagUploadSoSymTask : DefaultTask(), AndroidManifestI
     @get:Internal
     internal abstract val uploadRequestClient: Property<UploadRequestClient>
 
-    private var isFirstRun: Boolean = true
-
     init {
         group = BugsnagPlugin.GROUP_NAME
         description = "Uploads SO Symbol files to Bugsnag"
@@ -74,10 +72,7 @@ internal abstract class BugsnagUploadSoSymTask : DefaultTask(), AndroidManifestI
         } else {
             rootDir.walkTopDown()
                 .filter { it.isFile && it.extension == "gz" && it.length() >= VALID_SO_FILE_THRESHOLD }
-                .forEach {
-                    val requestEndpoint: String = endpoint.get() + SUBDOMAIN_NDK + ENDPOINT_SUFFIX
-                    uploadSymbols(it, requestEndpoint)
-                }
+                .forEach { uploadSymbols(it) }
         }
     }
 
@@ -85,8 +80,10 @@ internal abstract class BugsnagUploadSoSymTask : DefaultTask(), AndroidManifestI
      * Uploads the given shared object mapping information
      * @param mappingFile the file to upload
      */
-    private fun uploadSymbols(mappingFile: File, requestEndpoint: String) {
+    private fun uploadSymbols(mappingFile: File) {
         val sharedObjectName = mappingFile.nameWithoutExtension
+        val requestEndpoint = endpoint.get() + ENDPOINT_SUFFIX
+
         val request = BugsnagMultiPartUploadRequest.from(this, requestEndpoint)
         val manifestInfo = parseManifestInfo()
         val mappingFileHash = mappingFile.md5HashCode()
@@ -104,17 +101,13 @@ internal abstract class BugsnagUploadSoSymTask : DefaultTask(), AndroidManifestI
                     .addFormDataPart("projectRoot", projectRoot.get())
             }
 
-            request.uploadRequest(body) { response ->
+            request.uploadRequest(requestEndpoint, body) { response ->
                 if (response.code == HTTP_NOT_FOUND && endpoint.get() != UPLOAD_ENDPOINT_DEFAULT) {
                     throw StopExecutionException(
                         "Bugsnag instance does not support the new NDK symbols upload mechanism. " +
                             "Please set legacyNDKSymbolsUpload or upgrade your Bugsnag instance. " +
                             "See https://docs.bugsnag.com/api/ndk-symbol-mapping-upload/ for details."
                     )
-                }
-                if (response.code == 404 && isFirstRun) {
-                    uploadSymbols(mappingFile, endpoint.get() + ENDPOINT_SUFFIX)
-                    isFirstRun = false
                 }
 
                 if (!response.isSuccessful) {
@@ -136,8 +129,9 @@ internal abstract class BugsnagUploadSoSymTask : DefaultTask(), AndroidManifestI
         }
 
         val sharedObjectName = mappingFile.nameWithoutExtension
-        val soUploadKey = uploadType.get().uploadKey
         val requestEndpoint = uploadType.get().endpoint(endpoint.get())
+        val soUploadKey = uploadType.get().uploadKey
+
         val request = BugsnagMultiPartUploadRequest.from(this, requestEndpoint)
         val manifestInfo = parseManifestInfo()
         val mappingFileHash = mappingFile.md5HashCode()
@@ -153,14 +147,11 @@ internal abstract class BugsnagUploadSoSymTask : DefaultTask(), AndroidManifestI
                 builder.addFormDataPart("projectRoot", projectRoot.get())
             }
         }
-
         requestOutputFile.asFile.get().writeText(response)
     }
 
     companion object {
         private const val ENDPOINT_SUFFIX = "/ndk-symbol"
-
-        private const val SUBDOMAIN_NDK = "/ndk"
 
         private const val VALID_SO_FILE_THRESHOLD = 1024
 
