@@ -14,7 +14,7 @@ import java.io.IOException
 class BugsnagMultiPartUploadRequest(
     private val failOnUploadError: Boolean,
     private val overwrite: Boolean,
-    private val endpoint: String,
+    private val endpoints: Array<out String>,
     private val okHttpClient: OkHttpClient
 ) {
 
@@ -25,8 +25,18 @@ class BugsnagMultiPartUploadRequest(
         val body = createMultipartBody(bodyBuilder)
 
         return try {
+            var currentEndpoint = 0
             runRequestWithRetries(retryCount) {
-                uploadToServer(body)!!
+                uploadRequest(endpoints[currentEndpoint], body) { response ->
+                    if (response.code == 404 && currentEndpoint < endpoints.lastIndex) {
+                        currentEndpoint++
+                    }
+                    if (!response.isSuccessful) {
+                        throw IOException("Bugsnag upload failed with code ${response.code}")
+                    }
+
+                    response.body?.string()
+                }!!
             }
         } catch (exc: Throwable) {
             when {
@@ -50,7 +60,7 @@ class BugsnagMultiPartUploadRequest(
             .addFormDataPart("buildUUID", manifestInfo.buildUUID)
     }
 
-    fun <R> uploadRequest(body: MultipartBody, responseHandler: (Response) -> R): R {
+    fun <R> uploadRequest(endpoint: String, body: MultipartBody, responseHandler: (Response) -> R): R {
         // Make the request
         val request = Request.Builder()
             .url(endpoint)
@@ -59,16 +69,6 @@ class BugsnagMultiPartUploadRequest(
 
         okHttpClient.newCall(request).execute().use { response ->
             return responseHandler(response)
-        }
-    }
-
-    private fun uploadToServer(body: MultipartBody): String? {
-        return uploadRequest(body) { response ->
-            if (!response.isSuccessful) {
-                throw IOException("Bugsnag upload failed with code ${response.code}")
-            }
-
-            response.body?.string()
         }
     }
 
@@ -86,12 +86,12 @@ class BugsnagMultiPartUploadRequest(
 
         internal fun <T> from(
             task: T,
-            endpoint: String = task.endpoint.get()
+            vararg endpoints: String = arrayOf(task.endpoint.get())
         ): BugsnagMultiPartUploadRequest where T : DefaultTask, T : BugsnagFileUploadTask {
             return BugsnagMultiPartUploadRequest(
                 failOnUploadError = task.failOnUploadError.get(),
                 overwrite = task.overwrite.get(),
-                endpoint = endpoint,
+                endpoints = endpoints,
                 okHttpClient = task.httpClientHelper.get().okHttpClient
             )
         }

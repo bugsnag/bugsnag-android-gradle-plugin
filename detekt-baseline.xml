@@ -6,6 +6,7 @@
     <ID>ComplexCondition:BugsnagPlugin.kt$BugsnagPlugin$!jvmMinificationEnabled &amp;&amp; !ndkEnabled &amp;&amp; !unityEnabled &amp;&amp; !reactNativeEnabled</ID>
     <ID>LongParameterList:BugsnagGenerateNdkSoMappingTask.kt$BugsnagGenerateNdkSoMappingTask.Companion$( project: Project, variant: BaseVariant, output: ApkVariantOutput, ndk: NdkToolchain, searchPaths: List&lt;File>, soMappingOutputPath: String )</ID>
     <ID>LongParameterList:BugsnagUploadSoSymTask.kt$BugsnagUploadSoSymTask.Companion$( project: Project, variant: BaseVariantOutput, ndkToolchain: NdkToolchain, uploadType: UploadType, generateTaskProvider: TaskProvider&lt;out AbstractSoMappingTask>, httpClientHelperProvider: Provider&lt;out BugsnagHttpClientHelper>, ndkUploadClientProvider: Provider&lt;out UploadRequestClient>, )</ID>
+    <ID>MagicNumber:BugsnagMultiPartUploadRequest.kt$BugsnagMultiPartUploadRequest$404</ID>
     <ID>MagicNumber:BugsnagPluginExtension.kt$BugsnagPluginExtension$60000</ID>
     <ID>MagicNumber:BugsnagReleasesTask.kt$BugsnagReleasesTask$200</ID>
     <ID>MagicNumber:MappingFileProvider.kt$9</ID>
