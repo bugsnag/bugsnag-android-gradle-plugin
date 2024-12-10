@@ -28,7 +28,7 @@ class BugsnagMultiPartUploadRequest(
             var currentEndpoint = 0
             runRequestWithRetries(retryCount) {
                 uploadRequest(endpoints[currentEndpoint], body) { response ->
-                    if (response.code == 404 && currentEndpoint < endpoints.lastIndex) {
+                    if (response.code == NOT_FOUND && currentEndpoint < endpoints.lastIndex) {
                         currentEndpoint++
                     }
                     if (!response.isSuccessful) {
@@ -73,6 +73,7 @@ class BugsnagMultiPartUploadRequest(
     }
 
     companion object {
+        private const val NOT_FOUND = 404
 
         internal fun buildMultipartBody(overwrite: Boolean): MultipartBody.Builder {
             return MultipartBody.Builder()
