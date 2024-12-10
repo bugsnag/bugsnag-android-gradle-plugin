@@ -82,7 +82,8 @@ open class BugsnagUploadProguardTask @Inject constructor(
         val manifestInfo = parseManifestInfo()
 
         // Send the request
-        val request = BugsnagMultiPartUploadRequest.from(this)
+        val newEndPoint = endpoint.get().removeSuffix("/") + PROGUARD_ENDPOINT_SUFFIX
+        val request = BugsnagMultiPartUploadRequest.from(this, newEndPoint, endpoint.get())
         val mappingFileHash = mappingFile.md5HashCode()
         val response = uploadRequestClient.get().makeRequestIfNeeded(manifestInfo, mappingFileHash) {
             request.uploadMultipartEntity(retryCount.get()) { builder ->
@@ -95,6 +96,7 @@ open class BugsnagUploadProguardTask @Inject constructor(
     }
 
     companion object {
+        private const val PROGUARD_ENDPOINT_SUFFIX = "/proguard"
 
         /**
          * Registers the appropriate subtype to this [project] with the given [name] and

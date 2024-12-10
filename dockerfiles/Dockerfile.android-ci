@@ -47,7 +47,7 @@ RUN yes | sdkmanager 'ndk;16.1.4479499' >/dev/null
 ENV ANDROID_NDK_HOME="/sdk/ndk/16.1.4479499"
 
 # Install Ruby and other maze-runner requirements
-RUN gem install bundler
+RUN gem install bundler -v 2.4.22
 RUN gem update --system 3.0.6
 
 # Install node, npm and yarn
