@@ -101,7 +101,7 @@ internal abstract class BugsnagUploadSoSymTask : DefaultTask(), AndroidManifestI
                     .addFormDataPart("projectRoot", projectRoot.get())
             }
 
-            request.uploadRequest(body) { response ->
+            request.uploadRequest(requestEndpoint, body) { response ->
                 if (response.code == HTTP_NOT_FOUND && endpoint.get() != UPLOAD_ENDPOINT_DEFAULT) {
                     throw StopExecutionException(
                         "Bugsnag instance does not support the new NDK symbols upload mechanism. " +
