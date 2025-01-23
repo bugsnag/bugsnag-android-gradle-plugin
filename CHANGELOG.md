@@ -1,3 +1,9 @@
+## 8.2.0 (2025-01-23)
+
+### Changes
+* Changed the default endpoint for `mapping.txt` files to the new `/proguard` endpoint
+  [#544](https://github.com/bugsnag/bugsnag-android-gradle-plugin/pull/544)
+
 ## 8.1.0 (2023-09-28)
 
 ### Enhancements
