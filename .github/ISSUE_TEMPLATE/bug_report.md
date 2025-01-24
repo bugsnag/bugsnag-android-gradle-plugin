@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-<!-- Before raising, please check if somebody else has already reported your issue. -->
+<!-- Before raising, please check whether somebody else has already reported your issue. -->
 
 ### Describe the bug
 A clear and concise description of what the bug is.
@@ -22,8 +22,8 @@ A clear and concise description of what the bug is.
 * Android Studio version:
 * Gradle version: 
 * Android Gradle Plugin (AGP) version:
-* Bugsnag Android Gradle Plugin version: 
-* Bugsnag manifest section (if modified):
+* BugSnag Android Gradle Plugin version: 
+* BugSnag manifest section (if modified):
 
 <!--
   Below are a few approaches you might take to communicate the issue, in
