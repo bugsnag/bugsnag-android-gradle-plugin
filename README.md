@@ -18,12 +18,12 @@ If you aren't using Gradle or need more manual control, [see the API docs](https
 ## Getting started
 
 1. [Create a Bugsnag account](https://bugsnag.com)
-1. Complete the instructions in the [integration guide](https://docs.bugsnag.com/build-integrations/gradle/) to setup the Gradle Plugin
-1. Customize your integration using the [configuration options](http://docs.bugsnag.com/build-integrations/gradle/#additional-configuration)
+1. Complete the instructions in the [integration guide](https://docs.bugsnag.com/build-integrations/android-gradle-plugin/) to setup the Gradle Plugin
+1. Customize your integration using the [configuration options](https://docs.bugsnag.com/build-integrations/android-gradle-plugin/#additional-configuration)
 
 ## Support
 
-* [Read the integration guide](https://docs.bugsnag.com/build-integrations/gradle/) or [configuration options documentation](http://docs.bugsnag.com/build-integrations/gradle/#additional-configuration)
+* [Read the integration guide](https://docs.bugsnag.com/build-integrations/android-gradle-plugin/) or [configuration options documentation](https://docs.bugsnag.com/build-integrations/android-gradle-plugin/#additional-configuration)
 * [Search open and closed issues](https://github.com/bugsnag/bugsnag-android-gradle-plugin/issues?utf8=✓&q=is%3Aissue) for similar problems
 * [Report a bug or request a feature](https://github.com/bugsnag/bugsnag-android-gradle-plugin/issues/new)
 - [Additional Documentation](https://docs.bugsnag.com/api/android-mapping-upload/)
