@@ -29,4 +29,4 @@ mkdir -p "$GRADLE_DIR"
 # === Build, Publish and Close===
 ./gradlew clean publishAllPublicationsToSonatypeRepository publishPlugins --no-daemon --max-workers=1
 
-echo "Go to https://oss.sonatype.org/ to release the final artefact."
+echo "Go to https://central.sonatype.com/ to release the final artefact."
